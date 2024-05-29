@@ -5,20 +5,20 @@ import {
   PLATFORM_LAGOU,
   PLATFORM_ZHILIAN,
   JOB_STATUS_DESC_NEWEST,
-} from './common';
-import { Job } from '@/data/domain/job';
-import { JobApi } from './api';
-import { infoLog } from './log';
-import dayjs from 'dayjs';
+} from "./common";
+import { Job } from "@/data/domain/job";
+import { JobApi } from "./api";
+import { infoLog } from "./log";
+import dayjs from "dayjs";
 
 const SALARY_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)\D*(?<month>\d*)/;
 const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
 
 export async function saveBrowseJob(list, platform) {
   infoLog(
-    'saveBrowseJob start,record size = ' +
+    "saveBrowseJob start,record size = " +
       list.length +
-      ',platform = ' +
+      ",platform = " +
       platform
   );
   let jobs;
@@ -34,11 +34,11 @@ export async function saveBrowseJob(list, platform) {
     //skip
   }
   await JobApi.batchAddOrUpdateJobBrowse(jobs);
-  infoLog('saveBrowseJob success,record size = ' + list.length);
+  infoLog("saveBrowseJob success,record size = " + list.length);
 }
 
 function genId(id, platform) {
-  return platform + '_' + id;
+  return platform + "_" + id;
 }
 
 export function getJobIds(list, platform) {
@@ -84,7 +84,7 @@ function handleLagouData(list) {
     } = item;
     job.jobId = genId(positionId, PLATFORM_LAGOU);
     job.jobPlatform = PLATFORM_LAGOU;
-    job.jobUrl = 'https://www.lagou.com/wn/jobs/' + positionId + '.html';
+    job.jobUrl = "https://www.lagou.com/wn/jobs/" + positionId + ".html";
     job.jobName = positionName;
     job.jobCompanyName = companyFullName;
     job.jobLocationName = city;
@@ -95,18 +95,18 @@ function handleLagouData(list) {
     job.jobDegreeName = education;
     //handle job year
     let jobYearGroups = workYear.match(JOB_YEAR_MATCH)?.groups;
-    if(jobYearGroups){
+    if (jobYearGroups) {
       job.jobYear = jobYearGroups.min;
-    }else{
+    } else {
       //skip
     }
     //handle salary
     let groups = salary.match(SALARY_MATCH)?.groups;
-    if(groups){
+    if (groups) {
       //unit is K,1K = 1000
-      job.jobSalaryMin = Number.parseInt(groups?.min)*1000;
-      job.jobSalaryMax = Number.parseInt(groups?.max)*1000;
-    }else{
+      job.jobSalaryMin = Number.parseInt(groups?.min) * 1000;
+      job.jobSalaryMax = Number.parseInt(groups?.max) * 1000;
+    } else {
       //skip
     }
     job.jobSalaryTotalMonth = null;
@@ -152,17 +152,17 @@ function handleZhilianData(list) {
     job.jobDegreeName = education;
     //handle job year
     let jobYearGroups = workingExp.match(JOB_YEAR_MATCH)?.groups;
-    if(jobYearGroups){
+    if (jobYearGroups) {
       job.jobYear = jobYearGroups.min;
-    }else{
+    } else {
       //skip
     }
     //handle salary
     let groups = salaryReal.match(SALARY_MATCH)?.groups;
-    if(groups){
+    if (groups) {
       job.jobSalaryMin = Number.parseInt(groups?.min);
       job.jobSalaryMax = Number.parseInt(groups?.max);
-    }else{
+    } else {
       //skip
     }
     //handle salary month
@@ -212,25 +212,33 @@ function handleBossData(list) {
     job.jobDegreeName = degreeName;
     //handle job year
     let jobYearGroups = experienceName.match(JOB_YEAR_MATCH)?.groups;
-    if(jobYearGroups){
+    if (jobYearGroups) {
       job.jobYear = jobYearGroups.min;
-    }else{
+    } else {
       //skip
     }
     //handle salary
     let groups = salaryDesc.match(SALARY_MATCH)?.groups;
-    if(groups){
-      //unit is K,1K = 1000
-      job.jobSalaryMin = Number.parseInt(groups?.min)*1000;
-      job.jobSalaryMax = Number.parseInt(groups?.max)*1000;
+    if (groups) {
+      let coefficient;
+      if (salaryDesc.includes("元") && salaryDesc.includes("天")) {
+        //一个月算20天工作日，一般一周5天，有些特殊的6天工作
+        coefficient = 1 * 20;
+      } else if (salaryDesc.includes("元")) {
+        coefficient = 1;
+      } else {
+        coefficient = 1000;
+      }
+      job.jobSalaryMin = Number.parseInt(groups?.min) * coefficient;
+      job.jobSalaryMax = Number.parseInt(groups?.max) * coefficient;
       job.jobSalaryTotalMonth = groups?.month;
-    }else{
+    } else {
       //skip
     }
-    if(jobStatusDesc == JOB_STATUS_DESC_NEWEST.key){
+    if (jobStatusDesc == JOB_STATUS_DESC_NEWEST.key) {
       //招聘状态为最新，则代表一周内发布的职位。记录入库的时间设置取今天零点。
-      job.jobFirstPublishDatetime = dayjs(new Date()).startOf('day');
-    }else{
+      job.jobFirstPublishDatetime = dayjs(new Date()).startOf("day");
+    } else {
       job.jobFirstPublishDatetime = null;
     }
     job.bossName = name;
@@ -275,18 +283,18 @@ function handle51JobData(list) {
     job.jobLatitude = lat;
     job.jobDescription = jobDescribe;
     job.jobDegreeName = degreeString;
-    if(workYearString.endsWith("无需经验")){
+    if (workYearString.endsWith("无需经验")) {
       job.jobYear = 0;
-    }else{
+    } else {
       let groups = workYearString.match(/(?<min>[0-9\.]*)/)?.groups;
       job.jobYear = groups.min;
-    }    
+    }
     job.jobSalaryMin = jobSalaryMin;
     job.jobSalaryMax = jobSalaryMax;
-    if(provideSalaryString.endsWith("薪")){
+    if (provideSalaryString.endsWith("薪")) {
       let groups = provideSalaryString.match(SALARY_MATCH)?.groups;
       job.jobSalaryTotalMonth = groups.month;
-    }else{
+    } else {
       job.jobSalaryTotalMont = "";
     }
     job.jobFirstPublishDatetime = confirmDateString;
