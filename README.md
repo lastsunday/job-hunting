@@ -1,10 +1,10 @@
-# 找工作-Job Hunting
+# Job Hunting - 一款协助找工作的 chrome 浏览器插件
 
-## 介绍
+<p align="center">
+    <img src="docs\logo.png" alt="angular-logo" width="128px" height="128px"/>
+</p>
 
-这是一款协助找工作的 chrome 浏览器插件
-
-功能：
+## 功能列表
 
 1. 显示职位发布时间（支持BOSS,51Job,智联,拉钩）
 2. 本地显示职位初次浏览时间，历史浏览次数
