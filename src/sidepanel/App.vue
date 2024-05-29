@@ -12,6 +12,7 @@
     <el-menu-item index="2" route="/setting">设置</el-menu-item>
   </el-menu>
   <router-view />
+  <el-backtop />
 </template>
 <script lang="ts" setup>
 import { ref } from "vue";

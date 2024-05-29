@@ -69,7 +69,7 @@
     </el-collapse>
   </el-col>
   <el-row>
-    <el-table :data="tableData" style="width: 100%" border>
+    <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }" style="width: 100%" stripe>
       <el-table-column type="expand" width="30">
         <template #default="props">
           <div m="4" class="expand">
@@ -133,12 +133,12 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column prop="createDatetime" label="首次浏览日期" width="110">
+      <el-table-column prop="createDatetime" sortable label="首次浏览日期" width="140">
         <template #default="scope">
           {{ datetimeFormat(scope.row.createDatetime) }}
         </template>
       </el-table-column>
-      <el-table-column prop="createDatetime" label="发布日期" width="110">
+      <el-table-column prop="createDatetime" sortable label="发布日期" width="110">
         <template #default="scope">
           {{ datetimeFormat(scope.row.jobFirstPublishDatetime) }}
         </template>
@@ -156,6 +156,34 @@
         <template #default="scope">
           <el-text line-clamp="1">
             {{ scope.row.jobCompanyName }}
+          </el-text>
+        </template>
+      </el-table-column>
+      <el-table-column label="最低薪资" prop="jobSalaryMin" sortable width="120">
+        <template #default="scope">
+          <el-text line-clamp="1">
+            {{ scope.row.jobSalaryMin }}
+          </el-text>
+        </template>
+      </el-table-column>
+      <el-table-column label="最高薪资" prop="jobSalaryMax" sortable width="120">
+        <template #default="scope">
+          <el-text line-clamp="1">
+            {{ scope.row.jobSalaryMax }}
+          </el-text>
+        </template>
+      </el-table-column>
+      <el-table-column label="几薪" prop="jobSalaryTotalMonth" sortable width="80">
+        <template #default="scope">
+          <el-text line-clamp="1">
+            {{ scope.row.jobSalaryTotalMonth }}
+          </el-text>
+        </template>
+      </el-table-column>
+      <el-table-column label="学历" prop="jobDegreeName" sortable width="120">
+        <template #default="scope">
+          <el-text line-clamp="1">
+            {{ scope.row.jobDegreeName }}
           </el-text>
         </template>
       </el-table-column>
