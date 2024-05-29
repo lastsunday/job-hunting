@@ -4,6 +4,7 @@ import {
   renderSortJobItem,
   createLoadingDOM,
   hiddenLoadingDOM,
+  finalRender,
 } from '../../commonRender';
 import { debounce } from '../../utils';
 import { PLATFORM_LAGOU } from '../../common';
@@ -90,6 +91,7 @@ async function parseLaGouData(list, getListItem) {
   });
   hiddenLoadingDOM();
   renderSortJobItem(list, getListItem);
+  finalRender(jobDTOList);
 }
 
 export function createDOM(

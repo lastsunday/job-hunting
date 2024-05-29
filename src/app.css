@@ -57,3 +57,11 @@
     font-size:12px;
     line-height: 18px;
 }
+
+.echo-like .echo-like__icon{
+    fill:white;
+}
+
+.echo-like__count{
+    color:white;
+}

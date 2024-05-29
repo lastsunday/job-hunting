@@ -5,6 +5,7 @@ import {
   renderSortJobItem,
   createLoadingDOM,
   hiddenLoadingDOM,
+  finalRender,
 } from "../../commonRender";
 import { getRandomInt } from "../../utils";
 import onlineFilter from "./onlineFilter";
@@ -91,7 +92,7 @@ function parseBossData(list, getListItem) {
       securityId;
     apiUrlList.push(pureJobItemDetailApiUrl);
     //jobUrl
-    const jobItemDetailUrl = dom.childNodes[0].childNodes[0].href;
+    const jobItemDetailUrl = dom.querySelector(".job-card-body").querySelector(".job-card-left").href;
     const url = new URL(jobItemDetailUrl);
     let pureJobItemDetailUrl = url.origin + url.pathname;
     urlList.push(pureJobItemDetailUrl);
@@ -164,6 +165,7 @@ function parseBossData(list, getListItem) {
           });
           hiddenLoadingDOM();
           renderSortJobItem(list, getListItem);
+          finalRender(jobDTOList);
         })
         .catch((error) => {
           console.log(error);

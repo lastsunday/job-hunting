@@ -4,6 +4,7 @@ import {
   renderSortJobItem,
   createLoadingDOM,
   hiddenLoadingDOM,
+  finalRender,
 } from "../../commonRender";
 import { PLATFORM_ZHILIAN } from "../../common";
 import { saveBrowseJob,getJobIds } from "../../commonDataHandler";
@@ -69,6 +70,7 @@ async function parseZhilianData(list, getListItem) {
   });
   hiddenLoadingDOM();
   renderSortJobItem(list, getListItem);
+  finalRender(jobDTOList);
 }
 
 export function createDOM(

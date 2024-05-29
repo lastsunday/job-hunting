@@ -38,6 +38,7 @@
     "webpack-merge": "^5.10.0"
   },
   "dependencies": {
+    "@0xecho/button": "^0.0.17",
     "@element-plus/icons-vue": "^2.3.1",
     "ajax-hooks": "^1.8.0",
     "core-js": "^3.29.1",
@@ -45,8 +46,10 @@
     "echarts": "^5.5.0",
     "element-plus": "^2.7.3",
     "jquery": "^3.7.1",
+    "jszip": "^3.10.1",
     "vue": "^3.2.47",
     "vue-echarts": "^6.7.2",
-    "vue-router": "^4.2.5"
+    "vue-router": "^4.2.5",
+    "xlsx": "^0.18.5"
   }
 }

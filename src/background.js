@@ -1,6 +1,13 @@
-import {debugLog} from "./log";
+import { BACKGROUND, CONTENT_SCRIPT, OFFSCREEN } from "./api/bridgeCommon";
+import { debugLog, infoLog } from "./log";
 
-debugLog('background ready');
+debugLog("background ready");
+debugLog("keepAlive start");
+//see https://stackoverflow.com/questions/66618136/persistent-service-worker-in-chrome-extension
+const keepAlive = () => setInterval(chrome.runtime.getPlatformInfo, 20e3);
+chrome.runtime.onStartup.addListener(keepAlive);
+keepAlive();
+
 //sidepanel
 chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
@@ -27,39 +34,86 @@ async function setupOffscreenDocument(path) {
     creating = null;
   }
 
-  var portInstance;
-  chrome.runtime.onConnect.addListener(function(port) {
-    portInstance = port;
-    port.onMessage.addListener(function(message) {
-      debugLog("[background][receive][content script -> background] message = "+JSON.stringify(message));
-      sendMessageToOffscreen("bridge",message);
-      debugLog("[background][send][background -> offscreen] message = "+JSON.stringify(message));
-    });
+  chrome.runtime.onMessage.addListener(async function (
+    message,
+    sender,
+    sendResponse
+  ) {
+    if (message) {
+      if (message.from == CONTENT_SCRIPT && message.to == BACKGROUND) {
+        //get the tab id from content script page,not the extension page(eg: sidepanel)
+        if (sender.tab) {
+          message.tabId = sender.tab.id;
+        }
+        debugLog(
+          "2.[background][receive][" +
+            message.from +
+            " -> " +
+            message.to +
+            "] message [action=" +
+            message.action +
+            ",callbackId=" +
+            message.callbackId +
+            ",error=" +
+            message.error +
+            "]"
+        );
+        message.from = BACKGROUND;
+        message.to = OFFSCREEN;
+        debugLog(
+          "3.[background][send][" +
+            message.from +
+            " -> " +
+            message.to +
+            "] message [action=" +
+            message.action +
+            ",callbackId=" +
+            message.callbackId +
+            ",error=" +
+            message.error +
+            "]"
+        );
+        chrome.runtime.sendMessage(message);
+      } else if (message.from == OFFSCREEN && message.to == BACKGROUND) {
+        debugLog(
+          "10.[background][receive][" +
+            message.from +
+            " -> " +
+            message.to +
+            "] message [action=" +
+            message.action +
+            ",callbackId=" +
+            message.callbackId +
+            ",error=" +
+            message.error +
+            "]"
+        );
+        message.from = BACKGROUND;
+        message.to = CONTENT_SCRIPT;
+        debugLog(
+          "11.[background][send][" +
+            message.from +
+            " -> " +
+            message.to +
+            "] message [action=" +
+            message.action +
+            ",callbackId=" +
+            message.callbackId +
+            ",error=" +
+            message.error +
+            "]"
+        );
+        if (message.tabId) {
+          //content script invoke
+          chrome.tabs.sendMessage(message.tabId, message);
+        } else {
+          //other invoke
+          //Note that extensions cannot send messages to content scripts using this method. To send messages to content scripts, use tabs.sendMessage.
+          chrome.runtime.sendMessage(message);
+        }
+      }
+    }
   });
-
-  chrome.runtime.onMessage.addListener((event)=>{
-    var message = event.data;
-    debugLog("[background][receive][offscreen -> background] message = "+JSON.stringify(message));
-    sendMessageToContentScript(message);
-    debugLog("[background][send][background -> content script] message = "+JSON.stringify(message));
-  });
-
-  function sendMessageToContentScript(message){
-    portInstance.postMessage(message);
-  }
-
-  function sendMessageToOffscreen(type,data){
-    chrome.runtime.sendMessage({
-      type,
-      target: 'offscreen',
-      data
-    });
-  };
-
 }
 
 setupOffscreenDocument("offscreen.html");
-
-
-
-

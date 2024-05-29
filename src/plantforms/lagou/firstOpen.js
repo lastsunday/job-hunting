@@ -3,6 +3,7 @@ import {
   renderSortJobItem,
   createLoadingDOM,
   hiddenLoadingDOM,
+  finalRender,
 } from '../../commonRender';
 import { createDOM } from './index';
 import { mutationContainer, getListValue } from './index';
@@ -51,5 +52,6 @@ export default function firstOpen(data) {
     renderSortJobItem(list, (index) => {
       return children?.[index];
     });
+    finalRender(jobDTOList);
   });
 }

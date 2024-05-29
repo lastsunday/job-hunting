@@ -7,6 +7,7 @@ import {
   renderSortJobItem,
   createLoadingDOM,
   hiddenLoadingDOM,
+  finalRender,
 } from "../../commonRender";
 
 export function getJob51Data(responseText) {
@@ -75,6 +76,7 @@ async function parseData(list, getListItem) {
   });
   hiddenLoadingDOM();
   renderSortJobItem(list, getListItem);
+  finalRender(jobDTOList);
 }
 
 export function createDOM(

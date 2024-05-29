@@ -6,10 +6,13 @@ import {
   PLATFORM_ZHILIAN,
   JOB_STATUS_DESC_NEWEST,
 } from './common';
-import { Job } from './domain/job';
+import { Job } from '@/data/domain/job';
 import { JobApi } from './api';
 import { infoLog } from './log';
 import dayjs from 'dayjs';
+
+const SALARY_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)\D*(?<month>\d*)/;
+const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
 
 export async function saveBrowseJob(list, platform) {
   infoLog(
@@ -90,10 +93,23 @@ function handleLagouData(list) {
     job.jobLatitude = latitude;
     job.jobDescription = positionDetail;
     job.jobDegreeName = education;
-    job.jobYear = workYear;
-    job.jobSalaryMin = salary;
-    job.jobSalaryMax = salary;
-    job.jobSalaryTotalMonth = '';
+    //handle job year
+    let jobYearGroups = workYear.match(JOB_YEAR_MATCH)?.groups;
+    if(jobYearGroups){
+      job.jobYear = jobYearGroups.min;
+    }else{
+      //skip
+    }
+    //handle salary
+    let groups = salary.match(SALARY_MATCH)?.groups;
+    if(groups){
+      //unit is K,1K = 1000
+      job.jobSalaryMin = Number.parseInt(groups?.min)*1000;
+      job.jobSalaryMax = Number.parseInt(groups?.max)*1000;
+    }else{
+      //skip
+    }
+    job.jobSalaryTotalMonth = null;
     job.jobFirstPublishDatetime = createTime;
     job.bossName = publisherId;
     job.bossCompanyName = companyFullName;
@@ -120,6 +136,7 @@ function handleZhilianData(list) {
       workingExp,
       salaryReal,
       firstPublishTime,
+      salaryCount,
     } = item;
     const { staffName, hrJob } = item.staffCard;
     job.jobId = genId(jobId, PLATFORM_ZHILIAN);
@@ -133,10 +150,24 @@ function handleZhilianData(list) {
     job.jobLatitude = null;
     job.jobDescription = jobSummary;
     job.jobDegreeName = education;
-    job.jobYear = workingExp;
-    job.jobSalaryMin = salaryReal;
-    job.jobSalaryMax = salaryReal;
-    job.jobSalaryTotalMonth = '';
+    //handle job year
+    let jobYearGroups = workingExp.match(JOB_YEAR_MATCH)?.groups;
+    if(jobYearGroups){
+      job.jobYear = jobYearGroups.min;
+    }else{
+      //skip
+    }
+    //handle salary
+    let groups = salaryReal.match(SALARY_MATCH)?.groups;
+    if(groups){
+      job.jobSalaryMin = Number.parseInt(groups?.min);
+      job.jobSalaryMax = Number.parseInt(groups?.max);
+    }else{
+      //skip
+    }
+    //handle salary month
+    let groupsSalaryCount = salaryCount.match(/(?<count>\d*)/)?.groups;
+    job.jobSalaryTotalMonth = groupsSalaryCount.count;
     job.jobFirstPublishDatetime = firstPublishTime;
     job.bossName = staffName;
     job.bossCompanyName = companyName;
@@ -179,10 +210,23 @@ function handleBossData(list) {
     job.jobLatitude = latitude;
     job.jobDescription = postDescription;
     job.jobDegreeName = degreeName;
-    job.jobYear = experienceName;
-    job.jobSalaryMin = salaryDesc;
-    job.jobSalaryMax = salaryDesc;
-    job.jobSalaryTotalMonth = '';
+    //handle job year
+    let jobYearGroups = experienceName.match(JOB_YEAR_MATCH)?.groups;
+    if(jobYearGroups){
+      job.jobYear = jobYearGroups.min;
+    }else{
+      //skip
+    }
+    //handle salary
+    let groups = salaryDesc.match(SALARY_MATCH)?.groups;
+    if(groups){
+      //unit is K,1K = 1000
+      job.jobSalaryMin = Number.parseInt(groups?.min)*1000;
+      job.jobSalaryMax = Number.parseInt(groups?.max)*1000;
+      job.jobSalaryTotalMonth = groups?.month;
+    }else{
+      //skip
+    }
     if(jobStatusDesc == JOB_STATUS_DESC_NEWEST.key){
       //招聘状态为最新，则代表一周内发布的岗位。记录入库的时间设置取今天零点。
       job.jobFirstPublishDatetime = dayjs(new Date()).startOf('day');
@@ -212,12 +256,13 @@ function handle51JobData(list) {
       lon,
       jobDescribe,
       degreeString,
-      workYear,
       jobSalaryMin,
       jobSalaryMax,
       hrName,
       hrPosition,
       confirmDateString,
+      provideSalaryString,
+      workYearString,
     } = item;
     job.jobId = genId(jobId, PLATFORM_51JOB);
     job.jobPlatform = PLATFORM_51JOB;
@@ -230,10 +275,20 @@ function handle51JobData(list) {
     job.jobLatitude = lat;
     job.jobDescription = jobDescribe;
     job.jobDegreeName = degreeString;
-    job.jobYear = workYear;
+    if(workYearString.endsWith("无需经验")){
+      job.jobYear = 0;
+    }else{
+      let groups = workYearString.match(/(?<min>[0-9\.]*)/)?.groups;
+      job.jobYear = groups.min;
+    }    
     job.jobSalaryMin = jobSalaryMin;
     job.jobSalaryMax = jobSalaryMax;
-    job.jobSalaryTotalMonth = '';
+    if(provideSalaryString.endsWith("薪")){
+      let groups = provideSalaryString.match(SALARY_MATCH)?.groups;
+      job.jobSalaryTotalMonth = groups.month;
+    }else{
+      job.jobSalaryTotalMont = "";
+    }
     job.jobFirstPublishDatetime = confirmDateString;
     job.bossName = hrName;
     job.bossCompanyName = fullCompanyName;

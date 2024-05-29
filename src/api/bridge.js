@@ -1,50 +1,84 @@
 import { getRandomInt } from "../utils";
 import { debugLog } from "../log";
+import { CONTENT_SCRIPT, BACKGROUND } from "@/api/bridgeCommon.js";
 
 const callbackPromiseHookMap = new Map();
-var seq = 0;
+let seq = 0;
 
-export function invoke(action,param){
-    var promise = new Promise((resolve,reject)=>{
-        var callbackId = genCallbackId();
-        addCallbackPromiseHook(callbackId,{resolve,reject});
-        var message = {action,callbackId,param};
-        var portInstance = chrome.runtime.connect({name: "bridge"});
-        portInstance.onMessage.addListener(function(message) {
-            //message = {action,callbackId,param,data,error}
-            var promiseHook = getAndRemovePromiseHook(message.callbackId);
-            if(message.error){
-                promiseHook.reject(message);
-            }else{
-                promiseHook.resolve(message);
-            }
-            debugLog("[content script][receive][background -> content script] message = "+JSON.stringify(message));
-            portInstance.disconnect();
-        });
-        portInstance.postMessage(message);
-        debugLog("[content script][send][content script -> background] message = "+JSON.stringify(message));
-    });
-    return promise;
+/**
+ *
+ * @param {string} action 通过传入src/offscreen/worker.js里的WorkerBridge的方法名，实现方法的调用
+ * @param {*} param 所需要传递的调用参数，在被调用方法的param参数中有体现
+ * @returns
+ */
+export function invoke(action, param) {
+  let promise = new Promise((resolve, reject) => {
+    let callbackId = genCallbackId();
+    addCallbackPromiseHook(callbackId, { resolve, reject });
+    let message = {
+      action,
+      callbackId,
+      param,
+      from: CONTENT_SCRIPT,
+      to: BACKGROUND,
+    };
+    debugLog(
+      "1.[content script][send][" +
+        message.from +
+        " -> " +
+        message.to +
+        "] message [action=" +
+        message.action +
+        ",callbackId=" +
+        message.callbackId +
+        ",error=" +
+        message.error +
+        "]"
+    );
+    chrome.runtime.sendMessage(message);
+  });
+  return promise;
 }
 
-function addCallbackPromiseHook(callbackId,promiseHook){
-    callbackPromiseHookMap.set(callbackId,promiseHook);
+export function init() {
+  chrome.runtime.onMessage.addListener(function (result, sender, sendResponse) {
+    let message = result;
+    if (message.from == BACKGROUND && message.to == CONTENT_SCRIPT) {
+      //message = {action,callbackId,param,data,error}
+      debugLog(
+        "12.[content script][receive][" +
+          message.from +
+          " -> " +
+          message.to +
+          "] message [action=" +
+          message.action +
+          ",callbackId=" +
+          message.callbackId +
+          ",error=" +
+          message.error +
+          "]"
+      );
+      let promiseHook = getAndRemovePromiseHook(message.callbackId);
+      if (message.error) {
+        message.message = message.error;
+        promiseHook.reject(message);
+      } else {
+        promiseHook.resolve(message);
+      }
+    }
+  });
 }
 
-function getAndRemovePromiseHook(callbackId){
-    var promiseHook = callbackPromiseHookMap.get(callbackId);
-    callbackPromiseHookMap.delete(callbackId);
-    return promiseHook;
+function addCallbackPromiseHook(callbackId, promiseHook) {
+  callbackPromiseHookMap.set(callbackId, promiseHook);
 }
 
-function genCallbackId(){
-    return new Date().getTime()+seq+getRandomInt(1000);
+function getAndRemovePromiseHook(callbackId) {
+  let promiseHook = callbackPromiseHookMap.get(callbackId);
+  callbackPromiseHookMap.delete(callbackId);
+  return promiseHook;
 }
 
-export class Message{
-    action;
-    callbackId;
-    param;
-    error;
-    data;
+function genCallbackId() {
+  return new Date().getTime() + seq + getRandomInt(1000);
 }

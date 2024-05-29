@@ -3,6 +3,7 @@ import {
   renderSortJobItem,
   createLoadingDOM,
   hiddenLoadingDOM,
+  finalRender,
 } from '../../commonRender';
 import { createDOM } from './index';
 import { PLATFORM_ZHILIAN } from '../../common';
@@ -48,4 +49,5 @@ export default async function firstOpen(data) {
   renderSortJobItem(positionList, (index) => {
     return children?.[index];
   });
+  finalRender(jobDTOList);
 }

@@ -1,9 +1,9 @@
-import { Job } from "../domain/job";
-import { JobDTO } from "../dto/jobDTO";
+import { Job } from "@/data/domain/job";
+import { JobDTO } from "@/data/dto/jobDTO";
 import { invoke } from "./bridge";
-import { StatisticJobBrowseDTO } from "../dto/statisticJobBrowseDTO"; 
-import { SearchJobBO } from "../bo/searchJobBO";
-import { SearchJobDTO } from "../dto/searchJobDTO";
+import { StatisticJobBrowseDTO } from "@/data/dto/statisticJobBrowseDTO"; 
+import { SearchJobBO } from "@/data/bo/searchJobBO";
+import { SearchJobDTO } from "@/data/dto/searchJobDTO";
 
 export const JobApi = {
 
@@ -31,7 +31,7 @@ export const JobApi = {
      * @returns {SearchJobDTO[]}
      */
     searchJob: async function(param){
-        var result = await invoke(this.searchJob.name,param);
+        let result = await invoke(this.searchJob.name,param);
         return result.data;
     },
 
@@ -42,7 +42,7 @@ export const JobApi = {
      * @returns {JobDTO[]}
      */
     getJobBrowseInfoByIds: async function(ids){
-        var result = await invoke(this.getJobBrowseInfoByIds.name,ids);
+        let result = await invoke(this.getJobBrowseInfoByIds.name,ids);
         return result.data;
     },
 
@@ -51,7 +51,7 @@ export const JobApi = {
      * @returns {StatisticJobBrowseDTO}
      */
     statisticJobBrowse: async function(){
-        var result = await invoke(this.statisticJobBrowse.name,{});
+        let result = await invoke(this.statisticJobBrowse.name,{});
         return result.data;
     }
 }
