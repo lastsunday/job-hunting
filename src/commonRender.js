@@ -95,7 +95,7 @@ export function finalRender(jobDTOList) {
     const echo = new EchoButton({
       targetUri: jobId, // commenting target, required
       alwaysShowPopover: false, // whether always show popover, default: false
-      partnerName: "boss-show-time", // if specified, partner name will be shown on popover
+      partnerName: "job-hunting", // if specified, partner name will be shown on popover
       numberType: "count", // button display number type, power(default) or count,
       theme: "light", // dark or light(default)
     }).mount(commentJobDiv);

@@ -25,7 +25,7 @@ const SQL_CREATE_TABLE_JOB = `
   )
   `;
 
-//data_source空间占用为每条岗位基础数据的1.5倍，决定不保留
+//data_source空间占用为每条职位基础数据的1.5倍，决定不保留
 // const SQL_CREATE_TABLE_JOB_DATA_SOURCE = `
 //   CREATE TABLE job_data_source(
 //     job_id TEXT PRIMARY KEY,

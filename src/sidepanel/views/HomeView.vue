@@ -7,7 +7,7 @@
       <el-statistic title="总浏览数" :value="totalBrowseCount" />
     </el-col>
     <el-col :span="8">
-      <el-statistic title="总岗位数" :value="totalJobCount" />
+      <el-statistic title="总职位数" :value="totalJobCount" />
     </el-col>
   </el-row>
   <el-col class="search">

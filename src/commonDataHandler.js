@@ -228,7 +228,7 @@ function handleBossData(list) {
       //skip
     }
     if(jobStatusDesc == JOB_STATUS_DESC_NEWEST.key){
-      //招聘状态为最新，则代表一周内发布的岗位。记录入库的时间设置取今天零点。
+      //招聘状态为最新，则代表一周内发布的职位。记录入库的时间设置取今天零点。
       job.jobFirstPublishDatetime = dayjs(new Date()).startOf('day');
     }else{
       job.jobFirstPublishDatetime = null;

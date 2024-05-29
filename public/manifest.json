@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "Boss Show-time",
-    "version": "0.1.0",
-    "description": "My Chrome Extension",
+    "name": "Job Hunting",
+    "version": "1.0.0",
+    "description": "Job hunting",
     "icons": {
         "16": "icons/icon.jpg",
         "32": "icons/icon.jpg",

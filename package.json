@@ -1,8 +1,8 @@
 {
-  "name": "boss-show-time",
-  "version": "0.2.0",
-  "description": "展示 boss 直聘岗位的时间",
-  "private": true,
+  "name": "job-hunting",
+  "version": "1.0.0",
+  "description": "协助找工作",
+  "private": false,
   "scripts": {
     "watch": "node ./node_modules/webpack/bin/webpack.js --mode=development --watch --config config/webpack.config.js",
     "build": "node ./node_modules/webpack/bin/webpack.js --mode=production --config config/webpack.config.js"
