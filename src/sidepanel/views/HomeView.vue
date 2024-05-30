@@ -143,7 +143,7 @@
           {{ datetimeFormat(scope.row.jobFirstPublishDatetime) }}
         </template>
       </el-table-column>
-      <el-table-column label="名称" width="150">
+      <el-table-column label="名称">
         <template #default="scope">
           <a :href="scope.row.jobUrl" target="_blank" :title="scope.row.jobUrl">
             <el-text line-clamp="1">
