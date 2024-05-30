@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (ContentScript)BOSS招聘的职位显示顺序根据HR活跃时间进行排列
+
 ## 1.1.1(2024-05-30)
 
 ### 🐛 Fixed

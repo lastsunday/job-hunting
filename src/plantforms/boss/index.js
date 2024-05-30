@@ -126,6 +126,7 @@ function parseBossData(list, getListItem) {
       const lastModifyTimeList = [];
       const jobStatusDescList = [];
       const jobDesc = [];
+      const hrActiveTimeDescList = [];
       var jobDTOList = [];
       Promise.allSettled(promiseList)
         .then(async (jsonList) => {
@@ -145,12 +146,14 @@ function parseBossData(list, getListItem) {
               convertJobStatusDesc(item.value?.zpData?.jobInfo?.jobStatusDesc)
             );
             jobDesc.push(item.value?.zpData?.jobInfo?.postDescription);
+            hrActiveTimeDescList.push(item.value?.zpData?.bossInfo?.activeTimeDesc);
           });
           list.forEach((item, index) => {
             item["lastModifyTime"] = lastModifyTimeList[index];
             item["jobStatusDesc"] = jobStatusDescList[index];
             item["postDescription"] = jobDesc[index];
             item["firstBrowseDatetime"] = jobDTOList[index].createDatetime;
+            item["hrActiveTimeDesc"] = hrActiveTimeDescList[index];
           });
           list.forEach((item, index) => {
             const {
@@ -159,9 +162,11 @@ function parseBossData(list, getListItem) {
               brandName,
               jobStatusDesc,
               postDescription,
+              hrActiveTimeDesc,
             } = item;
             const dom = getListItem(itemId);
             let tag = createDOM(
+              hrActiveTimeDesc,
               lastModifyTime,
               brandName,
               jobStatusDesc,
@@ -180,6 +185,7 @@ function parseBossData(list, getListItem) {
             const { itemId, lastModifyTime, brandName } = item;
             const dom = getListItem(itemId);
             let tag = createDOM(
+              null,
               lastModifyTime,
               brandName,
               null,
@@ -195,6 +201,7 @@ function parseBossData(list, getListItem) {
 }
 
 function createDOM(
+  hrActiveTimeDesc,
   lastModifyTime,
   brandName,
   jobStatusDesc,
@@ -204,6 +211,7 @@ function createDOM(
   const div = document.createElement("div");
   div.classList.add("__boss_time_tag");
   renderTimeTag(div, lastModifyTime, brandName, {
+    hrActiveTimeDesc:hrActiveTimeDesc,
     jobStatusDesc: jobStatusDesc,
     jobDesc: postDescription,
     jobDTO: jobDTO,

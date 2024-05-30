@@ -5,14 +5,20 @@ import {
   convertTimeToHumanReadable,
   convertTimeOffsetToHumanReadable,
 } from "./utils";
-import { JOB_STATUS_DESC_NEWEST, PLATFORM_JOBSDB } from "./common";
+import {
+  JOB_STATUS_DESC_NEWEST,
+  PLATFORM_BOSS,
+  PLATFORM_JOBSDB,
+} from "./common";
 import EchoButton from "@0xecho/button";
+
+const ACTIVE_TIME_MATCH = /(?<num>[0-9\.]*)/;
 
 export function renderTimeTag(
   divElement,
   lastModifyTime,
   brandName,
-  { jobStatusDesc, firstPublishTime, jobDTO }
+  { jobStatusDesc, firstPublishTime, jobDTO, hrActiveTimeDesc }
 ) {
   var statusTag = null;
   //jobStatusDesc
@@ -26,9 +32,11 @@ export function renderTimeTag(
         "当前招聘状态【" +
         jobStatusDesc.label +
         "】，招聘状态：最新：代表一周内发布；招聘中：代表发布时间超过一周";
-      statusTag.classList.add("__time_tag_base_text_font");
-      divElement.appendChild(statusTag);
+    } else {
+      statusTag.innerHTML = "【发布时间未知】";
     }
+    statusTag.classList.add("__time_tag_base_text_font");
+    divElement.appendChild(statusTag);
   }
   //firstPublishTime
   if (firstPublishTime) {
@@ -41,6 +49,13 @@ export function renderTimeTag(
     firstPublishTimeTag.classList.add("__time_tag_base_text_font");
     divElement.appendChild(firstPublishTimeTag);
   }
+  //hrActiveTimeDesc for boss
+  if (hrActiveTimeDesc) {
+    var hrActiveTimeDescTag = document.createElement("span");
+    hrActiveTimeDescTag.innerHTML = "【HR-" + hrActiveTimeDesc + "】";
+    hrActiveTimeDescTag.classList.add("__time_tag_base_text_font");
+    divElement.appendChild(hrActiveTimeDescTag);
+  }
   //companyInfo
   var companyInfoTag = null;
   var companyInfoText = getCompanyInfoText(brandName);
@@ -50,11 +65,6 @@ export function renderTimeTag(
     companyInfoTag.classList.add("__time_tag_base_text_font");
     divElement.appendChild(companyInfoTag);
   }
-  //other
-  divElement.style = getRenderTimeStyle(
-    firstPublishTime ?? null,
-    jobStatusDesc
-  );
   if (jobDTO) {
     var firstBrowseTimeTag = document.createElement("div");
     var firstBrowseTimeHumanReadable = convertTimeOffsetToHumanReadable(
@@ -77,6 +87,22 @@ export function renderTimeTag(
   commentDiv.id = jobId;
   commentWrapperDiv.appendChild(commentDiv);
   divElement.appendChild(commentWrapperDiv);
+  //为time tag染色
+  if (hrActiveTimeDesc) {
+    // for boss
+    //根据hr活跃时间为JobItem染色
+    let now = dayjs();
+    let hrActiveDatetime = now.subtract(
+      convertHrActiveTimeDescToOffsetTime(hrActiveTimeDesc),
+      "millisecond"
+    );
+    divElement.style = getRenderTimeStyle(hrActiveDatetime);
+  } else {
+    divElement.style = getRenderTimeStyle(
+      firstPublishTime ?? null,
+      jobStatusDesc
+    );
+  }
 }
 
 export function finalRender(jobDTOList) {
@@ -261,61 +287,78 @@ export function setupSortJobItem(node) {
 
 export function renderSortJobItem(list, getListItem, { platform }) {
   const idAndSortIndexMap = new Map();
-  //sort updatetime
-  const sortList = JSON.parse(JSON.stringify(list)).sort((o1, o2) => {
-    return (
-      dayjs(
-        o2.lastModifyTime ??
+  //设置一个标识id,renderSortCustomId
+  list.forEach((item, index) => {
+    item.renderSortCustomId = index;
+  });
+  const sortList = JSON.parse(JSON.stringify(list));
+  if (platform == PLATFORM_BOSS) {
+    //handle hr active time
+    sortList.forEach((item) => {
+      let hrActiveTimeOffsetTime = convertHrActiveTimeDescToOffsetTime(
+        item.hrActiveTimeDesc
+      );
+      item.hrActiveTimeOffsetTime = hrActiveTimeOffsetTime;
+    });
+    sortList.sort((o1, o2) => {
+      return o1.hrActiveTimeOffsetTime - o2.hrActiveTimeOffsetTime;
+    });
+    sortList.sort((o1, o2) => {
+      if (o2.jobStatusDesc && o1.jobStatusDesc) {
+        return o1.jobStatusDesc.order - o2.jobStatusDesc.order;
+      } else {
+        return 0;
+      }
+    });
+  } else {
+    //sort updatetime
+    sortList.sort((o1, o2) => {
+      return (
+        dayjs(
           o2.lastModifyTime ??
-          o2.updateDateTime ??
-          o2.publishTime ??
-          null
-      ).valueOf() -
-      dayjs(
-        o1.lastModifyTime ??
+            o2.lastModifyTime ??
+            o2.updateDateTime ??
+            o2.publishTime ??
+            null
+        ).valueOf() -
+        dayjs(
           o1.lastModifyTime ??
-          o1.updateDateTime ??
-          o1.publishTime ??
-          null
-      ).valueOf()
-    );
-  });
-  //sort firstBrowseDatetime
-  sortList.sort((o1, o2) => {
-    return (
-      dayjs(o2.firstBrowseDatetime ?? null).valueOf() -
-      dayjs(o1.firstBrowseDatetime ?? null).valueOf()
-    );
-  });
-  //sort firstPublishTime
-  console.log(sortList);
-  sortList.sort((o1, o2) => {
-    return (
-      dayjs(
-        o2.jobFirstPublishDatetime ??
-          o2.confirmDateString ??
-          o2.firstPublishTime ??
-          o2.createTime ??
-          null
-      ).valueOf() -
-      dayjs(
-        o1.jobFirstPublishDatetime ??
-          o1.confirmDateString ??
-          o1.firstPublishTime ??
-          o1.createTime ??
-          null
-      ).valueOf()
-    );
-  });
-  sortList.sort((o1, o2) => {
-    if (o2.jobStatusDesc && o1.jobStatusDesc) {
-      return o1.jobStatusDesc.order - o2.jobStatusDesc.order;
-    } else {
-      return 0;
-    }
-  });
+            o1.lastModifyTime ??
+            o1.updateDateTime ??
+            o1.publishTime ??
+            null
+        ).valueOf()
+      );
+    });
+    //sort firstBrowseDatetime
+    sortList.sort((o1, o2) => {
+      return (
+        dayjs(o2.firstBrowseDatetime ?? null).valueOf() -
+        dayjs(o1.firstBrowseDatetime ?? null).valueOf()
+      );
+    });
+    //sort firstPublishTime
+    sortList.sort((o1, o2) => {
+      return (
+        dayjs(
+          o2.jobFirstPublishDatetime ??
+            o2.confirmDateString ??
+            o2.firstPublishTime ??
+            o2.createTime ??
+            null
+        ).valueOf() -
+        dayjs(
+          o1.jobFirstPublishDatetime ??
+            o1.confirmDateString ??
+            o1.firstPublishTime ??
+            o1.createTime ??
+            null
+        ).valueOf()
+      );
+    });
+  }
   sortList.forEach((item, index) => {
-    idAndSortIndexMap.set(JSON.stringify(item), index);
+    idAndSortIndexMap.set(item.renderSortCustomId, index);
   });
   list.forEach((item, index) => {
     const { itemId } = item;
@@ -330,6 +373,52 @@ export function renderSortJobItem(list, getListItem, { platform }) {
     } else {
       targetDom = dom;
     }
-    targetDom.style = "order:" + idAndSortIndexMap.get(JSON.stringify(item));
+    let styleString =
+      "order:" + idAndSortIndexMap.get(item.renderSortCustomId) + ";";
+    targetDom.style = styleString;
   });
+}
+
+function convertHrActiveTimeDescToOffsetTime(hrActiveTimeDesc) {
+  //按偏移量按毫秒算
+  let offsetTime;
+  const halfYear = 86400000 * 30 * 6;
+  const oneYear = 86400000 * 30 * 6 * 2;
+  if (hrActiveTimeDesc) {
+    let coefficient;
+    if (hrActiveTimeDesc.includes("刚刚")) {
+      offsetTime = 0;
+    } else if (
+      hrActiveTimeDesc.includes("日") ||
+      hrActiveTimeDesc.includes("周") ||
+      hrActiveTimeDesc.includes("月")
+    ) {
+      if (hrActiveTimeDesc.includes("日")) {
+        coefficient = 86400000;
+      } else if (hrActiveTimeDesc.includes("周")) {
+        coefficient = 86400000 * 7;
+      } else {
+        coefficient = 86400000 * 30;
+      }
+      let groups = hrActiveTimeDesc.match(ACTIVE_TIME_MATCH).groups;
+      if (groups) {
+        let num = groups.num;
+        if (num) {
+          offsetTime = Number.parseInt(num) * coefficient;
+        } else {
+          //没有数字，只有本字，如：本周
+          offsetTime = 1 * coefficient;
+        }
+      }
+    } else if (hrActiveTimeDesc.includes("半年前")) {
+      offsetTime = halfYear;
+    } else if (hrActiveTimeDesc.includes("近半年")) {
+      offsetTime = halfYear + 86400000;
+    } else {
+      offsetTime = oneYear;
+    }
+  } else {
+    offsetTime = oneYear;
+  }
+  return offsetTime;
 }
