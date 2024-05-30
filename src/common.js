@@ -10,4 +10,4 @@ export const PLATFORM_BOSS = "BOSS";
 export const PLATFORM_51JOB = "51JOB";
 export const PLATFORM_ZHILIAN = "ZHILIAN";
 export const PLATFORM_LAGOU = "LAGOU";
-export const PLATFORM_JOBSDB = "JBOSDB";
+export const PLATFORM_JOBSDB = "JOBSDB";

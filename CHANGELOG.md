@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## WIP
+
+### 🐛 Fixed
+
+1. (Data)修复Jobsdb的Id标识。
+
+### 📔 Documentation
+
+1. 增加运行截图
+
 ## 1.1.0(2024-05-30)
 
 ### ⭐ Added
