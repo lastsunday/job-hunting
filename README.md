@@ -22,6 +22,15 @@
 4. 数据备份，数据恢复 
 5. 职位评论（当前采用ECHO作为评论平台，请遵守相关法律法规合法留言）
 
+## 运行截图
+
+| 功能                                  | 效果图                                                       |
+| ------------------------------------- | ------------------------------------------------------------ |
+| 显示职位发布时间与自动排序            | <img src="docs\introduction\job_addition_tag.png" alt="angular-logo" width="600px"/> |
+| 职位评论                              | <img src="docs\introduction\job_comment.png" alt="angular-logo" width="600px"/> |
+| 管理页面(需点击插件图标打开SidePanel) | <img src="docs\introduction\sidepanel_admin_home.png" alt="angular-logo" width="600px"/> |
+
+
 
 ## 运行及编译
 
