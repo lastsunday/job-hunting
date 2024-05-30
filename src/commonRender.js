@@ -5,14 +5,14 @@ import {
   convertTimeToHumanReadable,
   convertTimeOffsetToHumanReadable,
 } from "./utils";
-import { JOB_STATUS_DESC_NEWEST } from "./common";
+import { JOB_STATUS_DESC_NEWEST, PLATFORM_JOBSDB } from "./common";
 import EchoButton from "@0xecho/button";
 
 export function renderTimeTag(
   divElement,
   lastModifyTime,
   brandName,
-  { jobStatusDesc, jobDesc, firstPublishTime, jobDTO }
+  { jobStatusDesc, firstPublishTime, jobDTO }
 ) {
   var statusTag = null;
   //jobStatusDesc
@@ -86,11 +86,11 @@ export function finalRender(jobDTOList) {
     let commentWrapperDiv = document.getElementById("wrapper" + jobId);
     commentWrapperDiv.style = "display: flex;justify-content: end;color:white;";
     const likeTitleDiv = document.createElement("div");
-    likeTitleDiv.innerHTML = "点赞数"
+    likeTitleDiv.innerHTML = "点赞数";
     likeTitleDiv.style = "color:white;";
     let commentJobDiv = document.getElementById(jobId);
 
-    commentWrapperDiv.insertBefore(likeTitleDiv,commentJobDiv);
+    commentWrapperDiv.insertBefore(likeTitleDiv, commentJobDiv);
 
     const echo = new EchoButton({
       targetUri: jobId, // commenting target, required
@@ -155,7 +155,8 @@ export function finalRender(jobDTOList) {
 
     const copmmentButtonDiv = document.createElement("div");
     copmmentButtonDiv.innerHTML = "查看评论💬";
-    copmmentButtonDiv.style = "cursor: pointer;margin-left: 5px;text-decoration: underline;color:white; ";
+    copmmentButtonDiv.style =
+      "cursor: pointer;margin-left: 5px;text-decoration: underline;color:white; ";
     commentWrapperDiv.appendChild(copmmentButtonDiv);
 
     copmmentButtonDiv.addEventListener("click", (event) => {
@@ -258,7 +259,7 @@ export function setupSortJobItem(node) {
   }
 }
 
-export function renderSortJobItem(list, getListItem) {
+export function renderSortJobItem(list, getListItem, { platform }) {
   const idAndSortIndexMap = new Map();
   //sort updatetime
   const sortList = JSON.parse(JSON.stringify(list)).sort((o1, o2) => {
@@ -287,13 +288,22 @@ export function renderSortJobItem(list, getListItem) {
     );
   });
   //sort firstPublishTime
+  console.log(sortList);
   sortList.sort((o1, o2) => {
     return (
       dayjs(
-        o2.confirmDateString ?? o2.firstPublishTime ?? o2.createTime ?? null
+        o2.jobFirstPublishDatetime ??
+          o2.confirmDateString ??
+          o2.firstPublishTime ??
+          o2.createTime ??
+          null
       ).valueOf() -
       dayjs(
-        o1.confirmDateString ?? o1.firstPublishTime ?? o1.createTime ?? null
+        o1.jobFirstPublishDatetime ??
+          o1.confirmDateString ??
+          o1.firstPublishTime ??
+          o1.createTime ??
+          null
       ).valueOf()
     );
   });
@@ -310,6 +320,16 @@ export function renderSortJobItem(list, getListItem) {
   list.forEach((item, index) => {
     const { itemId } = item;
     const dom = getListItem(itemId ? itemId : index);
-    dom.style = "order:" + idAndSortIndexMap.get(JSON.stringify(item));
+    let targetDom;
+    if (platform) {
+      if (PLATFORM_JOBSDB == platform) {
+        targetDom = dom.parentNode.parentNode;
+      } else {
+        targetDom = dom;
+      }
+    } else {
+      targetDom = dom;
+    }
+    targetDom.style = "order:" + idAndSortIndexMap.get(JSON.stringify(item));
   });
 }

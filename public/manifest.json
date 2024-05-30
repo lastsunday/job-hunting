@@ -26,7 +26,8 @@
                 "https://www.zhipin.com/*",
                 "https://sou.zhaopin.com/*",
                 "https://we.51job.com/*",
-                "https://www.lagou.com/*"
+                "https://www.lagou.com/*",
+                "https://hk.jobsdb.com/*"
             ]
         }
     ],
@@ -37,7 +38,8 @@
                 "https://www.zhipin.com/*", 
                 "https://sou.zhaopin.com/*",
                 "https://we.51job.com/*",
-                "https://www.lagou.com/*"
+                "https://www.lagou.com/*",
+                "https://hk.jobsdb.com/*"
             ]
         }
     ],
@@ -54,6 +56,7 @@
         "https://www.zhipin.com/*",
         "https://sou.zhaopin.com/*",
         "https://we.51job.com/*",
-        "https://www.lagou.com/*"
+        "https://www.lagou.com/*",
+        "https://hk.jobsdb.com/*"
     ]
 }

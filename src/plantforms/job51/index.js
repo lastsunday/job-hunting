@@ -1,6 +1,6 @@
 import { PLATFORM_51JOB } from "../../common";
-import { saveBrowseJob,getJobIds } from "../../commonDataHandler";
-import { JobApi} from "../../api"
+import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { JobApi } from "../../api";
 import {
   renderTimeTag,
   setupSortJobItem,
@@ -55,14 +55,21 @@ async function parseData(list, getListItem) {
     const { companyName } = item;
     let loadingLastModifyTimeTag = createLoadingDOM(
       companyName,
-      '__job51_time_tag'
+      "__job51_time_tag"
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
-  await saveBrowseJob(list,PLATFORM_51JOB);
-  var jobDTOList = await JobApi.getJobBrowseInfoByIds(getJobIds(list,PLATFORM_51JOB));
+  await saveBrowseJob(list, PLATFORM_51JOB);
+  var jobDTOList = await JobApi.getJobBrowseInfoByIds(
+    getJobIds(list, PLATFORM_51JOB)
+  );
   list.forEach((item, index) => {
-    const { updateDateTime, companyName, jobDescribe, confirmDateString } = item;
+    const {
+      updateDateTime,
+      companyName,
+      jobDescribe,
+      confirmDateString,
+    } = item;
     const dom = getListItem(index);
     item["firstBrowseDatetime"] = jobDTOList[index].createDatetime;
     let tag = createDOM(
@@ -75,7 +82,7 @@ async function parseData(list, getListItem) {
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
-  renderSortJobItem(list, getListItem);
+  renderSortJobItem(list, getListItem, { platform: PLATFORM_51JOB });
   finalRender(jobDTOList);
 }
 
@@ -91,7 +98,7 @@ export function createDOM(
   renderTimeTag(div, lastModifyTime, brandName, {
     jobDesc: jobDescribe,
     firstPublishTime: confirmDateString,
-    jobDTO:jobDTO
+    jobDTO: jobDTO,
   });
   return div;
 }

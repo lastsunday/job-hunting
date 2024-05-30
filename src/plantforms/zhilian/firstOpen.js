@@ -4,15 +4,15 @@ import {
   createLoadingDOM,
   hiddenLoadingDOM,
   finalRender,
-} from '../../commonRender';
-import { createDOM } from './index';
-import { PLATFORM_ZHILIAN } from '../../common';
-import { saveBrowseJob, getJobIds } from '../../commonDataHandler';
-import { JobApi } from '../../api';
+} from "../../commonRender";
+import { createDOM } from "./index";
+import { PLATFORM_ZHILIAN } from "../../common";
+import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { JobApi } from "../../api";
 
 // 智联招聘首次打开页面时是服务端渲染，没法监听接口，但是 html 中保存了列表数据
 export default async function firstOpen(data) {
-  const dom = document.querySelector('.positionlist');
+  const dom = document.querySelector(".positionlist");
   setupSortJobItem(dom);
   const children = dom?.children;
   const { positionList = [] } = data;
@@ -22,7 +22,7 @@ export default async function firstOpen(data) {
     const { companyName } = item;
     let loadingLastModifyTimeTag = createLoadingDOM(
       companyName,
-      '__zhilian_time_tag'
+      "__zhilian_time_tag"
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
@@ -33,7 +33,7 @@ export default async function firstOpen(data) {
   positionList.forEach((item, index) => {
     const { publishTime, companyName, jobSummary, firstPublishTime } = item;
     const dom = children?.[index];
-    item['firstBrowseDatetime'] = jobDTOList[index].createDatetime;
+    item["firstBrowseDatetime"] = jobDTOList[index].createDatetime;
     if (!dom) return;
 
     let tag = createDOM(
@@ -46,8 +46,12 @@ export default async function firstOpen(data) {
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
-  renderSortJobItem(positionList, (index) => {
-    return children?.[index];
-  });
+  renderSortJobItem(
+    positionList,
+    (index) => {
+      return children?.[index];
+    },
+    { platform: PLATFORM_ZHILIAN }
+  );
   finalRender(jobDTOList);
 }

@@ -4,12 +4,12 @@ import {
   createLoadingDOM,
   hiddenLoadingDOM,
   finalRender,
-} from '../../commonRender';
-import { createDOM } from './index';
-import { mutationContainer, getListValue } from './index';
-import { PLATFORM_LAGOU } from '../../common';
-import { saveBrowseJob, getJobIds } from '../../commonDataHandler';
-import { JobApi } from '../../api';
+} from "../../commonRender";
+import { createDOM } from "./index";
+import { mutationContainer, getListValue } from "./index";
+import { PLATFORM_LAGOU } from "../../common";
+import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { JobApi } from "../../api";
 
 // 首次打开页面时是服务端渲染，没法监听接口，但是 html 中保存了列表数据
 export default function firstOpen(data) {
@@ -25,7 +25,7 @@ export default function firstOpen(data) {
       const { companyShortName } = item;
       let loadingLastModifyTimeTag = createLoadingDOM(
         companyShortName,
-        '__zhipin_time_tag'
+        "__zhipin_time_tag"
       );
       dom.appendChild(loadingLastModifyTimeTag);
     });
@@ -36,7 +36,7 @@ export default function firstOpen(data) {
     list.forEach((item, index) => {
       const { createTime, companyShortName, positionDetail } = item;
       const dom = children?.[index];
-      item['firstBrowseDatetime'] = jobDTOList[index].createDatetime;
+      item["firstBrowseDatetime"] = jobDTOList[index].createDatetime;
       if (!dom) return;
 
       let tag = createDOM(
@@ -49,9 +49,13 @@ export default function firstOpen(data) {
       dom.appendChild(tag);
     });
     hiddenLoadingDOM();
-    renderSortJobItem(list, (index) => {
-      return children?.[index];
-    });
+    renderSortJobItem(
+      list,
+      (index) => {
+        return children?.[index];
+      },
+      { platform: PLATFORM_LAGOU }
+    );
     finalRender(jobDTOList);
   });
 }

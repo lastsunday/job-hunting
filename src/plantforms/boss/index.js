@@ -15,8 +15,8 @@ import {
   JOB_STATUS_DESC_UNKNOW,
 } from "../../common";
 import { PLATFORM_BOSS } from "../../common";
-import { saveBrowseJob,getJobIds } from "../../commonDataHandler";
-import { JobApi} from "../../api"
+import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { JobApi } from "../../api";
 
 const DELAY_FETCH_TIME = 75; //ms
 const DELAY_FETCH_TIME_RANDOM_OFFSET = 50; //ms
@@ -92,12 +92,17 @@ function parseBossData(list, getListItem) {
       securityId;
     apiUrlList.push(pureJobItemDetailApiUrl);
     //jobUrl
-    const jobItemDetailUrl = dom.querySelector(".job-card-body").querySelector(".job-card-left").href;
+    const jobItemDetailUrl = dom
+      .querySelector(".job-card-body")
+      .querySelector(".job-card-left").href;
     const url = new URL(jobItemDetailUrl);
     let pureJobItemDetailUrl = url.origin + url.pathname;
     urlList.push(pureJobItemDetailUrl);
 
-    let loadingLastModifyTimeTag = createLoadingDOM(brandName,"__boss_time_tag");
+    let loadingLastModifyTimeTag = createLoadingDOM(
+      brandName,
+      "__boss_time_tag"
+    );
     dom.appendChild(loadingLastModifyTimeTag);
   });
   let promiseList = [];
@@ -123,13 +128,15 @@ function parseBossData(list, getListItem) {
       const jobDesc = [];
       var jobDTOList = [];
       Promise.allSettled(promiseList)
-        .then( async (jsonList) => {
-          jsonList.forEach((item,index) => {
+        .then(async (jsonList) => {
+          jsonList.forEach((item, index) => {
             item.value.zpData.jobInfo.jobUrl = urlList[index];
-          })
-          
-          await saveBrowseJob(jsonList,PLATFORM_BOSS);
-          jobDTOList = await JobApi.getJobBrowseInfoByIds(getJobIds(jsonList,PLATFORM_BOSS));
+          });
+
+          await saveBrowseJob(jsonList, PLATFORM_BOSS);
+          jobDTOList = await JobApi.getJobBrowseInfoByIds(
+            getJobIds(jsonList, PLATFORM_BOSS)
+          );
           jsonList.forEach((item) => {
             lastModifyTimeList.push(
               dayjs(item.value?.zpData?.brandComInfo?.activeTime)
@@ -145,7 +152,7 @@ function parseBossData(list, getListItem) {
             item["postDescription"] = jobDesc[index];
             item["firstBrowseDatetime"] = jobDTOList[index].createDatetime;
           });
-          list.forEach((item,index) => {
+          list.forEach((item, index) => {
             const {
               itemId,
               lastModifyTime,
@@ -164,7 +171,7 @@ function parseBossData(list, getListItem) {
             dom.appendChild(tag);
           });
           hiddenLoadingDOM();
-          renderSortJobItem(list, getListItem);
+          renderSortJobItem(list, getListItem, { platform: PLATFORM_BOSS });
           finalRender(jobDTOList);
         })
         .catch((error) => {
@@ -172,7 +179,13 @@ function parseBossData(list, getListItem) {
           list.forEach((item) => {
             const { itemId, lastModifyTime, brandName } = item;
             const dom = getListItem(itemId);
-            let tag = createDOM(lastModifyTime, brandName,null,null,jobDTOList[index]);
+            let tag = createDOM(
+              lastModifyTime,
+              brandName,
+              null,
+              null,
+              jobDTOList[index]
+            );
             dom.appendChild(tag);
           });
           hiddenLoadingDOM();
@@ -181,13 +194,19 @@ function parseBossData(list, getListItem) {
   });
 }
 
-function createDOM(lastModifyTime, brandName, jobStatusDesc, postDescription,jobDTO) {
+function createDOM(
+  lastModifyTime,
+  brandName,
+  jobStatusDesc,
+  postDescription,
+  jobDTO
+) {
   const div = document.createElement("div");
   div.classList.add("__boss_time_tag");
   renderTimeTag(div, lastModifyTime, brandName, {
     jobStatusDesc: jobStatusDesc,
     jobDesc: postDescription,
-    jobDTO: jobDTO
+    jobDTO: jobDTO,
   });
   return div;
 }

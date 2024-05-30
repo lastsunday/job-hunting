@@ -7,8 +7,8 @@ import {
   finalRender,
 } from "../../commonRender";
 import { PLATFORM_ZHILIAN } from "../../common";
-import { saveBrowseJob,getJobIds } from "../../commonDataHandler";
-import { JobApi} from "../../api"
+import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { JobApi } from "../../api";
 
 export function getZhiLianData(responseText) {
   try {
@@ -55,21 +55,29 @@ async function parseZhilianData(list, getListItem) {
     const { companyName } = item;
     let loadingLastModifyTimeTag = createLoadingDOM(
       companyName,
-      '__zhilian_time_tag'
+      "__zhilian_time_tag"
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
-  await saveBrowseJob(list,PLATFORM_ZHILIAN);
-  let jobDTOList = await JobApi.getJobBrowseInfoByIds(getJobIds(list,PLATFORM_ZHILIAN));
+  await saveBrowseJob(list, PLATFORM_ZHILIAN);
+  let jobDTOList = await JobApi.getJobBrowseInfoByIds(
+    getJobIds(list, PLATFORM_ZHILIAN)
+  );
   list.forEach((item, index) => {
     const { publishTime, companyName, jobSummary, firstPublishTime } = item;
     const dom = getListItem(index);
     item["firstBrowseDatetime"] = jobDTOList[index].createDatetime;
-    let tag = createDOM(publishTime, companyName, jobSummary, firstPublishTime,jobDTOList[index]);
+    let tag = createDOM(
+      publishTime,
+      companyName,
+      jobSummary,
+      firstPublishTime,
+      jobDTOList[index]
+    );
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
-  renderSortJobItem(list, getListItem);
+  renderSortJobItem(list, getListItem, { platform: PLATFORM_ZHILIAN });
   finalRender(jobDTOList);
 }
 
@@ -85,7 +93,7 @@ export function createDOM(
   renderTimeTag(div, lastModifyTime, brandName, {
     jobDesc: jobSummary,
     firstPublishTime: firstPublishTime,
-    jobDTO:jobDTO,
+    jobDTO: jobDTO,
   });
   return div;
 }

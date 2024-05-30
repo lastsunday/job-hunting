@@ -4,12 +4,22 @@
     <img src="docs\logo.png" alt="angular-logo" width="128px" height="128px"/>
 </p>
 
+## 招聘平台支持列表
+
+| 招聘平台  | 访问地址                            | 备注                   |
+| --------- | ----------------------------------- | ---------------------- |
+| BOSS      | https://www.zhipin.com/web/geek/job |                        |
+| 51Job     | https://we.51job.com/pc/search      |                        |
+| 智联      | https://sou.zhaopin.com/            |                        |
+| 拉钩      | https://www.lagou.com/wn/zhaopin    |                        |
+| jobsdb-hk | https://hk.jobsdb.com/              | 需点击搜索按钮才有效果 |
+
 ## 功能列表
 
-1. 显示职位发布时间（支持BOSS,51Job,智联,拉钩）
+1. 显示职位发布时间与自动排序
 2. 本地显示职位初次浏览时间，历史浏览次数
 3. 本地职位记录统计，查询，查询结果导出
-4. 数据备份，数据恢复
+4. 数据备份，数据恢复 
 5. 职位评论（当前采用ECHO作为评论平台，请遵守相关法律法规合法留言）
 
 
@@ -36,6 +46,7 @@
     * 51Job：   <https://we.51job.com/pc/search>
     * 智联招聘： <https://sou.zhaopin.com/>
     * 拉钩网：<https://www.lagou.com/wn/zhaopin>
+    * jobsdb-hk <https://hk.jobsdb.com/>
 
 **开发**
 

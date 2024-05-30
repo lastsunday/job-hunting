@@ -5,14 +5,14 @@ import {
   createLoadingDOM,
   hiddenLoadingDOM,
   finalRender,
-} from '../../commonRender';
-import { debounce } from '../../utils';
-import { PLATFORM_LAGOU } from '../../common';
-import { saveBrowseJob, getJobIds } from '../../commonDataHandler';
-import { JobApi } from '../../api';
+} from "../../commonRender";
+import { debounce } from "../../utils";
+import { PLATFORM_LAGOU } from "../../common";
+import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { JobApi } from "../../api";
 
 export function getListValue(data = {}) {
-  return ['content', 'positionResult', 'result'].reduce((value, key) => {
+  return ["content", "positionResult", "result"].reduce((value, key) => {
     return value ? value?.[key] : undefined;
   }, data);
 }
@@ -25,7 +25,7 @@ export function getLaGouData(responseText) {
       parseLaGouData(getListValue(data) || [], getListByNode(node));
     });
   } catch (err) {
-    console.error('解析 JSON 失败', err);
+    console.error("解析 JSON 失败", err);
   }
 }
 
@@ -40,7 +40,7 @@ function getListByNode(node) {
 // 监听节点，判断职位列表是否被挂载
 export function mutationContainer() {
   return new Promise((resolve, reject) => {
-    const dom = document.getElementById('jobList');
+    const dom = document.getElementById("jobList");
     // 首次刷新页面的时候会触发多次，所以加上 debounce
     const observer = new MutationObserver(
       debounce(function (childList) {
@@ -49,8 +49,8 @@ export function mutationContainer() {
           return item?.addedNodes?.length > 0;
         });
         return isAdd
-          ? resolve(dom.querySelector('.list__YibNq'))
-          : reject('未找到职位列表');
+          ? resolve(dom.querySelector(".list__YibNq"))
+          : reject("未找到职位列表");
       }, 1000)
     );
 
@@ -68,7 +68,7 @@ async function parseLaGouData(list, getListItem) {
     const { companyShortName } = item;
     let loadingLastModifyTimeTag = createLoadingDOM(
       companyShortName,
-      '__zhipin_time_tag'
+      "__zhipin_time_tag"
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
@@ -79,7 +79,7 @@ async function parseLaGouData(list, getListItem) {
   list.forEach((item, index) => {
     const { createTime, companyShortName, positionDetail } = item;
     const dom = getListItem(index);
-    item['firstBrowseDatetime'] = jobDTOList[index].createDatetime;
+    item["firstBrowseDatetime"] = jobDTOList[index].createDatetime;
     let tag = createDOM(
       null,
       companyShortName,
@@ -90,7 +90,7 @@ async function parseLaGouData(list, getListItem) {
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
-  renderSortJobItem(list, getListItem);
+  renderSortJobItem(list, getListItem, { platform: PLATFORM_LAGOU });
   finalRender(jobDTOList);
 }
 
@@ -101,10 +101,10 @@ export function createDOM(
   createTime,
   jobDTO
 ) {
-  const div = document.createElement('div');
-  div.classList.add('__zhipin_time_tag');
+  const div = document.createElement("div");
+  div.classList.add("__zhipin_time_tag");
   renderTimeTag(div, lastModifyTime, brandName, {
-    jobDesc: positionDetail?.replace(/<\/?.+?\/?>/g,''),
+    jobDesc: positionDetail?.replace(/<\/?.+?\/?>/g, ""),
     firstPublishTime: createTime,
     jobDTO: jobDTO,
   });

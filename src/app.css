@@ -33,6 +33,24 @@
     text-align: right;
 }
 
+.__jobsdb_time_tag{
+    position: absolute;
+    right: 0;
+    background: rgba(229, 248, 248);
+    color: #00a6a7;
+    padding: 0 8px;
+    font-size: 14px;
+    border-radius: 0 0 0 4px;
+    text-align: right;
+    margin-right: 57px;
+    margin-top:10px;
+}
+
+/*for jbsdb job item*/
+div[data-search-sol-meta] {
+    display:flex;
+}
+
 /* 与BOSS直聘的筛选器样式 .condition-filter-select .current-select 保持一致*/
 .__boss_filter.condition-filter-select .current-select::after {
     content: unset;

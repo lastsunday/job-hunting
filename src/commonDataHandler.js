@@ -1,9 +1,9 @@
 import {
   PLATFORM_51JOB,
   PLATFORM_BOSS,
-  PLATFORM_ID_PREFIX_51JOB,
   PLATFORM_LAGOU,
   PLATFORM_ZHILIAN,
+  PLATFORM_JOBSDB,
   JOB_STATUS_DESC_NEWEST,
 } from "./common";
 import { Job } from "@/data/domain/job";
@@ -11,7 +11,7 @@ import { JobApi } from "./api";
 import { infoLog } from "./log";
 import dayjs from "dayjs";
 
-const SALARY_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)\D*(?<month>\d*)/;
+const SALARY_MATCH = /(?<min>[0-9\.]*)(?<minUnit>\D*)(?<max>[0-9\.]*)(?<maxUnit>\D*)(?<month>\d*)/;
 const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
 
 export async function saveBrowseJob(list, platform) {
@@ -30,6 +30,8 @@ export async function saveBrowseJob(list, platform) {
     jobs = handleZhilianData(list);
   } else if (PLATFORM_LAGOU == platform) {
     jobs = handleLagouData(list);
+  } else if (PLATFORM_JOBSDB == platform) {
+    jobs = handleJobsdb(list);
   } else {
     //skip
   }
@@ -54,12 +56,75 @@ export function getJobIds(list, platform) {
       jobId = item.jobId;
     } else if (PLATFORM_LAGOU == platform) {
       jobId = item.positionId;
+    } else if (PLATFORM_JOBSDB == platform) {
+      jobId = item.id;
     } else {
       //skip
     }
     result.push(genId(jobId, platform));
   }
   return result;
+}
+
+function handleJobsdb(list) {
+  let jobs = [];
+  for (var i = 0; i < list.length; i++) {
+    var job = new Job();
+    var item = list[i];
+    const { id, jobUrl, title, jobDetail, listingDate, salary } = item;
+    const { description: companyFullName } = item.advertiser;
+    const { countryCode: city, label: positionAddress } = item.jobLocation;
+    job.jobId = genId(id, PLATFORM_JOBSDB);
+    job.jobPlatform = PLATFORM_JOBSDB;
+    job.jobUrl = jobUrl;
+    job.jobName = title;
+    job.jobCompanyName = companyFullName;
+    job.jobLocationName = city;
+    job.jobAddress = positionAddress;
+    job.jobLongitude = "";
+    job.jobLatitude = "";
+    job.jobDescription = jobDetail;
+    job.jobDegreeName = "";
+    job.jobYear = "";
+    //handle salary
+    //TODO salary content was complex,not handle all situation
+    let targetSalary = salary.replaceAll(",", "").replaceAll("$", "");
+    let groups = targetSalary.match(SALARY_MATCH)?.groups;
+    if (groups) {
+      let coefficient;
+      let minUnitCoefficient;
+      let maxUnitCoefficient;
+      if (salary.includes("per hour")) {
+        //一天8小时工作5天
+        coefficient = 1 * 8 * 5;
+      } else {
+        coefficient = 1;
+      }
+      if (groups?.minUnit.includes("k")) {
+        minUnitCoefficient = 1000;
+      } else {
+        minUnitCoefficient = 1;
+      }
+      if (groups?.maxUnit.includes("k")) {
+        maxUnitCoefficient = 1000;
+      } else {
+        maxUnitCoefficient = 1;
+      }
+      job.jobSalaryMin =
+        Number.parseInt(groups?.min) * coefficient * minUnitCoefficient;
+      job.jobSalaryMax =
+        Number.parseInt(groups?.max) * coefficient * maxUnitCoefficient;
+    } else {
+      //skip
+    }
+    job.jobSalaryTotalMonth = null;
+    job.jobFirstPublishDatetime = listingDate;
+    job.bossName = "";
+    job.bossCompanyName = companyFullName;
+    job.bossPosition = null;
+    jobs.push(job);
+  }
+  return jobs;
 }
 
 function handleLagouData(list) {

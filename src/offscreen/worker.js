@@ -133,7 +133,7 @@ export const WorkerBridge = {
       }
       let tempResultMap = new Map();
       const SQL_QUERY_JOB =
-        "SELECT job_id,job_platform,job_url,job_name,job_company_name,job_location_name,job_address,job_longitude,job_latitude,job_description,job_degree_name,job_year,job_salary_min,job_salary_max,job_salary_total_month,boss_name,boss_company_name,boss_position,create_datetime,update_datetime FROM job WHERE job_id in (" +
+        "SELECT job_id,job_platform,job_url,job_name,job_company_name,job_location_name,job_address,job_longitude,job_latitude,job_description,job_degree_name,job_year,job_salary_min,job_salary_max,job_salary_total_month,job_first_publish_datetime,boss_name,boss_company_name,boss_position,create_datetime,update_datetime FROM job WHERE job_id in (" +
         ids +
         ")";
       let rows = [];
