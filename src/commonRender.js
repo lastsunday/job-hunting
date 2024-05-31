@@ -12,7 +12,7 @@ import {
 } from "./common";
 import EchoButton from "@0xecho/button";
 
-import {logoBase64} from "@/assets/logo";
+import { logoBase64 } from "@/assets/logo";
 
 const ACTIVE_TIME_MATCH = /(?<num>[0-9\.]*)/;
 
@@ -74,18 +74,6 @@ export function renderTimeTag(
     companyInfoTag.classList.add("__time_tag_base_text_font");
     divElement.appendChild(companyInfoTag);
   }
-  let firstBrowseTimeTag = document.createElement("div");
-  let firstBrowseTimeHumanReadable = convertTimeOffsetToHumanReadable(
-    jobDTO.createDatetime
-  );
-  firstBrowseTimeTag.innerHTML +=
-    "【" +
-    firstBrowseTimeHumanReadable +
-    "看过(共" +
-    jobDTO.browseCount +
-    "次)】";
-  firstBrowseTimeTag.classList.add("__time_tag_base_text_font");
-  divElement.appendChild(firstBrowseTimeTag);
 
   divElement.classList.add("__time_tag_base_text_font");
 
@@ -107,13 +95,13 @@ export function renderTimeTag(
   }
 }
 
-export function finalRender(jobDTOList,{platform}) {
+export function finalRender(jobDTOList, { platform }) {
   for (let i = 0; i < jobDTOList.length; i++) {
     let item = jobDTOList[i];
     let jobId = item.jobId;
     let commentWrapperDiv = document.getElementById("wrapper" + jobId);
     commentWrapperDiv.classList.add("__comment_wrapper");
-    commentWrapperDiv.classList.add("__"+platform+"_comment_wrapper");
+    commentWrapperDiv.classList.add("__" + platform + "_comment_wrapper");
     const likeTitleDiv = document.createElement("div");
     likeTitleDiv.innerHTML = "点赞";
     let commentJobDiv = document.getElementById(jobId);
@@ -184,7 +172,7 @@ export function finalRender(jobDTOList,{platform}) {
     const copmmentButtonDiv = document.createElement("div");
     copmmentButtonDiv.innerHTML = "查看评论💬";
     copmmentButtonDiv.style =
-      "cursor: pointer;margin-left: 5px;text-decoration: underline; ";
+      "cursor: pointer;margin-left: 5px;text-decoration: underline; color:blue;";
     commentWrapperDiv.appendChild(copmmentButtonDiv);
 
     copmmentButtonDiv.addEventListener("click", (event) => {
@@ -411,25 +399,41 @@ export function renderFunctionPanel(list, getListItem, { platform } = {}) {
     targetDom.append(functionPanelDiv);
     functionPanelDiv.appendChild(createLogo());
     functionPanelDiv.appendChild(createSearchCompanyLink(item.jobCompanyName));
-    functionPanelDiv.appendChild(createCommentWrapper(item.jobId));
+    functionPanelDiv.appendChild(createCommentWrapper(item));
   });
 }
 
-
-function createLogo(){
+function createLogo() {
   let logo = document.createElement("img");
-  logo.src = "data:image/png;base64,"+logoBase64;
+  logo.src = "data:image/png;base64," + logoBase64;
   logo.classList.add("__logo_in_function_panel");
   return logo;
 }
 
-function createCommentWrapper(jobId) {
+function createCommentWrapper(jobDTO) {
   let commentWrapperDiv = document.createElement("div");
-  commentWrapperDiv.id = "wrapper" + jobId;
+  commentWrapperDiv.id = "wrapper" + jobDTO.jobId;
   let commentDiv = document.createElement("div");
-  commentDiv.id = jobId;
+  commentDiv.id = jobDTO.jobId;
+
+  commentWrapperDiv.appendChild(createFirstBrowse(jobDTO));
   commentWrapperDiv.appendChild(commentDiv);
   return commentWrapperDiv;
+}
+
+function createFirstBrowse(jobDTO) {
+  let firstBrowseTimeTag = document.createElement("div");
+  let firstBrowseTimeHumanReadable = convertTimeOffsetToHumanReadable(
+    jobDTO.createDatetime
+  );
+  firstBrowseTimeTag.innerHTML +=
+    "【" +
+    firstBrowseTimeHumanReadable +
+    "展示过(共" +
+    jobDTO.browseCount +
+    "次)】";
+  firstBrowseTimeTag.classList.add("__first_browse_time");
+  return firstBrowseTimeTag;
 }
 
 function createSearchCompanyLink(keyword) {
