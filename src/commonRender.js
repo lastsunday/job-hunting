@@ -44,6 +44,13 @@ export function renderTimeTag(
       statusTag.classList.add("__time_tag_base_text_font");
       divElement.appendChild(statusTag);
     }
+    //hrActiveTimeDesc for boss
+    if (hrActiveTimeDesc) {
+      let hrActiveTimeDescTag = document.createElement("span");
+      hrActiveTimeDescTag.innerHTML = "【HR-" + hrActiveTimeDesc + "】";
+      hrActiveTimeDescTag.classList.add("__time_tag_base_text_font");
+      divElement.appendChild(hrActiveTimeDescTag);
+    }
   } else {
     //firstPublishTime
     let firstPublishTime = jobDTO.jobFirstPublishDatetime;
@@ -56,13 +63,6 @@ export function renderTimeTag(
         "【" + firstPublishTimeHumanReadable + "发布】";
       firstPublishTimeTag.classList.add("__time_tag_base_text_font");
       divElement.appendChild(firstPublishTimeTag);
-    }
-    //hrActiveTimeDesc for boss
-    if (hrActiveTimeDesc) {
-      let hrActiveTimeDescTag = document.createElement("span");
-      hrActiveTimeDescTag.innerHTML = "【HR-" + hrActiveTimeDesc + "】";
-      hrActiveTimeDescTag.classList.add("__time_tag_base_text_font");
-      divElement.appendChild(hrActiveTimeDescTag);
     }
   }
   //companyInfo
