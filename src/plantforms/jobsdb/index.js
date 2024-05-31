@@ -77,7 +77,7 @@ function parseData(list, getListItem) {
     const { description: companyName } = item.advertiser;
     const dom = getListItem(index);
     //apiUrl
-    var pureJobItemDetailHtmlUrl = "https://hk.jobsdb.com/job/" + id;
+    let pureJobItemDetailHtmlUrl = "https://hk.jobsdb.com/job/" + id;
     detailHtmlUrlList.push(pureJobItemDetailHtmlUrl);
     //jobUrl
     urlList.push("https://hk.jobsdb.com/job/" + id);

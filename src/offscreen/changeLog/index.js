@@ -1,6 +1,6 @@
 import { ChangeLog } from "./changelog";
 
-var changelogListInstance = [];
+let changelogListInstance = [];
 
 /**
  * 

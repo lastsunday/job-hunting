@@ -60,7 +60,7 @@ async function parseData(list, getListItem) {
     dom.appendChild(loadingLastModifyTimeTag);
   });
   await saveBrowseJob(list, PLATFORM_51JOB);
-  var jobDTOList = await JobApi.getJobBrowseInfoByIds(
+  let jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(list, PLATFORM_51JOB)
   );
   list.forEach((item,index) => {

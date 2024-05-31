@@ -24,11 +24,11 @@ export function renderTimeTag(
   }
   //对发布时间的处理
   if (platform && platform == PLATFORM_BOSS) {
-    var statusTag = null;
+    let statusTag = null;
     //jobStatusDesc
     if (jobStatusDesc) {
       statusTag = document.createElement("span");
-      var statusToTimeText = "";
+      let statusToTimeText = "";
       if (jobStatusDesc == JOB_STATUS_DESC_NEWEST) {
         statusToTimeText = "一周内";
         statusTag.innerHTML = "【 " + statusToTimeText + "发布❔】";
@@ -46,8 +46,8 @@ export function renderTimeTag(
     //firstPublishTime
     let firstPublishTime = jobDTO.jobFirstPublishDatetime;
     if (firstPublishTime) {
-      var firstPublishTimeTag = document.createElement("span");
-      var firstPublishTimeHumanReadable = convertTimeToHumanReadable(
+      let firstPublishTimeTag = document.createElement("span");
+      let firstPublishTimeHumanReadable = convertTimeToHumanReadable(
         firstPublishTime
       );
       firstPublishTimeTag.innerHTML +=
@@ -57,23 +57,23 @@ export function renderTimeTag(
     }
     //hrActiveTimeDesc for boss
     if (hrActiveTimeDesc) {
-      var hrActiveTimeDescTag = document.createElement("span");
+      let hrActiveTimeDescTag = document.createElement("span");
       hrActiveTimeDescTag.innerHTML = "【HR-" + hrActiveTimeDesc + "】";
       hrActiveTimeDescTag.classList.add("__time_tag_base_text_font");
       divElement.appendChild(hrActiveTimeDescTag);
     }
   }
   //companyInfo
-  var companyInfoTag = null;
-  var companyInfoText = getCompanyInfoText(jobDTO.jobCompanyName);
+  let companyInfoTag = null;
+  let companyInfoText = getCompanyInfoText(jobDTO.jobCompanyName);
   if (companyInfoText !== "") {
     companyInfoTag = document.createElement("span");
     companyInfoTag.innerHTML = companyInfoText;
     companyInfoTag.classList.add("__time_tag_base_text_font");
     divElement.appendChild(companyInfoTag);
   }
-  var firstBrowseTimeTag = document.createElement("div");
-  var firstBrowseTimeHumanReadable = convertTimeOffsetToHumanReadable(
+  let firstBrowseTimeTag = document.createElement("div");
+  let firstBrowseTimeHumanReadable = convertTimeOffsetToHumanReadable(
     jobDTO.createDatetime
   );
   firstBrowseTimeTag.innerHTML +=
@@ -209,7 +209,7 @@ export function createLoadingDOM(brandName, styleClass) {
 }
 
 export function hiddenLoadingDOM() {
-  var loadingTagList = document.querySelectorAll(".__loading_tag");
+  let loadingTagList = document.querySelectorAll(".__loading_tag");
   if (loadingTagList) {
     loadingTagList.forEach((item) => {
       item.style = "visibility: hidden;";
@@ -218,8 +218,8 @@ export function hiddenLoadingDOM() {
 }
 
 export function renderTimeLoadingTag(divElement, brandName) {
-  var timeText = "【正查找发布时间⌛︎】";
-  var text = timeText;
+  let timeText = "【正查找发布时间⌛︎】";
+  let text = timeText;
   text += getCompanyInfoText(brandName);
   divElement.style = getRenderTimeStyle();
   divElement.classList.add("__time_tag_base_text_font");
@@ -227,7 +227,7 @@ export function renderTimeLoadingTag(divElement, brandName) {
 }
 
 function getCompanyInfoText(brandName) {
-  var text = "";
+  let text = "";
   const isOutsourceBrand = isOutsource(brandName);
   const isTrainingBrand = isTraining(brandName);
   if (isOutsourceBrand) {
@@ -245,8 +245,8 @@ function getCompanyInfoText(brandName) {
 }
 
 function getRenderTimeStyle(lastModifyTime, jobStatusDesc) {
+  let offsetTimeDay;
   if (jobStatusDesc) {
-    var offsetTimeDay;
     if (JOB_STATUS_DESC_NEWEST == jobStatusDesc) {
       offsetTimeDay = 7; // actual <7
     } else {

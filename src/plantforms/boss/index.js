@@ -88,7 +88,7 @@ function parseBossData(list, getListItem) {
     const { brandName, securityId } = item;
     const dom = getListItem(index);
     //apiUrl
-    var pureJobItemDetailApiUrl =
+    let pureJobItemDetailApiUrl =
       "https://www.zhipin.com/wapi/zpgeek/job/detail.json?securityId=" +
       securityId;
     apiUrlList.push(pureJobItemDetailApiUrl);

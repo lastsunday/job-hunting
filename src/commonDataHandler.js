@@ -44,7 +44,7 @@ function genId(id, platform) {
 }
 
 export function getJobIds(list, platform) {
-  var result = [];
+  let result = [];
   for (let i = 0; i < list.length; i++) {
     let item = list[i];
     let jobId;
@@ -68,9 +68,9 @@ export function getJobIds(list, platform) {
 
 function handleJobsdb(list) {
   let jobs = [];
-  for (var i = 0; i < list.length; i++) {
-    var job = new Job();
-    var item = list[i];
+  for (let i = 0; i < list.length; i++) {
+    let job = new Job();
+    let item = list[i];
     const { id, jobUrl, title, jobDetail, listingDate, salary } = item;
     const { description: companyFullName } = item.advertiser;
     const { countryCode: city, label: positionAddress } = item.jobLocation;
@@ -129,9 +129,9 @@ function handleJobsdb(list) {
 
 function handleLagouData(list) {
   let jobs = [];
-  for (var i = 0; i < list.length; i++) {
-    var job = new Job();
-    var item = list[i];
+  for (let i = 0; i < list.length; i++) {
+    let job = new Job();
+    let item = list[i];
     const {
       positionId,
       positionName,
@@ -186,9 +186,9 @@ function handleLagouData(list) {
 
 function handleZhilianData(list) {
   let jobs = [];
-  for (var i = 0; i < list.length; i++) {
-    var job = new Job();
-    var item = list[i];
+  for (let i = 0; i < list.length; i++) {
+    let job = new Job();
+    let item = list[i];
     const {
       jobId,
       positionUrl,
@@ -244,9 +244,9 @@ function handleZhilianData(list) {
 
 function handleBossData(list) {
   let jobs = [];
-  for (var i = 0; i < list.length; i++) {
-    var job = new Job();
-    var item = list[i];
+  for (let i = 0; i < list.length; i++) {
+    let job = new Job();
+    let item = list[i];
     let zpData = item.value.zpData;
     const { brandName } = zpData.brandComInfo;
     const { name, brandName: bossBranchName, title } = zpData.bossInfo;
@@ -316,9 +316,9 @@ function handleBossData(list) {
 
 function handle51JobData(list) {
   let jobs = [];
-  for (var i = 0; i < list.length; i++) {
-    var job = new Job();
-    var item = list[i];
+  for (let i = 0; i < list.length; i++) {
+    let job = new Job();
+    let item = list[i];
     const {
       jobId,
       jobHref,
