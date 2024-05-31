@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### 🛀 Refactor
+
+1. (ContentScript)重构timeTag的渲染代码和promise的使用
+
 ## 1.2.0(2024-05-31)
 
 ### ⭐ Added

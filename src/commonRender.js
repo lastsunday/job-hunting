@@ -16,69 +16,75 @@ const ACTIVE_TIME_MATCH = /(?<num>[0-9\.]*)/;
 
 export function renderTimeTag(
   divElement,
-  lastModifyTime,
-  brandName,
-  { jobStatusDesc, firstPublishTime, jobDTO, hrActiveTimeDesc }
+  jobDTO,
+  { jobStatusDesc, hrActiveTimeDesc, platform } = {}
 ) {
-  var statusTag = null;
-  //jobStatusDesc
-  if (jobStatusDesc) {
-    statusTag = document.createElement("span");
-    var statusToTimeText = "";
-    if (jobStatusDesc == JOB_STATUS_DESC_NEWEST) {
-      statusToTimeText = "一周内";
-      statusTag.innerHTML = "【 " + statusToTimeText + "发布❔】";
-      statusTag.title =
-        "当前招聘状态【" +
-        jobStatusDesc.label +
-        "】，招聘状态：最新：代表一周内发布；招聘中：代表发布时间超过一周";
-    } else {
-      statusTag.innerHTML = "【发布时间未知】";
+  if (jobDTO == null || jobDTO == undefined) {
+    throw new Error("jobDTO is required");
+  }
+  //对发布时间的处理
+  if (platform && platform == PLATFORM_BOSS) {
+    var statusTag = null;
+    //jobStatusDesc
+    if (jobStatusDesc) {
+      statusTag = document.createElement("span");
+      var statusToTimeText = "";
+      if (jobStatusDesc == JOB_STATUS_DESC_NEWEST) {
+        statusToTimeText = "一周内";
+        statusTag.innerHTML = "【 " + statusToTimeText + "发布❔】";
+        statusTag.title =
+          "当前招聘状态【" +
+          jobStatusDesc.label +
+          "】，招聘状态：最新：代表一周内发布；招聘中：代表发布时间超过一周";
+      } else {
+        statusTag.innerHTML = "【发布时间未知】";
+      }
+      statusTag.classList.add("__time_tag_base_text_font");
+      divElement.appendChild(statusTag);
     }
-    statusTag.classList.add("__time_tag_base_text_font");
-    divElement.appendChild(statusTag);
-  }
-  //firstPublishTime
-  if (firstPublishTime) {
-    var firstPublishTimeTag = document.createElement("span");
-    var firstPublishTimeHumanReadable = convertTimeToHumanReadable(
-      firstPublishTime
-    );
-    firstPublishTimeTag.innerHTML +=
-      "【" + firstPublishTimeHumanReadable + "发布】";
-    firstPublishTimeTag.classList.add("__time_tag_base_text_font");
-    divElement.appendChild(firstPublishTimeTag);
-  }
-  //hrActiveTimeDesc for boss
-  if (hrActiveTimeDesc) {
-    var hrActiveTimeDescTag = document.createElement("span");
-    hrActiveTimeDescTag.innerHTML = "【HR-" + hrActiveTimeDesc + "】";
-    hrActiveTimeDescTag.classList.add("__time_tag_base_text_font");
-    divElement.appendChild(hrActiveTimeDescTag);
+  } else {
+    //firstPublishTime
+    let firstPublishTime = jobDTO.jobFirstPublishDatetime;
+    if (firstPublishTime) {
+      var firstPublishTimeTag = document.createElement("span");
+      var firstPublishTimeHumanReadable = convertTimeToHumanReadable(
+        firstPublishTime
+      );
+      firstPublishTimeTag.innerHTML +=
+        "【" + firstPublishTimeHumanReadable + "发布】";
+      firstPublishTimeTag.classList.add("__time_tag_base_text_font");
+      divElement.appendChild(firstPublishTimeTag);
+    }
+    //hrActiveTimeDesc for boss
+    if (hrActiveTimeDesc) {
+      var hrActiveTimeDescTag = document.createElement("span");
+      hrActiveTimeDescTag.innerHTML = "【HR-" + hrActiveTimeDesc + "】";
+      hrActiveTimeDescTag.classList.add("__time_tag_base_text_font");
+      divElement.appendChild(hrActiveTimeDescTag);
+    }
   }
   //companyInfo
   var companyInfoTag = null;
-  var companyInfoText = getCompanyInfoText(brandName);
+  var companyInfoText = getCompanyInfoText(jobDTO.jobCompanyName);
   if (companyInfoText !== "") {
     companyInfoTag = document.createElement("span");
     companyInfoTag.innerHTML = companyInfoText;
     companyInfoTag.classList.add("__time_tag_base_text_font");
     divElement.appendChild(companyInfoTag);
   }
-  if (jobDTO) {
-    var firstBrowseTimeTag = document.createElement("div");
-    var firstBrowseTimeHumanReadable = convertTimeOffsetToHumanReadable(
-      jobDTO.createDatetime
-    );
-    firstBrowseTimeTag.innerHTML +=
-      "【" +
-      firstBrowseTimeHumanReadable +
-      "看过(共" +
-      jobDTO.browseCount +
-      "次)】";
-    firstBrowseTimeTag.classList.add("__time_tag_base_text_font");
-    divElement.appendChild(firstBrowseTimeTag);
-  }
+  var firstBrowseTimeTag = document.createElement("div");
+  var firstBrowseTimeHumanReadable = convertTimeOffsetToHumanReadable(
+    jobDTO.createDatetime
+  );
+  firstBrowseTimeTag.innerHTML +=
+    "【" +
+    firstBrowseTimeHumanReadable +
+    "看过(共" +
+    jobDTO.browseCount +
+    "次)】";
+  firstBrowseTimeTag.classList.add("__time_tag_base_text_font");
+  divElement.appendChild(firstBrowseTimeTag);
+
   divElement.classList.add("__time_tag_base_text_font");
   let jobId = jobDTO.jobId;
   let commentWrapperDiv = document.createElement("div");
@@ -87,6 +93,7 @@ export function renderTimeTag(
   commentDiv.id = jobId;
   commentWrapperDiv.appendChild(commentDiv);
   divElement.appendChild(commentWrapperDiv);
+
   //为time tag染色
   if (hrActiveTimeDesc) {
     // for boss
@@ -99,7 +106,7 @@ export function renderTimeTag(
     divElement.style = getRenderTimeStyle(hrActiveDatetime);
   } else {
     divElement.style = getRenderTimeStyle(
-      firstPublishTime ?? null,
+      jobDTO.jobFirstPublishDatetime ?? null,
       jobStatusDesc
     );
   }
@@ -292,6 +299,13 @@ export function renderSortJobItem(list, getListItem, { platform }) {
     item.renderSortCustomId = index;
   });
   const sortList = JSON.parse(JSON.stringify(list));
+  //sort firstBrowseDatetime
+  sortList.sort((o1, o2) => {
+    return (
+      dayjs(o2.firstBrowseDatetime ?? null).valueOf() -
+      dayjs(o1.firstBrowseDatetime ?? null).valueOf()
+    );
+  });
   if (platform == PLATFORM_BOSS) {
     //handle hr active time
     sortList.forEach((item) => {
@@ -311,49 +325,11 @@ export function renderSortJobItem(list, getListItem, { platform }) {
       }
     });
   } else {
-    //sort updatetime
-    sortList.sort((o1, o2) => {
-      return (
-        dayjs(
-          o2.lastModifyTime ??
-            o2.lastModifyTime ??
-            o2.updateDateTime ??
-            o2.publishTime ??
-            null
-        ).valueOf() -
-        dayjs(
-          o1.lastModifyTime ??
-            o1.lastModifyTime ??
-            o1.updateDateTime ??
-            o1.publishTime ??
-            null
-        ).valueOf()
-      );
-    });
-    //sort firstBrowseDatetime
-    sortList.sort((o1, o2) => {
-      return (
-        dayjs(o2.firstBrowseDatetime ?? null).valueOf() -
-        dayjs(o1.firstBrowseDatetime ?? null).valueOf()
-      );
-    });
     //sort firstPublishTime
     sortList.sort((o1, o2) => {
       return (
-        dayjs(
-          o2.jobFirstPublishDatetime ??
-            o2.confirmDateString ??
-            o2.firstPublishTime ??
-            o2.createTime ??
-            null
-        ).valueOf() -
-        dayjs(
-          o1.jobFirstPublishDatetime ??
-            o1.confirmDateString ??
-            o1.firstPublishTime ??
-            o1.createTime ??
-            null
-        ).valueOf()
+        dayjs(o2.jobFirstPublishDatetime ?? null).valueOf() -
+        dayjs(o1.jobFirstPublishDatetime ?? null).valueOf()
       );
     });
   }
@@ -361,8 +337,7 @@ export function renderSortJobItem(list, getListItem, { platform }) {
     idAndSortIndexMap.set(item.renderSortCustomId, index);
   });
   list.forEach((item, index) => {
-    const { itemId } = item;
-    const dom = getListItem(itemId ? itemId : index);
+    const dom = getListItem(index);
     let targetDom;
     if (platform) {
       if (PLATFORM_JOBSDB == platform) {

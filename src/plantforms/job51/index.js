@@ -63,42 +63,19 @@ async function parseData(list, getListItem) {
   var jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(list, PLATFORM_51JOB)
   );
-  list.forEach((item, index) => {
-    const {
-      updateDateTime,
-      companyName,
-      jobDescribe,
-      confirmDateString,
-    } = item;
+  list.forEach((item,index) => {
     const dom = getListItem(index);
-    item["firstBrowseDatetime"] = jobDTOList[index].createDatetime;
-    let tag = createDOM(
-      updateDateTime,
-      companyName,
-      jobDescribe,
-      confirmDateString,
-      jobDTOList[index]
-    );
+    let tag = createDOM(jobDTOList[index]);
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
-  renderSortJobItem(list, getListItem, { platform: PLATFORM_51JOB });
+  renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_51JOB });
   finalRender(jobDTOList);
 }
 
-export function createDOM(
-  lastModifyTime,
-  brandName,
-  jobDescribe,
-  confirmDateString,
-  jobDTO
-) {
+export function createDOM(jobDTO) {
   const div = document.createElement("div");
   div.classList.add("__job51_time_tag");
-  renderTimeTag(div, lastModifyTime, brandName, {
-    jobDesc: jobDescribe,
-    firstPublishTime: confirmDateString,
-    jobDTO: jobDTO,
-  });
+  renderTimeTag(div, jobDTO);
   return div;
 }

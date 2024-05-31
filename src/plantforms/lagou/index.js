@@ -76,37 +76,19 @@ async function parseLaGouData(list, getListItem) {
   let jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(list, PLATFORM_LAGOU)
   );
-  list.forEach((item, index) => {
-    const { createTime, companyShortName, positionDetail } = item;
+  list.forEach((item,index) => {
     const dom = getListItem(index);
-    item["firstBrowseDatetime"] = jobDTOList[index].createDatetime;
-    let tag = createDOM(
-      null,
-      companyShortName,
-      positionDetail,
-      createTime,
-      jobDTOList[index]
-    );
+    let tag = createDOM(jobDTOList[index]);
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
-  renderSortJobItem(list, getListItem, { platform: PLATFORM_LAGOU });
+  renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_LAGOU });
   finalRender(jobDTOList);
 }
 
-export function createDOM(
-  lastModifyTime,
-  brandName,
-  positionDetail,
-  createTime,
-  jobDTO
-) {
+export function createDOM(jobDTO) {
   const div = document.createElement("div");
   div.classList.add("__zhipin_time_tag");
-  renderTimeTag(div, lastModifyTime, brandName, {
-    jobDesc: positionDetail?.replace(/<\/?.+?\/?>/g, ""),
-    firstPublishTime: createTime,
-    jobDTO: jobDTO,
-  });
+  renderTimeTag(div, jobDTO);
   return div;
 }

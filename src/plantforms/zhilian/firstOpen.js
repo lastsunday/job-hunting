@@ -30,24 +30,16 @@ export default async function firstOpen(data) {
   let jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(positionList, PLATFORM_ZHILIAN)
   );
-  positionList.forEach((item, index) => {
-    const { publishTime, companyName, jobSummary, firstPublishTime } = item;
+  positionList.forEach((item,index) => {
     const dom = children?.[index];
-    item["firstBrowseDatetime"] = jobDTOList[index].createDatetime;
     if (!dom) return;
 
-    let tag = createDOM(
-      publishTime,
-      companyName,
-      jobSummary,
-      firstPublishTime,
-      jobDTOList[index]
-    );
+    let tag = createDOM(jobDTOList[index]);
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
   renderSortJobItem(
-    positionList,
+    jobDTOList,
     (index) => {
       return children?.[index];
     },

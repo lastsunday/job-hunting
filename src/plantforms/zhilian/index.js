@@ -63,37 +63,19 @@ async function parseZhilianData(list, getListItem) {
   let jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(list, PLATFORM_ZHILIAN)
   );
-  list.forEach((item, index) => {
-    const { publishTime, companyName, jobSummary, firstPublishTime } = item;
+  list.forEach((item,index) => {
     const dom = getListItem(index);
-    item["firstBrowseDatetime"] = jobDTOList[index].createDatetime;
-    let tag = createDOM(
-      publishTime,
-      companyName,
-      jobSummary,
-      firstPublishTime,
-      jobDTOList[index]
-    );
+    let tag = createDOM(jobDTOList[index]);
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
-  renderSortJobItem(list, getListItem, { platform: PLATFORM_ZHILIAN });
+  renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_ZHILIAN });
   finalRender(jobDTOList);
 }
 
-export function createDOM(
-  lastModifyTime,
-  brandName,
-  jobSummary,
-  firstPublishTime,
-  jobDTO
-) {
+export function createDOM(jobDTO) {
   const div = document.createElement("div");
   div.classList.add("__zhilian_time_tag");
-  renderTimeTag(div, lastModifyTime, brandName, {
-    jobDesc: jobSummary,
-    firstPublishTime: firstPublishTime,
-    jobDTO: jobDTO,
-  });
+  renderTimeTag(div, jobDTO);
   return div;
 }

@@ -33,24 +33,16 @@ export default function firstOpen(data) {
     let jobDTOList = await JobApi.getJobBrowseInfoByIds(
       getJobIds(list, PLATFORM_LAGOU)
     );
-    list.forEach((item, index) => {
-      const { createTime, companyShortName, positionDetail } = item;
+    list.forEach((item,index) => {
       const dom = children?.[index];
-      item["firstBrowseDatetime"] = jobDTOList[index].createDatetime;
       if (!dom) return;
 
-      let tag = createDOM(
-        null,
-        companyShortName,
-        positionDetail,
-        createTime,
-        jobDTOList[index]
-      );
+      let tag = createDOM(jobDTOList[index]);
       dom.appendChild(tag);
     });
     hiddenLoadingDOM();
     renderSortJobItem(
-      list,
+      jobDTOList,
       (index) => {
         return children?.[index];
       },

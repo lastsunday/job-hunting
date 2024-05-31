@@ -7,7 +7,7 @@ import {
   hiddenLoadingDOM,
   finalRender,
 } from "../../commonRender";
-import { getRandomInt } from "../../utils";
+import { randomDelay } from "../../utils";
 import {
   JOB_STATUS_DESC_NEWEST,
   JOB_STATUS_DESC_RECRUITING,
@@ -68,16 +68,6 @@ function mutationContainer() {
   });
 }
 
-function convertJobStatusDesc(statusText) {
-  if (statusText == JOB_STATUS_DESC_NEWEST.key) {
-    return JOB_STATUS_DESC_NEWEST;
-  } else if (statusText == JOB_STATUS_DESC_RECRUITING.key) {
-    return JOB_STATUS_DESC_RECRUITING;
-  } else {
-    return JOB_STATUS_DESC_UNKNOW;
-  }
-}
-
 // 解析数据，插入时间标签
 function parseData(list, getListItem) {
   const detailHtmlUrlList = [];
@@ -98,83 +88,53 @@ function parseData(list, getListItem) {
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
-  let promiseList = [];
-  detailHtmlUrlList.forEach(async (url, index) => {
-    const delay = (
-      ms = DELAY_FETCH_TIME * index +
-        getRandomInt(DELAY_FETCH_TIME_RANDOM_OFFSET)
-    ) => new Promise((r) => setTimeout(r, ms));
-    await delay();
-    const promise = new Promise(async (resolve, reject) => {
-      try {
-        const response = await fetch(url);
-        const result = await response.text();
-        resolve(result);
-      } catch (e) {
-        reject(e);
-      }
-    });
-    promiseList.push(promise);
-    if (index == detailHtmlUrlList.length - 1) {
-      var jobDTOList = [];
-      Promise.allSettled(promiseList)
-        .then(async (htmlList) => {
-          htmlList.forEach((item, index) => {
-            let htmlString = item.value;
-            let matchContent = htmlString.match("window.SEEK_REDUX_DATA = .*");
-            if (matchContent && matchContent.length > 0) {
-              let configJsonString = matchContent[0]
-                .replaceAll("window.SEEK_REDUX_DATA = ", "")
-                .replace(/.$/, "")
-                .replaceAll("undefined", '""');
-              let json = JSON.parse(configJsonString);
-              let content = json.jobdetails.result.job.content;
-              list[index].jobDetail = content;
-            }
-            list[index].jobUrl = urlList[index];
-          });
-          await saveBrowseJob(list, PLATFORM_JOBSDB);
-          jobDTOList = await JobApi.getJobBrowseInfoByIds(
-            getJobIds(list, PLATFORM_JOBSDB)
-          );
-          jobDTOList.forEach((item, index) => {
-            const { jobCompanyName, jobDescription } = item;
-            const dom = getListItem(index);
-            let tag = createDOM(
-              jobCompanyName,
-              jobDescription,
-              jobDTOList[index]
-            );
-            dom.appendChild(tag);
-          });
-          hiddenLoadingDOM();
-          renderSortJobItem(jobDTOList, getListItem, {
-            platform: PLATFORM_JOBSDB,
-          });
-          finalRender(jobDTOList);
-        })
-        .catch((error) => {
-          console.log(error);
-          list.forEach((item, index) => {
-            const { listingDate } = item;
-            const { description } = item.advertiser;
-            const dom = getListItem(index);
-            let tag = createDOM(listingDate, description, jobDTOList[index]);
-            dom.appendChild(tag);
-          });
-          hiddenLoadingDOM();
-        });
-    }
+  const promiseList = detailHtmlUrlList.map(async (url, index) => {
+    await randomDelay(DELAY_FETCH_TIME * index, DELAY_FETCH_TIME_RANDOM_OFFSET); // 避免频繁请求触发风控
+    const response = await fetch(url);
+    const result = await response.text();
+    return result;
   });
+  Promise.allSettled(promiseList)
+    .then(async (htmlList) => {
+      let jobDTOList = [];
+      htmlList.forEach((item, index) => {
+        let htmlString = item.value;
+        let matchContent = htmlString.match("window.SEEK_REDUX_DATA = .*");
+        if (matchContent && matchContent.length > 0) {
+          let configJsonString = matchContent[0]
+            .replaceAll("window.SEEK_REDUX_DATA = ", "")
+            .replace(/.$/, "")
+            .replaceAll("undefined", '""');
+          let json = JSON.parse(configJsonString);
+          let content = json.jobdetails.result.job.content;
+          list[index].jobDetail = content;
+        }
+        list[index].jobUrl = urlList[index];
+      });
+      await saveBrowseJob(list, PLATFORM_JOBSDB);
+      jobDTOList = await JobApi.getJobBrowseInfoByIds(
+        getJobIds(list, PLATFORM_JOBSDB)
+      );
+      jobDTOList.forEach((item,index) => {
+        const dom = getListItem(index);
+        let tag = createDOM(jobDTOList[index]);
+        dom.appendChild(tag);
+      });
+      hiddenLoadingDOM();
+      renderSortJobItem(jobDTOList, getListItem, {
+        platform: PLATFORM_JOBSDB,
+      });
+      finalRender(jobDTOList);
+    })
+    .catch((error) => {
+      console.log(error);
+      hiddenLoadingDOM();
+    });
 }
 
-function createDOM(brandName, postDescription, jobDTO) {
+function createDOM(jobDTO) {
   const div = document.createElement("div");
   div.classList.add("__jobsdb_time_tag");
-  renderTimeTag(div, null, brandName, {
-    firstPublishTime: jobDTO.jobFirstPublishDatetime,
-    jobDesc: postDescription,
-    jobDTO: jobDTO,
-  });
+  renderTimeTag(div, jobDTO);
   return div;
 }

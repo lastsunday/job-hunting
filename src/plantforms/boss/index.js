@@ -7,7 +7,7 @@ import {
   hiddenLoadingDOM,
   finalRender,
 } from "../../commonRender";
-import { getRandomInt } from "../../utils";
+import { randomDelay } from "../../utils";
 import onlineFilter from "./onlineFilter";
 import {
   JOB_STATUS_DESC_NEWEST,
@@ -37,8 +37,9 @@ export function getBossData(responseText) {
 
 // 获取职位列表节点
 function getListByNode(node) {
-  return function getListItem(itemId) {
-    return node.querySelector(`[ka="search_list_${itemId}"]`);
+  const children = node?.children;
+  return function getListItem(index) {
+    return children?.[index];
   };
 }
 
@@ -83,9 +84,9 @@ function convertJobStatusDesc(statusText) {
 function parseBossData(list, getListItem) {
   const apiUrlList = [];
   const urlList = [];
-  list.forEach((item) => {
-    const { itemId, brandName, securityId } = item;
-    const dom = getListItem(itemId);
+  list.forEach((item, index) => {
+    const { brandName, securityId } = item;
+    const dom = getListItem(index);
     //apiUrl
     var pureJobItemDetailApiUrl =
       "https://www.zhipin.com/wapi/zpgeek/job/detail.json?securityId=" +
@@ -105,116 +106,67 @@ function parseBossData(list, getListItem) {
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
-  let promiseList = [];
-  apiUrlList.forEach(async (url, index) => {
-    const delay = (
-      ms = DELAY_FETCH_TIME * index +
-        getRandomInt(DELAY_FETCH_TIME_RANDOM_OFFSET)
-    ) => new Promise((r) => setTimeout(r, ms));
-    await delay();
-    const promise = new Promise(async (resolve, reject) => {
-      try {
-        const response = await fetch(url);
-        const result = await response.json();
-        resolve(result);
-      } catch (e) {
-        reject(e);
-      }
-    });
-    promiseList.push(promise);
-    if (index == apiUrlList.length - 1) {
+  const promiseList = apiUrlList.map(async (url, index) => {
+    await randomDelay(DELAY_FETCH_TIME * index, DELAY_FETCH_TIME_RANDOM_OFFSET); // 避免频繁请求触发风控
+    const response = await fetch(url);
+    const result = await response.json();
+    return result;
+  });
+  Promise.allSettled(promiseList)
+    .then(async (jsonList) => {
+      let jobDTOList = [];
+      jsonList.forEach((item, index) => {
+        item.value.zpData.jobInfo.jobUrl = urlList[index];
+      });
+      await saveBrowseJob(jsonList, PLATFORM_BOSS);
+      jobDTOList = await JobApi.getJobBrowseInfoByIds(
+        getJobIds(jsonList, PLATFORM_BOSS)
+      );
       const lastModifyTimeList = [];
       const jobStatusDescList = [];
-      const jobDesc = [];
       const hrActiveTimeDescList = [];
-      var jobDTOList = [];
-      Promise.allSettled(promiseList)
-        .then(async (jsonList) => {
-          jsonList.forEach((item, index) => {
-            item.value.zpData.jobInfo.jobUrl = urlList[index];
-          });
+      jsonList.forEach((item, index) => {
+        lastModifyTimeList.push(
+          dayjs(item.value?.zpData?.brandComInfo?.activeTime)
+        );
+        let jobStatus = convertJobStatusDesc(
+          item.value?.zpData?.jobInfo?.jobStatusDesc
+        );
+        jobStatusDescList.push(jobStatus);
+        //额外针对BOSS平台，为后面的排序做准备
+        jobDTOList[index].jobStatusDesc = jobStatus;
+        let hrActiveTimeDesc = item.value?.zpData?.bossInfo?.activeTimeDesc;
+        hrActiveTimeDescList.push(hrActiveTimeDesc);
+        //额外针对BOSS平台，为后面的排序做准备
+        jobDTOList[index].hrActiveTimeDesc = hrActiveTimeDesc;
+      });
 
-          await saveBrowseJob(jsonList, PLATFORM_BOSS);
-          jobDTOList = await JobApi.getJobBrowseInfoByIds(
-            getJobIds(jsonList, PLATFORM_BOSS)
-          );
-          jsonList.forEach((item) => {
-            lastModifyTimeList.push(
-              dayjs(item.value?.zpData?.brandComInfo?.activeTime)
-            );
-            jobStatusDescList.push(
-              convertJobStatusDesc(item.value?.zpData?.jobInfo?.jobStatusDesc)
-            );
-            jobDesc.push(item.value?.zpData?.jobInfo?.postDescription);
-            hrActiveTimeDescList.push(item.value?.zpData?.bossInfo?.activeTimeDesc);
-          });
-          list.forEach((item, index) => {
-            item["lastModifyTime"] = lastModifyTimeList[index];
-            item["jobStatusDesc"] = jobStatusDescList[index];
-            item["postDescription"] = jobDesc[index];
-            item["firstBrowseDatetime"] = jobDTOList[index].createDatetime;
-            item["hrActiveTimeDesc"] = hrActiveTimeDescList[index];
-          });
-          list.forEach((item, index) => {
-            const {
-              itemId,
-              lastModifyTime,
-              brandName,
-              jobStatusDesc,
-              postDescription,
-              hrActiveTimeDesc,
-            } = item;
-            const dom = getListItem(itemId);
-            let tag = createDOM(
-              hrActiveTimeDesc,
-              lastModifyTime,
-              brandName,
-              jobStatusDesc,
-              postDescription,
-              jobDTOList[index]
-            );
-            dom.appendChild(tag);
-          });
-          hiddenLoadingDOM();
-          renderSortJobItem(list, getListItem, { platform: PLATFORM_BOSS });
-          finalRender(jobDTOList);
-        })
-        .catch((error) => {
-          console.log(error);
-          list.forEach((item) => {
-            const { itemId, lastModifyTime, brandName } = item;
-            const dom = getListItem(itemId);
-            let tag = createDOM(
-              null,
-              lastModifyTime,
-              brandName,
-              null,
-              null,
-              jobDTOList[index]
-            );
-            dom.appendChild(tag);
-          });
-          hiddenLoadingDOM();
-        });
-    }
-  });
+      list.forEach((item, index) => {
+        const dom = getListItem(index);
+        let tag = createDOM(
+          jobDTOList[index],
+          hrActiveTimeDescList[index],
+          jobStatusDescList[index]
+        );
+        dom.appendChild(tag);
+      });
+      hiddenLoadingDOM();
+      renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_BOSS });
+      finalRender(jobDTOList);
+    })
+    .catch((error) => {
+      console.log(error);
+      hiddenLoadingDOM();
+    });
 }
 
-function createDOM(
-  hrActiveTimeDesc,
-  lastModifyTime,
-  brandName,
-  jobStatusDesc,
-  postDescription,
-  jobDTO
-) {
+function createDOM(jobDTO, hrActiveTimeDesc, jobStatusDesc) {
   const div = document.createElement("div");
   div.classList.add("__boss_time_tag");
-  renderTimeTag(div, lastModifyTime, brandName, {
-    hrActiveTimeDesc:hrActiveTimeDesc,
+  renderTimeTag(div, jobDTO, {
+    hrActiveTimeDesc: hrActiveTimeDesc,
     jobStatusDesc: jobStatusDesc,
-    jobDesc: postDescription,
-    jobDTO: jobDTO,
+    platform: PLATFORM_BOSS,
   });
   return div;
 }
