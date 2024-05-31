@@ -72,7 +72,7 @@ async function parseZhilianData(list, getListItem) {
   hiddenLoadingDOM();
   renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_ZHILIAN });
   renderFunctionPanel(jobDTOList, getListItem, { platform: PLATFORM_ZHILIAN });
-  finalRender(jobDTOList);
+  finalRender(jobDTOList, { platform: PLATFORM_ZHILIAN });
 }
 
 export function createDOM(jobDTO) {

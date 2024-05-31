@@ -78,11 +78,9 @@ div[data-search-sol-meta] {
 }
 
 .echo-like .echo-like__icon {
-  fill: white;
 }
 
 .echo-like__count {
-  color: white;
 }
 
 .__company_info_search {
@@ -102,23 +100,63 @@ div[data-search-sol-meta] {
   }
 }
 
-.__BOSS_function_panel{
-    padding-left: 10px;
+.__BOSS_function_panel {
+  padding-left: 10px;
 }
 
-.__51JOB_function_panel{
-    margin-left: -10px;
-    margin-top: 5px;
+.__51JOB_function_panel {
+  margin-left: -10px;
+  margin-top: 5px;
 }
 
-.__ZHILIAN_function_panel{
-    margin-left: -10px;
+.__ZHILIAN_function_panel {
+  margin-left: -10px;
 }
 
-.__LAGOU_function_panel{
-    padding-left: 17px;
+.__LAGOU_function_panel {
+  padding-left: 17px;
+  margin-right: 10px; 
 }
 
-.__JOBSDB_function_panel{
+.__JOBSDB_function_panel {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.__comment_wrapper {
+  display: flex;
+  justify-content: end;
+  font-size: 14px;
+  color: #414a60;
+}
+
+.__BOSS_comment_wrapper {
+  padding-right: 10px;
+  padding-bottom: 10px;
+} 
+
+.__51JOB_comment_wrapper {
 
 }
+
+.__ZHILIAN_comment_wrapper {
+
+}
+
+.__LAGOU_comment_wrapper {
+  padding-right: 10px;
+  padding-bottom: 5px;
+}
+
+.__JOBSDB_comment_wrapper {
+  padding-right: 25px;
+}
+
+.__logo_in_function_panel{
+  position: absolute;
+  right: 0;
+  bottom: 0px;
+  width: 20px;
+}
+

@@ -153,8 +153,8 @@ function parseBossData(list, getListItem) {
       });
       hiddenLoadingDOM();
       renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_BOSS });
-      renderFunctionPanel(jobDTOList, getListItem,{ platform: PLATFORM_BOSS });
-      finalRender(jobDTOList);
+      renderFunctionPanel(jobDTOList, getListItem, { platform: PLATFORM_BOSS });
+      finalRender(jobDTOList, { platform: PLATFORM_BOSS });
     })
     .catch((error) => {
       console.log(error);

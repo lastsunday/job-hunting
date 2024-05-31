@@ -53,5 +53,5 @@ export default async function firstOpen(data) {
     },
     { platform: PLATFORM_ZHILIAN }
   );
-  finalRender(jobDTOList);
+  finalRender(jobDTOList, { platform: PLATFORM_ZHILIAN });
 }

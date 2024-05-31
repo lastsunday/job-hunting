@@ -85,7 +85,7 @@ async function parseLaGouData(list, getListItem) {
   hiddenLoadingDOM();
   renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_LAGOU });
   renderFunctionPanel(jobDTOList, getListItem, { platform: PLATFORM_LAGOU });
-  finalRender(jobDTOList);
+  finalRender(jobDTOList, { platform: PLATFORM_LAGOU });
 }
 
 export function createDOM(jobDTO) {

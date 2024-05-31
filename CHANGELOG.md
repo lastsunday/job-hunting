@@ -4,17 +4,18 @@
 
 ### ⭐ Added
 
-1. (ContentScript)快捷查询公司信息，支持（小红书，脉脉，必应，Google，爱企查）
+1. (ContentScript)快捷查询公司信息，支持（小红书，脉脉，必应，Google，爱企查）。
+2. (ContentScript)在职位卡片下显示应用LOGO。
 
 ### 🛀 Refactor
 
-1. (ContentScript)重构timeTag的渲染代码和promise的使用
+1. (ContentScript)重构timeTag的渲染代码和promise的使用。
 
 ## 1.2.0(2024-05-31)
 
 ### ⭐ Added
 
-1. (ContentScript)BOSS招聘的职位显示顺序根据HR活跃时间进行排列
+1. (ContentScript)BOSS招聘的职位显示顺序根据HR活跃时间进行排列。
 
 ## 1.1.1(2024-05-30)
 

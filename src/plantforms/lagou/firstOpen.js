@@ -56,6 +56,6 @@ export default function firstOpen(data) {
       },
       { platform: PLATFORM_LAGOU }
     );
-    finalRender(jobDTOList);
+    finalRender(jobDTOList, { platform: PLATFORM_LAGOU });
   });
 }

@@ -123,7 +123,9 @@ function parseData(list, getListItem) {
       renderFunctionPanel(jobDTOList, getListItem, {
         platform: PLATFORM_JOBSDB,
       });
-      finalRender(jobDTOList);
+      finalRender(jobDTOList, {
+        platform: PLATFORM_JOBSDB,
+      });
     })
     .catch((error) => {
       console.log(error);

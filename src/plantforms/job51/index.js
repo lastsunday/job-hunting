@@ -72,7 +72,7 @@ async function parseData(list, getListItem) {
   hiddenLoadingDOM();
   renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_51JOB });
   renderFunctionPanel(jobDTOList, getListItem, { platform: PLATFORM_51JOB });
-  finalRender(jobDTOList);
+  finalRender(jobDTOList, { platform: PLATFORM_51JOB });
 }
 
 export function createDOM(jobDTO) {
