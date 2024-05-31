@@ -4,6 +4,7 @@ import {
   createLoadingDOM,
   hiddenLoadingDOM,
   finalRender,
+  renderFunctionPanel,
 } from "../../commonRender";
 import { createDOM } from "./index";
 import { mutationContainer, getListValue } from "./index";
@@ -33,7 +34,7 @@ export default function firstOpen(data) {
     let jobDTOList = await JobApi.getJobBrowseInfoByIds(
       getJobIds(list, PLATFORM_LAGOU)
     );
-    list.forEach((item,index) => {
+    list.forEach((item, index) => {
       const dom = children?.[index];
       if (!dom) return;
 
@@ -42,6 +43,13 @@ export default function firstOpen(data) {
     });
     hiddenLoadingDOM();
     renderSortJobItem(
+      jobDTOList,
+      (index) => {
+        return children?.[index];
+      },
+      { platform: PLATFORM_LAGOU }
+    );
+    renderFunctionPanel(
       jobDTOList,
       (index) => {
         return children?.[index];

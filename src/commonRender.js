@@ -397,3 +397,66 @@ function convertHrActiveTimeDescToOffsetTime(hrActiveTimeDesc) {
   }
   return offsetTime;
 }
+
+export function renderFunctionPanel(list, getListItem, { platform } = {}) {
+  list.forEach((item, index) => {
+    const dom = getListItem(index);
+    let targetDom;
+    if (platform) {
+      if (PLATFORM_JOBSDB == platform) {
+        targetDom = dom.parentNode.parentNode;
+      } else {
+        targetDom = dom;
+      }
+    } else {
+      targetDom = dom;
+    }
+    let functionPanelDiv = document.createElement("div");
+    functionPanelDiv.appendChild(createSearchCompanyLink(item.jobCompanyName));
+    functionPanelDiv.classList.add(`__${platform}_function_panel`);
+    targetDom.append(functionPanelDiv);
+  });
+}
+
+export function createSearchCompanyLink(keyword) {
+  const decode = encodeURIComponent(keyword);
+  const dom = document.createElement("div");
+  dom.className = "__company_info_search";
+  let labelDiv = document.createElement("div");
+  labelDiv.innerHTML = "公司信息查询：";
+  dom.appendChild(labelDiv);
+  dom.appendChild(
+    createATag(
+      `https://www.xiaohongshu.com/search_result?keyword=${decode}`,
+      "小红书"
+    )
+  );
+  dom.appendChild(
+    createATag(
+      `https://maimai.cn/web/search_center?type=feed&query=${decode}&highlight=true`,
+      "脉脉"
+    )
+  );
+  dom.appendChild(
+    createATag(`https://www.bing.com/search?q=${decode}`, "必应")
+  );
+  dom.appendChild(
+    createATag(`https://www.google.com/search?q=${decode}`, "Google")
+  );
+  dom.appendChild(
+    createATag(`https://aiqicha.baidu.com/s?q=${decode}`, "爱企查")
+  );
+  return dom;
+}
+
+function createATag(url, label) {
+  let aTag = document.createElement("a");
+  aTag.href = url;
+  aTag.target = "_blank";
+  aTag.ref = "noopener noreferrer";
+  aTag.text = "🔎" + label;
+  aTag.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+  return aTag;
+}

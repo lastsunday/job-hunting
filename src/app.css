@@ -1,13 +1,15 @@
-.__boss_time_tag, .__zhipin_time_tag, .__zhilian_time_tag {
-    position: absolute;
-    right: 0;
-    top: 0;
-    background: rgba(229, 248, 248);
-    color: #00a6a7;
-    padding: 0 8px;
-    font-size: 14px;
-    border-radius: 0 0 0 4px;
-    text-align: right;
+.__boss_time_tag,
+.__zhipin_time_tag,
+.__zhilian_time_tag {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: rgba(229, 248, 248);
+  color: #00a6a7;
+  padding: 0 8px;
+  font-size: 14px;
+  border-radius: 0 0 0 4px;
+  text-align: right;
 }
 /* 
 .__zhipin_time_tag {
@@ -21,65 +23,102 @@
     border-radius: 0 0 0 4px;
 } */
 
-.__job51_time_tag{
-    position: absolute;
-    right: 0;
-    top: 0;
-    background: rgba(229, 248, 248);
-    color: #00a6a7;
-    padding: 0 8px;
-    font-size: 14px;
-    border-radius: 0 0 0 4px;
-    text-align: right;
+.__job51_time_tag {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: rgba(229, 248, 248);
+  color: #00a6a7;
+  padding: 0 8px;
+  font-size: 14px;
+  border-radius: 0 0 0 4px;
+  text-align: right;
 }
 
-.__jobsdb_time_tag{
-    position: absolute;
-    right: 0;
-    background: rgba(229, 248, 248);
-    color: #00a6a7;
-    padding: 0 8px;
-    font-size: 14px;
-    border-radius: 0 0 0 4px;
-    text-align: right;
-    margin-right: 57px;
-    margin-top:10px;
+.__jobsdb_time_tag {
+  position: absolute;
+  right: 0;
+  background: rgba(229, 248, 248);
+  color: #00a6a7;
+  padding: 0 8px;
+  font-size: 14px;
+  border-radius: 0 0 0 4px;
+  text-align: right;
+  margin-right: 57px;
+  margin-top: 10px;
 }
 
 /*for jbsdb job item*/
 div[data-search-sol-meta] {
-    display:flex;
+  display: flex;
 }
 
 /* 与BOSS直聘的筛选器样式 .condition-filter-select .current-select 保持一致*/
 .__boss_filter.condition-filter-select .current-select::after {
-    content: unset;
+  content: unset;
 }
 .__boss_filter.condition-filter-select .current-select {
-    padding-right: 12px;
+  padding-right: 12px;
 }
 .__boss_filter_result-hidden {
-    display: none;
+  display: none;
 }
 
 .__is_outsourcing_or_training {
-    
 }
 
 .__rencent_update {
-    color: red;
+  color: red;
 }
 
-.__time_tag_base_text_font{
-    color:white;
-    font-size:12px;
-    line-height: 18px;
+.__time_tag_base_text_font {
+  color: white;
+  font-size: 12px;
+  line-height: 18px;
 }
 
-.echo-like .echo-like__icon{
-    fill:white;
+.echo-like .echo-like__icon {
+  fill: white;
 }
 
-.echo-like__count{
-    color:white;
+.echo-like__count {
+  color: white;
+}
+
+.__company_info_search {
+  display: flex;
+  padding: 10px;
+  font-size: 14px;
+  color: #414a60;
+  a {
+    padding-right: 10px;
+    font-size: 14px;
+    color: #414a60;
+  }
+
+  a:hover {
+    background-color: yellowgreen;
+    color: white;
+  }
+}
+
+.__BOSS_function_panel{
+    padding-left: 10px;
+}
+
+.__51JOB_function_panel{
+    margin-left: -10px;
+    margin-top: 5px;
+}
+
+.__ZHILIAN_function_panel{
+    margin-left: -10px;
+}
+
+.__LAGOU_function_panel{
+    padding-left: 17px;
+}
+
+.__JOBSDB_function_panel{
+
 }

@@ -2,6 +2,10 @@
 
 ## WIP
 
+### ⭐ Added
+
+1. (ContentScript)快捷查询公司信息，支持（小红书，脉脉，必应，Google，爱企查）
+
 ### 🛀 Refactor
 
 1. (ContentScript)重构timeTag的渲染代码和promise的使用

@@ -5,6 +5,7 @@ import {
   createLoadingDOM,
   hiddenLoadingDOM,
   finalRender,
+  renderFunctionPanel,
 } from "../../commonRender";
 import { PLATFORM_ZHILIAN } from "../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
@@ -63,13 +64,14 @@ async function parseZhilianData(list, getListItem) {
   let jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(list, PLATFORM_ZHILIAN)
   );
-  list.forEach((item,index) => {
+  list.forEach((item, index) => {
     const dom = getListItem(index);
     let tag = createDOM(jobDTOList[index]);
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
   renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_ZHILIAN });
+  renderFunctionPanel(jobDTOList, getListItem, { platform: PLATFORM_ZHILIAN });
   finalRender(jobDTOList);
 }
 

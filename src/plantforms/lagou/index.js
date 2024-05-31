@@ -5,6 +5,7 @@ import {
   createLoadingDOM,
   hiddenLoadingDOM,
   finalRender,
+  renderFunctionPanel,
 } from "../../commonRender";
 import { debounce } from "../../utils";
 import { PLATFORM_LAGOU } from "../../common";
@@ -76,13 +77,14 @@ async function parseLaGouData(list, getListItem) {
   let jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(list, PLATFORM_LAGOU)
   );
-  list.forEach((item,index) => {
+  list.forEach((item, index) => {
     const dom = getListItem(index);
     let tag = createDOM(jobDTOList[index]);
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
   renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_LAGOU });
+  renderFunctionPanel(jobDTOList, getListItem, { platform: PLATFORM_LAGOU });
   finalRender(jobDTOList);
 }
 

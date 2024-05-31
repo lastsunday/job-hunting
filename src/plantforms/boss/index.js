@@ -6,6 +6,7 @@ import {
   createLoadingDOM,
   hiddenLoadingDOM,
   finalRender,
+  renderFunctionPanel,
 } from "../../commonRender";
 import { randomDelay } from "../../utils";
 import onlineFilter from "./onlineFilter";
@@ -152,6 +153,7 @@ function parseBossData(list, getListItem) {
       });
       hiddenLoadingDOM();
       renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_BOSS });
+      renderFunctionPanel(jobDTOList, getListItem,{ platform: PLATFORM_BOSS });
       finalRender(jobDTOList);
     })
     .catch((error) => {

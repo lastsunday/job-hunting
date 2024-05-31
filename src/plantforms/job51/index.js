@@ -8,6 +8,7 @@ import {
   createLoadingDOM,
   hiddenLoadingDOM,
   finalRender,
+  renderFunctionPanel,
 } from "../../commonRender";
 
 export function getJob51Data(responseText) {
@@ -63,13 +64,14 @@ async function parseData(list, getListItem) {
   let jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(list, PLATFORM_51JOB)
   );
-  list.forEach((item,index) => {
+  list.forEach((item, index) => {
     const dom = getListItem(index);
     let tag = createDOM(jobDTOList[index]);
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
   renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_51JOB });
+  renderFunctionPanel(jobDTOList, getListItem, { platform: PLATFORM_51JOB });
   finalRender(jobDTOList);
 }
 

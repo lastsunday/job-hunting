@@ -4,6 +4,7 @@ import {
   createLoadingDOM,
   hiddenLoadingDOM,
   finalRender,
+  renderFunctionPanel,
 } from "../../commonRender";
 import { createDOM } from "./index";
 import { PLATFORM_ZHILIAN } from "../../common";
@@ -30,7 +31,7 @@ export default async function firstOpen(data) {
   let jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(positionList, PLATFORM_ZHILIAN)
   );
-  positionList.forEach((item,index) => {
+  positionList.forEach((item, index) => {
     const dom = children?.[index];
     if (!dom) return;
 
@@ -39,6 +40,13 @@ export default async function firstOpen(data) {
   });
   hiddenLoadingDOM();
   renderSortJobItem(
+    jobDTOList,
+    (index) => {
+      return children?.[index];
+    },
+    { platform: PLATFORM_ZHILIAN }
+  );
+  renderFunctionPanel(
     jobDTOList,
     (index) => {
       return children?.[index];

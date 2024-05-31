@@ -6,13 +6,9 @@ import {
   createLoadingDOM,
   hiddenLoadingDOM,
   finalRender,
+  renderFunctionPanel,
 } from "../../commonRender";
 import { randomDelay } from "../../utils";
-import {
-  JOB_STATUS_DESC_NEWEST,
-  JOB_STATUS_DESC_RECRUITING,
-  JOB_STATUS_DESC_UNKNOW,
-} from "../../common";
 import { PLATFORM_JOBSDB } from "../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
 import { JobApi } from "../../api";
@@ -115,13 +111,16 @@ function parseData(list, getListItem) {
       jobDTOList = await JobApi.getJobBrowseInfoByIds(
         getJobIds(list, PLATFORM_JOBSDB)
       );
-      jobDTOList.forEach((item,index) => {
+      jobDTOList.forEach((item, index) => {
         const dom = getListItem(index);
         let tag = createDOM(jobDTOList[index]);
         dom.appendChild(tag);
       });
       hiddenLoadingDOM();
       renderSortJobItem(jobDTOList, getListItem, {
+        platform: PLATFORM_JOBSDB,
+      });
+      renderFunctionPanel(jobDTOList, getListItem, {
         platform: PLATFORM_JOBSDB,
       });
       finalRender(jobDTOList);
