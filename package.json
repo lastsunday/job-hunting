@@ -4,8 +4,8 @@
   "description": "协助找工作",
   "private": false,
   "scripts": {
-    "watch": "node ./node_modules/webpack/bin/webpack.js --mode=development --watch --config config/webpack.config.js",
-    "build": "node ./node_modules/webpack/bin/webpack.js --mode=production --config config/webpack.config.js"
+    "watch": "cross-env NODE_ENV=development node ./node_modules/webpack/bin/webpack.js --progress --watch --config config/webpack.config.js",
+    "build": "cross-env NODE_ENV=production node ./node_modules/webpack/bin/webpack.js --progress --config config/webpack.config.js"
   },
   "devDependencies": {
     "@babel/core": "^7.21.3",
@@ -16,6 +16,7 @@
     "@types/chrome": "^0.0.246",
     "babel-loader": "^9.1.2",
     "copy-webpack-plugin": "^6.4.1",
+    "cross-env": "^7.0.3",
     "css-loader": "^6.11.0",
     "eslint": "^9.2.0",
     "file-loader": "^6.2.0",

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### 🚀 Performance
+
+1. (build)生产环境不生成source map
+
 ## 1.3.0(2024-05-31)
 
 ### ⭐ Added

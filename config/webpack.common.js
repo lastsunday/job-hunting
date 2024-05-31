@@ -18,7 +18,7 @@ const common = {
     filename: '[name].js',
     publicPath: './',
   },
-  devtool: 'source-map',
+  devtool: process.env.NODE_ENV == 'production' ? false : 'source-map',
   stats: {
     all: false,
     errors: true,
