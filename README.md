@@ -1,17 +1,17 @@
 # Job Hunting - 一款协助找工作的 chrome 浏览器插件
 
 <p align="center">
-    <img src="docs\logo.png" alt="angular-logo" width="128px" height="128px"/>
+    <img src="docs\logo.png" alt="logo" width="128px" height="128px"/>
 </p>
 
 ## 招聘平台支持列表
 
 | 招聘平台  | 访问地址                            | 备注                   |
 | --------- | ----------------------------------- | ---------------------- |
-| BOSS      | https://www.zhipin.com/web/geek/job |                        |
-| 51Job     | https://we.51job.com/pc/search      |                        |
-| 智联      | https://sou.zhaopin.com/            |                        |
-| 拉钩      | https://www.lagou.com/wn/zhaopin    |                        |
+| BOSS直聘  | https://www.zhipin.com/web/geek/job |                        |
+| 前程无忧  | https://we.51job.com/pc/search      |                        |
+| 智联招聘  | https://sou.zhaopin.com/            |                        |
+| 拉钩网    | https://www.lagou.com/wn/zhaopin    |                        |
 | jobsdb-hk | https://hk.jobsdb.com/              | 需点击搜索按钮才有效果 |
 
 ## 功能列表
@@ -24,22 +24,83 @@
 6. 职位评论（当前采用ECHO作为评论平台，请遵守相关法律法规合法留言）
 
 
+## Browsers support
+
+Modern browsers
+
+| [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="IE / Edge" width="24px" height="24px" />](https://godban.github.io/browsers-support-badges/)</br> Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](https://godban.github.io/browsers-support-badges/)</br>Chrome |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Edge                                                         | last 2 versions                                              |
+
 ## 运行截图
 
-| 功能                                  | 效果图                                                       |
-| ------------------------------------- | ------------------------------------------------------------ |
-| 显示职位发布时间与自动排序            | <img src="docs\introduction\job_addition_tag.png" alt="angular-logo" width="600px"/> |
-| 职位评论                              | <img src="docs\introduction\job_comment.png" alt="angular-logo" width="600px"/> |
-| 管理页面(需点击插件图标打开SidePanel) | <img src="docs\introduction\sidepanel_admin_home.png" alt="angular-logo" width="600px"/> |
+<p>
+    <div style="margin-top:20px">
+        <img src="docs\introduction\job-item-boss.png" alt="boss" width="1000px"/>
+        <div style="text-align:center">
+            Boss直聘
+        </div>
+	</div>
+	<div style="margin-top:20px">
+        <img src="docs\introduction\job-item-51job.png" alt="51job" width="1000px"/>
+        <div style="text-align:center;">
+            前程无忧
+        </div>
+	</div>
+	<div style="margin-top:20px">
+        <img src="docs\introduction\job-item-zhilian.png" alt="zhilian" width="1000px"/>
+        <div style="text-align:center">
+            智联招聘
+        </div>
+	</div>
+	<div style="margin-top:20px">
+        <img src="docs\introduction\job-item-lagou.png" alt="lagou" width="1000px"/>
+        <div style="text-align:center">
+            拉勾网
+        </div>
+	</div>
+	<div style="margin-top:20px;text-align:center;" >
+        <img src="docs\introduction\job-item-jobsdb.png" alt="jobsdb" width="500px"/>
+        <div style="text-align:center">
+            JobsDB HK
+        </div>
+	</div>
+</p>
+
+### 管理页面
+
+<p>
+    <div style="margin-top:20px">
+        <img src="docs\introduction\chrome_extension_sidepanel_open.png" alt="chrome_extension_sidepanel_open" width="600px"/>
+        <div style="text-align:center">
+            打开SidePanel
+        </div>
+	</div>
+    <div style="margin-top:20px">
+        <img src="docs\introduction\sidepanel_admin_home.png" alt="sidepanel_admin_home" width="1000px"/>
+        <div style="text-align:center">
+            管理页面（需点击插件图标打开Sidepanel）
+        </div>
+	</div>
+</p>
 
 
 
 ## 运行及编译
 
-**直接下载**
+**直接下载1（尝鲜版）**
 
 1. 切换到 gh-pages 分支
 2. 点击右边绿色 code 按钮，选择下拉框中的 Download ZIP 下载
+3. 解压zip文件
+4. 打开chrome，选择加载已解压的扩展程序，选择解压后的job-hunting-gh-pages目录
+
+**直接下载2**
+
+	1. 打开Release页
+ 	2. 找到最新版本的Assets页下的job-hunting-chrome-extension-xxx.zip
+ 	3. 解压zip文件
+ 	4. 打开chrome，选择加载已解压的扩展程序，选择解压后的job-hunting-chrome-extension目录
 
 **编译**
 
