@@ -10,6 +10,7 @@ import { Job } from "@/data/domain/job";
 import { JobApi } from "./api";
 import { infoLog } from "./log";
 import dayjs from "dayjs";
+import sha256 from 'crypto-js/sha256';
 
 const SALARY_MATCH = /(?<min>[0-9\.]*)(?<minUnit>\D*)(?<max>[0-9\.]*)(?<maxUnit>\D*)(?<month>\d*)/;
 const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
@@ -369,4 +370,16 @@ function handle51JobData(list) {
     jobs.push(job);
   }
   return jobs;
+}
+
+export function genSha256(value){
+  return sha256(value);;
+}
+
+export function genCompanyIdWithSha256(value){
+  return genSha256("COMPANY_"+value);
+}
+
+export function genJobItemIdWithSha256(value){
+  return genSha256("JOBITEM_"+value);
 }

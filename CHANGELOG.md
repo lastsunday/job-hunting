@@ -2,9 +2,21 @@
 
 ## WIP
 
+### ⭐ Added
+
+1. (ContentScript)新增公司评论。
+
+### 🗑️ Removed
+
+1. (ContentScript)移除点赞数显示。
+
 ### 🚀 Performance
 
-1. (build)生产环境不生成source map
+1. (build)生产环境不生成source map。
+
+### 🔨 Dependency
+
+1. 新增crypto-js ^4.2.0
 
 ## 1.3.0(2024-05-31)
 

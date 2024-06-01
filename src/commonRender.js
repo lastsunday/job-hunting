@@ -10,7 +10,10 @@ import {
   PLATFORM_BOSS,
   PLATFORM_JOBSDB,
 } from "./common";
-import EchoButton from "@0xecho/button";
+import {
+  genJobItemIdWithSha256,
+  genCompanyIdWithSha256,
+} from "./commonDataHandler";
 
 import { logoBase64 } from "@/assets/logo";
 
@@ -99,88 +102,94 @@ export function finalRender(jobDTOList, { platform }) {
   for (let i = 0; i < jobDTOList.length; i++) {
     let item = jobDTOList[i];
     let jobId = item.jobId;
+    let jobItemIdSha256 = genJobItemIdWithSha256(jobId);
+    let companyIdSha256 = genCompanyIdWithSha256(item.jobCompanyName);
     let commentWrapperDiv = document.getElementById("wrapper" + jobId);
     commentWrapperDiv.classList.add("__comment_wrapper");
     commentWrapperDiv.classList.add("__" + platform + "_comment_wrapper");
-    const likeTitleDiv = document.createElement("div");
-    likeTitleDiv.innerHTML = "点赞";
-    let commentJobDiv = document.getElementById(jobId);
-
-    commentWrapperDiv.insertBefore(likeTitleDiv, commentJobDiv);
-
-    const echo = new EchoButton({
-      targetUri: jobId, // commenting target, required
-      alwaysShowPopover: false, // whether always show popover, default: false
-      partnerName: "job-hunting", // if specified, partner name will be shown on popover
-      numberType: "count", // button display number type, power(default) or count,
-      theme: "light", // dark or light(default)
-    }).mount(commentJobDiv);
-    const dialogDiv = document.createElement("div");
-    dialogDiv.style =
-      "position: absolute;background-color: white;z-index: 9999;color: black;padding: 6px;border-radius: 10px;box-shadow: 0 2px 10px rgba(0, 0, 0, .08);";
-
-    const menuDiv = document.createElement("div");
-    menuDiv.style = "display: flex;justify-content: end;}";
-
-    const maximizeDiv = document.createElement("div");
-    maximizeDiv.style = "font-size: 20px;padding: 5px;";
-    maximizeDiv.innerHTML = "⬜";
-    menuDiv.appendChild(maximizeDiv);
-
-    const closeDiv = document.createElement("div");
-    closeDiv.style = "font-size: 20px;padding: 5px;";
-    closeDiv.innerHTML = "✖️";
-    closeDiv.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      commentWrapperDiv.removeChild(dialogDiv);
-    });
-    menuDiv.appendChild(closeDiv);
-
-    dialogDiv.append(menuDiv);
-    const titleDiv = document.createElement("div");
-    titleDiv.style = "font-size: 15px;text-align: left;padding: 5px;";
-    titleDiv.innerHTML = item.jobName + "-" + item.jobCompanyName;
-    dialogDiv.appendChild(titleDiv);
-
-    const commentIframe = document.createElement("iframe");
-    commentIframe.src =
-      "https://widget.0xecho.com/?color-theme=light&desc=&has-h-padding=true&has-v-padding=true&modules=comment%2Clike%2Cdislike&receiver=&target_uri=" +
-      jobId +
-      "&height=800&display=iframe";
-    commentIframe.width = 400;
-    commentIframe.height = 400;
-    commentIframe.style = "border: none;";
-    dialogDiv.appendChild(commentIframe);
-
-    let maximize = false;
-    const maximizeFunction = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      maximize = !maximize;
-      if (maximize) {
-        commentIframe.width = 800;
-        commentIframe.height = 800;
-      } else {
-        commentIframe.width = 400;
-        commentIframe.height = 400;
-      }
-    };
-    maximizeDiv.addEventListener("click", maximizeFunction);
-    menuDiv.addEventListener("dblclick", maximizeFunction);
-
-    const copmmentButtonDiv = document.createElement("div");
-    copmmentButtonDiv.innerHTML = "查看评论💬";
-    copmmentButtonDiv.style =
-      "cursor: pointer;margin-left: 5px;text-decoration: underline; color:blue;";
-    commentWrapperDiv.appendChild(copmmentButtonDiv);
-
-    copmmentButtonDiv.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      commentWrapperDiv.appendChild(dialogDiv);
-    });
+    let companyCommentButton = genCommentTextButton(
+      commentWrapperDiv,
+      "查看公司评论💬",
+      item.jobCompanyName,
+      companyIdSha256
+    );
+    commentWrapperDiv.append(companyCommentButton);
+    let jobItemCommentButton = genCommentTextButton(
+      commentWrapperDiv,
+      "查看职位评论💬",
+      item.jobName + "-" + item.jobCompanyName,
+      jobItemIdSha256
+    );
+    commentWrapperDiv.append(jobItemCommentButton);
   }
+}
+
+function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id) {
+  const dialogDiv = document.createElement("div");
+  dialogDiv.style =
+    "position: absolute;background-color: white;z-index: 9999;color: black;padding: 6px;border-radius: 10px;box-shadow: 0 2px 10px rgba(0, 0, 0, .08);";
+
+  const menuDiv = document.createElement("div");
+  menuDiv.style = "display: flex;justify-content: end;}";
+
+  const maximizeDiv = document.createElement("div");
+  maximizeDiv.style = "font-size: 20px;padding: 5px;";
+  maximizeDiv.innerHTML = "⬜";
+  menuDiv.appendChild(maximizeDiv);
+
+  const closeDiv = document.createElement("div");
+  closeDiv.style = "font-size: 20px;padding: 5px;";
+  closeDiv.innerHTML = "✖️";
+  closeDiv.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    commentWrapperDiv.removeChild(dialogDiv);
+  });
+  menuDiv.appendChild(closeDiv);
+
+  dialogDiv.append(menuDiv);
+  const titleDiv = document.createElement("div");
+  titleDiv.style = "font-size: 15px;text-align: left;padding: 5px;";
+  titleDiv.innerHTML = dialogTitle;
+  dialogDiv.appendChild(titleDiv);
+
+  const commentIframe = document.createElement("iframe");
+  commentIframe.src =
+    "https://widget.0xecho.com/?color-theme=light&desc=&has-h-padding=true&has-v-padding=true&modules=comment%2Clike%2Cdislike&receiver=&target_uri=" +
+    id +
+    "&height=800&display=iframe";
+  commentIframe.width = 400;
+  commentIframe.height = 400;
+  commentIframe.style = "border: none;";
+  dialogDiv.appendChild(commentIframe);
+
+  let maximize = false;
+  const maximizeFunction = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    maximize = !maximize;
+    if (maximize) {
+      commentIframe.width = 800;
+      commentIframe.height = 800;
+    } else {
+      commentIframe.width = 400;
+      commentIframe.height = 400;
+    }
+  };
+  maximizeDiv.addEventListener("click", maximizeFunction);
+  menuDiv.addEventListener("dblclick", maximizeFunction);
+
+  const copmmentButtonDiv = document.createElement("div");
+  copmmentButtonDiv.innerHTML = buttonLabel;
+  copmmentButtonDiv.style =
+    "cursor: pointer;margin-left: 5px;text-decoration: underline; color:blue;";
+  copmmentButtonDiv.addEventListener("click", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    commentWrapperDiv.appendChild(dialogDiv);
+  });
+
+  return copmmentButtonDiv;
 }
 
 export function createLoadingDOM(brandName, styleClass) {
@@ -411,13 +420,10 @@ function createLogo() {
 }
 
 function createCommentWrapper(jobDTO) {
+  let jobId = jobDTO.jobId;
   let commentWrapperDiv = document.createElement("div");
-  commentWrapperDiv.id = "wrapper" + jobDTO.jobId;
-  let commentDiv = document.createElement("div");
-  commentDiv.id = jobDTO.jobId;
-
+  commentWrapperDiv.id = "wrapper" + jobId;
   commentWrapperDiv.appendChild(createFirstBrowse(jobDTO));
-  commentWrapperDiv.appendChild(commentDiv);
   return commentWrapperDiv;
 }
 
