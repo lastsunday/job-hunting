@@ -8,11 +8,13 @@ import { toHump } from "../utils";
 import { ChangeLogV1 } from "./changeLog/changeLogV1";
 import { initChangeLog, getChangeLogList } from "./changeLog";
 import { StatisticJobBrowseDTO } from "@/data/dto/statisticJobBrowseDTO";
+import { StatisticJobSearchGroupByAvgSalaryDTO } from "@/data/dto/statisticJobSearchGroupByAvgSalaryDTO";
 import { SearchJobBO } from "@/data/bo/pageBO";
 import { SearchJobDTO } from "@/data/dto/searchJobDTO";
 import { bytesToBase64, base64ToBytes } from "@/utils/base64.js";
 import JSZip from "jszip";
 import { OFFSCREEN, WEB_WORKER } from "../api/bridgeCommon";
+import { SQL_JOB_SEARCH_QUERY, SQL_GROUP_BY_COUNT_AVG_SALARY } from "./sql";
 
 debugLog("worker ready");
 
@@ -180,50 +182,13 @@ export const WorkerBridge = {
   searchJob: function (message, param) {
     try {
       let result = new SearchJobDTO();
-      let sqlQuery =
-        "SELECT job_id AS jobId,job_platform AS jobPlatform,job_url AS jobUrl,job_name AS jobName,job_company_name AS jobCompanyName,job_location_name AS jobLocationName,job_address AS jobAddress,job_longitude AS jobLongitude,job_latitude AS jobLatitude,job_description AS jobDescription,job_degree_name AS jobDegreeName,job_year AS jobYear,job_salary_min AS jobSalaryMin,job_salary_max AS jobSalaryMax,job_salary_total_month AS jobSalaryTotalMonth,job_first_publish_datetime AS jobFirstPublishDatetime,boss_name AS bossName,boss_company_name AS bossCompanyName,boss_position AS bossPosition,create_datetime AS createDatetime,update_datetime AS updateDatetime FROM job";
-      let sqlCount = "SELECT COUNT(*) AS total from job";
-      let whereCondition = "";
+      let sqlQuery = "";
+      let whereCondition = genJobSearchWhereConditionSql(param);
       let orderBy = " ORDER BY create_datetime DESC";
       let limitStart = (param.pageNum - 1) * param.pageSize;
       let limitEnd = param.pageSize;
       let limit = " limit " + limitStart + "," + limitEnd;
-
-      if (param.jobName) {
-        whereCondition += " AND job_name LIKE '%" + param.jobName + "%' ";
-      }
-      if (param.jobCompanyName) {
-        whereCondition +=
-          " AND job_company_name LIKE '%" + param.jobCompanyName + "%' ";
-      }
-      if (param.startDatetime) {
-        whereCondition +=
-          " AND create_datetime >= '" +
-          dayjs(param.startDatetime).format("YYYY-MM-DD HH:mm:ss") +
-          "'";
-      }
-      if (param.endDatetime) {
-        whereCondition +=
-          " AND create_datetime < '" +
-          dayjs(param.endDatetime).format("YYYY-MM-DD HH:mm:ss") +
-          "'";
-      }
-      if (param.firstPublishStartDatetime) {
-        whereCondition +=
-          " AND job_first_publish_datetime >= '" +
-          dayjs(param.firstPublishStartDatetime).format("YYYY-MM-DD HH:mm:ss") +
-          "'";
-      }
-      if (param.firstPublishEndDatetime) {
-        whereCondition +=
-          " AND job_first_publish_datetime < '" +
-          dayjs(param.firstPublishEndDatetime).format("YYYY-MM-DD HH:mm:ss") +
-          "'";
-      }
-      if (whereCondition.startsWith(" AND")) {
-        whereCondition = whereCondition.replace("AND", "");
-        whereCondition = " WHERE " + whereCondition;
-      }
+      sqlQuery += SQL_JOB_SEARCH_QUERY;
       sqlQuery += whereCondition;
       sqlQuery += orderBy;
       sqlQuery += limit;
@@ -247,6 +212,7 @@ export const WorkerBridge = {
         items.push(item);
       }
 
+      let sqlCount = "SELECT COUNT(*) AS total from job";
       //count
       sqlCount += whereCondition;
       let queryCountRows = [];
@@ -262,6 +228,39 @@ export const WorkerBridge = {
       postSuccessMessage(message, result);
     } catch (e) {
       postErrorMessage(message, "[worker] searchJob error : " + e.message);
+    }
+  },
+
+  /**
+   *
+   * @param {Message} message
+   * @param {SearchJobBO} param
+   *
+   * @returns StatisticJobSearchGroupByAvgSalaryDTO
+   */
+  statisticJobSearchGroupByAvgSalary: function (message, param) {
+    try {
+      let result = new StatisticJobSearchGroupByAvgSalaryDTO();
+      let resultSqlQuery = SQL_GROUP_BY_COUNT_AVG_SALARY.replace(
+        "#{injectSql}",
+        SQL_JOB_SEARCH_QUERY + genJobSearchWhereConditionSql(param)
+      );
+      let queryRows = [];
+      db.exec({
+        sql: resultSqlQuery,
+        rowMode: "object",
+        resultRows: queryRows,
+      });
+      for (let i = 0; i < queryRows.length; i++) {
+        let item = queryRows[i];
+        result[item.levels] = item.total;
+      }
+      postSuccessMessage(message, result);
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[worker] statisticJobSearchGroupByAvgSalary error : " + e.message
+      );
     }
   },
 
@@ -373,6 +372,52 @@ let keys = Object.keys(WorkerBridge);
 for (let i = 0; i < keys.length; i++) {
   let key = keys[i];
   ACTION_FUNCTION.set(key, WorkerBridge[key]);
+}
+
+/**
+ *
+ * @param {SearchJobBO} param
+ *
+ * @returns string sql
+ */
+function genJobSearchWhereConditionSql(param) {
+  let whereCondition = "";
+  if (param.jobName) {
+    whereCondition += " AND job_name LIKE '%" + param.jobName + "%' ";
+  }
+  if (param.jobCompanyName) {
+    whereCondition +=
+      " AND job_company_name LIKE '%" + param.jobCompanyName + "%' ";
+  }
+  if (param.startDatetime) {
+    whereCondition +=
+      " AND create_datetime >= '" +
+      dayjs(param.startDatetime).format("YYYY-MM-DD HH:mm:ss") +
+      "'";
+  }
+  if (param.endDatetime) {
+    whereCondition +=
+      " AND create_datetime < '" +
+      dayjs(param.endDatetime).format("YYYY-MM-DD HH:mm:ss") +
+      "'";
+  }
+  if (param.firstPublishStartDatetime) {
+    whereCondition +=
+      " AND job_first_publish_datetime >= '" +
+      dayjs(param.firstPublishStartDatetime).format("YYYY-MM-DD HH:mm:ss") +
+      "'";
+  }
+  if (param.firstPublishEndDatetime) {
+    whereCondition +=
+      " AND job_first_publish_datetime < '" +
+      dayjs(param.firstPublishEndDatetime).format("YYYY-MM-DD HH:mm:ss") +
+      "'";
+  }
+  if (whereCondition.startsWith(" AND")) {
+    whereCondition = whereCondition.replace("AND", "");
+    whereCondition = " WHERE " + whereCondition;
+  }
+  return whereCondition;
 }
 
 function insertJobAndBrowseHistory(param, now) {

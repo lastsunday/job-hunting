@@ -22,6 +22,8 @@
 4. 本地职位记录统计，查询，查询结果导出。
 5. 数据备份，数据恢复。
 6. 职位评论，公司评论。（当前采用ECHO作为评论平台，请遵守相关法律法规合法留言）
+7. 数据统计图表
+    1. 根据指定搜索条件统计薪酬区间职位数（薪酬计算方式：(最低薪资+最高薪资)/2）
 
 
 ## Browsers support
@@ -80,6 +82,12 @@ Modern browsers
         <img src="docs\introduction\sidepanel_admin_home.png" alt="sidepanel_admin_home" width="1000px"/>
         <div style="text-align:center">
             管理页面（需点击插件图标打开Sidepanel）
+        </div>
+	</div>
+    <div style="margin-top:20px">
+        <img src="docs\introduction\sidepanel_admin_charts_avg_salary.png" alt="sidepanel_admin_charts_avg_salary" width="1000px"/>
+        <div style="text-align:center">
+            根据指定搜索条件统计薪酬区间职位数
         </div>
 	</div>
 </p>

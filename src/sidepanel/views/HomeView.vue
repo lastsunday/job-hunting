@@ -28,6 +28,7 @@
           />
         </div>
         <div>
+          <el-button @click="showDialogAvgSalary">统计薪酬区间职位数</el-button>
           <el-button @click="searchResultExport">导出</el-button>
           <el-button @click="reset">重置</el-button>
           <el-button @click="onClickSearch"
@@ -69,7 +70,12 @@
     </el-collapse>
   </el-col>
   <el-row>
-    <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }" style="width: 100%" stripe>
+    <el-table
+      :data="tableData"
+      :default-sort="{ prop: 'createDatetime', order: 'descending' }"
+      style="width: 100%"
+      stripe
+    >
       <el-table-column type="expand" width="30">
         <template #default="props">
           <div m="4" class="expand">
@@ -133,12 +139,22 @@
           </div>
         </template>
       </el-table-column>
-      <el-table-column prop="createDatetime" sortable label="首次扫描时间" width="140">
+      <el-table-column
+        prop="createDatetime"
+        sortable
+        label="首次扫描时间"
+        width="140"
+      >
         <template #default="scope">
           {{ datetimeFormat(scope.row.createDatetime) }}
         </template>
       </el-table-column>
-      <el-table-column prop="createDatetime" sortable label="发布时间" width="110">
+      <el-table-column
+        prop="createDatetime"
+        sortable
+        label="发布时间"
+        width="110"
+      >
         <template #default="scope">
           {{ datetimeFormat(scope.row.jobFirstPublishDatetime) }}
         </template>
@@ -159,21 +175,36 @@
           </el-text>
         </template>
       </el-table-column>
-      <el-table-column label="最低薪资" prop="jobSalaryMin" sortable width="120">
+      <el-table-column
+        label="最低薪资"
+        prop="jobSalaryMin"
+        sortable
+        width="120"
+      >
         <template #default="scope">
           <el-text line-clamp="1">
             {{ scope.row.jobSalaryMin }}
           </el-text>
         </template>
       </el-table-column>
-      <el-table-column label="最高薪资" prop="jobSalaryMax" sortable width="120">
+      <el-table-column
+        label="最高薪资"
+        prop="jobSalaryMax"
+        sortable
+        width="120"
+      >
         <template #default="scope">
           <el-text line-clamp="1">
             {{ scope.row.jobSalaryMax }}
           </el-text>
         </template>
       </el-table-column>
-      <el-table-column label="几薪" prop="jobSalaryTotalMonth" sortable width="80">
+      <el-table-column
+        label="几薪"
+        prop="jobSalaryTotalMonth"
+        sortable
+        width="80"
+      >
         <template #default="scope">
           <el-text line-clamp="1">
             {{ scope.row.jobSalaryTotalMonth }}
@@ -203,15 +234,44 @@
       @current-change="handleCurrentChange"
     />
   </el-row>
+  <el-dialog
+    v-model="dialogAvgSalaryVisible"
+    title="统计薪酬区间职位数"
+    width="90%"
+  >
+    <v-chart
+      :loading="avgSalaryEchartLoading"
+      v-if="dialogAvgSalaryEchartVisible"
+      class="dialog_avg_salary"
+      :option="avgSalaryOption"
+    />
+  </el-dialog>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, provide, nextTick } from "vue";
 import { useTransition } from "@vueuse/core";
 import { JobApi } from "@/api/index.js";
 import { SearchJobBO } from "@/data/bo/searchJobBO.js";
 import dayjs from "dayjs";
 import { utils, writeFileXLSX } from "xlsx";
+import { use } from "echarts/core";
+import { CanvasRenderer } from "echarts/renderers";
+import { BarChart } from "echarts/charts";
+import {
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+} from "echarts/components";
+import VChart from "vue-echarts";
+
+use([
+  CanvasRenderer,
+  GridComponent,
+  TooltipComponent,
+  LegendComponent,
+  BarChart,
+]);
 
 const todayBrowseCountSource = ref(0);
 const totalBrowseCountSource = ref(0);
@@ -248,6 +308,10 @@ const jobSearchFirstPublishDatetime = ref([]);
 
 const showAdvanceSearch = ref(false);
 
+const dialogAvgSalaryVisible = ref(false);
+const dialogAvgSalaryEchartVisible = ref(false);
+const avgSalaryEchartLoading = ref(true);
+
 const handleSizeChange = (val: number) => {
   search();
 };
@@ -261,6 +325,55 @@ onMounted(async () => {
   setInterval(refreshStatistic, 10000);
   search();
 });
+
+const avgSalaryOption = ref({
+  tooltip: {},
+  legend: {},
+  xAxis: {
+    type: "category",
+    data: [],
+  },
+  yAxis: {
+    type: "value",
+  },
+  series: [
+    {
+      name: "职位数",
+      data: [],
+      type: "bar",
+      label: {
+        show: true,
+      },
+    },
+  ],
+});
+
+const showDialogAvgSalary = async () => {
+  avgSalaryEchartLoading.value = true;
+  dialogAvgSalaryVisible.value = true;
+  let result = await JobApi.statisticJobSearchGroupByAvgSalary(
+    getSearchParam()
+  );
+  let xAxisArray = [
+    "6k-9k",
+    "9k-12k",
+    "12k-15k",
+    "15k-18k",
+    "18k-21k",
+    "21k-24k",
+    ">24k",
+  ];
+  avgSalaryOption.value.xAxis.data = xAxisArray;
+  let seriesArray = [];
+  for (let i = 0; i < xAxisArray.length; i++) {
+    seriesArray.push(result[xAxisArray[i]]);
+  }
+  avgSalaryOption.value.series[0].data = seriesArray;
+  nextTick(() => {
+    avgSalaryEchartLoading.value = false;
+    dialogAvgSalaryEchartVisible.value = true;
+  });
+};
 
 const searchResultExport = async () => {
   let list = tableData.value;
@@ -312,6 +425,12 @@ const reset = async () => {
 };
 
 const search = async () => {
+  let searchResult = await JobApi.searchJob(getSearchParam());
+  tableData.value = searchResult.items;
+  total.value = parseInt(searchResult.total);
+};
+
+function getSearchParam() {
   let searchParam = new SearchJobBO();
   searchParam.pageNum = currentPage.value;
   searchParam.pageSize = pageSize.value;
@@ -338,10 +457,8 @@ const search = async () => {
     searchParam.startDatetime = null;
     searchParam.endDatetime = null;
   }
-  let searchResult = await JobApi.searchJob(searchParam);
-  tableData.value = searchResult.items;
-  total.value = parseInt(searchResult.total);
-};
+  return searchParam;
+}
 
 const refreshStatistic = async () => {
   if (firstTimeLoading.value) {
@@ -380,5 +497,8 @@ const refreshStatistic = async () => {
 }
 .operation_menu_left {
   flex: 1;
+}
+.dialog_avg_salary {
+  height: 400px;
 }
 </style>
