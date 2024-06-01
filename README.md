@@ -105,10 +105,10 @@ Modern browsers
 
 **直接下载2**
 
-	1. 打开Release页
- 	2. 找到最新版本的Assets页下的job-hunting-chrome-extension-xxx.zip
- 	3. 解压zip文件
- 	4. 打开chrome，选择加载已解压的扩展程序，选择解压后的job-hunting-chrome-extension目录
+1. 打开Release页
+2. 找到最新版本的Assets页下的job-hunting-chrome-extension-xxx.zip
+3. 解压zip文件
+4. 打开chrome，选择加载已解压的扩展程序，选择解压后的job-hunting-chrome-extension目录
 
 **编译**
 
