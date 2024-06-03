@@ -394,6 +394,13 @@ function genJobSearchWhereConditionSql(param) {
     whereCondition +=
       " AND job_company_name LIKE '%" + param.jobCompanyName + "%' ";
   }
+  if (param.jobLocationName) {
+    whereCondition +=
+      " AND job_location_name LIKE '%" + param.jobLocationName + "%' ";
+  }
+  if (param.jobAddress) {
+    whereCondition += " AND job_address LIKE '%" + param.jobAddress + "%' ";
+  }
   if (param.startDatetime) {
     whereCondition +=
       " AND create_datetime >= '" +

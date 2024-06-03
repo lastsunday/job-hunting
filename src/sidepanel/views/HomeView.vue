@@ -47,6 +47,20 @@
             clearable
             @change="onClickSearch"
           />
+          <el-input
+            style="width: 240px"
+            placeholder="地区"
+            v-model="jobSearchLocationName"
+            clearable
+            @change="onClickSearch"
+          />
+          <el-input
+            style="width: 240px"
+            placeholder="地址"
+            v-model="jobSearchAddress"
+            clearable
+            @change="onClickSearch"
+          />
           <el-date-picker
             type="daterange"
             range-separator="到"
@@ -174,6 +188,13 @@
         <template #default="scope">
           <el-text line-clamp="1">
             {{ scope.row.jobCompanyName }}
+          </el-text>
+        </template>
+      </el-table-column>
+      <el-table-column label="地区" width="120">
+        <template #default="scope">
+          <el-text line-clamp="1">
+            {{ scope.row.jobLocationName }}
           </el-text>
         </template>
       </el-table-column>
@@ -306,6 +327,8 @@ const datetimeFormat = computed(() => {
 });
 const jobSearchName = ref(null);
 const jobSearchCompanyName = ref(null);
+const jobSearchLocationName = ref(null);
+const jobSearchAddress = ref(null);
 const jobSearchDatetime = ref([]);
 const jobSearchFirstPublishDatetime = ref([]);
 const jobSearchOrderByColumn = ref("create_datetime");
@@ -380,20 +403,20 @@ const showDialogAvgSalary = async () => {
   });
 };
 
-const sortChange = function(column){
-  if(column.order !== null && column.prop){
+const sortChange = function (column) {
+  if (column.order !== null && column.prop) {
     jobSearchOrderByColumn.value = toLine(column.prop);
-    if(column.order === 'descending'){
+    if (column.order === "descending") {
       jobSearchOrderBy.value = "DESC";
-    }else if(column.order === 'ascending'){
+    } else if (column.order === "ascending") {
       jobSearchOrderBy.value = "ASC";
-    }else{
+    } else {
       jobSearchOrderByColumn.value = "create_datetime";
       jobSearchOrderBy.value = "DESC";
     }
   }
   search();
-}
+};
 
 const searchResultExport = async () => {
   let list = tableData.value;
@@ -438,6 +461,8 @@ const onClickSearch = async () => {
 const reset = async () => {
   jobSearchName.value = null;
   jobSearchCompanyName.value = null;
+  jobSearchLocationName.value = null;
+  jobSearchAddress.value = null;
   jobSearchDatetime.value = [];
   jobSearchFirstPublishDatetime.value = [];
   currentPage.value = 1;
@@ -455,6 +480,8 @@ function getSearchParam() {
   searchParam.pageNum = currentPage.value;
   searchParam.pageSize = pageSize.value;
   searchParam.jobName = jobSearchName.value;
+  searchParam.jobLocationName = jobSearchLocationName.value;
+  searchParam.jobAddress = jobSearchAddress.value;
   searchParam.jobCompanyName = jobSearchCompanyName.value;
   if (jobSearchDatetime.value && jobSearchDatetime.value.length > 0) {
     searchParam.startDatetime = dayjs(jobSearchDatetime.value[0]);
