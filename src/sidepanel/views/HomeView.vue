@@ -75,6 +75,8 @@
       :default-sort="{ prop: 'createDatetime', order: 'descending' }"
       style="width: 100%"
       stripe
+      @sort-change="sortChange"
+      sortable="custom"
     >
       <el-table-column type="expand" width="30">
         <template #default="props">
@@ -141,7 +143,7 @@
       </el-table-column>
       <el-table-column
         prop="createDatetime"
-        sortable
+        sortable="custom"
         label="首次扫描时间"
         width="140"
       >
@@ -150,8 +152,8 @@
         </template>
       </el-table-column>
       <el-table-column
-        prop="createDatetime"
-        sortable
+        prop="jobFirstPublishDatetime"
+        sortable="custom"
         label="发布时间"
         width="110"
       >
@@ -178,7 +180,7 @@
       <el-table-column
         label="最低薪资"
         prop="jobSalaryMin"
-        sortable
+        sortable="custom"
         width="120"
       >
         <template #default="scope">
@@ -190,7 +192,7 @@
       <el-table-column
         label="最高薪资"
         prop="jobSalaryMax"
-        sortable
+        sortable="custom"
         width="120"
       >
         <template #default="scope">
@@ -202,7 +204,7 @@
       <el-table-column
         label="几薪"
         prop="jobSalaryTotalMonth"
-        sortable
+        sortable="custom"
         width="80"
       >
         <template #default="scope">
@@ -264,6 +266,7 @@ import {
   LegendComponent,
 } from "echarts/components";
 import VChart from "vue-echarts";
+import { toLine } from "@/utils";
 
 use([
   CanvasRenderer,
@@ -305,6 +308,8 @@ const jobSearchName = ref(null);
 const jobSearchCompanyName = ref(null);
 const jobSearchDatetime = ref([]);
 const jobSearchFirstPublishDatetime = ref([]);
+const jobSearchOrderByColumn = ref("create_datetime");
+const jobSearchOrderBy = ref("DESC");
 
 const showAdvanceSearch = ref(false);
 
@@ -374,6 +379,21 @@ const showDialogAvgSalary = async () => {
     dialogAvgSalaryEchartVisible.value = true;
   });
 };
+
+const sortChange = function(column){
+  if(column.order !== null && column.prop){
+    jobSearchOrderByColumn.value = toLine(column.prop);
+    if(column.order === 'descending'){
+      jobSearchOrderBy.value = "DESC";
+    }else if(column.order === 'ascending'){
+      jobSearchOrderBy.value = "ASC";
+    }else{
+      jobSearchOrderByColumn.value = "create_datetime";
+      jobSearchOrderBy.value = "DESC";
+    }
+  }
+  search();
+}
 
 const searchResultExport = async () => {
   let list = tableData.value;
@@ -457,6 +477,8 @@ function getSearchParam() {
     searchParam.startDatetime = null;
     searchParam.endDatetime = null;
   }
+  searchParam.orderByColumn = jobSearchOrderByColumn.value;
+  searchParam.orderBy = jobSearchOrderBy.value;
   return searchParam;
 }
 

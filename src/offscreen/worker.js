@@ -4,7 +4,7 @@ import { Job } from "@/data/domain/job";
 import { Message } from "../api/message";
 import dayjs from "dayjs";
 import { JobDTO } from "@/data/dto/jobDTO";
-import { toHump } from "../utils";
+import { toHump, convertEmptyStringToNull } from "../utils";
 import { ChangeLogV1 } from "./changeLog/changeLogV1";
 import { initChangeLog, getChangeLogList } from "./changeLog";
 import { StatisticJobBrowseDTO } from "@/data/dto/statisticJobBrowseDTO";
@@ -184,7 +184,12 @@ export const WorkerBridge = {
       let result = new SearchJobDTO();
       let sqlQuery = "";
       let whereCondition = genJobSearchWhereConditionSql(param);
-      let orderBy = " ORDER BY create_datetime DESC";
+      let orderBy =
+        " ORDER BY " +
+        param.orderByColumn +
+        " " +
+        param.orderBy +
+        " NULLS LAST";
       let limitStart = (param.pageNum - 1) * param.pageSize;
       let limitEnd = param.pageSize;
       let limit = " limit " + limitStart + "," + limitEnd;
@@ -440,27 +445,29 @@ function insertJobAndBrowseHistory(param, now) {
       bind: {
         $job_id: param.jobId,
         $job_platform: param.jobPlatform,
-        $job_url: param.jobUrl,
-        $job_name: param.jobName,
-        $job_company_name: param.jobCompanyName,
-        $job_location_name: param.jobLocationName,
-        $job_address: param.jobAddress,
-        $job_longitude: param.jobLongitude,
-        $job_latitude: param.jobLatitude,
-        $job_description: param.jobDescription,
-        $job_degree_name: param.jobDegreeName,
-        $job_year: param.jobYear,
-        $job_salary_min: param.jobSalaryMin,
-        $job_salary_max: param.jobSalaryMax,
-        $job_salary_total_month: param.jobSalaryTotalMonth,
+        $job_url: convertEmptyStringToNull(param.jobUrl),
+        $job_name: convertEmptyStringToNull(param.jobName),
+        $job_company_name: convertEmptyStringToNull(param.jobCompanyName),
+        $job_location_name: convertEmptyStringToNull(param.jobLocationName),
+        $job_address: convertEmptyStringToNull(param.jobAddress),
+        $job_longitude: convertEmptyStringToNull(param.jobLongitude),
+        $job_latitude: convertEmptyStringToNull(param.jobLatitude),
+        $job_description: convertEmptyStringToNull(param.jobDescription),
+        $job_degree_name: convertEmptyStringToNull(param.jobDegreeName),
+        $job_year: convertEmptyStringToNull(param.jobYear),
+        $job_salary_min: convertEmptyStringToNull(param.jobSalaryMin),
+        $job_salary_max: convertEmptyStringToNull(param.jobSalaryMax),
+        $job_salary_total_month: convertEmptyStringToNull(
+          param.jobSalaryTotalMonth
+        ),
         $job_first_publish_datetime: dayjs(
           param.jobFirstPublishDatetime
         ).isValid()
           ? dayjs(param.jobFirstPublishDatetime).format("YYYY-MM-DD HH:mm:ss")
           : null,
-        $boss_name: param.bossName,
-        $boss_company_name: param.bossCompanyName,
-        $boss_position: param.bossPosition,
+        $boss_name: convertEmptyStringToNull(param.bossName),
+        $boss_company_name: convertEmptyStringToNull(param.bossCompanyName),
+        $boss_position: convertEmptyStringToNull(param.bossPosition),
         $create_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
         $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
       },

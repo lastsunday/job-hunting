@@ -108,10 +108,28 @@ export function toLine(name) {
  * 随机等待
  * @param {*} delayTime 等待时间，单位ms
  * @param {*} randomRange 随机时间范围，单位ms
- * @returns 
+ * @returns
  */
-export function randomDelay(delayTime,randomRange) {
+export function randomDelay(delayTime, randomRange) {
   return new Promise((r) =>
     setTimeout(r, delayTime + getRandomInt(randomRange))
   );
+}
+
+export function convertEmptyStringToNull(value) {
+  if (value) {
+    if (isEmpty(value) || isBlank(value)) {
+      return null;
+    } else {
+      return value;
+    }
+  } else {
+    return null;
+  }
+}
+
+const isEmpty = (str) => !str?.length;
+
+function isBlank(str) {
+  return !str || /^\s*$/.test(str);
 }

@@ -6,6 +6,11 @@
 
 1. (SidePanel)新增统计图表：根据指定搜索条件统计薪酬区间职位数。
 
+### ✏️ Changed
+
+1. (SidePanel)修改表格排序为远程排序。
+2. (SidePanel)新增Job Record时，对为空串的内容设置为NULL。
+
 ## 1.4.0(2024-06-01)
 
 ### ⭐ Added
@@ -34,7 +39,7 @@
 ### ✏️ Changed
 
 1. (ContentScript)将展示次数移动到职位卡片的功能框里。
-1. (SidePanel)修改job item browse的显示文案。
+2. (SidePanel)修改job item browse的显示文案。
 
 ### 🛀 Refactor
 

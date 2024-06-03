@@ -8,4 +8,9 @@ export class SearchJobBO extends PageBO{
     endDatetime;
     firstPublishStartDatetime;
     firstPublishEndDatetime;
+    orderByColumn;
+    /**
+     * ASC,DESC
+     */
+    orderBy;
 }
