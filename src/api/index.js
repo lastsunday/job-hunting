@@ -1,10 +1,10 @@
-import { Job } from "@/data/domain/job";
-import { JobDTO } from "@/data/dto/jobDTO";
+import { Job } from "../data/domain/job";
+import { JobDTO } from "../data/dto/jobDTO";
 import { invoke } from "./bridge";
-import { StatisticJobBrowseDTO } from "@/data/dto/statisticJobBrowseDTO";
-import { SearchJobBO } from "@/data/bo/searchJobBO";
-import { SearchJobDTO } from "@/data/dto/searchJobDTO";
-import { StatisticJobSearchGroupByAvgSalaryDTO } from "@/data/dto/statisticJobSearchGroupByAvgSalaryDTO";
+import { StatisticJobBrowseDTO } from "../data/dto/statisticJobBrowseDTO";
+import { SearchJobBO } from "../data/bo/searchJobBO";
+import { SearchJobDTO } from "../data/dto/searchJobDTO";
+import { StatisticJobSearchGroupByAvgSalaryDTO } from "../data/dto/statisticJobSearchGroupByAvgSalaryDTO";
 
 export const JobApi = {
   /**

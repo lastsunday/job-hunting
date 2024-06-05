@@ -13,8 +13,8 @@ chrome.runtime.onInstalled.addListener(() => {
   chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 });
 
-let creating;
-async function setupOffscreenDocument(path) {
+let creating :any;
+async function setupOffscreenDocument(path:string) {
   // Check all windows controlled by the service worker to see if one
   // of them is the offscreen document with the given path
   if (await chrome.offscreen.hasDocument?.()) return;
@@ -116,4 +116,4 @@ async function setupOffscreenDocument(path) {
   });
 }
 
-setupOffscreenDocument("offscreen.html");
+setupOffscreenDocument("src/offscreen/offscreen.html");

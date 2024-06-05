@@ -1,6 +1,6 @@
 import { getRandomInt } from "../utils";
 import { debugLog } from "../log";
-import { CONTENT_SCRIPT, BACKGROUND } from "@/api/bridgeCommon.js";
+import { CONTENT_SCRIPT, BACKGROUND } from "./bridgeCommon.js";
 
 const callbackPromiseHookMap = new Map();
 let seq = 0;

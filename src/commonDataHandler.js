@@ -6,7 +6,7 @@ import {
   PLATFORM_JOBSDB,
   JOB_STATUS_DESC_NEWEST,
 } from "./common";
-import { Job } from "@/data/domain/job";
+import { Job } from "./data/domain/job";
 import { JobApi } from "./api";
 import { infoLog } from "./log";
 import dayjs from "dayjs";

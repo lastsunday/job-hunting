@@ -5,7 +5,6 @@ import { getLaGouData } from "./plantforms/lagou/index.js";
 import zhilianFirstOpen from "./plantforms/zhilian/firstOpen.js";
 import lagouFirstOpen from "./plantforms/lagou/firstOpen.js";
 
-import "./app.css"; // 为了能够走打包逻辑，如果不想在这写，那么直接放在 webpack 里也行
 import { createLink, createScript } from "./utils.js";
 import $ from "jquery";
 import { initBridge } from "./api/common.js";

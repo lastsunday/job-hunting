@@ -66,8 +66,8 @@
 <script lang="ts" setup>
 import { ref } from "vue";
 import dayjs from "dayjs";
-import { dbExport, dbImport } from "@/api/common";
-import { base64ToBytes, bytesToBase64 } from "@/utils/base64.js";
+import { dbExport, dbImport } from "../../api/common";
+import { base64ToBytes, bytesToBase64 } from "../../utils/base64.js";
 import { ElMessage, ElLoading } from "element-plus";
 import { DocumentCopy, CopyDocument } from "@element-plus/icons-vue";
 

@@ -274,8 +274,8 @@
 <script lang="ts" setup>
 import { onMounted, ref, computed, provide, nextTick } from "vue";
 import { useTransition } from "@vueuse/core";
-import { JobApi } from "@/api/index.js";
-import { SearchJobBO } from "@/data/bo/searchJobBO.js";
+import { JobApi } from "../../api/index.js";
+import { SearchJobBO } from "../../data/bo/searchJobBO.js";
 import dayjs from "dayjs";
 import { utils, writeFileXLSX } from "xlsx";
 import { use } from "echarts/core";
@@ -287,7 +287,7 @@ import {
   LegendComponent,
 } from "echarts/components";
 import VChart from "vue-echarts";
-import { toLine } from "@/utils";
+import { toLine } from "../../utils";
 
 use([
   CanvasRenderer,

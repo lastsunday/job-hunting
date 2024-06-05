@@ -2,7 +2,7 @@ import { BACKGROUND, OFFSCREEN, WEB_WORKER } from "../api/bridgeCommon";
 import { debugLog } from "../log";
 debugLog("offscreen ready");
 
-const worker = new Worker(new URL("./worker.js", import.meta.url), {
+const worker = new Worker(new URL("worker.js", import.meta.url), {
   type: "module",
 });
 

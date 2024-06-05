@@ -3,7 +3,7 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import sidepanel from './App.vue'
 import  router  from "./router";
-import { initBridge } from '@/api/common';
+import { initBridge } from '../api/common';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 async function init(){
@@ -14,6 +14,6 @@ async function init(){
         app.component(key, component)
       }
     app.use(router)
-    app.mount('#app');
+    app.mount('body');
 }
 init();

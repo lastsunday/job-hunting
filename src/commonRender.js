@@ -15,7 +15,7 @@ import {
   genCompanyIdWithSha256,
 } from "./commonDataHandler";
 
-import { logoBase64 } from "@/assets/logo";
+import { logoBase64 } from "./assets/logo";
 
 const ACTIVE_TIME_MATCH = /(?<num>[0-9\.]*)/;
 
