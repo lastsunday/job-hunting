@@ -14,7 +14,12 @@
 
 ### 🚀 Performance
 
-1. (build)将webpack替换成vite
+1. (build)将webpack替换为vite，加快开发期间的编译速度。
+
+### 🛀 Refactor
+
+1. 重构项目的目录结构，根据Chrome Extension的概念进行分类:background,contentScript,offscreen,sidepanel。
+2. 使用vite-plugin-web-extension进行插件编译的管理。
 
 ## 1.4.0(2024-06-01)
 

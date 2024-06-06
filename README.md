@@ -116,7 +116,7 @@ Modern browsers
 
 ```bash
     pnpm i
-    npm run build
+    pnpm run build
 ```
 
 2. 打开chrome，选择加载已解压的扩展程序，选择当前项目的 dist 目录
@@ -134,7 +134,7 @@ Modern browsers
 
    ```bash
    pnpm i
-   npm run dev
+   pnpm run dev
    ```
 
 2. chrome 浏览器打开 chrome://extensions/ 页面

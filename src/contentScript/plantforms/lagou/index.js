@@ -7,10 +7,10 @@ import {
   finalRender,
   renderFunctionPanel,
 } from "../../commonRender";
-import { debounce } from "../../utils";
+import { debounce } from "../../../common/utils";
 import { PLATFORM_LAGOU } from "../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
-import { JobApi } from "../../api";
+import { JobApi } from "../../../common/api";
 
 export function getListValue(data = {}) {
   return ["content", "positionResult", "result"].reduce((value, key) => {

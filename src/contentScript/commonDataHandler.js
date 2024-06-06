@@ -6,9 +6,9 @@ import {
   PLATFORM_JOBSDB,
   JOB_STATUS_DESC_NEWEST,
 } from "./common";
-import { Job } from "./data/domain/job";
-import { JobApi } from "./api";
-import { infoLog } from "./log";
+import { Job } from "../common/data/domain/job";
+import { JobApi } from "../common/api";
+import { infoLog } from "../common/log";
 import dayjs from "dayjs";
 import sha256 from 'crypto-js/sha256';
 

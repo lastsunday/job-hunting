@@ -1,5 +1,5 @@
-import { BACKGROUND, OFFSCREEN, WEB_WORKER } from "../api/bridgeCommon";
-import { debugLog } from "../log";
+import { BACKGROUND, OFFSCREEN, WEB_WORKER } from "../common/api/bridgeCommon";
+import { debugLog } from "../common/log";
 debugLog("offscreen ready");
 
 const worker = new Worker(new URL("worker.js", import.meta.url), {

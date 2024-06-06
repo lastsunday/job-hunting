@@ -1,10 +1,10 @@
 import dayjs from "dayjs";
-import { isOutsource } from "./data/outsource";
-import { isTraining } from "./data/training";
+import { isOutsource } from "../common/data/outsource";
+import { isTraining } from "../common/data/training";
 import {
   convertTimeToHumanReadable,
   convertTimeOffsetToHumanReadable,
-} from "./utils";
+} from "../common/utils";
 import {
   JOB_STATUS_DESC_NEWEST,
   PLATFORM_BOSS,

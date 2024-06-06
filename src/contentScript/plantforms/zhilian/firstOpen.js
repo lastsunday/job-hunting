@@ -9,7 +9,7 @@ import {
 import { createDOM } from "./index";
 import { PLATFORM_ZHILIAN } from "../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
-import { JobApi } from "../../api";
+import { JobApi } from "../../../common/api";
 
 // 智联招聘首次打开页面时是服务端渲染，没法监听接口，但是 html 中保存了列表数据
 export default async function firstOpen(data) {

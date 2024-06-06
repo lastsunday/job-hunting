@@ -1,3 +1,6 @@
+import { PLATFORM_51JOB } from "../../common";
+import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { JobApi } from "../../../common/api";
 import {
   renderTimeTag,
   setupSortJobItem,
@@ -7,16 +10,13 @@ import {
   finalRender,
   renderFunctionPanel,
 } from "../../commonRender";
-import { PLATFORM_ZHILIAN } from "../../common";
-import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
-import { JobApi } from "../../api";
 
-export function getZhiLianData(responseText) {
+export function getJob51Data(responseText) {
   try {
     const data = JSON.parse(responseText);
     mutationContainer().then((node) => {
       setupSortJobItem(node);
-      parseZhilianData(data?.data?.list || [], getListByNode(node));
+      parseData(data?.resultbody?.job?.items || [], getListByNode(node));
     });
   } catch (err) {
     console.error("解析 JSON 失败", err);
@@ -34,8 +34,8 @@ function getListByNode(node) {
 // 监听 positionList-hook 节点，判断职位列表是否被挂载
 function mutationContainer() {
   return new Promise((resolve, reject) => {
-    const dom = document.querySelector(".positionlist");
-    const observer = new MutationObserver(function (childList) {
+    const dom = document.querySelector(".joblist");
+    const observer = new MutationObserver(function (childList, obs) {
       const isAdd = (childList || []).some((item) => {
         return item?.addedNodes?.length > 0;
       });
@@ -50,19 +50,19 @@ function mutationContainer() {
 }
 
 // 解析数据，插入时间标签
-async function parseZhilianData(list, getListItem) {
+async function parseData(list, getListItem) {
   list.forEach((item, index) => {
     const dom = getListItem(index);
     const { companyName } = item;
     let loadingLastModifyTimeTag = createLoadingDOM(
       companyName,
-      "__zhilian_time_tag"
+      "__job51_time_tag"
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
-  await saveBrowseJob(list, PLATFORM_ZHILIAN);
+  await saveBrowseJob(list, PLATFORM_51JOB);
   let jobDTOList = await JobApi.getJobBrowseInfoByIds(
-    getJobIds(list, PLATFORM_ZHILIAN)
+    getJobIds(list, PLATFORM_51JOB)
   );
   list.forEach((item, index) => {
     const dom = getListItem(index);
@@ -70,14 +70,14 @@ async function parseZhilianData(list, getListItem) {
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
-  renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_ZHILIAN });
-  renderFunctionPanel(jobDTOList, getListItem, { platform: PLATFORM_ZHILIAN });
-  finalRender(jobDTOList, { platform: PLATFORM_ZHILIAN });
+  renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_51JOB });
+  renderFunctionPanel(jobDTOList, getListItem, { platform: PLATFORM_51JOB });
+  finalRender(jobDTOList, { platform: PLATFORM_51JOB });
 }
 
 export function createDOM(jobDTO) {
   const div = document.createElement("div");
-  div.classList.add("__zhilian_time_tag");
+  div.classList.add("__job51_time_tag");
   renderTimeTag(div, jobDTO);
   return div;
 }

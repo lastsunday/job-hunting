@@ -10,7 +10,7 @@ import { createDOM } from "./index";
 import { mutationContainer, getListValue } from "./index";
 import { PLATFORM_LAGOU } from "../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
-import { JobApi } from "../../api";
+import { JobApi } from "../../../common/api";
 
 // 首次打开页面时是服务端渲染，没法监听接口，但是 html 中保存了列表数据
 export default function firstOpen(data) {

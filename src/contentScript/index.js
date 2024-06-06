@@ -2,13 +2,14 @@ import { getBossData } from "./plantforms/boss/index.js";
 import { getZhiLianData } from "./plantforms/zhilian/index.js";
 import { getJob51Data } from "./plantforms/job51/index.js";
 import { getLaGouData } from "./plantforms/lagou/index.js";
+import { getJobsdbData } from "./plantforms/jobsdb/index.js";
 import zhilianFirstOpen from "./plantforms/zhilian/firstOpen.js";
 import lagouFirstOpen from "./plantforms/lagou/firstOpen.js";
 
-import { createLink, createScript } from "./utils.js";
+import { createLink, createScript } from "../common/utils.js";
 import $ from "jquery";
-import { initBridge } from "./api/common.js";
-import { getJobsdbData } from "./plantforms/jobsdb/index.js";
+import { initBridge } from "../common/api/common.js";
+
 
 (async function () {
   // 这里的 window 和页面的 window 不是同一个

@@ -24,6 +24,7 @@ export default defineConfig({
     vue(),
     webExtension({
       manifest: generateManifest,
+      disableAutoLaunch:true,
       watchFilePaths: ["package.json", "manifest.json"],
       additionalInputs:[
         "src/offscreen/offscreen.html",

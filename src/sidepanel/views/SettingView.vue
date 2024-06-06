@@ -66,8 +66,8 @@
 <script lang="ts" setup>
 import { ref } from "vue";
 import dayjs from "dayjs";
-import { dbExport, dbImport } from "../../api/common";
-import { base64ToBytes, bytesToBase64 } from "../../utils/base64.js";
+import { dbExport, dbImport } from "../../common/api/common";
+import { base64ToBytes, bytesToBase64 } from "../../common/utils/base64.js";
 import { ElMessage, ElLoading } from "element-plus";
 import { DocumentCopy, CopyDocument } from "@element-plus/icons-vue";
 
@@ -178,3 +178,4 @@ const downloadURL = function (data, fileName) {
   justify-content: end;
 }
 </style>
+../../common/api/common../../common/utils/base64.js

@@ -1,5 +1,5 @@
-import { BACKGROUND, CONTENT_SCRIPT, OFFSCREEN } from "./api/bridgeCommon";
-import { debugLog, infoLog } from "./log";
+import { BACKGROUND, CONTENT_SCRIPT, OFFSCREEN } from "../common/api/bridgeCommon";
+import { debugLog } from "../common/log";
 
 debugLog("background ready");
 debugLog("keepAlive start");

@@ -5,7 +5,7 @@
   "description": "协助找工作",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite dev",
     "build": "vue-tsc && vite build"
   },
   "dependencies": {

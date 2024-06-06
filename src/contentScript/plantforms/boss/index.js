@@ -8,7 +8,7 @@ import {
   finalRender,
   renderFunctionPanel,
 } from "../../commonRender";
-import { randomDelay } from "../../utils";
+import { randomDelay } from "../../../common/utils";
 import onlineFilter from "./onlineFilter";
 import {
   JOB_STATUS_DESC_NEWEST,
@@ -17,7 +17,7 @@ import {
 } from "../../common";
 import { PLATFORM_BOSS } from "../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
-import { JobApi } from "../../api";
+import { JobApi } from "../../../common/api";
 
 const DELAY_FETCH_TIME = 75; //ms
 const DELAY_FETCH_TIME_RANDOM_OFFSET = 50; //ms

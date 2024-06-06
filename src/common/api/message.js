@@ -4,5 +4,7 @@ export class Message {
     param;
     error;
     data;
+    from;
+    to;
   }
   
