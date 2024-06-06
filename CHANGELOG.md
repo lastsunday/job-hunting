@@ -12,6 +12,10 @@
 1. (SidePanel)修改表格排序为远程排序。
 2. (SidePanel)新增Job Record时，对为空串的内容设置为NULL。
 
+### 🐛 Fixed
+
+1. (ContentScript)修复智联招聘Job List元素查找路径。
+
 ### 🚀 Performance
 
 1. (build)将webpack替换为vite，加快开发期间的编译速度。
