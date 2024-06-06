@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### ✏️ Changed
+
+1. (SidePanel)补全统计薪酬区间职位数的<3k,3k-6k的区间显示。
+
 ## 1.5.0(2024-06-06)
 
 ### ⭐ Added

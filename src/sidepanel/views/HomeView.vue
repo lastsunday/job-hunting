@@ -383,6 +383,8 @@ const showDialogAvgSalary = async () => {
     getSearchParam()
   );
   let xAxisArray = [
+    "<3k",
+    "3k-6k",
     "6k-9k",
     "9k-12k",
     "12k-15k",
