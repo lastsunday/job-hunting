@@ -115,11 +115,11 @@ Modern browsers
 1. 安装，编译
 
 ```bash
-    npm i
-    npm run build
+    pnpm i
+    pnpm run build
 ```
 
-2. 打开chrome，选择加载已解压的扩展程序，选择当前项目的 build 目录
+2. 打开chrome，选择加载已解压的扩展程序，选择当前项目的 dist 目录
 
 3. 打开页面
     * boss直聘： <https://www.zhipin.com/web/geek/job>
@@ -133,15 +133,15 @@ Modern browsers
 1. 安装，编译
 
    ```bash
-   npm i
-   npm run watch
+   pnpm i
+   pnpm run dev
    ```
 
 2. chrome 浏览器打开 chrome://extensions/ 页面
 
 3. 点击`加载已解压的扩展程序`
 
-4. 选择项目中生成的 build 文件夹即可
+4. 选择项目中生成的 dist 文件夹即可
 
 5. 每次保存都会重新编译，扩展程序需要***重新点一次刷新按钮***才生效
 

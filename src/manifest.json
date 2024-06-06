@@ -1,0 +1,63 @@
+{
+  "{{chrome}}.manifest_version": 3,
+  "{{firefox}}.manifest_version": 2,
+  "icons": {
+    "16": "icons/16x16.png",
+    "32": "icons/32x32.png",
+    "48": "icons/48x48.png",
+    "128": "icons/128x128.png"
+  },
+  "{{chrome}}.action": {
+    "default_title": "Click to open panel"
+  },
+  "{{firefox}}.browser_action": {
+    "default_title": "Click to open panel"
+  },
+  "background": {
+    "{{chrome}}.service_worker": "src/background/index.ts",
+    "{{firefox}}.scripts": ["src/background/index.ts"]
+  },
+  "{{chrome}}.content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'"
+  },
+  "{{chrome}}.content_scripts": [
+    {
+        "js": ["src/contentScript/index.js"],
+        "matches": [
+            "https://www.zhipin.com/*",
+            "https://sou.zhaopin.com/*",
+            "https://we.51job.com/*",
+            "https://www.lagou.com/*",
+            "https://hk.jobsdb.com/*"
+        ]
+    }
+  ],
+  "{{chrome}}.web_accessible_resources": [
+      {
+          "resources": ["proxyAjax.js", "app.css"],
+          "matches": [
+              "https://www.zhipin.com/*", 
+              "https://sou.zhaopin.com/*",
+              "https://we.51job.com/*",
+              "https://www.lagou.com/*",
+              "https://hk.jobsdb.com/*"
+          ]
+      }
+  ],
+  "{{chrome}}.side_panel": {
+    "default_path": "src/sidepanel/index.html"
+  },
+  "{{chrome}}.permissions": [
+      "webRequest",
+      "offscreen",
+      "sidePanel",
+      "unlimitedStorage"
+  ],
+  "{{chrome}}.host_permissions": [
+      "https://www.zhipin.com/*",
+      "https://sou.zhaopin.com/*",
+      "https://we.51job.com/*",
+      "https://www.lagou.com/*",
+      "https://hk.jobsdb.com/*"
+  ]
+}

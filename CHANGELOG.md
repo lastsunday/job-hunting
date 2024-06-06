@@ -12,6 +12,15 @@
 1. (SidePanel)修改表格排序为远程排序。
 2. (SidePanel)新增Job Record时，对为空串的内容设置为NULL。
 
+### 🚀 Performance
+
+1. (build)将webpack替换为vite，加快开发期间的编译速度。
+
+### 🛀 Refactor
+
+1. 重构项目的目录结构，根据Chrome Extension的概念进行分类:background,contentScript,offscreen,sidepanel。
+2. 使用vite-plugin-web-extension进行插件编译的管理。
+
 ## 1.4.0(2024-06-01)
 
 ### ⭐ Added
