@@ -24,10 +24,25 @@ export async function dbImport(param) {
 }
 
 /**
- * @param {string} url
+ * 提交网络请求
+ * @param {string} param url
+ * @param function onReturnAbortHandlerCallbackFunction 返回中断网络请求的函数
  * @returns text content
  */
-export async function httpFetchGetText(param){
-  let result = await invoke("httpFetchGetText", param);
+export async function httpFetchGetText(param,onReturnAbortHandlerCallbackFunction){
+  let result = await invoke("httpFetchGetText", param,(message)=>{
+    onReturnAbortHandlerCallbackFunction(()=>{
+      httpFetchGetTextAbort(message.callbackId);
+    })
+  });
   return result.data;
+}
+
+/**
+ * 中断网络请求
+ * @param {string} param callbackId
+ * @returns 
+ */
+export async function httpFetchGetTextAbort(param){
+  await invoke("httpFetchGetTextAbort", param);
 }

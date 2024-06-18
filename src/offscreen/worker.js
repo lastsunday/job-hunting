@@ -1,4 +1,4 @@
-import { infoLog, debugLog } from "../common/log";
+import { infoLog, debugLog, errorLog } from "../common/log";
 import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 import { Job } from "../common/data/domain/job";
 import { Message } from "../common/api/message";
@@ -24,6 +24,7 @@ let capi;
 let oo;
 let db;
 let initializing = false;
+const callbackIdAndAbortControllerMap = new Map();
 
 export const WorkerBridge = {
   /**
@@ -372,17 +373,42 @@ export const WorkerBridge = {
   },
 
   /**
-   *
+   * 提交网络请求
    * @param {*} message
    * @param {string} param url
    */
   httpFetchGetText: async function (message, param) {
     try {
-      const response = await fetch(param);
+      const controller = new AbortController();
+      const signal = controller.signal;
+      callbackIdAndAbortControllerMap.set(message.callbackId, controller);
+      const response = await fetch(param, { signal });
       const result = await response.text();
       postSuccessMessage(message, result);
     } catch (e) {
-      postErrorMessage(message, "[worker] httpFetchGetText error : " + e.message);
+      postErrorMessage(
+        message,
+        "[worker] httpFetchGetText error : " + e.message
+      );
+    }
+  },
+
+  /**
+   *中断网络请求
+   * @param {*} message
+   * @param {string} param callbackId
+   */
+  httpFetchGetTextAbort: async function (message, param) {
+    try {
+      let controller = callbackIdAndAbortControllerMap.get(param);
+      callbackIdAndAbortControllerMap.delete(param);
+      controller.abort("user abort");
+      postSuccessMessage(message, {});
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[worker] httpFetchGetTextAbort error : " + e.message
+      );
     }
   },
 };
@@ -554,7 +580,7 @@ const initDb = async function (sqlite3) {
       infoLog("[DB] execute " + SQL_PRAGMA_AUTO_VACUUM);
     }
   } catch (e) {
-    console.error("[DB] checking schema fail," + e.message);
+    errorLog("[DB] checking schema fail," + e.message);
     return;
   }
   try {
@@ -626,7 +652,7 @@ const initDb = async function (sqlite3) {
       sql: "COMMIT",
     });
   } catch (e) {
-    console.error("[DB] schema upgrade fail," + e.message);
+    errorLog("[DB] schema upgrade fail," + e.message);
     db.exec({
       sql: "ROLLBACK TRANSACTION",
     });
@@ -696,7 +722,6 @@ function postErrorMessage(message, error) {
       message.error +
       "]"
   );
-  infoLog(error);
   let resultMessage = JSON.parse(JSON.stringify(message));
   debugLog(resultMessage);
   resultMessage.error = error;

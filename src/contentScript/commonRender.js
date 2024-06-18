@@ -392,7 +392,17 @@ function convertHrActiveTimeDescToOffsetTime(hrActiveTimeDesc) {
   return offsetTime;
 }
 
+//请求中断列表
+let abortFunctionHandlerMap = new Map();
+
 export function renderFunctionPanel(list, getListItem, { platform } = {}) {
+  if (abortFunctionHandlerMap && abortFunctionHandlerMap.size > 0) {
+    //中断上一次的查询请求
+    abortFunctionHandlerMap.forEach((value, key, map) => {
+      key();
+    });
+  }
+  abortFunctionHandlerMap.clear();
   list.forEach((item, index) => {
     const dom = getListItem(index);
     let targetDom;
@@ -489,17 +499,29 @@ function createCompanyReputation(keyword) {
 }
 
 async function asyncRenderRuobilin(div, keyword) {
-  div.title = "信息来源:跨境小白网（若比邻网）https://kjxb.org/"
+  div.title = "信息来源:跨境小白网（若比邻网）https://kjxb.org/";
   const decode = encodeURIComponent(keyword);
   const url = `https://kjxb.org/?s=${decode}&post_type=question`;
-  const loaddingTag = createATag("📡", url, "若比邻黑名单(检测中⌛︎)",(event) => {
+  const loaddingTag = createATag(
+    "📡",
+    url,
+    "若比邻黑名单(检测中⌛︎)",
+    (event) => {
       clearAllChildNode(div);
       asyncRenderRuobilin(div, keyword);
-  });
+    }
+  );
   div.appendChild(loaddingTag);
   renderRuobilinColor(loaddingTag, "black");
   try {
-    const result = await httpFetchGetText(url);
+    let abortFunctionHandler = null;
+    const result = await httpFetchGetText(url, (abortFunction) => {
+      abortFunctionHandler = abortFunction;
+      //加入请求手动中断列表
+      abortFunctionHandlerMap.set(abortFunctionHandler, null);
+    });
+    //请求正常结束，从手动中断列表中移除
+    abortFunctionHandlerMap.delete(abortFunctionHandler);
     let hyperlinks = $(result).find(".ap-questions-hyperlink");
     clearAllChildNode(div);
     if (hyperlinks && hyperlinks.length > 0) {
@@ -532,7 +554,7 @@ async function asyncRenderRuobilin(div, keyword) {
   }
 }
 
-function clearAllChildNode(div){
+function clearAllChildNode(div) {
   div.innerHTML = "";
 }
 

@@ -1,5 +1,5 @@
 import { getRandomInt } from "../utils";
-import { debugLog } from "../log";
+import { debugLog, errorLog } from "../log";
 import { CONTENT_SCRIPT, BACKGROUND } from "./bridgeCommon.js";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -9,9 +9,10 @@ const callbackPromiseHookMap = new Map();
  *
  * @param {string} action 通过传入src/offscreen/worker.js里的WorkerBridge的方法名，实现方法的调用
  * @param {*} param 所需要传递的调用参数，在被调用方法的param参数中有体现
+ * @param function onMessageCallback 返回message信息的回调函数
  * @returns
  */
-export function invoke(action, param) {
+export function invoke(action, param, onMessageCallback) {
   let callbackId = genCallbackId();
   let promise = new Promise((resolve, reject) => {
     addCallbackPromiseHook(callbackId, { resolve, reject });
@@ -22,6 +23,9 @@ export function invoke(action, param) {
       from: CONTENT_SCRIPT,
       to: BACKGROUND,
     };
+    if(onMessageCallback){
+      onMessageCallback(message);
+    }
     debugLog(
       "1.[content script][send][" +
         message.from +
@@ -67,7 +71,7 @@ export function init() {
           promiseHook.resolve(message);
         }
       } else {
-        console.error(
+        errorLog(
           `callbackId = ${message.callbackId} lost callback promiseHook`
         );
       }
