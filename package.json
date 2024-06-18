@@ -20,6 +20,7 @@
     "element-plus": "^2.7.3",
     "jquery": "^3.7.1",
     "jszip": "^3.10.1",
+    "uuid": "^10.0.0",
     "vue": "^3.2.47",
     "vue-echarts": "^6.7.2",
     "vue-router": "^4.2.5",
@@ -27,6 +28,7 @@
   },
   "devDependencies": {
     "@sqlite.org/sqlite-wasm": "3.43.2-build1",
+    "@types/chrome": "^0.0.246",
     "@types/webextension-polyfill": "^0.10.0",
     "@vitejs/plugin-vue": "^4.5.0",
     "sass": "^1.77.4",
@@ -34,7 +36,6 @@
     "vite": "^5.0.0",
     "vite-plugin-web-extension": "^4.0.0",
     "vue-tsc": "^2.0.19",
-    "webextension-polyfill": "^0.10.0",
-    "@types/chrome": "^0.0.246"
+    "webextension-polyfill": "^0.10.0"
   }
 }

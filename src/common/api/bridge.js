@@ -1,9 +1,9 @@
 import { getRandomInt } from "../utils";
 import { debugLog } from "../log";
 import { CONTENT_SCRIPT, BACKGROUND } from "./bridgeCommon.js";
+import { v4 as uuidv4 } from 'uuid';
 
 const callbackPromiseHookMap = new Map();
-let seq = 0;
 
 /**
  *
@@ -12,7 +12,6 @@ let seq = 0;
  * @returns
  */
 export function invoke(action, param) {
-  //如果放到promise函数里面，则可能会生成重复的callbackId
   let callbackId = genCallbackId();
   let promise = new Promise((resolve, reject) => {
     addCallbackPromiseHook(callbackId, { resolve, reject });
@@ -87,5 +86,5 @@ function getAndRemovePromiseHook(callbackId) {
 }
 
 function genCallbackId() {
-  return new Date().getTime() + seq + getRandomInt(1000);
+  return uuidv4();
 }
