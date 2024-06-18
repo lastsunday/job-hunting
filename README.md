@@ -152,4 +152,4 @@ Modern browsers
 1. https://github.com/tangzhiyao/boss-show-time ***boss 直聘时间展示插件***
 2. https://github.com/iibeibei/tampermonkey_scripts ***BOSS 直聘 跨境黑名单***
 3. https://kjxb.org/ ***【跨境小白网】，跨境电商人的职场交流社区，互助网站。***
-4. https://maimai.cn/article/detail?fid=1662335089&efid=I0IjMo8A_37C2pHoqU2HjA *** 求职必备技能：教你如何扒了公司的底裤 ***
+4. https://maimai.cn/article/detail?fid=1662335089&efid=I0IjMo8A_37C2pHoqU2HjA ***求职必备技能：教你如何扒了公司的底裤***
