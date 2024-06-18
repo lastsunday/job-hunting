@@ -12,8 +12,9 @@ let seq = 0;
  * @returns
  */
 export function invoke(action, param) {
+  //如果放到promise函数里面，则可能会生成重复的callbackId
+  let callbackId = genCallbackId();
   let promise = new Promise((resolve, reject) => {
-    let callbackId = genCallbackId();
     addCallbackPromiseHook(callbackId, { resolve, reject });
     let message = {
       action,
@@ -59,11 +60,17 @@ export function init() {
           "]"
       );
       let promiseHook = getAndRemovePromiseHook(message.callbackId);
-      if (message.error) {
-        message.message = message.error;
-        promiseHook.reject(message);
+      if (promiseHook) {
+        if (message.error) {
+          message.message = message.error;
+          promiseHook.reject(message);
+        } else {
+          promiseHook.resolve(message);
+        }
       } else {
-        promiseHook.resolve(message);
+        console.error(
+          `callbackId = ${message.callbackId} lost callback promiseHook`
+        );
       }
     }
   });

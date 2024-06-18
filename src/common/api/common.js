@@ -22,3 +22,12 @@ export async function dbImport(param) {
   let result = await invoke("dbImport", param);
   return result.data;
 }
+
+/**
+ * @param {string} url
+ * @returns text content
+ */
+export async function httpFetchGetText(param){
+  let result = await invoke("httpFetchGetText", param);
+  return result.data;
+}

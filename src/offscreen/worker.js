@@ -370,6 +370,21 @@ export const WorkerBridge = {
       postErrorMessage(message, "[worker] dbExport error : " + e.message);
     }
   },
+
+  /**
+   *
+   * @param {*} message
+   * @param {string} param url
+   */
+  httpFetchGetText: async function (message, param) {
+    try {
+      const response = await fetch(param);
+      const result = await response.text();
+      postSuccessMessage(message, result);
+    } catch (e) {
+      postErrorMessage(message, "[worker] httpFetchGetText error : " + e.message);
+    }
+  },
 };
 
 const ACTION_FUNCTION = new Map();

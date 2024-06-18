@@ -14,8 +14,10 @@ import {
   genJobItemIdWithSha256,
   genCompanyIdWithSha256,
 } from "./commonDataHandler";
+import { httpFetchGetText } from "../common/api/common";
 
 import { logoBase64 } from "./assets/logo";
+import $ from "jquery";
 
 const ACTIVE_TIME_MATCH = /(?<num>[0-9\.]*)/;
 
@@ -408,6 +410,7 @@ export function renderFunctionPanel(list, getListItem, { platform } = {}) {
     targetDom.append(functionPanelDiv);
     functionPanelDiv.appendChild(createLogo());
     functionPanelDiv.appendChild(createSearchCompanyLink(item.jobCompanyName));
+    functionPanelDiv.appendChild(createCompanyReputation(item.jobCompanyName));
     functionPanelDiv.appendChild(createCommentWrapper(item));
   });
 }
@@ -450,36 +453,111 @@ function createSearchCompanyLink(keyword) {
   labelDiv.innerHTML = "公司信息查询：";
   dom.appendChild(labelDiv);
   dom.appendChild(
-    createATag(
+    createATagWithSearch(
       `https://www.xiaohongshu.com/search_result?keyword=${decode}`,
       "小红书"
     )
   );
   dom.appendChild(
-    createATag(
+    createATagWithSearch(
       `https://maimai.cn/web/search_center?type=feed&query=${decode}&highlight=true`,
       "脉脉"
     )
   );
   dom.appendChild(
-    createATag(`https://www.bing.com/search?q=${decode}`, "必应")
+    createATagWithSearch(`https://www.bing.com/search?q=${decode}`, "必应")
   );
   dom.appendChild(
-    createATag(`https://www.google.com/search?q=${decode}`, "Google")
+    createATagWithSearch(`https://www.google.com/search?q=${decode}`, "Google")
   );
   dom.appendChild(
-    createATag(`https://aiqicha.baidu.com/s?q=${decode}`, "爱企查")
+    createATagWithSearch(`https://aiqicha.baidu.com/s?q=${decode}`, "爱企查")
   );
   return dom;
 }
 
-function createATag(url, label) {
+function createCompanyReputation(keyword) {
+  const dom = document.createElement("div");
+  dom.className = "__company_info_search";
+  let labelDiv = document.createElement("div");
+  labelDiv.innerHTML = "公司风评检测：";
+  dom.appendChild(labelDiv);
+  const ruobilinDiv = document.createElement("div");
+  dom.appendChild(ruobilinDiv);
+  asyncRenderRuobilin(ruobilinDiv, keyword);
+  return dom;
+}
+
+async function asyncRenderRuobilin(div, keyword) {
+  div.title = "信息来源:跨境小白网（若比邻网）https://kjxb.org/"
+  const decode = encodeURIComponent(keyword);
+  const url = `https://kjxb.org/?s=${decode}&post_type=question`;
+  const loaddingTag = createATag("📡", url, "若比邻黑名单(检测中⌛︎)",(event) => {
+      clearAllChildNode(div);
+      asyncRenderRuobilin(div, keyword);
+  });
+  div.appendChild(loaddingTag);
+  renderRuobilinColor(loaddingTag, "black");
+  try {
+    const result = await httpFetchGetText(url);
+    let hyperlinks = $(result).find(".ap-questions-hyperlink");
+    clearAllChildNode(div);
+    if (hyperlinks && hyperlinks.length > 0) {
+      //存在于若比邻黑名单
+      const count = hyperlinks.length;
+      let tag = createATag("📡", url, `若比邻黑名单(疑似${count}条记录)`);
+      div.appendChild(tag);
+      renderRuobilinColor(tag, "red");
+    } else {
+      //不存在
+      let tag = createATag("📡", url, "若比邻黑名单(无记录)");
+      div.appendChild(tag);
+      renderRuobilinColor(tag, "yellowgreen");
+    }
+  } catch (e) {
+    clearAllChildNode(div);
+    const errorDiv = createATag(
+      "📡",
+      url,
+      "若比邻黑名单(检测失败，点击重新检测)",
+      (event) => {
+        clearAllChildNode(div);
+        asyncRenderRuobilin(div, keyword);
+      }
+    );
+    errorDiv.href = "javaScript:void(0);";
+    errorDiv.target = "";
+    div.appendChild(errorDiv);
+    renderRuobilinColor(errorDiv, "black");
+  }
+}
+
+function clearAllChildNode(div){
+  div.innerHTML = "";
+}
+
+function renderRuobilinColor(div, color) {
+  div.style = `background-color:${color};color:white`;
+}
+
+function clearRuobilinColor(div) {
+  div.style = null;
+}
+
+function createATagWithSearch(url, label) {
+  return createATag("🔎", url, label);
+}
+
+function createATag(emoji, url, label, callback) {
   let aTag = document.createElement("a");
   aTag.href = url;
   aTag.target = "_blank";
   aTag.ref = "noopener noreferrer";
-  aTag.text = "🔎" + label;
+  aTag.text = emoji + label;
   aTag.addEventListener("click", (event) => {
+    if (callback) {
+      callback(event);
+    }
     event.stopPropagation();
   });
   return aTag;
