@@ -1,8 +1,9 @@
-# Job Hunting - 一款协助找工作的 chrome 浏览器插件
-
 <p align="center">
-    <img src="docs\logo.png" alt="logo" width="128px" height="128px"/>
+    <img width="180" src="docs\logo.png" alt="Vite logo">
 </p>
+<br/>
+
+# Job Hunting - 一款协助找工作的 chrome 浏览器插件
 
 ## 招聘平台支持列表
 
