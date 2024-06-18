@@ -18,7 +18,7 @@
 ## 功能列表
 
 1. 显示职位发布时间与自动排序(按职位发布时间,hr活跃时间（只支持BOSS）)。
-2. 快捷查询公司信息🔎。
+2. 快捷查询公司信息🔎（互联网渠道，政府渠道）。
 3. 自动检测公司风评📡，当前支持：若比邻黑名单。
 4. 本地显示职位初次浏览时间，历史浏览次数。
 5. 本地职位记录统计，查询，查询结果导出。
@@ -152,3 +152,4 @@ Modern browsers
 1. https://github.com/tangzhiyao/boss-show-time ***boss 直聘时间展示插件***
 2. https://github.com/iibeibei/tampermonkey_scripts ***BOSS 直聘 跨境黑名单***
 3. https://kjxb.org/ ***【跨境小白网】，跨境电商人的职场交流社区，互助网站。***
+4. https://maimai.cn/article/detail?fid=1662335089&efid=I0IjMo8A_37C2pHoqU2HjA *** 求职必备技能：教你如何扒了公司的底裤 ***

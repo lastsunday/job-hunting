@@ -458,31 +458,51 @@ function createFirstBrowse(jobDTO) {
 function createSearchCompanyLink(keyword) {
   const decode = encodeURIComponent(keyword);
   const dom = document.createElement("div");
-  dom.className = "__company_info_search";
-  let labelDiv = document.createElement("div");
-  labelDiv.innerHTML = "公司信息查询：";
-  dom.appendChild(labelDiv);
-  dom.appendChild(
+  const internetDiv = document.createElement("div");
+  internetDiv.className = "__company_info_search";
+  let internetLabelDiv = document.createElement("div");
+  internetLabelDiv.innerHTML = "公司信息查询（互联网渠道）：";
+  internetDiv.appendChild(internetLabelDiv);
+  internetDiv.appendChild(
     createATagWithSearch(
       `https://www.xiaohongshu.com/search_result?keyword=${decode}`,
       "小红书"
     )
   );
-  dom.appendChild(
+  internetDiv.appendChild(
     createATagWithSearch(
       `https://maimai.cn/web/search_center?type=feed&query=${decode}&highlight=true`,
       "脉脉"
     )
   );
-  dom.appendChild(
+  internetDiv.appendChild(
     createATagWithSearch(`https://www.bing.com/search?q=${decode}`, "必应")
   );
-  dom.appendChild(
+  internetDiv.appendChild(
     createATagWithSearch(`https://www.google.com/search?q=${decode}`, "Google")
   );
-  dom.appendChild(
+  internetDiv.appendChild(
     createATagWithSearch(`https://aiqicha.baidu.com/s?q=${decode}`, "爱企查")
   );
+  dom.appendChild(internetDiv);
+  const govDiv = document.createElement("div");
+  govDiv.className = "__company_info_search";
+  let govLabelDiv = document.createElement("div");
+  govLabelDiv.innerHTML = "公司信息查询（政府渠道）：";
+  govDiv.appendChild(govLabelDiv)
+  govDiv.appendChild(
+    createATagWithSearch(`https://www.gsxt.gov.cn/corp-query-homepage.html`, "企业信用")
+  );
+  govDiv.appendChild(
+    createATagWithSearch(`http://zxgk.court.gov.cn/zhzxgk/`, "执行信息")
+  );
+  govDiv.appendChild(
+    createATagWithSearch(`https://wenshu.court.gov.cn/`, "裁判文书")
+  );
+  govDiv.appendChild(
+    createATagWithSearch(`https://xwqy.gsxt.gov.cn/`, "个体私营")
+  );
+  dom.appendChild(govDiv);
   return dom;
 }
 
