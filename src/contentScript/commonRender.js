@@ -460,41 +460,46 @@ function createFirstBrowse(jobDTO) {
   return firstBrowseTimeTag;
 }
 
-function createCompanyInfo(item,{getCompanyInfoFunction}={}) {
+function createCompanyInfo(item, { getCompanyInfoFunction } = {}) {
   const dom = document.createElement("div");
   dom.className = "__company_info_quick_search";
   let mainChannelDiv = document.createElement("div");
   let otherChannelDiv = document.createElement("div");
   let quickSearchButton = document.createElement("div");
-  let fixValidHummanButton = document.createElement("a");
   quickSearchButton.className = "__company_info_quick_search_button";
   quickSearchButton.innerHTML = "🔎点击快速查询公司信息";
+  let fixValidHummanButton = document.createElement("a");
+  fixValidHummanButton.className = "__company_info_quick_search_button";
+  fixValidHummanButton.target = "_blank";
+  fixValidHummanButton.ref = "noopener noreferrer";
+  let quickSearchButtonLoading = document.createElement("div");
+  quickSearchButtonLoading.className = "__company_info_quick_search_button";
   const quickSearchHandle = async (event) => {
+    if (mainChannelDiv.contains(fixValidHummanButton)) {
+      mainChannelDiv.removeChild(fixValidHummanButton);
+    }
+    quickSearchButtonLoading.innerHTML = `🔎正查询公司全称⌛︎`;
+    mainChannelDiv.removeChild(quickSearchButton);
+    mainChannelDiv.appendChild(quickSearchButtonLoading);
     let companyName = item.jobCompanyName;
-    if(getCompanyInfoFunction){
-      let targetCompanyName = await getCompanyInfoFunction(item.jobCompanyApiUrl);
-      if(targetCompanyName){
+    fixValidHummanButton.innerHTML =
+      "一直查询失败？点击该按钮去尝试解除人机验证吧！";
+    if (getCompanyInfoFunction) {
+      let targetCompanyName = await getCompanyInfoFunction(
+        item.jobCompanyApiUrl
+      );
+      if (targetCompanyName) {
         companyName = targetCompanyName;
+      } else {
+        fixValidHummanButton.innerHTML = `找不到【${companyName}】的全称，点击该按钮去看看有没有相关记录`;
       }
     }
     const decode = encodeURIComponent(companyName);
     const url = `https://aiqicha.baidu.com/s?q=${decode}`;
-    fixValidHummanButton.className = "__company_info_quick_search_button";
-    fixValidHummanButton.innerHTML =
-      "一直查询失败？点击该按钮去尝试解除人机验证吧！";
     fixValidHummanButton.href = url;
-    fixValidHummanButton.target = "_blank";
-    fixValidHummanButton.ref = "noopener noreferrer";
     otherChannelDiv.innerHTML = "";
-    let quickSearchButtonLoading = document.createElement("div");
     try {
-      mainChannelDiv.removeChild(quickSearchButton);
-      if (mainChannelDiv.hasChildNodes(fixValidHummanButton)) {
-        mainChannelDiv.removeChild(fixValidHummanButton);
-      }
-      quickSearchButtonLoading.className = "__company_info_quick_search_button";
-      quickSearchButtonLoading.innerHTML = `🔎查询【${companyName}】中⌛︎`;
-      mainChannelDiv.appendChild(quickSearchButtonLoading);
+      quickSearchButtonLoading.innerHTML = `🔎正查询【${companyName}】⌛︎`;
       await asyncRenderCompanyInfo(mainChannelDiv, companyName);
       mainChannelDiv.removeChild(quickSearchButtonLoading);
     } catch (e) {
@@ -511,10 +516,10 @@ function createCompanyInfo(item,{getCompanyInfoFunction}={}) {
   mainChannelDiv.appendChild(quickSearchButton);
   dom.appendChild(mainChannelDiv);
   dom.appendChild(otherChannelDiv);
-  if(getCompanyInfoFunction){
+  if (getCompanyInfoFunction) {
     //for boss
     //skip
-  }else{
+  } else {
     //自动查询公司信息
     quickSearchHandle();
   }
