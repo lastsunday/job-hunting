@@ -136,6 +136,9 @@ function parseBossData(list, getListItem) {
         jobStatusDescList.push(jobStatus);
         //额外针对BOSS平台，为后面的排序做准备
         jobDTOList[index].jobStatusDesc = jobStatus;
+        jobDTOList[
+          index
+        ].jobCompanyApiUrl = `https://www.zhipin.com/gongsi/${item.value?.zpData?.brandComInfo?.encryptBrandId}.html`;
         let hrActiveTimeDesc = item.value?.zpData?.bossInfo?.activeTimeDesc;
         hrActiveTimeDescList.push(hrActiveTimeDesc);
         //额外针对BOSS平台，为后面的排序做准备
@@ -153,7 +156,20 @@ function parseBossData(list, getListItem) {
       });
       hiddenLoadingDOM();
       renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_BOSS });
-      renderFunctionPanel(jobDTOList, getListItem, { platform: PLATFORM_BOSS });
+      renderFunctionPanel(jobDTOList, getListItem, {
+        platform: PLATFORM_BOSS,
+        getCompanyInfoFunction: async function (url) {
+          const response = await fetch(url);
+          const result = await response.text();
+          const MATCH_COMPANY = /企业名称：<\/span>(?<data>.*)<\/li>/;
+          const groups = result.match(MATCH_COMPANY)?.groups;
+          if (groups) {
+            return groups["data"];
+          } else {
+            return null;
+          }
+        },
+      });
       finalRender(jobDTOList, { platform: PLATFORM_BOSS });
     })
     .catch((error) => {

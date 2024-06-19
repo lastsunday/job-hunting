@@ -4,6 +4,7 @@ import { isTraining } from "../common/data/training";
 import {
   convertTimeToHumanReadable,
   convertTimeOffsetToHumanReadable,
+  autoFillHttp,
 } from "../common/utils";
 import {
   JOB_STATUS_DESC_NEWEST,
@@ -395,7 +396,7 @@ function convertHrActiveTimeDescToOffsetTime(hrActiveTimeDesc) {
 //请求中断列表
 let abortFunctionHandlerMap = new Map();
 
-export function renderFunctionPanel(list, getListItem, { platform } = {}) {
+export function renderFunctionPanel(list, getListItem, { platform ,getCompanyInfoFunction} = {}) {
   if (abortFunctionHandlerMap && abortFunctionHandlerMap.size > 0) {
     //中断上一次的查询请求
     abortFunctionHandlerMap.forEach((value, key, map) => {
@@ -418,9 +419,13 @@ export function renderFunctionPanel(list, getListItem, { platform } = {}) {
     let functionPanelDiv = document.createElement("div");
     functionPanelDiv.classList.add(`__${platform}_function_panel`);
     targetDom.append(functionPanelDiv);
+    functionPanelDiv.onclick = (event) => {
+      event.stopPropagation();
+    };
     functionPanelDiv.appendChild(createLogo());
-    functionPanelDiv.appendChild(createSearchCompanyLink(item.jobCompanyName));
-    functionPanelDiv.appendChild(createCompanyReputation(item.jobCompanyName));
+    functionPanelDiv.appendChild(
+      createCompanyInfo(item,{getCompanyInfoFunction:getCompanyInfoFunction})
+    );
     functionPanelDiv.appendChild(createCommentWrapper(item));
   });
 }
@@ -455,14 +460,210 @@ function createFirstBrowse(jobDTO) {
   return firstBrowseTimeTag;
 }
 
+function createCompanyInfo(item,{getCompanyInfoFunction}={}) {
+  const dom = document.createElement("div");
+  dom.className = "__company_info_quick_search";
+  let mainChannelDiv = document.createElement("div");
+  let otherChannelDiv = document.createElement("div");
+  let quickSearchButton = document.createElement("div");
+  let fixValidHummanButton = document.createElement("a");
+  quickSearchButton.className = "__company_info_quick_search_button";
+  quickSearchButton.innerHTML = "🔎点击快速查询公司信息";
+  const quickSearchHandle = async (event) => {
+    let companyName = item.jobCompanyName;
+    if(getCompanyInfoFunction){
+      let targetCompanyName = await getCompanyInfoFunction(item.jobCompanyApiUrl);
+      if(targetCompanyName){
+        companyName = targetCompanyName;
+      }
+    }
+    const decode = encodeURIComponent(companyName);
+    const url = `https://aiqicha.baidu.com/s?q=${decode}`;
+    fixValidHummanButton.className = "__company_info_quick_search_button";
+    fixValidHummanButton.innerHTML =
+      "一直查询失败？点击该按钮去尝试解除人机验证吧！";
+    fixValidHummanButton.href = url;
+    fixValidHummanButton.target = "_blank";
+    fixValidHummanButton.ref = "noopener noreferrer";
+    otherChannelDiv.innerHTML = "";
+    let quickSearchButtonLoading = document.createElement("div");
+    try {
+      mainChannelDiv.removeChild(quickSearchButton);
+      if (mainChannelDiv.hasChildNodes(fixValidHummanButton)) {
+        mainChannelDiv.removeChild(fixValidHummanButton);
+      }
+      quickSearchButtonLoading.className = "__company_info_quick_search_button";
+      quickSearchButtonLoading.innerHTML = `🔎查询【${companyName}】中⌛︎`;
+      mainChannelDiv.appendChild(quickSearchButtonLoading);
+      await asyncRenderCompanyInfo(mainChannelDiv, companyName);
+      mainChannelDiv.removeChild(quickSearchButtonLoading);
+    } catch (e) {
+      mainChannelDiv.removeChild(quickSearchButtonLoading);
+      quickSearchButton.innerHTML = `🔎查询【${companyName}】失败，点击重新查询`;
+      mainChannelDiv.appendChild(quickSearchButton);
+      mainChannelDiv.appendChild(fixValidHummanButton);
+    } finally {
+      otherChannelDiv.appendChild(createCompanyReputation(companyName));
+      otherChannelDiv.appendChild(createSearchCompanyLink(companyName));
+    }
+  };
+  quickSearchButton.onclick = quickSearchHandle;
+  mainChannelDiv.appendChild(quickSearchButton);
+  dom.appendChild(mainChannelDiv);
+  dom.appendChild(otherChannelDiv);
+  if(getCompanyInfoFunction){
+    //for boss
+    //skip
+  }else{
+    //自动查询公司信息
+    quickSearchHandle();
+  }
+  return dom;
+}
+
+const AIQICHA_PAGE_DATA_MATCH = /window.pageData = (?<data>\{.*\})/;
+
+async function asyncRenderCompanyInfo(div, keyword) {
+  let companyInfo = await getCompanyInfoByAiqicha(keyword);
+  if (companyInfo) {
+    let companyInfoDetail = await getCompanyInfoDetailByAiqicha(
+      companyInfo.pid
+    );
+    div.appendChild(createCompanyInfoDetail(companyInfo, companyInfoDetail));
+  } else {
+    throw "company search fail";
+  }
+}
+
+function createCompanyInfoDetail(companyInfo, companyInfoDetail) {
+  let contentDiv = $("<div></div>");
+  contentDiv.append(
+    $(`<div class="__company_info_quick_search_item"></div>`)
+      .append(
+        $(
+          `<div><div class="__company_info_quick_search_item_label">公司名：</div><div class="__company_info_quick_search_item_value">${companyInfoDetail.entName}</div></div>`
+        )
+      )
+      .append(
+        $(
+          `<div><div class="__company_info_quick_search_item_label">经营状态：</div>${companyInfoDetail.openStatus}</div>`
+        )
+      )
+  );
+  let websiteElement = null;
+  if (companyInfoDetail.website && companyInfoDetail.website.length > 1) {
+    websiteElement = `<a href="${autoFillHttp(
+      companyInfoDetail.website
+    )}" target = "_blank"; ref = "noopener noreferrer">${
+      companyInfoDetail.website
+    }</a>`;
+  } else {
+    websiteElement = "-";
+  }
+  contentDiv.append(
+    $(`<div class="__company_info_quick_search_item"></div>`)
+      .append(
+        $(
+          `<div><div class="__company_info_quick_search_item_label">法人：</div>${companyInfoDetail.legalPerson}</div>`
+        )
+      )
+      .append(
+        $(
+          `<div><div class="__company_info_quick_search_item_label">统一社会信用代码：</div>${companyInfoDetail.unifiedCode}</div>`
+        )
+      )
+      .append(
+        $(
+          `<div><div class="__company_info_quick_search_item_label">官网：</div>${websiteElement}</div>`
+        )
+      )
+  );
+  contentDiv.append(
+    $(`<div class="__company_info_quick_search_item"></div>`)
+      .append(
+        $(
+          `<div><div class="__company_info_quick_search_item_label">社保人数：</div>${
+            companyInfoDetail?.insuranceInfo?.insuranceNum ?? "-"
+          }</div>`
+        )
+      )
+      .append(
+        $(
+          `<div><div class="__company_info_quick_search_item_label">自身风险数：</div>${companyInfo?.risk?.selfRiskTotal}</div>`
+        )
+      )
+      .append(
+        $(
+          `<div><div class="__company_info_quick_search_item_label">关联风险数：</div>${companyInfo?.risk?.unionRiskTotal}</div>`
+        )
+      )
+  );
+  contentDiv.append(
+    $(`<div class="__company_info_quick_search_item"></div>`).append(
+      $(
+        `<div><div class="__company_info_quick_search_item_label">地址：</div><div class="__company_info_quick_search_item_value">${companyInfoDetail.regAddr}</div></div>`
+      )
+    )
+  );
+  contentDiv.append(
+    $(`<div class="__company_info_quick_search_item"></div>`).append(
+      $(
+        `<div><div class="__company_info_quick_search_item_label">数据来源：</div><div class="__company_info_quick_search_item_value"><a href="https://aiqicha.baidu.com/company_detail_${companyInfo.pid}" target = "_blank"; ref = "noopener noreferrer">https://aiqicha.baidu.com/company_detail_${companyInfo.pid}</a></div></div>`
+      )
+    )
+  );
+  return contentDiv[0];
+}
+
+async function getCompanyInfoByAiqicha(keyword) {
+  const decode = encodeURIComponent(keyword);
+  const url = `https://aiqicha.baidu.com/s?q=${decode}`;
+  let abortFunctionHandler = null;
+  const result = await httpFetchGetText(url, (abortFunction) => {
+    abortFunctionHandler = abortFunction;
+    //加入请求手动中断列表
+    abortFunctionHandlerMap.set(abortFunctionHandler, null);
+  });
+  //请求正常结束，从手动中断列表中移除
+  abortFunctionHandlerMap.delete(abortFunctionHandler);
+  let data = JSON.parse(result.match(AIQICHA_PAGE_DATA_MATCH).groups["data"]);
+  let resultList = data.result.resultList;
+  for (let i = 0; i < resultList.length; i++) {
+    let companyInfo = resultList[i];
+    if (companyInfo.titleName == keyword) {
+      return companyInfo;
+    }
+  }
+  return null;
+}
+
+async function getCompanyInfoDetailByAiqicha(pid) {
+  const url = `https://aiqicha.baidu.com/company_detail_${pid}`;
+  let abortFunctionHandler = null;
+  const result = await httpFetchGetText(url, (abortFunction) => {
+    abortFunctionHandler = abortFunction;
+    //加入请求手动中断列表
+    abortFunctionHandlerMap.set(abortFunctionHandler, null);
+  });
+  //请求正常结束，从手动中断列表中移除
+  abortFunctionHandlerMap.delete(abortFunctionHandler);
+  let data = JSON.parse(result.match(AIQICHA_PAGE_DATA_MATCH).groups["data"]);
+  let companyInfoDetail = data.result;
+  return companyInfoDetail;
+}
+
 function createSearchCompanyLink(keyword) {
   const decode = encodeURIComponent(keyword);
   const dom = document.createElement("div");
   const internetDiv = document.createElement("div");
-  internetDiv.className = "__company_info_search";
+  internetDiv.className =
+    "__company_info_quick_search_item __company_info_other_channel";
   let internetLabelDiv = document.createElement("div");
-  internetLabelDiv.innerHTML = "公司信息查询（互联网渠道）：";
-  internetDiv.appendChild(internetLabelDiv);
+  internetLabelDiv.className = "__company_info_quick_search_item_label";
+  internetLabelDiv.innerHTML = " - 互联网渠道";
+  internetDiv.appendChild(
+    createATagWithSearch(`https://aiqicha.baidu.com/s?q=${decode}`, "爱企查")
+  );
   internetDiv.appendChild(
     createATagWithSearch(
       `https://www.xiaohongshu.com/search_result?keyword=${decode}`,
@@ -481,17 +682,19 @@ function createSearchCompanyLink(keyword) {
   internetDiv.appendChild(
     createATagWithSearch(`https://www.google.com/search?q=${decode}`, "Google")
   );
-  internetDiv.appendChild(
-    createATagWithSearch(`https://aiqicha.baidu.com/s?q=${decode}`, "爱企查")
-  );
+  internetDiv.appendChild(internetLabelDiv);
   dom.appendChild(internetDiv);
   const govDiv = document.createElement("div");
-  govDiv.className = "__company_info_search";
+  govDiv.className =
+    "__company_info_quick_search_item __company_info_other_channel";
   let govLabelDiv = document.createElement("div");
-  govLabelDiv.innerHTML = "公司信息查询（政府渠道）：";
-  govDiv.appendChild(govLabelDiv)
+  govLabelDiv.className = "__company_info_quick_search_item_label";
+  govLabelDiv.innerHTML = "- 政府渠道";
   govDiv.appendChild(
-    createATagWithSearch(`https://www.gsxt.gov.cn/corp-query-homepage.html`, "企业信用")
+    createATagWithSearch(
+      `https://www.gsxt.gov.cn/corp-query-homepage.html`,
+      "企业信用"
+    )
   );
   govDiv.appendChild(
     createATagWithSearch(`http://zxgk.court.gov.cn/zhzxgk/`, "执行信息")
@@ -502,14 +705,16 @@ function createSearchCompanyLink(keyword) {
   govDiv.appendChild(
     createATagWithSearch(`https://xwqy.gsxt.gov.cn/`, "个体私营")
   );
+  govDiv.appendChild(govLabelDiv);
   dom.appendChild(govDiv);
   return dom;
 }
 
 function createCompanyReputation(keyword) {
   const dom = document.createElement("div");
-  dom.className = "__company_info_search";
+  dom.className = "__company_info_quick_search_item";
   let labelDiv = document.createElement("div");
+  labelDiv.className = "__company_info_quick_search_item_label";
   labelDiv.innerHTML = "公司风评检测：";
   dom.appendChild(labelDiv);
   const ruobilinDiv = document.createElement("div");

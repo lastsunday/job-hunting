@@ -20,11 +20,12 @@
 1. 显示职位发布时间与自动排序(按职位发布时间,hr活跃时间（只支持BOSS）)。
 2. 快捷查询公司信息🔎（互联网渠道，政府渠道）。
 3. 自动检测公司风评📡，当前支持：若比邻黑名单。
-4. 本地显示职位初次浏览时间，历史浏览次数。
-5. 本地职位记录统计，查询，查询结果导出。
-6. 数据备份，数据恢复。
-7. 职位评论，公司评论。（当前采用ECHO作为评论平台，请遵守相关法律法规合法留言）
-8. 数据统计图表
+4. 自动快速查询公司信息（BOSS直聘需手动点击查询）。
+5. 本地显示职位初次浏览时间，历史浏览次数。
+6. 本地职位记录统计，查询，查询结果导出。
+7. 数据备份，数据恢复。
+8. 职位评论，公司评论。（当前采用ECHO作为评论平台，请遵守相关法律法规合法留言）
+9. 数据统计图表
     1. 根据指定搜索条件统计薪酬区间职位数（薪酬计算方式：(最低薪资+最高薪资)/2）
 
 
@@ -39,34 +40,10 @@ Modern browsers
 ## 运行截图
 
 <p>
-    <div style="margin-top:20px">
-        <img src="docs\introduction\job-item-boss.png" alt="boss" width="1000px"/>
-        <div style="text-align:center">
-            Boss直聘
-        </div>
-	</div>
 	<div style="margin-top:20px">
         <img src="docs\introduction\job-item-51job.png" alt="51job" width="1000px"/>
         <div style="text-align:center;">
             前程无忧
-        </div>
-	</div>
-	<div style="margin-top:20px">
-        <img src="docs\introduction\job-item-zhilian.png" alt="zhilian" width="1000px"/>
-        <div style="text-align:center">
-            智联招聘
-        </div>
-	</div>
-	<div style="margin-top:20px">
-        <img src="docs\introduction\job-item-lagou.png" alt="lagou" width="1000px"/>
-        <div style="text-align:center">
-            拉勾网
-        </div>
-	</div>
-	<div style="margin-top:20px;text-align:center;" >
-        <img src="docs\introduction\job-item-jobsdb.png" alt="jobsdb" width="500px"/>
-        <div style="text-align:center">
-            JobsDB HK
         </div>
 	</div>
 </p>

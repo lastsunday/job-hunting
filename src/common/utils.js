@@ -133,3 +133,14 @@ const isEmpty = (str) => !str?.length;
 function isBlank(str) {
   return !str || /^\s*$/.test(str);
 }
+
+export function autoFillHttp(url) {
+  if (
+    url.substr(0, 7).toLowerCase() == "http://" ||
+    url.substr(0, 8).toLowerCase() == "https://"
+  ) {
+    return url;
+  } else {
+    return "http://" + url;
+  }
+}

@@ -89,16 +89,61 @@ div[data-search-sol-meta] {
   font-size: 14px;
   color: #414a60;
   flex-wrap: wrap;
+}
+
+.__company_info_quick_search {
+  display: flex;
+  font-size: 14px;
+  color: #414a60;
+  padding: 8px;
+  flex-direction: column;
+  background-color: lightgoldenrodyellow;
+  border-radius: 10px;
+}
+
+.__company_info_quick_search_item {
+  display: flex;
+  padding: 2px;
   a {
     padding-right: 10px;
     font-size: 14px;
-    color: #414a60;
+    color: blue;
   }
 
   a:hover {
     background-color: yellowgreen;
     color: white;
   }
+}
+
+.__company_info_quick_search_item > div {
+  display: flex;
+  align-items: flex-end;
+  padding-right: 10px;
+}
+
+.__company_info_quick_search_item_label {
+  font-weight: 600;
+  align-self: baseline;
+}
+
+.__company_info_quick_search_item_value {
+  flex: 1;
+}
+
+.__company_info_quick_search_button{
+  background-color: mediumblue;
+  color: white;
+  padding: 1px 8px;
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-block;
+  margin: 5px;
+}
+
+.__company_info_other_channel{
+  justify-content: end;
 }
 
 .__BOSS_function_panel {
@@ -116,7 +161,7 @@ div[data-search-sol-meta] {
 
 .__LAGOU_function_panel {
   padding-left: 17px;
-  margin-right: 10px; 
+  margin-right: 10px;
 }
 
 .__JOBSDB_function_panel {
@@ -135,14 +180,12 @@ div[data-search-sol-meta] {
 .__BOSS_comment_wrapper {
   padding-right: 10px;
   padding-bottom: 10px;
-} 
+}
 
 .__51JOB_comment_wrapper {
-
 }
 
 .__ZHILIAN_comment_wrapper {
-
 }
 
 .__LAGOU_comment_wrapper {
@@ -154,15 +197,14 @@ div[data-search-sol-meta] {
   padding-right: 25px;
 }
 
-.__logo_in_function_panel{
+.__logo_in_function_panel {
   position: absolute;
   right: 0;
   bottom: 0px;
   width: 20px;
 }
 
-.__first_browse_time{
+.__first_browse_time {
   font-size: 14px;
   color: #414a60;
 }
-
