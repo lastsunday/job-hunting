@@ -551,6 +551,11 @@ function createCompanyInfoDetail(companyInfo, companyInfoDetail) {
       )
       .append(
         $(
+          `<div><div class="__company_info_quick_search_item_label">成立时间：</div>${companyInfoDetail.startDate}</div>`
+        )
+      )
+      .append(
+        $(
           `<div><div class="__company_info_quick_search_item_label">经营状态：</div>${companyInfoDetail.openStatus}</div>`
         )
       )
