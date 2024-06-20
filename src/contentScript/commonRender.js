@@ -26,7 +26,7 @@ const ACTIVE_TIME_MATCH = /(?<num>[0-9\.]*)/;
 export function renderTimeTag(
   divElement,
   jobDTO,
-  { jobStatusDesc, hrActiveTimeDesc, platform } = {}
+  { jobStatusDesc, platform } = {}
 ) {
   if (jobDTO == null || jobDTO == undefined) {
     throw new Error("jobDTO is required");
@@ -50,13 +50,6 @@ export function renderTimeTag(
       }
       statusTag.classList.add("__time_tag_base_text_font");
       divElement.appendChild(statusTag);
-    }
-    //hrActiveTimeDesc for boss
-    if (hrActiveTimeDesc) {
-      let hrActiveTimeDescTag = document.createElement("span");
-      hrActiveTimeDescTag.innerHTML = "【HR-" + hrActiveTimeDesc + "】";
-      hrActiveTimeDescTag.classList.add("__time_tag_base_text_font");
-      divElement.appendChild(hrActiveTimeDescTag);
     }
   } else if (platform && platform == PLATFORM_LIEPIN) {
     //refreshTime
@@ -82,6 +75,12 @@ export function renderTimeTag(
       divElement.appendChild(firstPublishTimeTag);
     }
   }
+  if (jobDTO.hrActiveTimeDesc) {
+    let hrActiveTimeDescTag = document.createElement("span");
+    hrActiveTimeDescTag.innerHTML = "【HR-" + jobDTO.hrActiveTimeDesc + "】";
+    hrActiveTimeDescTag.classList.add("__time_tag_base_text_font");
+    divElement.appendChild(hrActiveTimeDescTag);
+  }
   //显示职位介绍
   divElement.title = jobDTO.jobDescription;
   //companyInfo
@@ -97,12 +96,11 @@ export function renderTimeTag(
   divElement.classList.add("__time_tag_base_text_font");
 
   //为time tag染色
-  if (hrActiveTimeDesc) {
-    // for boss
+  if (jobDTO.hrActiveTimeDesc && platform == PLATFORM_BOSS) {
     //根据hr活跃时间为JobItem染色
     let now = dayjs();
     let hrActiveDatetime = now.subtract(
-      convertHrActiveTimeDescToOffsetTime(hrActiveTimeDesc),
+      convertHrActiveTimeDescToOffsetTime(jobDTO.hrActiveTimeDesc),
       "millisecond"
     );
     divElement.style = getRenderTimeStyle(hrActiveDatetime);
@@ -314,8 +312,8 @@ export function renderSortJobItem(list, getListItem, { platform }) {
       dayjs(o1.firstBrowseDatetime ?? null).valueOf()
     );
   });
-  if (platform == PLATFORM_BOSS) {
-    //handle hr active time
+  //handle hr active time
+  if (platform == PLATFORM_BOSS || platform == PLATFORM_LIEPIN) {
     sortList.forEach((item) => {
       let hrActiveTimeOffsetTime = convertHrActiveTimeDescToOffsetTime(
         item.hrActiveTimeDesc
@@ -325,6 +323,8 @@ export function renderSortJobItem(list, getListItem, { platform }) {
     sortList.sort((o1, o2) => {
       return o1.hrActiveTimeOffsetTime - o2.hrActiveTimeOffsetTime;
     });
+  }
+  if (platform == PLATFORM_BOSS) {
     sortList.sort((o1, o2) => {
       if (o2.jobStatusDesc && o1.jobStatusDesc) {
         return o1.jobStatusDesc.order - o2.jobStatusDesc.order;
@@ -369,14 +369,23 @@ function convertHrActiveTimeDescToOffsetTime(hrActiveTimeDesc) {
   const oneYear = 86400000 * 30 * 6 * 2;
   if (hrActiveTimeDesc) {
     let coefficient;
-    if (hrActiveTimeDesc.includes("刚刚")) {
+    if (
+      hrActiveTimeDesc.includes("刚刚") ||
+      hrActiveTimeDesc.includes("当前")
+    ) {
       offsetTime = 0;
     } else if (
+      hrActiveTimeDesc.includes("分") ||
+      hrActiveTimeDesc.includes("时") ||
       hrActiveTimeDesc.includes("日") ||
       hrActiveTimeDesc.includes("周") ||
       hrActiveTimeDesc.includes("月")
     ) {
-      if (hrActiveTimeDesc.includes("日")) {
+      if (hrActiveTimeDesc.includes("分")) {
+        coefficient = 60000;
+      } else if (hrActiveTimeDesc.includes("时")) {
+        coefficient = 3600000;
+      } else if (hrActiveTimeDesc.includes("日")) {
         coefficient = 86400000;
       } else if (hrActiveTimeDesc.includes("周")) {
         coefficient = 86400000 * 7;

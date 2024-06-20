@@ -102,7 +102,7 @@ function handleLiepin(list) {
     job.jobDescription = jobDesc;
     job.jobDegreeName = requireEduLevel;
     //handle job year
-    let jobYearGroups = requireWorkYears.match(JOB_YEAR_MATCH)?.groups;
+    let jobYearGroups = requireWorkYears?.match(JOB_YEAR_MATCH)?.groups;
     if (jobYearGroups) {
       job.jobYear = jobYearGroups.min;
     } else {

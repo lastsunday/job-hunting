@@ -95,16 +95,29 @@ async function parseData(list, getListItem) {
   });
   Promise.allSettled(promiseList)
     .then(async (jobDetailHtmlContentList) => {
+      const hrActiveTimeDescList = [];
       jobDetailHtmlContentList.forEach((item, index) => {
         let jobDesc = null;
-        let firstFilterTextList = item.value.match(/<dd data-selector="job-intro-content">[\s\S]*?<\/dd>/g);
-        if (firstFilterTextList && firstFilterTextList.length > 0) {
-          const groups = firstFilterTextList[0].match(/<dd data-selector="job-intro-content">(?<data>[\s\S]*)<\/dd>/)?.groups;
-          if (groups) {
-            jobDesc = groups["data"];
+        let jobDescFilterTextList = item.value.match(
+          /<dd data-selector="job-intro-content">[\s\S]*?<\/dd>/g
+        );
+        if (jobDescFilterTextList && jobDescFilterTextList.length > 0) {
+          const jobDescGroups = jobDescFilterTextList[0].match(
+            /<dd data-selector="job-intro-content">(?<data>[\s\S]*)<\/dd>/
+          )?.groups;
+          if (jobDescGroups) {
+            jobDesc = jobDescGroups["data"];
           }
         }
         list[index].job.jobDesc = jobDesc;
+        let hrActiveTimeDesc = null;
+        let hrActiveTimeDescGroups = item.value.match(
+          /<span class="online off">(?<data>.*)<\/span>/
+        )?.groups;
+        if (hrActiveTimeDescGroups) {
+          hrActiveTimeDesc = hrActiveTimeDescGroups["data"];
+        }
+        hrActiveTimeDescList.push(hrActiveTimeDesc);
       });
       await saveBrowseJob(list, PLATFORM_LIEPIN);
       let jobDTOList = await JobApi.getJobBrowseInfoByIds(
@@ -115,6 +128,7 @@ async function parseData(list, getListItem) {
         jobDTOList[
           index
         ].jobCompanyApiUrl = `https://www.liepin.com/company/${compId}`;
+        jobDTOList[index].hrActiveTimeDesc = hrActiveTimeDescList[index];
         const dom = getListItem(index);
         let tag = createDOM(jobDTOList[index]);
         dom.appendChild(tag);

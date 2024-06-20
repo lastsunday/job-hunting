@@ -125,7 +125,6 @@ function parseBossData(list, getListItem) {
       );
       const lastModifyTimeList = [];
       const jobStatusDescList = [];
-      const hrActiveTimeDescList = [];
       jsonList.forEach((item, index) => {
         lastModifyTimeList.push(
           dayjs(item.value?.zpData?.brandComInfo?.activeTime)
@@ -140,18 +139,13 @@ function parseBossData(list, getListItem) {
           index
         ].jobCompanyApiUrl = `https://www.zhipin.com/gongsi/${item.value?.zpData?.brandComInfo?.encryptBrandId}.html`;
         let hrActiveTimeDesc = item.value?.zpData?.bossInfo?.activeTimeDesc;
-        hrActiveTimeDescList.push(hrActiveTimeDesc);
         //额外针对BOSS平台，为后面的排序做准备
         jobDTOList[index].hrActiveTimeDesc = hrActiveTimeDesc;
       });
 
       list.forEach((item, index) => {
         const dom = getListItem(index);
-        let tag = createDOM(
-          jobDTOList[index],
-          hrActiveTimeDescList[index],
-          jobStatusDescList[index]
-        );
+        let tag = createDOM(jobDTOList[index], jobStatusDescList[index]);
         dom.appendChild(tag);
       });
       hiddenLoadingDOM();
@@ -178,11 +172,10 @@ function parseBossData(list, getListItem) {
     });
 }
 
-function createDOM(jobDTO, hrActiveTimeDesc, jobStatusDesc) {
+function createDOM(jobDTO, jobStatusDesc) {
   const div = document.createElement("div");
   div.classList.add("__boss_time_tag");
   renderTimeTag(div, jobDTO, {
-    hrActiveTimeDesc: hrActiveTimeDesc,
     jobStatusDesc: jobStatusDesc,
     platform: PLATFORM_BOSS,
   });
