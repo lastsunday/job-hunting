@@ -149,7 +149,7 @@
               m="t-0 b-2"
               style="width: 100%; height: 300px"
               disabled
-              :value="props.row.jobDescription.replace(/<\/?.+?\/?>/g, '')"
+              :value="props.row.jobDescription?.replace(/<\/?.+?\/?>/g, '')"
             >
             </textarea>
           </div>

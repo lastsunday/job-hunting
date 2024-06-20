@@ -14,6 +14,7 @@
 | 智联招聘  | https://sou.zhaopin.com/            |                        |
 | 拉钩网    | https://www.lagou.com/wn/zhaopin    |                        |
 | jobsdb-hk | https://hk.jobsdb.com/              | 需点击搜索按钮才有效果 |
+| 猎聘网 | https://www.liepin.com/zhaopin              | 需点击搜索按钮才有效果 |
 
 ## 功能列表
 
@@ -105,7 +106,8 @@ Modern browsers
     * 51Job：   <https://we.51job.com/pc/search>
     * 智联招聘： <https://sou.zhaopin.com/>
     * 拉钩网：<https://www.lagou.com/wn/zhaopin>
-    * jobsdb-hk <https://hk.jobsdb.com/>
+    * jobsdb-hk：<https://hk.jobsdb.com/>
+    * 猎聘网： <https://www.liepin.com/zhaopin>
 
 **开发**
 

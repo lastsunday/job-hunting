@@ -22,44 +22,47 @@
   },
   "{{chrome}}.content_scripts": [
     {
-        "js": ["src/contentScript/index.js"],
-        "matches": [
-            "https://www.zhipin.com/*",
-            "https://sou.zhaopin.com/*",
-            "https://we.51job.com/*",
-            "https://www.lagou.com/*",
-            "https://hk.jobsdb.com/*"
-        ]
+      "js": ["src/contentScript/index.js"],
+      "matches": [
+        "https://www.zhipin.com/*",
+        "https://sou.zhaopin.com/*",
+        "https://we.51job.com/*",
+        "https://www.lagou.com/*",
+        "https://hk.jobsdb.com/*",
+        "https://www.liepin.com/*"
+      ]
     }
   ],
   "{{chrome}}.web_accessible_resources": [
-      {
-          "resources": ["proxyAjax.js", "app.css"],
-          "matches": [
-              "https://www.zhipin.com/*", 
-              "https://sou.zhaopin.com/*",
-              "https://we.51job.com/*",
-              "https://www.lagou.com/*",
-              "https://hk.jobsdb.com/*"
-          ]
-      }
+    {
+      "resources": ["proxyAjax.js", "app.css"],
+      "matches": [
+        "https://www.zhipin.com/*",
+        "https://sou.zhaopin.com/*",
+        "https://we.51job.com/*",
+        "https://www.lagou.com/*",
+        "https://hk.jobsdb.com/*",
+        "https://www.liepin.com/*"
+      ]
+    }
   ],
   "{{chrome}}.side_panel": {
     "default_path": "src/sidepanel/index.html"
   },
   "{{chrome}}.permissions": [
-      "webRequest",
-      "offscreen",
-      "sidePanel",
-      "unlimitedStorage"
+    "webRequest",
+    "offscreen",
+    "sidePanel",
+    "unlimitedStorage"
   ],
   "{{chrome}}.host_permissions": [
-      "https://www.zhipin.com/*",
-      "https://sou.zhaopin.com/*",
-      "https://we.51job.com/*",
-      "https://www.lagou.com/*",
-      "https://hk.jobsdb.com/*",
-      "https://kjxb.org/",
-      "https://aiqicha.baidu.com/"
+    "https://www.zhipin.com/*",
+    "https://sou.zhaopin.com/*",
+    "https://we.51job.com/*",
+    "https://www.lagou.com/*",
+    "https://hk.jobsdb.com/*",
+    "https://kjxb.org/",
+    "https://aiqicha.baidu.com/",
+    "https://www.liepin.com/*"
   ]
 }

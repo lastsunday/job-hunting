@@ -5,12 +5,13 @@ import {
   PLATFORM_ZHILIAN,
   PLATFORM_JOBSDB,
   JOB_STATUS_DESC_NEWEST,
+  PLATFORM_LIEPIN,
 } from "./common";
 import { Job } from "../common/data/domain/job";
 import { JobApi } from "../common/api";
 import { infoLog } from "../common/log";
 import dayjs from "dayjs";
-import sha256 from 'crypto-js/sha256';
+import sha256 from "crypto-js/sha256";
 
 const SALARY_MATCH = /(?<min>[0-9\.]*)(?<minUnit>\D*)(?<max>[0-9\.]*)(?<maxUnit>\D*)(?<month>\d*)/;
 const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
@@ -33,6 +34,8 @@ export async function saveBrowseJob(list, platform) {
     jobs = handleLagouData(list);
   } else if (PLATFORM_JOBSDB == platform) {
     jobs = handleJobsdb(list);
+  } else if (PLATFORM_LIEPIN == platform) {
+    jobs = handleLiepin(list);
   } else {
     //skip
   }
@@ -59,12 +62,103 @@ export function getJobIds(list, platform) {
       jobId = item.positionId;
     } else if (PLATFORM_JOBSDB == platform) {
       jobId = item.id;
+    } else if (PLATFORM_LIEPIN == platform) {
+      jobId = item.job.jobId;
     } else {
       //skip
     }
     result.push(genId(jobId, platform));
   }
   return result;
+}
+
+function handleLiepin(list) {
+  let jobs = [];
+  for (let i = 0; i < list.length; i++) {
+    let job = new Job();
+    let item = list[i];
+    const {
+      jobId,
+      link,
+      title,
+      dq,
+      requireEduLevel,
+      requireWorkYears,
+      salary,
+      refreshTime,
+      jobDesc, //访问详情页面而来的
+    } = item.job;
+    const { compName } = item.comp;
+    const { recruiterName, recruiterTitle } = item.recruiter;
+    job.jobId = genId(jobId, PLATFORM_LIEPIN);
+    job.jobPlatform = PLATFORM_LIEPIN;
+    job.jobUrl = link;
+    job.jobName = title;
+    job.jobCompanyName = compName;
+    job.jobLocationName = dq;
+    job.jobAddress = dq;
+    job.jobLongitude = "";
+    job.jobLatitude = "";
+    job.jobDescription = jobDesc;
+    job.jobDegreeName = requireEduLevel;
+    //handle job year
+    let jobYearGroups = requireWorkYears.match(JOB_YEAR_MATCH)?.groups;
+    if (jobYearGroups) {
+      job.jobYear = jobYearGroups.min;
+    } else {
+      //skip
+    }
+    //handle salary
+    //TODO salary content was complex,not handle all situation
+    if (salary) {
+      let targetSalary = salary.replaceAll(",", "").replaceAll("$", "");
+      let groups = targetSalary.match(SALARY_MATCH)?.groups;
+      if (groups) {
+        let coefficient;
+        let minUnitCoefficient;
+        let maxUnitCoefficient;
+        if (salary.includes("per hour")) {
+          //一天8小时工作5天
+          coefficient = 1 * 8 * 5;
+        } else {
+          coefficient = 1;
+        }
+        if (groups?.minUnit.includes("k")) {
+          minUnitCoefficient = 1000;
+        } else {
+          if (groups?.minUnit.includes("-") && groups?.maxUnit.includes("k")) {
+            minUnitCoefficient = 1000;
+          } else {
+            minUnitCoefficient = 1;
+          }
+        }
+        if (groups?.maxUnit.includes("k")) {
+          maxUnitCoefficient = 1000;
+        } else {
+          maxUnitCoefficient = 1;
+        }
+        job.jobSalaryMin =
+          Number.parseInt(groups?.min) * coefficient * minUnitCoefficient;
+        job.jobSalaryMax =
+          Number.parseInt(groups?.max) * coefficient * maxUnitCoefficient;
+      } else {
+        //skip
+      }
+    }
+    if (salary.endsWith("薪")) {
+      let groups = salary.match(SALARY_MATCH)?.groups;
+      job.jobSalaryTotalMonth = groups.month;
+    } else {
+      job.jobSalaryTotalMonth = "";
+    }
+    //暂未找到首次发布时间，用更新时间代替
+    job.jobFirstPublishDatetime = refreshTime;
+    job.bossName = recruiterName;
+    job.bossCompanyName = compName;
+    job.bossPosition = recruiterTitle;
+    jobs.push(job);
+  }
+  return jobs;
 }
 
 function handleJobsdb(list) {
@@ -361,7 +455,7 @@ function handle51JobData(list) {
       let groups = provideSalaryString.match(SALARY_MATCH)?.groups;
       job.jobSalaryTotalMonth = groups.month;
     } else {
-      job.jobSalaryTotalMont = "";
+      job.jobSalaryTotalMonth = "";
     }
     job.jobFirstPublishDatetime = confirmDateString;
     job.bossName = hrName;
@@ -372,14 +466,14 @@ function handle51JobData(list) {
   return jobs;
 }
 
-export function genSha256(value){
-  return sha256(value);;
+export function genSha256(value) {
+  return sha256(value);
 }
 
-export function genCompanyIdWithSha256(value){
-  return genSha256("COMPANY_"+value);
+export function genCompanyIdWithSha256(value) {
+  return genSha256("COMPANY_" + value);
 }
 
-export function genJobItemIdWithSha256(value){
-  return genSha256("JOBITEM_"+value);
+export function genJobItemIdWithSha256(value) {
+  return genSha256("JOBITEM_" + value);
 }

@@ -10,6 +10,7 @@ import {
   JOB_STATUS_DESC_NEWEST,
   PLATFORM_BOSS,
   PLATFORM_JOBSDB,
+  PLATFORM_LIEPIN,
 } from "./common";
 import {
   genJobItemIdWithSha256,
@@ -57,6 +58,16 @@ export function renderTimeTag(
       hrActiveTimeDescTag.classList.add("__time_tag_base_text_font");
       divElement.appendChild(hrActiveTimeDescTag);
     }
+  } else if (platform && platform == PLATFORM_LIEPIN) {
+    //refreshTime
+    let refreshTime = jobDTO.jobFirstPublishDatetime;
+    if (refreshTime) {
+      let refreshTimeTag = document.createElement("span");
+      let refreshTimeHumanReadable = convertTimeToHumanReadable(refreshTime);
+      refreshTimeTag.innerHTML += "【" + refreshTimeHumanReadable + "更新】";
+      refreshTimeTag.classList.add("__time_tag_base_text_font");
+      divElement.appendChild(refreshTimeTag);
+    }
   } else {
     //firstPublishTime
     let firstPublishTime = jobDTO.jobFirstPublishDatetime;
@@ -71,6 +82,8 @@ export function renderTimeTag(
       divElement.appendChild(firstPublishTimeTag);
     }
   }
+  //显示职位介绍
+  divElement.title = jobDTO.jobDescription;
   //companyInfo
   let companyInfoTag = null;
   let companyInfoText = getCompanyInfoText(jobDTO.jobCompanyName);
@@ -396,7 +409,11 @@ function convertHrActiveTimeDescToOffsetTime(hrActiveTimeDesc) {
 //请求中断列表
 let abortFunctionHandlerMap = new Map();
 
-export function renderFunctionPanel(list, getListItem, { platform ,getCompanyInfoFunction} = {}) {
+export function renderFunctionPanel(
+  list,
+  getListItem,
+  { platform, getCompanyInfoFunction } = {}
+) {
   if (abortFunctionHandlerMap && abortFunctionHandlerMap.size > 0) {
     //中断上一次的查询请求
     abortFunctionHandlerMap.forEach((value, key, map) => {
@@ -424,7 +441,9 @@ export function renderFunctionPanel(list, getListItem, { platform ,getCompanyInf
     };
     functionPanelDiv.appendChild(createLogo());
     functionPanelDiv.appendChild(
-      createCompanyInfo(item,{getCompanyInfoFunction:getCompanyInfoFunction})
+      createCompanyInfo(item, {
+        getCompanyInfoFunction: getCompanyInfoFunction,
+      })
     );
     functionPanelDiv.appendChild(createCommentWrapper(item));
   });
@@ -640,11 +659,24 @@ async function getCompanyInfoByAiqicha(keyword) {
   let resultList = data.result.resultList;
   for (let i = 0; i < resultList.length; i++) {
     let companyInfo = resultList[i];
-    if (companyInfo.titleName == keyword) {
+    if (isCompanyNameSame(companyInfo.titleName, keyword)) {
       return companyInfo;
     }
   }
   return null;
+}
+
+/**
+ * 公司名对比，将中文括号进行替换英文括号，然后进行对比
+ * @param {*} name1
+ * @param {*} name2
+ * @returns
+ */
+function isCompanyNameSame(name1, name2) {
+  return (
+    name1.replaceAll("（", "(").replaceAll("）", ")") ==
+    name2.replaceAll("（", "(").replaceAll("）", ")")
+  );
 }
 
 async function getCompanyInfoDetailByAiqicha(pid) {

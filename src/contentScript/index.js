@@ -3,6 +3,7 @@ import { getZhiLianData } from "./plantforms/zhilian/index.js";
 import { getJob51Data } from "./plantforms/job51/index.js";
 import { getLaGouData } from "./plantforms/lagou/index.js";
 import { getJobsdbData } from "./plantforms/jobsdb/index.js";
+import { getLiepinData } from "./plantforms/liepin/index.js";
 import zhilianFirstOpen from "./plantforms/zhilian/firstOpen.js";
 import lagouFirstOpen from "./plantforms/lagou/firstOpen.js";
 
@@ -61,6 +62,11 @@ import { initBridge } from "../common/api/common.js";
       // jobsdb
       if (responseURL.indexOf("/api/chalice-search/v4/search") !== -1) {
         getJobsdbData(data?.response);
+      }
+
+      // liepin
+      if (responseURL.indexOf("/api/com.liepin.searchfront4c.pc-search-job") !== -1) {
+        getLiepinData(data?.response);
       }
     }
   });

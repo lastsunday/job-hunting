@@ -1,6 +1,7 @@
 .__boss_time_tag,
 .__zhipin_time_tag,
-.__zhilian_time_tag {
+.__zhilian_time_tag,
+.__liepin_time_tag {
   position: absolute;
   right: 0;
   top: 0;
@@ -131,7 +132,7 @@ div[data-search-sol-meta] {
   flex: 1;
 }
 
-.__company_info_quick_search_button{
+.__company_info_quick_search_button {
   background-color: mediumblue;
   color: white;
   padding: 1px 8px;
@@ -142,7 +143,7 @@ div[data-search-sol-meta] {
   margin: 5px;
 }
 
-.__company_info_other_channel{
+.__company_info_other_channel {
   justify-content: end;
 }
 
@@ -168,6 +169,9 @@ div[data-search-sol-meta] {
   display: flex;
   flex-direction: column;
   position: relative;
+}
+
+.__LIEPIN_function_panel {
 }
 
 .__comment_wrapper {
@@ -197,6 +201,10 @@ div[data-search-sol-meta] {
   padding-right: 25px;
 }
 
+.__LIEPIN_comment_wrapper {
+  padding-right: 25px;
+}
+
 .__logo_in_function_panel {
   position: absolute;
   right: 0;
@@ -207,4 +215,11 @@ div[data-search-sol-meta] {
 .__first_browse_time {
   font-size: 14px;
   color: #414a60;
+}
+
+.__LIEPIN_job_item {
+  position: relative;
+  background-color: white;
+  padding: 10px;
+  margin: 10px;
 }

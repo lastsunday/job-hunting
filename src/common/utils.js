@@ -117,6 +117,9 @@ export function randomDelay(delayTime, randomRange) {
 }
 
 export function convertEmptyStringToNull(value) {
+  if (isNumeric(value)) {
+    return value;
+  }
   if (value) {
     if (isEmpty(value) || isBlank(value)) {
       return null;
@@ -126,6 +129,10 @@ export function convertEmptyStringToNull(value) {
   } else {
     return null;
   }
+}
+
+export function isNumeric(value) {
+  return !isNaN(parseFloat(value)) && isFinite(value);
 }
 
 const isEmpty = (str) => !str?.length;
