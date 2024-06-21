@@ -8,6 +8,7 @@ import {
 } from "../common/utils";
 import {
   JOB_STATUS_DESC_NEWEST,
+  PLATFORM_AIQICHA,
   PLATFORM_BOSS,
   PLATFORM_JOBSDB,
   PLATFORM_LIEPIN,
@@ -15,11 +16,17 @@ import {
 import {
   genJobItemIdWithSha256,
   genCompanyIdWithSha256,
+  saveCompany,
+  genSha256,
+  companyNameConvert,
 } from "./commonDataHandler";
 import { httpFetchGetText } from "../common/api/common";
 
 import { logoBase64 } from "./assets/logo";
 import $ from "jquery";
+import { CompanyApi } from "../common/api";
+import { Company } from "../common/data/domain/company";
+import { errorLog } from "../common/log";
 
 const ACTIVE_TIME_MATCH = /(?<num>[0-9\.]*)/;
 
@@ -502,12 +509,14 @@ function createCompanyInfo(item, { getCompanyInfoFunction } = {}) {
   fixValidHummanButton.ref = "noopener noreferrer";
   let quickSearchButtonLoading = document.createElement("div");
   quickSearchButtonLoading.className = "__company_info_quick_search_button";
-  const quickSearchHandle = async (event) => {
+  const quickSearchHandle = async (forceSyncData) => {
     if (mainChannelDiv.contains(fixValidHummanButton)) {
       mainChannelDiv.removeChild(fixValidHummanButton);
     }
     quickSearchButtonLoading.innerHTML = `🔎正查询公司全称⌛︎`;
-    mainChannelDiv.removeChild(quickSearchButton);
+    if (mainChannelDiv.contains(quickSearchButton)) {
+      mainChannelDiv.removeChild(quickSearchButton);
+    }
     mainChannelDiv.appendChild(quickSearchButtonLoading);
     let companyName = item.jobCompanyName;
     fixValidHummanButton.innerHTML =
@@ -528,7 +537,12 @@ function createCompanyInfo(item, { getCompanyInfoFunction } = {}) {
     otherChannelDiv.innerHTML = "";
     try {
       quickSearchButtonLoading.innerHTML = `🔎正查询【${companyName}】⌛︎`;
-      await asyncRenderCompanyInfo(mainChannelDiv, companyName);
+      await asyncRenderCompanyInfo(
+        mainChannelDiv,
+        companyName,
+        forceSyncData,
+        quickSearchHandle
+      );
       mainChannelDiv.removeChild(quickSearchButtonLoading);
     } catch (e) {
       mainChannelDiv.removeChild(quickSearchButtonLoading);
@@ -540,60 +554,103 @@ function createCompanyInfo(item, { getCompanyInfoFunction } = {}) {
       otherChannelDiv.appendChild(createSearchCompanyLink(companyName));
     }
   };
-  quickSearchButton.onclick = quickSearchHandle;
+  quickSearchButton.onclick = () => {
+    quickSearchHandle(false);
+  };
   mainChannelDiv.appendChild(quickSearchButton);
   dom.appendChild(mainChannelDiv);
   dom.appendChild(otherChannelDiv);
   if (getCompanyInfoFunction) {
-    //for boss
+    //for boss,liepin
     //skip
   } else {
     //自动查询公司信息
-    quickSearchHandle();
+    quickSearchHandle(false);
   }
   return dom;
 }
 
 const AIQICHA_PAGE_DATA_MATCH = /window.pageData = (?<data>\{.*\})/;
 
-async function asyncRenderCompanyInfo(div, keyword) {
-  let companyInfo = await getCompanyInfoByAiqicha(keyword);
-  if (companyInfo) {
-    let companyInfoDetail = await getCompanyInfoDetailByAiqicha(
-      companyInfo.pid
+async function asyncRenderCompanyInfo(
+  div,
+  keyword,
+  forceSyncData,
+  quickSearchHandle
+) {
+  try {
+    let convertdCompanyName = companyNameConvert(keyword);
+    //查询数据库是否有公司信息
+    let company = await CompanyApi.getCompanyById(
+      genSha256(convertdCompanyName) + ""
     );
-    div.appendChild(createCompanyInfoDetail(companyInfo, companyInfoDetail));
-  } else {
-    throw "company search fail";
+    let now = dayjs();
+    if (
+      !forceSyncData &&
+      company &&
+      now.isBefore(dayjs(company.updateDatetime).add(60, "day"))
+    ) {
+      //skip
+    } else {
+      //数据过期时间设置为60天
+      //数据库没有数据或数据过期了，则进行网络查询，保存数据到数据库
+      let companyInfo = await getCompanyInfoByAiqicha(keyword);
+      if (companyInfo) {
+        let companyInfoDetail = await getCompanyInfoDetailByAiqicha(
+          companyInfo.pid
+        );
+        let companyDetail = companyInfoDetail;
+        companyDetail.selfRiskTotal = companyInfo?.risk?.selfRiskTotal;
+        companyDetail.unionRiskTotal = companyInfo?.risk?.unionRiskTotal;
+        companyDetail.sourceUrl = `https://aiqicha.baidu.com/company_detail_${companyDetail.pid}`;
+        await saveCompany(companyDetail, PLATFORM_AIQICHA);
+        company = await CompanyApi.getCompanyById(
+          genSha256(convertdCompanyName) + ""
+        );
+      } else {
+        throw "company search fail";
+      }
+    }
+    div.appendChild(createCompanyInfoDetail(company, quickSearchHandle));
+  } catch (e) {
+    errorLog(e);
+    throw e;
   }
 }
 
-function createCompanyInfoDetail(companyInfo, companyInfoDetail) {
+/**
+ *
+ * @param {Company} company
+ * @returns
+ */
+function createCompanyInfoDetail(company, quickSearchHandle) {
   let contentDiv = $("<div></div>");
   contentDiv.append(
     $(`<div class="__company_info_quick_search_item"></div>`)
       .append(
         $(
-          `<div><div class="__company_info_quick_search_item_label">公司名：</div><div class="__company_info_quick_search_item_value">${companyInfoDetail.entName}</div></div>`
+          `<div><div class="__company_info_quick_search_item_label">公司名：</div><div class="__company_info_quick_search_item_value">${company.companyName}</div></div>`
         )
       )
       .append(
         $(
-          `<div><div class="__company_info_quick_search_item_label">成立时间：</div>${companyInfoDetail.startDate}</div>`
+          `<div><div class="__company_info_quick_search_item_label">成立时间：</div>${dayjs(
+            company.companyStartDate
+          ).format("YYYY-MM-DD")}</div>`
         )
       )
       .append(
         $(
-          `<div><div class="__company_info_quick_search_item_label">经营状态：</div>${companyInfoDetail.openStatus}</div>`
+          `<div><div class="__company_info_quick_search_item_label">经营状态：</div>${company.companyStatus}</div>`
         )
       )
   );
   let websiteElement = null;
-  if (companyInfoDetail.website && companyInfoDetail.website.length > 1) {
+  if (company.companyWebSite && company.companyWebSite.length > 1) {
     websiteElement = `<a href="${autoFillHttp(
-      companyInfoDetail.website
+      company.companyWebSite
     )}" target = "_blank"; ref = "noopener noreferrer">${
-      companyInfoDetail.website
+      company.companyWebSite
     }</a>`;
   } else {
     websiteElement = "-";
@@ -602,12 +659,12 @@ function createCompanyInfoDetail(companyInfo, companyInfoDetail) {
     $(`<div class="__company_info_quick_search_item"></div>`)
       .append(
         $(
-          `<div><div class="__company_info_quick_search_item_label">法人：</div>${companyInfoDetail.legalPerson}</div>`
+          `<div><div class="__company_info_quick_search_item_label">法人：</div>${company.companyLegalPerson}</div>`
         )
       )
       .append(
         $(
-          `<div><div class="__company_info_quick_search_item_label">统一社会信用代码：</div>${companyInfoDetail.unifiedCode}</div>`
+          `<div><div class="__company_info_quick_search_item_label">统一社会信用代码：</div>${company.companyUnifiedCode}</div>`
         )
       )
       .append(
@@ -621,34 +678,49 @@ function createCompanyInfoDetail(companyInfo, companyInfoDetail) {
       .append(
         $(
           `<div><div class="__company_info_quick_search_item_label">社保人数：</div>${
-            companyInfoDetail?.insuranceInfo?.insuranceNum ?? "-"
+            company.companyInsuranceNum ?? "-"
           }</div>`
         )
       )
       .append(
         $(
-          `<div><div class="__company_info_quick_search_item_label">自身风险数：</div>${companyInfo?.risk?.selfRiskTotal}</div>`
+          `<div><div class="__company_info_quick_search_item_label">自身风险数：</div>${company.companySelfRisk}</div>`
         )
       )
       .append(
         $(
-          `<div><div class="__company_info_quick_search_item_label">关联风险数：</div>${companyInfo?.risk?.unionRiskTotal}</div>`
+          `<div><div class="__company_info_quick_search_item_label">关联风险数：</div>${company.companyUnionRisk}</div>`
         )
       )
   );
   contentDiv.append(
     $(`<div class="__company_info_quick_search_item"></div>`).append(
       $(
-        `<div><div class="__company_info_quick_search_item_label">地址：</div><div class="__company_info_quick_search_item_value">${companyInfoDetail.regAddr}</div></div>`
+        `<div><div class="__company_info_quick_search_item_label">地址：</div><div class="__company_info_quick_search_item_value">${company.companyAddress}</div></div>`
       )
     )
   );
+  let syncDataButton = document.createElement("div");
+  syncDataButton.className = "__company_info_quick_search_button";
+  syncDataButton.innerHTML = "📥立即同步数据";
+  syncDataButton.onclick = () => {
+    contentDiv[0].parentElement.removeChild(contentDiv[0]);
+    quickSearchHandle(true);
+  };
   contentDiv.append(
-    $(`<div class="__company_info_quick_search_item"></div>`).append(
-      $(
-        `<div><div class="__company_info_quick_search_item_label">数据来源：</div><div class="__company_info_quick_search_item_value"><a href="https://aiqicha.baidu.com/company_detail_${companyInfo.pid}" target = "_blank"; ref = "noopener noreferrer">https://aiqicha.baidu.com/company_detail_${companyInfo.pid}</a></div></div>`
+    $(`<div class="__company_info_quick_search_item"></div>`)
+      .append(
+        $(
+          `<div><div class="__company_info_quick_search_item_label">数据来源：</div><div class="__company_info_quick_search_item_value"><a href="${company.sourceUrl}" target = "_blank"; ref = "noopener noreferrer">${company.sourceUrl}</a></div></div>`
+        )
       )
-    )
+      .append(
+        $(
+          `<div><div class="__company_info_quick_search_item_label">数据同步时间：</div><div class="__company_info_quick_search_item_value">${convertTimeOffsetToHumanReadable(
+            company.updateDatetime
+          )}</div></div>`
+        ).append(syncDataButton)
+      )
   );
   return contentDiv[0];
 }

@@ -5,6 +5,7 @@ import { StatisticJobBrowseDTO } from "../data/dto/statisticJobBrowseDTO";
 import { SearchJobBO } from "../data/bo/searchJobBO";
 import { SearchJobDTO } from "../data/dto/searchJobDTO";
 import { StatisticJobSearchGroupByAvgSalaryDTO } from "../data/dto/statisticJobSearchGroupByAvgSalaryDTO";
+import { Company } from "../data/domain/company";
 
 export const JobApi = {
   /**
@@ -66,5 +67,24 @@ export const JobApi = {
       param
     );
     return result.data;
+  },
+};
+
+export const CompanyApi = {
+  /**
+   *
+   * @param {string} id
+   */
+  getCompanyById: async function (id) {
+    let result = await invoke(this.getCompanyById.name, id);
+    return result.data;
+  },
+
+  /**
+   *
+   * @param {Company} company
+   */
+  addOrUpdateCompany: async function (company) {
+    await invoke(this.addOrUpdateCompany.name, company);
   },
 };

@@ -105,6 +105,7 @@ div[data-search-sol-meta] {
 .__company_info_quick_search_item {
   display: flex;
   padding: 2px;
+  align-items: baseline;
   a {
     padding-right: 10px;
     font-size: 14px;
@@ -119,7 +120,7 @@ div[data-search-sol-meta] {
 
 .__company_info_quick_search_item > div {
   display: flex;
-  align-items: flex-end;
+  align-items: inherit;
   padding-right: 10px;
 }
 

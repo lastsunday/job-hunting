@@ -6,12 +6,14 @@ import {
   PLATFORM_JOBSDB,
   JOB_STATUS_DESC_NEWEST,
   PLATFORM_LIEPIN,
+  PLATFORM_AIQICHA,
 } from "./common";
 import { Job } from "../common/data/domain/job";
-import { JobApi } from "../common/api";
+import { CompanyApi, JobApi } from "../common/api";
 import { infoLog } from "../common/log";
 import dayjs from "dayjs";
 import sha256 from "crypto-js/sha256";
+import { Company } from "../common/data/domain/company";
 
 const SALARY_MATCH = /(?<min>[0-9\.]*)(?<minUnit>\D*)(?<max>[0-9\.]*)(?<maxUnit>\D*)(?<month>\d*)/;
 const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
@@ -464,6 +466,54 @@ function handle51JobData(list) {
     jobs.push(job);
   }
   return jobs;
+}
+
+export async function saveCompany(source, platform) {
+  infoLog("save company start,platform = " + platform);
+  let company;
+  if (PLATFORM_AIQICHA == platform) {
+    company = handleAiqichaData(source);
+  } else {
+    throw "saveCompany not support platform " + platform;
+  }
+  await CompanyApi.addOrUpdateCompany(company);
+  infoLog("save company success");
+}
+
+function handleAiqichaData(source) {
+  let company = new Company();
+  company.companyId = genSha256(companyNameConvert(source.entName)) + "";
+  company.companyName = companyNameConvert(source.entName);
+  company.companyDesc = source.describe;
+  company.companyStartDate = dayjs(source.startDate);
+  company.companyStatus = source.openStatus;
+  company.companyLegalPerson = source.legalPerson;
+  company.companyUnifiedCode = source.unifiedCode;
+  company.companyWebSite = source.website;
+  company.companyInsuranceNum = source?.insuranceInfo?.insuranceNum;
+  company.companySelfRisk = source.selfRiskTotal;
+  company.companyUnionRisk = source.unionRiskTotal;
+  company.companyAddress = source.addr;
+  company.companyScope = source.scope;
+  company.companyTaxNo = source.taxNo;
+  company.companyIndustry = source.industry;
+  company.companyLicenseNumber = source.licenseNumber;
+  company.companyLongitude = source?.geoInfo?.lng;
+  company.companyLatitude = source?.geoInfo.lat;
+  company.sourceUrl = source.sourceUrl;
+  company.sourcePlatform = PLATFORM_AIQICHA;
+  company.sourceRecordId = source.pid;
+  company.sourceRefreshDatetime = dayjs(source.refreshTime);
+  return company;
+}
+
+/**
+ * 转换公司名称，中文括号转为英文括号
+ * @param {string} name
+ * @returns
+ */
+export function companyNameConvert(name) {
+  return name.replaceAll("（", "(").replaceAll("）", ")");
 }
 
 export function genSha256(value) {

@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (ContentScript,Offscreen)持久化公司信息到数据库并作为缓存来减少第三方接口的访问频率。
+
+### 🛀 Refactor
+
+1. (OffScreen)重构Offscreen的代码，拆分woker.js的业务功能。
+
 ## 1.7.0(2024-06-21)
 
 ### ⭐ Added
