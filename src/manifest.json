@@ -8,19 +8,19 @@
     "128": "icons/128x128.png"
   },
   "{{chrome}}.action": {
-    "default_title": "Click to open panel"
+    "default_title": "Click to open admin page"
   },
   "{{firefox}}.browser_action": {
-    "default_title": "Click to open panel"
+    "default_title": "Click to open admin page"
   },
   "background": {
     "{{chrome}}.service_worker": "src/background/index.ts",
-    "{{firefox}}.scripts": ["src/background/index.ts"]
+    "{{firefox}}.scripts": ["src/background/indexFirefox.ts"]
   },
   "{{chrome}}.content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'"
   },
-  "{{chrome}}.content_scripts": [
+  "content_scripts": [
     {
       "js": ["src/contentScript/index.js"],
       "matches": [
@@ -46,15 +46,7 @@
       ]
     }
   ],
-  "{{chrome}}.side_panel": {
-    "default_path": "src/sidepanel/index.html"
-  },
-  "{{chrome}}.permissions": [
-    "webRequest",
-    "offscreen",
-    "sidePanel",
-    "unlimitedStorage"
-  ],
+  "{{chrome}}.permissions": ["webRequest", "offscreen", "unlimitedStorage"],
   "{{chrome}}.host_permissions": [
     "https://www.zhipin.com/*",
     "https://sou.zhaopin.com/*",

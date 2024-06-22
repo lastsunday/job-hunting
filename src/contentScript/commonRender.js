@@ -124,6 +124,7 @@ export function finalRender(jobDTOList, { platform }) {
     let item = jobDTOList[i];
     let jobId = item.jobId;
     let jobItemIdSha256 = genJobItemIdWithSha256(jobId);
+    //TODO 需要考虑如何使用公司全称
     let companyIdSha256 = genCompanyIdWithSha256(item.jobCompanyName);
     let commentWrapperDiv = document.getElementById("wrapper" + jobId);
     commentWrapperDiv.classList.add("__comment_wrapper");

@@ -151,3 +151,7 @@ export function autoFillHttp(url) {
     return "http://" + url;
   }
 }
+
+export function convertDateStringToDateObject(text) {
+  return dayjs(text).isValid() ? dayjs(text).toDate() : null;
+}

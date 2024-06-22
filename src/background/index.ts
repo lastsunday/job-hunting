@@ -1,4 +1,8 @@
-import { BACKGROUND, CONTENT_SCRIPT, OFFSCREEN } from "../common/api/bridgeCommon";
+import {
+  BACKGROUND,
+  CONTENT_SCRIPT,
+  OFFSCREEN,
+} from "../common/api/bridgeCommon";
 import { debugLog } from "../common/log";
 
 debugLog("background ready");
@@ -8,13 +12,14 @@ const keepAlive = () => setInterval(chrome.runtime.getPlatformInfo, 20e3);
 chrome.runtime.onStartup.addListener(keepAlive);
 keepAlive();
 
-//sidepanel
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+chrome.action.onClicked.addListener(() => {
+  chrome.tabs.create({
+    url: "src/sidepanel/index.html",
+  });
 });
 
-let creating :any;
-async function setupOffscreenDocument(path:string) {
+let creating: any;
+async function setupOffscreenDocument(path: string) {
   // Check all windows controlled by the service worker to see if one
   // of them is the offscreen document with the given path
   if (await chrome.offscreen.hasDocument?.()) return;

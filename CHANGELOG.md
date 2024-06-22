@@ -1,5 +1,25 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. Firefox 拓展实现
+
+### ✏️ Changed
+
+1. (ContentScript)移除sidePanel，将管理页移动到tab页上。
+2. (ContentScript)处理发布时间时，将结果转换为Date对象，避免在firefox报clone undefined异常。
+
+### 🛀 Refactor
+
+1. (build)修改chrome编译目录为dist/chrome，firefox编译目录为dist/firefox
+2. (build)修改ci脚本，为tag自动生成编译后的产物([chrome][firefox])-xx.xx.xx分支
+
+### 🔨 Dependency
+
+1. Add cross-env ^7.0.3
+
 ## 1.8.0(2024-06-21)
 
 ### ⭐ Added

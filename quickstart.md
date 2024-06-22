@@ -3,7 +3,9 @@
 ## What's in this directory
 
 ``` text
-├─ dist                                     // build result folder 
+├─ dist                                      
+│  └─ chrome                                // build result folder for chrome
+│  └─ firefox                               // build result folder for firefox
 ├─ docs                                     // readme resource folder
 ├─ public                                   // public folder,not compile,just copy to build floder
 │  └─ icons                                 // logo

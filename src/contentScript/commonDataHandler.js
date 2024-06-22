@@ -14,6 +14,7 @@ import { infoLog } from "../common/log";
 import dayjs from "dayjs";
 import sha256 from "crypto-js/sha256";
 import { Company } from "../common/data/domain/company";
+import { convertDateStringToDateObject } from "../common/utils";
 
 const SALARY_MATCH = /(?<min>[0-9\.]*)(?<minUnit>\D*)(?<max>[0-9\.]*)(?<maxUnit>\D*)(?<month>\d*)/;
 const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
@@ -154,7 +155,7 @@ function handleLiepin(list) {
       job.jobSalaryTotalMonth = "";
     }
     //暂未找到首次发布时间，用更新时间代替
-    job.jobFirstPublishDatetime = refreshTime;
+    job.jobFirstPublishDatetime = convertDateStringToDateObject(refreshTime);
     job.bossName = recruiterName;
     job.bossCompanyName = compName;
     job.bossPosition = recruiterTitle;
@@ -215,7 +216,7 @@ function handleJobsdb(list) {
       //skip
     }
     job.jobSalaryTotalMonth = null;
-    job.jobFirstPublishDatetime = listingDate;
+    job.jobFirstPublishDatetime = convertDateStringToDateObject(listingDate);
     job.bossName = "";
     job.bossCompanyName = companyFullName;
     job.bossPosition = null;
@@ -272,7 +273,7 @@ function handleLagouData(list) {
       //skip
     }
     job.jobSalaryTotalMonth = null;
-    job.jobFirstPublishDatetime = createTime;
+    job.jobFirstPublishDatetime = convertDateStringToDateObject(createTime);
     job.bossName = publisherId;
     job.bossCompanyName = companyFullName;
     job.bossPosition = null;
@@ -330,7 +331,9 @@ function handleZhilianData(list) {
     //handle salary month
     let groupsSalaryCount = salaryCount.match(/(?<count>\d*)/)?.groups;
     job.jobSalaryTotalMonth = groupsSalaryCount.count;
-    job.jobFirstPublishDatetime = firstPublishTime;
+    job.jobFirstPublishDatetime = convertDateStringToDateObject(
+      firstPublishTime
+    );
     job.bossName = staffName;
     job.bossCompanyName = companyName;
     job.bossPosition = hrJob;
@@ -399,7 +402,7 @@ function handleBossData(list) {
     }
     if (jobStatusDesc == JOB_STATUS_DESC_NEWEST.key) {
       //招聘状态为最新，则代表一周内发布的职位。记录入库的时间设置取今天零点。
-      job.jobFirstPublishDatetime = dayjs(new Date()).startOf("day");
+      job.jobFirstPublishDatetime = dayjs(new Date()).startOf("day").toDate();
     } else {
       job.jobFirstPublishDatetime = null;
     }
@@ -459,7 +462,9 @@ function handle51JobData(list) {
     } else {
       job.jobSalaryTotalMonth = "";
     }
-    job.jobFirstPublishDatetime = confirmDateString;
+    job.jobFirstPublishDatetime = convertDateStringToDateObject(
+      confirmDateString
+    );
     job.bossName = hrName;
     job.bossCompanyName = fullCompanyName;
     job.bossPosition = hrPosition;
@@ -485,7 +490,7 @@ function handleAiqichaData(source) {
   company.companyId = genSha256(companyNameConvert(source.entName)) + "";
   company.companyName = companyNameConvert(source.entName);
   company.companyDesc = source.describe;
-  company.companyStartDate = dayjs(source.startDate);
+  company.companyStartDate = convertDateStringToDateObject(source.startDate);
   company.companyStatus = source.openStatus;
   company.companyLegalPerson = source.legalPerson;
   company.companyUnifiedCode = source.unifiedCode;
@@ -503,7 +508,9 @@ function handleAiqichaData(source) {
   company.sourceUrl = source.sourceUrl;
   company.sourcePlatform = PLATFORM_AIQICHA;
   company.sourceRecordId = source.pid;
-  company.sourceRefreshDatetime = dayjs(source.refreshTime);
+  company.sourceRefreshDatetime = convertDateStringToDateObject(
+    source.refreshTime
+  );
   return company;
 }
 

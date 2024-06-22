@@ -1,30 +1,45 @@
 name: build
 run-name: ${{ github.actor }} 构建插件
-on: 
-    push:
-        branches:
-            - dev
-        tags:
-            - build-**
+on:
+  push:
+    branches:
+      - dev
+    tags:
+      - "*"
 
 permissions:
-    contents: write
+  contents: write
 
 jobs:
-    build-extension:
-        runs-on: ubuntu-latest
-        steps: 
-            - name: 读取仓库
-              uses: actions/checkout@v4
+  build-chrome-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 读取仓库
+        uses: actions/checkout@v4
 
-            - name: 打包
-              run: | 
-                npm install
-                npm run build
+      - name: 打包
+        run: |
+          npm install
+          npm run build-chrome
 
-            - name: 部署
-              uses: JamesIves/github-pages-deploy-action@4.1.4
-              with: 
-                branch: gh-pages
-                folder: dist
+      - name: 部署
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: chrome-${{  github.ref_name }}"
+          folder: dist/chrome
+  build-firefox-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 读取仓库
+        uses: actions/checkout@v4
 
+      - name: 打包
+        run: |
+          npm install
+          npm run build-firefox
+
+      - name: 部署
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: firefox-${{  github.ref_name }}"
+          folder: dist/firefox
