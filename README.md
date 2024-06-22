@@ -74,14 +74,14 @@
 
 **直接下载 1（尝鲜版）**
 
-1. 切换到 chrome-dev 分支
+1. 切换到 dist/chrome-dev 分支
 2. 点击右边绿色 code 按钮，选择下拉框中的 Download ZIP 下载
 3. 解压 zip 文件
 4. 打开 chrome，选择加载已解压的扩展程序，选择解压后的 job-hunting-chrome-dev 目录
 
 **直接下载 2**
 
-1. 切换到 chrome-xx.xx.xx 分支
+1. 切换到 dist/chrome-xx.xx.xx 分支
 2. 点击右边绿色 code 按钮，选择下拉框中的 Download ZIP 下载
 3. 解压 zip 文件
 4. 打开 chrome，选择加载已解压的扩展程序，选择解压后的 job-hunting-chrome-xx.xx.xx 目录
