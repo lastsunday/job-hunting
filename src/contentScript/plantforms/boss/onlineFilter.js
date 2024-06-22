@@ -9,9 +9,13 @@ function createFilter() {
     _console('2. bfEle 不存在，执行添加');
 
     let newFilterNode = document.createElement('div');
-    newFilterNode.innerHTML = `<div class="current-select">
-        <span class="placeholder-text">招聘人在线</span>
-    </div>`;
+    let selectNode = document.createElement('div');
+    selectNode.className = "current-select";
+    let selectTextNode = document.createElement('span');
+    selectTextNode.className = "placeholder-text";
+    selectTextNode.textContent = "招聘人在线";
+    selectNode.appendChild(selectTextNode);
+    newFilterNode.appendChild(selectNode);
     newFilterNode.classList.add('condition-filter-select', '__boss_filter');
 
     // 绑定点击事件

@@ -47,13 +47,13 @@ export function renderTimeTag(
       let statusToTimeText = "";
       if (jobStatusDesc == JOB_STATUS_DESC_NEWEST) {
         statusToTimeText = "一周内";
-        statusTag.innerHTML = "【 " + statusToTimeText + "发布❔】";
+        statusTag.textContent = "【 " + statusToTimeText + "发布❔】";
         statusTag.title =
           "当前招聘状态【" +
           jobStatusDesc.label +
           "】，招聘状态：最新：代表一周内发布；招聘中：代表发布时间超过一周";
       } else {
-        statusTag.innerHTML = "【发布时间未知】";
+        statusTag.textContent = "【发布时间未知】";
       }
       statusTag.classList.add("__time_tag_base_text_font");
       divElement.appendChild(statusTag);
@@ -64,7 +64,7 @@ export function renderTimeTag(
     if (refreshTime) {
       let refreshTimeTag = document.createElement("span");
       let refreshTimeHumanReadable = convertTimeToHumanReadable(refreshTime);
-      refreshTimeTag.innerHTML += "【" + refreshTimeHumanReadable + "更新】";
+      refreshTimeTag.textContent += "【" + refreshTimeHumanReadable + "更新】";
       refreshTimeTag.classList.add("__time_tag_base_text_font");
       divElement.appendChild(refreshTimeTag);
     }
@@ -76,7 +76,7 @@ export function renderTimeTag(
       let firstPublishTimeHumanReadable = convertTimeToHumanReadable(
         firstPublishTime
       );
-      firstPublishTimeTag.innerHTML +=
+      firstPublishTimeTag.textContent +=
         "【" + firstPublishTimeHumanReadable + "发布】";
       firstPublishTimeTag.classList.add("__time_tag_base_text_font");
       divElement.appendChild(firstPublishTimeTag);
@@ -84,7 +84,7 @@ export function renderTimeTag(
   }
   if (jobDTO.hrActiveTimeDesc) {
     let hrActiveTimeDescTag = document.createElement("span");
-    hrActiveTimeDescTag.innerHTML = "【HR-" + jobDTO.hrActiveTimeDesc + "】";
+    hrActiveTimeDescTag.textContent = "【HR-" + jobDTO.hrActiveTimeDesc + "】";
     hrActiveTimeDescTag.classList.add("__time_tag_base_text_font");
     divElement.appendChild(hrActiveTimeDescTag);
   }
@@ -95,7 +95,7 @@ export function renderTimeTag(
   let companyInfoText = getCompanyInfoText(jobDTO.jobCompanyName);
   if (companyInfoText !== "") {
     companyInfoTag = document.createElement("span");
-    companyInfoTag.innerHTML = companyInfoText;
+    companyInfoTag.textContent = companyInfoText;
     companyInfoTag.classList.add("__time_tag_base_text_font");
     divElement.appendChild(companyInfoTag);
   }
@@ -156,12 +156,12 @@ function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id) {
 
   const maximizeDiv = document.createElement("div");
   maximizeDiv.style = "font-size: 20px;padding: 5px;";
-  maximizeDiv.innerHTML = "⬜";
+  maximizeDiv.textContent = "⬜";
   menuDiv.appendChild(maximizeDiv);
 
   const closeDiv = document.createElement("div");
   closeDiv.style = "font-size: 20px;padding: 5px;";
-  closeDiv.innerHTML = "✖️";
+  closeDiv.textContent = "✖️";
   closeDiv.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -172,7 +172,7 @@ function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id) {
   dialogDiv.append(menuDiv);
   const titleDiv = document.createElement("div");
   titleDiv.style = "font-size: 15px;text-align: left;padding: 5px;";
-  titleDiv.innerHTML = dialogTitle;
+  titleDiv.textContent = dialogTitle;
   dialogDiv.appendChild(titleDiv);
 
   const commentIframe = document.createElement("iframe");
@@ -202,7 +202,7 @@ function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id) {
   menuDiv.addEventListener("dblclick", maximizeFunction);
 
   const copmmentButtonDiv = document.createElement("div");
-  copmmentButtonDiv.innerHTML = buttonLabel;
+  copmmentButtonDiv.textContent = buttonLabel;
   copmmentButtonDiv.style =
     "cursor: pointer;margin-left: 5px;text-decoration: underline; color:blue;";
   copmmentButtonDiv.addEventListener("click", (event) => {
@@ -237,7 +237,7 @@ export function renderTimeLoadingTag(divElement, brandName) {
   text += getCompanyInfoText(brandName);
   divElement.style = getRenderTimeStyle();
   divElement.classList.add("__time_tag_base_text_font");
-  divElement.innerHTML = text;
+  divElement.textContent = text;
 }
 
 function getCompanyInfoText(brandName) {
@@ -486,7 +486,7 @@ function createFirstBrowse(jobDTO) {
   let firstBrowseTimeHumanReadable = convertTimeOffsetToHumanReadable(
     jobDTO.createDatetime
   );
-  firstBrowseTimeTag.innerHTML +=
+  firstBrowseTimeTag.textContent +=
     "【" +
     firstBrowseTimeHumanReadable +
     "展示过(共" +
@@ -503,7 +503,7 @@ function createCompanyInfo(item, { getCompanyInfoFunction } = {}) {
   let otherChannelDiv = document.createElement("div");
   let quickSearchButton = document.createElement("div");
   quickSearchButton.className = "__company_info_quick_search_button";
-  quickSearchButton.innerHTML = "🔎点击快速查询公司信息";
+  quickSearchButton.textContent = "🔎点击快速查询公司信息";
   let fixValidHummanButton = document.createElement("a");
   fixValidHummanButton.className = "__company_info_quick_search_button";
   fixValidHummanButton.target = "_blank";
@@ -514,13 +514,13 @@ function createCompanyInfo(item, { getCompanyInfoFunction } = {}) {
     if (mainChannelDiv.contains(fixValidHummanButton)) {
       mainChannelDiv.removeChild(fixValidHummanButton);
     }
-    quickSearchButtonLoading.innerHTML = `🔎正查询公司全称⌛︎`;
+    quickSearchButtonLoading.textContent = `🔎正查询公司全称⌛︎`;
     if (mainChannelDiv.contains(quickSearchButton)) {
       mainChannelDiv.removeChild(quickSearchButton);
     }
     mainChannelDiv.appendChild(quickSearchButtonLoading);
     let companyName = item.jobCompanyName;
-    fixValidHummanButton.innerHTML =
+    fixValidHummanButton.textContent =
       "一直查询失败？点击该按钮去尝试解除人机验证吧！";
     if (getCompanyInfoFunction) {
       let targetCompanyName = await getCompanyInfoFunction(
@@ -529,15 +529,15 @@ function createCompanyInfo(item, { getCompanyInfoFunction } = {}) {
       if (targetCompanyName) {
         companyName = targetCompanyName;
       } else {
-        fixValidHummanButton.innerHTML = `找不到【${companyName}】的全称，点击该按钮去看看有没有相关记录`;
+        fixValidHummanButton.textContent = `找不到【${companyName}】的全称，点击该按钮去看看有没有相关记录`;
       }
     }
     const decode = encodeURIComponent(companyName);
     const url = `https://aiqicha.baidu.com/s?q=${decode}`;
     fixValidHummanButton.href = url;
-    otherChannelDiv.innerHTML = "";
+    otherChannelDiv.replaceChildren();
     try {
-      quickSearchButtonLoading.innerHTML = `🔎正查询【${companyName}】⌛︎`;
+      quickSearchButtonLoading.textContent = `🔎正查询【${companyName}】⌛︎`;
       await asyncRenderCompanyInfo(
         mainChannelDiv,
         companyName,
@@ -547,7 +547,7 @@ function createCompanyInfo(item, { getCompanyInfoFunction } = {}) {
       mainChannelDiv.removeChild(quickSearchButtonLoading);
     } catch (e) {
       mainChannelDiv.removeChild(quickSearchButtonLoading);
-      quickSearchButton.innerHTML = `🔎查询【${companyName}】失败，点击重新查询`;
+      quickSearchButton.textContent = `🔎查询【${companyName}】失败，点击重新查询`;
       mainChannelDiv.appendChild(quickSearchButton);
       mainChannelDiv.appendChild(fixValidHummanButton);
     } finally {
@@ -703,7 +703,7 @@ function createCompanyInfoDetail(company, quickSearchHandle) {
   );
   let syncDataButton = document.createElement("div");
   syncDataButton.className = "__company_info_quick_search_button";
-  syncDataButton.innerHTML = "📥立即同步数据";
+  syncDataButton.textContent = "📥立即同步数据";
   syncDataButton.onclick = () => {
     contentDiv[0].parentElement.removeChild(contentDiv[0]);
     quickSearchHandle(true);
@@ -784,7 +784,7 @@ function createSearchCompanyLink(keyword) {
     "__company_info_quick_search_item __company_info_other_channel";
   let internetLabelDiv = document.createElement("div");
   internetLabelDiv.className = "__company_info_quick_search_item_label";
-  internetLabelDiv.innerHTML = " - 互联网渠道";
+  internetLabelDiv.textContent = " - 互联网渠道";
   internetDiv.appendChild(
     createATagWithSearch(`https://aiqicha.baidu.com/s?q=${decode}`, "爱企查")
   );
@@ -813,7 +813,7 @@ function createSearchCompanyLink(keyword) {
     "__company_info_quick_search_item __company_info_other_channel";
   let govLabelDiv = document.createElement("div");
   govLabelDiv.className = "__company_info_quick_search_item_label";
-  govLabelDiv.innerHTML = "- 政府渠道";
+  govLabelDiv.textContent = "- 政府渠道";
   govDiv.appendChild(
     createATagWithSearch(
       `https://www.gsxt.gov.cn/corp-query-homepage.html`,
@@ -839,7 +839,7 @@ function createCompanyReputation(keyword) {
   dom.className = "__company_info_quick_search_item";
   let labelDiv = document.createElement("div");
   labelDiv.className = "__company_info_quick_search_item_label";
-  labelDiv.innerHTML = "公司风评检测：";
+  labelDiv.textContent = "公司风评检测：";
   dom.appendChild(labelDiv);
   const ruobilinDiv = document.createElement("div");
   dom.appendChild(ruobilinDiv);
@@ -904,7 +904,7 @@ async function asyncRenderRuobilin(div, keyword) {
 }
 
 function clearAllChildNode(div) {
-  div.innerHTML = "";
+  div.replaceChildren();
 }
 
 function renderRuobilinColor(div, color) {
@@ -924,7 +924,7 @@ function createATag(emoji, url, label, callback) {
   aTag.href = url;
   aTag.target = "_blank";
   aTag.ref = "noopener noreferrer";
-  aTag.text = emoji + label;
+  aTag.textContent = emoji + label;
   aTag.addEventListener("click", (event) => {
     if (callback) {
       callback(event);
