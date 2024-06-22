@@ -27,5 +27,6 @@ export function traceLog(message) {
 export function errorLog(message) {
   if (logLevel <= LEVEL_ERROR) {
     console.error(`${dayjs(new Date()).format(DATE_FORMAT)} ${message}`);
+    console.error(message);
   }
 }
