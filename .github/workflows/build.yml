@@ -25,8 +25,8 @@ jobs:
       - name: 部署
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
-          branch: chrome-${{  github.ref_name }}"
-          folder: dist/chrome
+          branch: chrome-${{  github.ref_name }}
+          folder: dist-chrome
   build-firefox-extension:
     runs-on: ubuntu-latest
     steps:
@@ -41,5 +41,5 @@ jobs:
       - name: 部署
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
-          branch: firefox-${{  github.ref_name }}"
-          folder: dist/firefox
+          branch: firefox-${{  github.ref_name }}
+          folder: dist-firefox

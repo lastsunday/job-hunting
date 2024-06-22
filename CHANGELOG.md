@@ -13,7 +13,7 @@
 
 ### 🛀 Refactor
 
-1. (build)修改chrome编译目录为dist/chrome，firefox编译目录为dist/firefox
+1. (build)修改chrome编译目录为dist-chrome，firefox编译目录为dist-firefox
 2. (build)修改ci脚本，为tag自动生成编译后的产物([chrome][firefox])-xx.xx.xx分支
 
 ### 🔨 Dependency

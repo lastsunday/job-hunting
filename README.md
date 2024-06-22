@@ -102,7 +102,7 @@
     pnpm run build-chrome
 ```
 
-2. 打开 chrome，选择加载已解压的扩展程序，选择当前项目的 dist/chrome 目录
+2. 打开 chrome，选择加载已解压的扩展程序，选择当前项目的 dist-chrome 目录
 
 3. 打开页面
    - boss 直聘： <https://www.zhipin.com/web/geek/job>
@@ -125,7 +125,7 @@
 
 3. 点击`加载已解压的扩展程序`
 
-4. 选择项目中生成的 dist/chrome 文件夹即可
+4. 选择项目中生成的 dist-chrome 文件夹即可
 
 5. 每次保存都会重新编译，扩展程序需要**_重新点一次刷新按钮_**才生效
 

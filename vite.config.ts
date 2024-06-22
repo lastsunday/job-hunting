@@ -16,9 +16,9 @@ function generateManifest() {
 
 function getBuildOutputDir() {
   if (target === "firefox") {
-    return "dist/firefox";
+    return "dist-firefox";
   } else {
-    return "dist/chrome";
+    return "dist-chrome";
   }
 }
 
