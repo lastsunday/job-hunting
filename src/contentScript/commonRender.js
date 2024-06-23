@@ -477,8 +477,18 @@ function createCommentWrapper(jobDTO) {
   let jobId = jobDTO.jobId;
   let commentWrapperDiv = document.createElement("div");
   commentWrapperDiv.id = "wrapper" + jobId;
+  commentWrapperDiv.appendChild(createBrowseDetail(jobDTO));
   commentWrapperDiv.appendChild(createFirstBrowse(jobDTO));
   return commentWrapperDiv;
+}
+
+function createBrowseDetail(jobDTO) {
+  let browseDetailTag = document.createElement("div");
+  browseDetailTag.textContent += `【查看过${
+    jobDTO.browseDetailCount ?? 0
+  }次】`;
+  browseDetailTag.classList.add("__first_browse_time");
+  return browseDetailTag;
 }
 
 function createFirstBrowse(jobDTO) {

@@ -6,6 +6,7 @@ import { SearchJobBO } from "../data/bo/searchJobBO";
 import { SearchJobDTO } from "../data/dto/searchJobDTO";
 import { StatisticJobSearchGroupByAvgSalaryDTO } from "../data/dto/statisticJobSearchGroupByAvgSalaryDTO";
 import { Company } from "../data/domain/company";
+import { CONTENT_SCRIPT } from "./bridgeCommon";
 
 export const JobApi = {
   /**
@@ -13,7 +14,7 @@ export const JobApi = {
    * @param {Job[]} jobs
    */
   batchAddOrUpdateJobBrowse: async function (jobs) {
-    await invoke(this.batchAddOrUpdateJobBrowse.name, jobs);
+    return await invoke(this.batchAddOrUpdateJobBrowse.name, jobs);
   },
 
   /**
@@ -21,7 +22,7 @@ export const JobApi = {
    * @param {Job} job
    */
   addOrUpdateJobBrowse: async function (job) {
-    await invoke(this.addOrUpdateJobBrowse.name, job);
+    return await invoke(this.addOrUpdateJobBrowse.name, job);
   },
 
   /**
@@ -68,6 +69,34 @@ export const JobApi = {
     );
     return result.data;
   },
+
+  /**
+   *
+   * @param {string} param url
+   *
+   * @returns Job
+   */
+  getJobByDetailUrl: async function (
+    param,
+    { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }
+  ) {
+    let result = await invoke(this.getJobByDetailUrl.name, param, {
+      invokeEnv: invokeEnv,
+    });
+    return result.data;
+  },
+  /**
+   *
+   * @param {string} param jobId
+   */
+  addJobBrowseDetailHistory: async function (
+    param,
+    { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }
+  ) {
+    return await invoke(this.addJobBrowseDetailHistory.name, param, {
+      invokeEnv: invokeEnv,
+    });
+  },
 };
 
 export const CompanyApi = {
@@ -85,6 +114,6 @@ export const CompanyApi = {
    * @param {Company} company
    */
   addOrUpdateCompany: async function (company) {
-    await invoke(this.addOrUpdateCompany.name, company);
+    return await invoke(this.addOrUpdateCompany.name, company);
   },
 };

@@ -40,6 +40,8 @@ onmessage = function (e) {
           message.to +
           "] message [action=" +
           message.action +
+          ",invokeEnv=" +
+          message.invokeEnv +
           ",callbackId=" +
           message.callbackId +
           ",error=" +

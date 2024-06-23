@@ -6,5 +6,6 @@ export class Message {
     data;
     from;
     to;
+    invokeEnv;
   }
   

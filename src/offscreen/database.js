@@ -6,6 +6,7 @@ import { initChangeLog, getChangeLogList } from "./changeLog";
 import { bytesToBase64, base64ToBytes } from "../common/utils/base64.js";
 import JSZip from "jszip";
 import { postSuccessMessage, postErrorMessage } from "./util";
+import { toHump } from "../common/utils";
 
 const JOB_DB_FILE_NAME = "job.sqlite3";
 const JOB_DB_PATH = "/" + JOB_DB_FILE_NAME;
@@ -14,8 +15,30 @@ let oo;
 let db;
 let initializing = false;
 
-export function getDb() {
+export async function getDb() {
+  await Database.innerInit();
   return db;
+}
+
+export async function getOne(sql, bind, obj) {
+  let resultItem = null;
+  let rows = [];
+  (await getDb()).exec({
+    sql: sql,
+    rowMode: "object",
+    bind: bind,
+    resultRows: rows,
+  });
+  if (rows.length > 0) {
+    let item = rows[0];
+    resultItem = obj;
+    let keys = Object.keys(item);
+    for (let n = 0; n < keys.length; n++) {
+      let key = keys[n];
+      resultItem[toHump(key)] = item[key];
+    }
+  }
+  return resultItem;
 }
 
 export const Database = {
@@ -24,28 +47,43 @@ export const Database = {
    * @param {*} message
    * @param {*} param
    */
-  init: function (message, param) {
-    debugLog("Loading and initializing sqlite3 module...");
-    let changelogList = [];
-    changelogList.push(new ChangeLogV1());
-    changelogList.push(new ChangeLogV2());
-    initChangeLog(changelogList);
-    sqlite3InitModule({
-      print: debugLog,
-      printErr: infoLog,
-    }).then(function (sqlite3) {
-      debugLog("Done initializing. Running app...");
-      if (!initializing) {
-        try {
-          initDb(sqlite3);
-          initializing = true;
-          postSuccessMessage(message);
-        } catch (e) {
-          postErrorMessage(message, "init sqlite3 error : " + e.message);
-        }
-      } else {
-        postSuccessMessage(message);
+  init: async function (message, param) {
+    try {
+      await Database.innerInit();
+    } catch (e) {
+      postErrorMessage(message, "init sqlite3 error : " + e.message);
+    }
+    postSuccessMessage(message);
+  },
+
+  innerInit: async function () {
+    return new Promise((resolve, reject) => {
+      if (initializing) {
+        resolve();
+        return;
       }
+      debugLog("Loading and initializing sqlite3 module...");
+      let changelogList = [];
+      changelogList.push(new ChangeLogV1());
+      changelogList.push(new ChangeLogV2());
+      initChangeLog(changelogList);
+      sqlite3InitModule({
+        print: debugLog,
+        printErr: infoLog,
+      }).then(function (sqlite3) {
+        debugLog("Done initializing. Running app...");
+        if (!initializing) {
+          try {
+            initDb(sqlite3);
+            initializing = true;
+            resolve();
+          } catch (e) {
+            reject("init sqlite3 error : " + e.message);
+          }
+        } else {
+          resolve();
+        }
+      });
     });
   },
   /**

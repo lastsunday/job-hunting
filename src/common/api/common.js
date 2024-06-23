@@ -1,4 +1,5 @@
 import { invoke, init } from "./bridge";
+import { CONTENT_SCRIPT } from "./bridgeCommon";
 
 export async function initBridge() {
   init();
@@ -29,11 +30,18 @@ export async function dbImport(param) {
  * @param function onReturnAbortHandlerCallbackFunction 返回中断网络请求的函数
  * @returns text content
  */
-export async function httpFetchGetText(param,onReturnAbortHandlerCallbackFunction){
-  let result = await invoke("httpFetchGetText", param,(message)=>{
-    onReturnAbortHandlerCallbackFunction(()=>{
-      httpFetchGetTextAbort(message.callbackId);
-    })
+export async function httpFetchGetText(
+  param,
+  onReturnAbortHandlerCallbackFunction,
+  { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }
+) {
+  let result = await invoke("httpFetchGetText", param, {
+    onMessageCallback: (message) => {
+      onReturnAbortHandlerCallbackFunction(() => {
+        httpFetchGetTextAbort(message.callbackId);
+      });
+    },
+    invokeEnv: invokeEnv,
   });
   return result.data;
 }
@@ -41,8 +49,8 @@ export async function httpFetchGetText(param,onReturnAbortHandlerCallbackFunctio
 /**
  * 中断网络请求
  * @param {string} param callbackId
- * @returns 
+ * @returns
  */
-export async function httpFetchGetTextAbort(param){
+export async function httpFetchGetTextAbort(param) {
   await invoke("httpFetchGetTextAbort", param);
 }

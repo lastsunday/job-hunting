@@ -8,7 +8,10 @@ import { StatisticJobSearchGroupByAvgSalaryDTO } from "../../common/data/dto/sta
 import { SearchJobBO } from "../../common/data/bo/searchJobBO";
 import { SearchJobDTO } from "../../common/data/dto/searchJobDTO";
 import { postSuccessMessage, postErrorMessage } from "../util";
-import { getDb } from "../database";
+import { getDb, getOne } from "../database";
+
+const JOB_VISIT_TYPE_SEARCH = "SEARCH";
+const JOB_VISIT_TYPE_DETAIL = "DETAIL";
 
 export const JobService = {
   /**
@@ -16,16 +19,16 @@ export const JobService = {
    * @param {Message} message
    * @param {Job[]} param
    */
-  batchAddOrUpdateJobBrowse: function (message, param) {
+  batchAddOrUpdateJobBrowse: async function (message, param) {
     try {
       const now = new Date();
-      getDb().exec({
+      (await getDb()).exec({
         sql: "BEGIN TRANSACTION",
       });
       for (let i = 0; i < param.length; i++) {
-        insertJobAndBrowseHistory(param[i], now);
+        await insertJobAndBrowseHistory(param[i], now);
       }
-      getDb().exec({
+      (await getDb()).exec({
         sql: "COMMIT",
       });
       postSuccessMessage(message, {});
@@ -42,16 +45,34 @@ export const JobService = {
    * @param {Message} message
    * @param {Job} param
    */
-  addOrUpdateJobBrowse: function (message, param) {
+  addOrUpdateJobBrowse: async function (message, param) {
     try {
       const now = new Date();
-      getDb().exec({
+      (await getDb()).exec({
         sql: "BEGIN TRANSACTION",
       });
       insertJobAndBrowseHistory(param, now);
-      getDb().exec({
+      (await getDb()).exec({
         sql: "COMMIT",
       });
+      postSuccessMessage(message, {});
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[worker] addOrUpdateJobBrowse error : " + e.message
+      );
+    }
+  },
+
+  /**
+   *
+   * @param {Message} message
+   * @param {string} param jobId
+   */
+  addJobBrowseDetailHistory: async function (message, param) {
+    try {
+      const now = new Date();
+      await addJobBrowseHistory(param, now, JOB_VISIT_TYPE_DETAIL);
       postSuccessMessage(message, {});
     } catch (e) {
       postErrorMessage(
@@ -68,31 +89,24 @@ export const JobService = {
    *
    * @returns JobDTO[]
    */
-  getJobBrowseInfoByIds: function (message, param) {
+  getJobBrowseInfoByIds: async function (message, param) {
     try {
-      let countMap = new Map();
       let ids = "'" + param.join("','") + "'";
-      const SQL_QUERY_JOB_BOWSE_HISTORY_GROUP_COUNT =
-        "SELECT job_id AS jobId ,count(*) AS total FROM job_browse_history WHERE job_id IN (" +
-        ids +
-        ") GROUP BY job_id;";
-      let countRows = [];
-      getDb().exec({
-        sql: SQL_QUERY_JOB_BOWSE_HISTORY_GROUP_COUNT,
-        rowMode: "object",
-        resultRows: countRows,
-      });
-      for (let i = 0; i < countRows.length; i++) {
-        let item = countRows[i];
-        countMap.set(item.jobId, item.total);
-      }
+      let searchCountMap = await getJobBrowseHistoryCountMap(
+        ids,
+        JOB_VISIT_TYPE_SEARCH
+      );
+      let detailCountMap = await getJobBrowseHistoryCountMap(
+        ids,
+        JOB_VISIT_TYPE_DETAIL
+      );
       let tempResultMap = new Map();
       const SQL_QUERY_JOB =
         "SELECT job_id,job_platform,job_url,job_name,job_company_name,job_location_name,job_address,job_longitude,job_latitude,job_description,job_degree_name,job_year,job_salary_min,job_salary_max,job_salary_total_month,job_first_publish_datetime,boss_name,boss_company_name,boss_position,create_datetime,update_datetime FROM job WHERE job_id in (" +
         ids +
         ")";
       let rows = [];
-      getDb().exec({
+      (await getDb()).exec({
         sql: SQL_QUERY_JOB,
         rowMode: "object",
         resultRows: rows,
@@ -112,7 +126,8 @@ export const JobService = {
         let jobId = param[j];
         let target = tempResultMap.get(jobId);
         if (target) {
-          target.browseCount = countMap.get(jobId);
+          target.browseCount = searchCountMap.get(jobId);
+          target.browseDetailCount = detailCountMap.get(jobId);
         }
         result.push(target);
       }
@@ -132,7 +147,7 @@ export const JobService = {
    *
    * @returns SearchJobDTO
    */
-  searchJob: function (message, param) {
+  searchJob: async function (message, param) {
     try {
       let result = new SearchJobDTO();
       let sqlQuery = "";
@@ -153,7 +168,7 @@ export const JobService = {
       let items = [];
       let total = 0;
       let queryRows = [];
-      getDb().exec({
+      (await getDb()).exec({
         sql: sqlQuery,
         rowMode: "object",
         resultRows: queryRows,
@@ -174,7 +189,7 @@ export const JobService = {
       //count
       sqlCount += whereCondition;
       let queryCountRows = [];
-      getDb().exec({
+      (await getDb()).exec({
         sql: sqlCount,
         rowMode: "object",
         resultRows: queryCountRows,
@@ -188,6 +203,26 @@ export const JobService = {
       postErrorMessage(message, "[worker] searchJob error : " + e.message);
     }
   },
+  /**
+   *
+   * @param {Message} message
+   * @param {string} param url
+   *
+   * @returns Job
+   */
+  getJobByDetailUrl: async function (message, param) {
+    try {
+      postSuccessMessage(
+        message,
+        await getOne(SQL_JOB_BY_JOB_URL, [param], new Job())
+      );
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[worker] getJobByDetailUrl error : " + e.message
+      );
+    }
+  },
 
   /**
    *
@@ -196,7 +231,7 @@ export const JobService = {
    *
    * @returns StatisticJobSearchGroupByAvgSalaryDTO
    */
-  statisticJobSearchGroupByAvgSalary: function (message, param) {
+  statisticJobSearchGroupByAvgSalary: async function (message, param) {
     try {
       let result = new StatisticJobSearchGroupByAvgSalaryDTO();
       let resultSqlQuery = SQL_GROUP_BY_COUNT_AVG_SALARY.replace(
@@ -204,7 +239,7 @@ export const JobService = {
         SQL_JOB_SEARCH_QUERY + genJobSearchWhereConditionSql(param)
       );
       let queryRows = [];
-      getDb().exec({
+      (await getDb()).exec({
         sql: resultSqlQuery,
         rowMode: "object",
         resultRows: queryRows,
@@ -229,7 +264,7 @@ export const JobService = {
    *
    * @returns {StatisticJobBrowseDTO}
    */
-  statisticJobBrowse: function (message, param) {
+  statisticJobBrowse: async function (message, param) {
     try {
       let result = new StatisticJobBrowseDTO();
       let now = dayjs();
@@ -241,7 +276,7 @@ export const JobService = {
       const SQL_QUERY_JOB_BOWSE_HISTORY_COUNT_TODAY =
         "SELECT COUNT(*) AS count FROM job_browse_history WHERE job_visit_datetime >= $startDatetime AND job_visit_datetime < $endDatetime";
       let browseCountToday = [];
-      getDb().exec({
+      (await getDb()).exec({
         sql: SQL_QUERY_JOB_BOWSE_HISTORY_COUNT_TODAY,
         rowMode: "object",
         resultRows: browseCountToday,
@@ -253,14 +288,14 @@ export const JobService = {
       const SQL_QUERY_JOB_BOWSE_HISTORY_COUNT_TOTAL =
         "SELECT COUNT(*) AS count FROM job_browse_history";
       let browseTotalCount = [];
-      getDb().exec({
+      (await getDb()).exec({
         sql: SQL_QUERY_JOB_BOWSE_HISTORY_COUNT_TOTAL,
         rowMode: "object",
         resultRows: browseTotalCount,
       });
       const SQL_QUERY_JOB_COUNT_TOTAL = "SELECT COUNT(*) AS count FROM job;";
       let jobTotalCount = [];
-      getDb().exec({
+      (await getDb()).exec({
         sql: SQL_QUERY_JOB_COUNT_TOTAL,
         rowMode: "object",
         resultRows: jobTotalCount,
@@ -277,6 +312,24 @@ export const JobService = {
     }
   },
 };
+
+async function getJobBrowseHistoryCountMap(ids, type) {
+  let countMap = new Map();
+  const SQL_QUERY_JOB_BOWSE_HISTORY_GROUP_COUNT = `SELECT job_id AS jobId ,count(*) AS total FROM job_browse_history WHERE job_id IN (
+    ${ids}
+    ) AND job_visit_type = '${type}'  GROUP BY job_id;`;
+  let countRows = [];
+  (await getDb()).exec({
+    sql: SQL_QUERY_JOB_BOWSE_HISTORY_GROUP_COUNT,
+    rowMode: "object",
+    resultRows: countRows,
+  });
+  for (let i = 0; i < countRows.length; i++) {
+    let item = countRows[i];
+    countMap.set(item.jobId, item.total);
+  }
+  return countMap;
+}
 
 /**
  *
@@ -331,10 +384,10 @@ function genJobSearchWhereConditionSql(param) {
   return whereCondition;
 }
 
-function insertJobAndBrowseHistory(param, now) {
+async function insertJobAndBrowseHistory(param, now) {
   let rows = [];
   const SQL_JOB_BY_ID = `SELECT job_id,job_platform,job_url,job_name,job_company_name,job_location_name,job_address,job_longitude,job_latitude,job_description,job_degree_name,job_year,job_salary_min,job_salary_max,job_salary_total_month,job_first_publish_datetime,boss_name,boss_company_name,boss_position,create_datetime,update_datetime FROM job WHERE job_id = ?`;
-  getDb().exec({
+  (await getDb()).exec({
     sql: SQL_JOB_BY_ID,
     rowMode: "object",
     bind: [param.jobId],
@@ -346,7 +399,7 @@ function insertJobAndBrowseHistory(param, now) {
     const SQL_INSERT_JOB = `
     INSERT INTO job (job_id,job_platform,job_url,job_name,job_company_name,job_location_name,job_address,job_longitude,job_latitude,job_description,job_degree_name,job_year,job_salary_min,job_salary_max,job_salary_total_month,job_first_publish_datetime,boss_name,boss_company_name,boss_position,create_datetime,update_datetime) VALUES ($job_id,$job_platform,$job_url,$job_name,$job_company_name,$job_location_name,$job_address,$job_longitude,$job_latitude,$job_description,$job_degree_name,$job_year,$job_salary_min,$job_salary_max,$job_salary_total_month,$job_first_publish_datetime,$boss_name,$boss_company_name,$boss_position,$create_datetime,$update_datetime)
   `;
-    getDb().exec({
+    (await getDb()).exec({
       sql: SQL_INSERT_JOB,
       bind: {
         $job_id: param.jobId,
@@ -378,16 +431,20 @@ function insertJobAndBrowseHistory(param, now) {
         $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
       },
     });
+    await addJobBrowseHistory(param.jobId, now, JOB_VISIT_TYPE_SEARCH);
   }
+}
+
+async function addJobBrowseHistory(jobId, date, type) {
   const SQL_INSERT_JOB_BROWSE_HISTORY = `
   INSERT INTO job_browse_history (job_id,job_visit_datetime,job_visit_type) VALUES ($job_id,$job_visit_datetime,$job_visit_type)
   `;
-  getDb().exec({
+  return (await getDb()).exec({
     sql: SQL_INSERT_JOB_BROWSE_HISTORY,
     bind: {
-      $job_id: param.jobId,
-      $job_visit_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-      $job_visit_type: "SEARCH",
+      $job_id: jobId,
+      $job_visit_datetime: dayjs(date).format("YYYY-MM-DD HH:mm:ss"),
+      $job_visit_type: type,
     },
   });
 }
@@ -432,3 +489,4 @@ FROM
 GROUP BY
 	t2.levels;
 `;
+const SQL_JOB_BY_JOB_URL = `SELECT job_id,job_platform,job_url,job_name,job_company_name,job_location_name,job_address,job_longitude,job_latitude,job_description,job_degree_name,job_year,job_salary_min,job_salary_max,job_salary_total_month,job_first_publish_datetime,boss_name,boss_company_name,boss_position,create_datetime,update_datetime FROM job WHERE job_url = ?`;

@@ -14,7 +14,10 @@ import { infoLog } from "../common/log";
 import dayjs from "dayjs";
 import sha256 from "crypto-js/sha256";
 import { Company } from "../common/data/domain/company";
-import { convertDateStringToDateObject } from "../common/utils";
+import {
+  convertDateStringToDateObject,
+  convertPureJobDetailUrl,
+} from "../common/utils";
 
 const SALARY_MATCH = /(?<min>[0-9\.]*)(?<minUnit>\D*)(?<max>[0-9\.]*)(?<maxUnit>\D*)(?<month>\d*)/;
 const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
@@ -95,7 +98,7 @@ function handleLiepin(list) {
     const { recruiterName, recruiterTitle } = item.recruiter;
     job.jobId = genId(jobId, PLATFORM_LIEPIN);
     job.jobPlatform = PLATFORM_LIEPIN;
-    job.jobUrl = link;
+    job.jobUrl = convertPureJobDetailUrl(link);
     job.jobName = title;
     job.jobCompanyName = compName;
     job.jobLocationName = dq;
@@ -174,7 +177,7 @@ function handleJobsdb(list) {
     const { countryCode: city, label: positionAddress } = item.jobLocation;
     job.jobId = genId(id, PLATFORM_JOBSDB);
     job.jobPlatform = PLATFORM_JOBSDB;
-    job.jobUrl = jobUrl;
+    job.jobUrl = convertPureJobDetailUrl(jobUrl);
     job.jobName = title;
     job.jobCompanyName = companyFullName;
     job.jobLocationName = city;
@@ -304,7 +307,10 @@ function handleZhilianData(list) {
     const { staffName, hrJob } = item.staffCard;
     job.jobId = genId(jobId, PLATFORM_ZHILIAN);
     job.jobPlatform = PLATFORM_ZHILIAN;
-    job.jobUrl = positionUrl;
+    job.jobUrl = convertPureJobDetailUrl(positionUrl).replace(
+      "http:",
+      "https:"
+    );
     job.jobName = name;
     job.jobCompanyName = companyName;
     job.jobLocationName = workCity;
@@ -366,7 +372,7 @@ function handleBossData(list) {
     } = zpData.jobInfo;
     job.jobId = genId(encryptId, PLATFORM_BOSS);
     job.jobPlatform = PLATFORM_BOSS;
-    job.jobUrl = jobUrl;
+    job.jobUrl = convertPureJobDetailUrl(jobUrl);
     job.jobName = jobName;
     job.jobCompanyName = brandName;
     job.jobLocationName = locationName;
@@ -439,7 +445,7 @@ function handle51JobData(list) {
     } = item;
     job.jobId = genId(jobId, PLATFORM_51JOB);
     job.jobPlatform = PLATFORM_51JOB;
-    job.jobUrl = jobHref;
+    job.jobUrl = convertPureJobDetailUrl(jobHref);
     job.jobName = jobName;
     job.jobCompanyName = fullCompanyName;
     job.jobLocationName = jobAreaString;

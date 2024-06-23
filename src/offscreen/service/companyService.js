@@ -1,8 +1,8 @@
 import { Message } from "../../common/api/message";
 import { postSuccessMessage, postErrorMessage } from "../util";
-import { getDb } from "../database";
+import { getDb, getOne } from "../database";
 import { Company } from "../../common/data/domain/company";
-import { convertEmptyStringToNull, toHump } from "../../common/utils";
+import { convertEmptyStringToNull } from "../../common/utils";
 import dayjs from "dayjs";
 
 export const CompanyService = {
@@ -13,26 +13,12 @@ export const CompanyService = {
    *
    * @returns Company
    */
-  getCompanyById: function (message, param) {
+  getCompanyById: async function (message, param) {
     try {
-      let resultItem = null;
-      let rows = [];
-      getDb().exec({
-        sql: SQL_SELECT_BY_ID,
-        rowMode: "object",
-        bind: [param],
-        resultRows: rows,
-      });
-      if (rows.length > 0) {
-        let item = rows[0];
-        resultItem = new Company();
-        let keys = Object.keys(item);
-        for (let n = 0; n < keys.length; n++) {
-          let key = keys[n];
-          resultItem[toHump(key)] = item[key];
-        }
-      }
-      postSuccessMessage(message, resultItem);
+      postSuccessMessage(
+        message,
+        await getOne(SQL_SELECT_BY_ID, [param], new Company())
+      );
     } catch (e) {
       postErrorMessage(message, "[worker] getCompanyById error : " + e.message);
     }
@@ -43,18 +29,18 @@ export const CompanyService = {
    * @param {Message} message
    * @param {Company} param
    */
-  addOrUpdateCompany: function (message, param) {
+  addOrUpdateCompany: async function (message, param) {
     try {
       const now = new Date();
       let rows = [];
-      getDb().exec({
+      (await getDb()).exec({
         sql: SQL_SELECT_BY_ID,
         rowMode: "object",
         bind: [param.companyId],
         resultRows: rows,
       });
       if (rows.length > 0) {
-        getDb().exec({
+        (await getDb()).exec({
           sql: SQL_UPDATE_JOB,
           bind: {
             $company_id: convertEmptyStringToNull(param.companyId),
@@ -101,7 +87,7 @@ export const CompanyService = {
           },
         });
       } else {
-        getDb().exec({
+        (await getDb()).exec({
           sql: SQL_INSERT_JOB,
           bind: {
             $company_id: convertEmptyStringToNull(param.companyId),

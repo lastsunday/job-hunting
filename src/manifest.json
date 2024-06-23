@@ -48,13 +48,23 @@
   ],
   "{{chrome}}.permissions": ["webRequest", "offscreen", "unlimitedStorage"],
   "{{firefox}}.permissions": [
-    "https://aiqicha.baidu.com/*",
-    "https://kjxb.org/*"
+    "https://www.zhipin.com/*",
+    "https://sou.zhaopin.com/*",
+    "https://jobs.zhaopin.com/*",
+    "https://we.51job.com/*",
+    "https://jobs.51job.com/*",
+    "https://www.lagou.com/*",
+    "https://hk.jobsdb.com/*",
+    "https://kjxb.org/",
+    "https://aiqicha.baidu.com/",
+    "https://www.liepin.com/*"
   ],
   "{{chrome}}.host_permissions": [
     "https://www.zhipin.com/*",
     "https://sou.zhaopin.com/*",
+    "https://jobs.zhaopin.com/*",
     "https://we.51job.com/*",
+    "https://jobs.51job.com/*",
     "https://www.lagou.com/*",
     "https://hk.jobsdb.com/*",
     "https://kjxb.org/",

@@ -5,6 +5,7 @@
 ### ⭐ Added
 
 1. Firefox 拓展实现
+2. (ContentScript)记录和显示职位详情查看次数。
 
 ### ✏️ Changed
 

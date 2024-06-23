@@ -11,6 +11,8 @@ export function postSuccessMessage(message, data) {
       message.to +
       "] message [action=" +
       message.action +
+      ",invokeEnv=" +
+      message.invokeEnv +
       ",callbackId=" +
       message.callbackId +
       ",error=" +
@@ -34,6 +36,8 @@ export function postErrorMessage(message, error) {
       message.to +
       "] message [action=" +
       message.action +
+      ",invokeEnv=" +
+      message.invokeEnv +
       ",callbackId=" +
       message.callbackId +
       ",error=" +

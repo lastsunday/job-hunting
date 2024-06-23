@@ -17,6 +17,8 @@ worker.onmessage = function (event) {
           message.to +
           "] message [action=" +
           message.action +
+          ",invokeEnv=" +
+          message.invokeEnv +
           ",callbackId=" +
           message.callbackId +
           ",error=" +
@@ -32,6 +34,8 @@ worker.onmessage = function (event) {
           message.to +
           "] message [action=" +
           message.action +
+          ",invokeEnv=" +
+          message.invokeEnv +
           ",callbackId=" +
           message.callbackId +
           ",error=" +
@@ -53,6 +57,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           message.to +
           "] message [action=" +
           message.action +
+          ",invokeEnv=" +
+          message.invokeEnv +
           ",callbackId=" +
           message.callbackId +
           ",error=" +
@@ -68,6 +74,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           message.to +
           "] message [action=" +
           message.action +
+          ",invokeEnv=" +
+          message.invokeEnv +
           ",callbackId=" +
           message.callbackId +
           ",error=" +

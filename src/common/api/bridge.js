@@ -1,7 +1,8 @@
-import { getRandomInt } from "../utils";
 import { debugLog, errorLog } from "../log";
-import { CONTENT_SCRIPT, BACKGROUND } from "./bridgeCommon.js";
-import { v4 as uuidv4 } from 'uuid';
+import { CONTENT_SCRIPT, BACKGROUND, OFFSCREEN } from "./bridgeCommon.js";
+import { v4 as uuidv4 } from "uuid";
+
+export const EVENT_BRIDGE = "EVENT_BRIDGE";
 
 const callbackPromiseHookMap = new Map();
 
@@ -12,34 +13,78 @@ const callbackPromiseHookMap = new Map();
  * @param function onMessageCallback 返回message信息的回调函数
  * @returns
  */
-export function invoke(action, param, onMessageCallback) {
+export function invoke(
+  action,
+  param,
+  { onMessageCallback, invokeEnv } = { invokeEnv: CONTENT_SCRIPT }
+) {
   let callbackId = genCallbackId();
   let promise = new Promise((resolve, reject) => {
-    addCallbackPromiseHook(callbackId, { resolve, reject });
-    let message = {
-      action,
-      callbackId,
-      param,
-      from: CONTENT_SCRIPT,
-      to: BACKGROUND,
-    };
-    if(onMessageCallback){
-      onMessageCallback(message);
+    try {
+      addCallbackPromiseHook(callbackId, { resolve, reject });
+      let message = {
+        action,
+        callbackId,
+        param,
+        from: CONTENT_SCRIPT,
+        to: BACKGROUND,
+        invokeEnv: invokeEnv,
+      };
+      if (onMessageCallback) {
+        onMessageCallback(message);
+      }
+      if (invokeEnv == CONTENT_SCRIPT) {
+        debugLog(
+          "1.[content script][send][" +
+            message.from +
+            " -> " +
+            message.to +
+            "] message [action=" +
+            message.action +
+            ",invokeEnv=" +
+            message.invokeEnv +
+            ",callbackId=" +
+            message.callbackId +
+            ",error=" +
+            message.error +
+            "]"
+        );
+        chrome.runtime.sendMessage(message);
+      } else if (invokeEnv == BACKGROUND) {
+        message.from = BACKGROUND;
+        message.to = OFFSCREEN;
+        debugLog(
+          "1.[background script][send][" +
+            message.from +
+            " -> " +
+            message.to +
+            "] message [action=" +
+            message.action +
+            ",invokeEnv=" +
+            message.invokeEnv +
+            ",callbackId=" +
+            message.callbackId +
+            ",error=" +
+            message.error +
+            "]"
+        );
+        chrome.runtime.sendMessage(message);
+        try {
+          //for firefox hack
+          if (window) {
+            const event = new CustomEvent(EVENT_BRIDGE, { detail: message });
+            window.dispatchEvent(event);
+          }
+        } catch (e) {
+          //skip
+        }
+      } else {
+        reject(`unknow invokeEnv = ${invokeEnv}`);
+      }
+    } catch (e) {
+      errorLog(e);
+      reject(e);
     }
-    debugLog(
-      "1.[content script][send][" +
-        message.from +
-        " -> " +
-        message.to +
-        "] message [action=" +
-        message.action +
-        ",callbackId=" +
-        message.callbackId +
-        ",error=" +
-        message.error +
-        "]"
-    );
-    chrome.runtime.sendMessage(message);
   });
   return promise;
 }
@@ -56,6 +101,8 @@ export function init() {
           message.to +
           "] message [action=" +
           message.action +
+          ",invokeEnv=" +
+          message.invokeEnv +
           ",callbackId=" +
           message.callbackId +
           ",error=" +
@@ -83,7 +130,7 @@ function addCallbackPromiseHook(callbackId, promiseHook) {
   callbackPromiseHookMap.set(callbackId, promiseHook);
 }
 
-function getAndRemovePromiseHook(callbackId) {
+export function getAndRemovePromiseHook(callbackId) {
   let promiseHook = callbackPromiseHookMap.get(callbackId);
   callbackPromiseHookMap.delete(callbackId);
   return promiseHook;
