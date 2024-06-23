@@ -16,9 +16,14 @@
 1. (build)修改chrome编译目录为dist-chrome，firefox编译目录为dist-firefox
 2. (build)修改ci脚本，为tag自动生成编译后的产物([chrome][firefox])-xx.xx.xx分支
 
+### ⚙️ Chore
+
+1. (devtool)新增chrome和firefox快速启动并加载插件的命令:`start:firefox`和`start:chrome`(备注：每次启动该会自动清理数据库)
+
 ### 🔨 Dependency
 
 1. Add cross-env ^7.0.3
+2. Add web-ext ^8.2.0
 
 ## 1.8.0(2024-06-21)
 

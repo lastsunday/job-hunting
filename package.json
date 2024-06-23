@@ -7,6 +7,8 @@
   "scripts": {
     "dev-chrome": "cross-env TARGET=chrome vite dev",
     "dev-firefox": "cross-env TARGET=firefox vite dev",
+    "start:firefox": "web-ext run --source-dir ./dist-firefox/",
+    "start:chrome": "web-ext run --target chromium --source-dir ./dist-chrome/",
     "build-chrome": "cross-env TARGET=chrome vite build",
     "build-firefox": "cross-env TARGET=firefox vite build"
   },
@@ -30,7 +32,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@sqlite.org/sqlite-wasm": "3.43.2-build1",
+    "@sqlite.org/sqlite-wasm": "3.46.0-build2",
     "@types/chrome": "^0.0.246",
     "@types/webextension-polyfill": "^0.10.7",
     "@vitejs/plugin-vue": "^4.6.2",
@@ -38,6 +40,7 @@
     "typescript": "^5.5.2",
     "vite": "^5.3.1",
     "vite-plugin-web-extension": "^4.1.4",
-    "vue-tsc": "^2.0.21"
+    "vue-tsc": "^2.0.21",
+    "web-ext": "^8.2.0"
   }
 }
