@@ -21,9 +21,12 @@ chrome.action.onClicked.addListener(() => {
   });
 });
 
+//TODO 没有定时清理，可能会有问题
+const saveBrowseDetailTabIdMap = new Map();
+
 //detect job detail access
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  if (changeInfo?.status == "complete") {
+  if (changeInfo?.status == "complete" && !isSavedByTabId(tab.id)) {
     if (tab.url) {
       let pureUrl = convertPureJobDetailUrl(tab.url);
       let job = await JobApi.getJobByDetailUrl(pureUrl, {
@@ -35,10 +38,19 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
           invokeEnv: BACKGROUND,
         });
         infoLog(`save jobBrowseDetailHistory success jobId = ${job.jobId}`);
+        recordSavedByTabId(tab.id);
       }
     }
   }
 });
+
+function isSavedByTabId(tabId) {
+  return saveBrowseDetailTabIdMap.has(tabId);
+}
+
+function recordSavedByTabId(tabId) {
+  saveBrowseDetailTabIdMap.set(tabId, null);
+}
 
 let creating: any;
 async function setupOffscreenDocument(path: string) {
