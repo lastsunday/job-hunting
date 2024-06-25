@@ -57,7 +57,10 @@
     "https://hk.jobsdb.com/*",
     "https://kjxb.org/",
     "https://aiqicha.baidu.com/",
-    "https://www.liepin.com/*"
+    "https://www.liepin.com/*",
+    "https://*.chinaz.com/",
+    "http://*/",
+    "https://*/"
   ],
   "{{chrome}}.host_permissions": [
     "https://www.zhipin.com/*",
@@ -69,6 +72,9 @@
     "https://hk.jobsdb.com/*",
     "https://kjxb.org/",
     "https://aiqicha.baidu.com/",
-    "https://www.liepin.com/*"
+    "https://www.liepin.com/*",
+    "https://*.chinaz.com/",
+    "http://*/",
+    "https://*/"
   ]
 }

@@ -5,6 +5,7 @@ import {
   convertTimeToHumanReadable,
   convertTimeOffsetToHumanReadable,
   autoFillHttp,
+  getDomain,
 } from "../common/utils";
 import {
   JOB_STATUS_DESC_NEWEST,
@@ -484,9 +485,7 @@ function createCommentWrapper(jobDTO) {
 
 function createBrowseDetail(jobDTO) {
   let browseDetailTag = document.createElement("div");
-  browseDetailTag.textContent += `【查看过${
-    jobDTO.browseDetailCount ?? 0
-  }次】`;
+  browseDetailTag.textContent += `【查看过${jobDTO.browseDetailCount ?? 0}次】`;
   browseDetailTag.classList.add("__first_browse_time");
   return browseDetailTag;
 }
@@ -645,9 +644,13 @@ function createCompanyInfoDetail(company, quickSearchHandle) {
       )
       .append(
         $(
-          `<div><div class="__company_info_quick_search_item_label">成立时间：</div>${dayjs(
-            company.companyStartDate
-          ).format("YYYY-MM-DD")}</div>`
+          `<div><div class="__company_info_quick_search_item_label">成立时间：</div><div>
+          ${dayjs(company.companyStartDate).format(
+            "YYYY-MM-DD"
+          )}(${convertTimeOffsetToHumanReadable(
+            dayjs(company.companyStartDate)
+          )})
+          </div></div>`
         )
       )
       .append(
@@ -678,11 +681,26 @@ function createCompanyInfoDetail(company, quickSearchHandle) {
           `<div><div class="__company_info_quick_search_item_label">统一社会信用代码：</div>${company.companyUnifiedCode}</div>`
         )
       )
-      .append(
-        $(
-          `<div><div class="__company_info_quick_search_item_label">官网：</div>${websiteElement}</div>`
-        )
-      )
+  );
+  let websiteStatusElement = $(`<div></div>`);
+  renderWebsiteStatus(websiteStatusElement[0], company.companyWebSite);
+  let websiteWhoisElement = $(`<div></div>`);
+  renderWebsiteWhois(websiteWhoisElement[0], company.companyWebSite);
+  let websiteIpcElement = $(`<div></div>`);
+  renderWebsiteIpc(websiteIpcElement[0], company.companyWebSite);
+  contentDiv.append(
+    $(`<div class="__company_info_quick_search_item"></div>`).append(
+      $(
+        `<div><div class="__company_info_quick_search_item_label">官网：</div>${websiteElement}</div>`
+      ),
+      $(
+        `<div><div class="__company_info_quick_search_item_label">状态：</div></div>`
+      ).append(websiteStatusElement),
+      $(
+        `<div><div class="__company_info_quick_search_item_label">建站时间：</div></div>`
+      ).append(websiteWhoisElement),
+      $(`<div></div>`).append(websiteIpcElement)
+    )
   );
   contentDiv.append(
     $(`<div class="__company_info_quick_search_item"></div>`)
@@ -734,6 +752,158 @@ function createCompanyInfoDetail(company, quickSearchHandle) {
       )
   );
   return contentDiv[0];
+}
+
+async function renderWebsiteIpc(element, website) {
+  try {
+    element.onclick = null;
+    element.textContent = "备案信息检测中⌛︎";
+    element.className = "__website_value_loading";
+    if (website.length <= 1) {
+      //找不到网址，会显示-符号
+      element.textContent = "";
+      element.className = "";
+    } else {
+      let abortFunctionHandler = null;
+      let url = `https://icp.aizhan.com/${encodeURIComponent(
+        getDomain(website)
+      )}/`;
+      const result = await httpFetchGetText(url, (abortFunction) => {
+        abortFunctionHandler = abortFunction;
+        //加入请求手动中断列表
+        abortFunctionHandlerMap.set(abortFunctionHandler, null);
+      });
+      //请求正常结束，从手动中断列表中移除
+      abortFunctionHandlerMap.delete(abortFunctionHandler);
+      let firstMatchArray = result.match(
+        /<table class="table">[\s\S]*<tr><td class="thead">主办单位名称<\/td><td>.*[<\td>]?/
+      );
+      if (firstMatchArray && firstMatchArray.length > 0) {
+        let groups = firstMatchArray[0]
+          ?.replaceAll("\n", "")
+          ?.replaceAll("\t", "")
+          ?.replaceAll(" ", "")
+          ?.replaceAll("&nbsp;", "")
+          ?.match(
+            /<tr>(?<name>.*?)<\/tr><tr>(?<type>.*?)<\/tr><tr>(?<ipc>.*?)<\/tr>/
+          )?.groups;
+        if (groups) {
+          let name = groups.name.match(/<td>(?<name>.*)<a/).groups.name;
+          let type = groups.type.match(/<td>(?<type>.*)<\/td>/).groups.type;
+          let ipc = groups.ipc.match(/<span>(?<ipc>.*)<\/span>/).groups.ipc;
+          element.textContent = "";
+          element.className = "";
+          element.className = "__company_info_quick_search_item";
+          element.title = name;
+          let rootElement = $(element);
+          rootElement.append(
+            $(
+              `<div><div class="__company_info_quick_search_item_label">网站备案：</div><div class="__company_info_quick_search_item_value">${ipc}</div></div>`
+            ),
+            $(
+              `<div><div class="__company_info_quick_search_item_label">单位性质：</div><div class="__company_info_quick_search_item_value">${type}</div></div>`
+            )
+          );
+          return;
+        }
+      }
+      clearAllChildNode(element);
+      element.className = "";
+      let syncDataButton = document.createElement("div");
+      syncDataButton.className = "__company_info_quick_search_button";
+      syncDataButton.textContent = "🔎未找到备案信息，点击到工信部核实";
+      syncDataButton.onclick = () => {
+        window.open("https://beian.miit.gov.cn/#/Integrated/recordQuery");
+      };
+      element.appendChild(syncDataButton);
+    }
+  } catch (e) {
+    errorLog(e);
+    element.onclick = (event) => {
+      renderWebsiteIpc(element, website);
+    };
+    element.textContent = "备案信息检测失败，点击重新检测";
+    element.className = "__website_value_loading";
+  }
+}
+
+async function renderWebsiteWhois(element, website) {
+  try {
+    element.onclick = null;
+    element.textContent = "检测中⌛︎";
+    element.className = "__website_value_loading";
+    if (website.length <= 1) {
+      //找不到网址，会显示-符号
+      element.textContent = "-";
+      element.className = "";
+    } else {
+      let abortFunctionHandler = null;
+      let url = `https://whois.chinaz.com/${encodeURIComponent(website)}`;
+      const result = await httpFetchGetText(url, (abortFunction) => {
+        abortFunctionHandler = abortFunction;
+        //加入请求手动中断列表
+        abortFunctionHandlerMap.set(abortFunctionHandler, null);
+      });
+      //请求正常结束，从手动中断列表中移除
+      abortFunctionHandlerMap.delete(abortFunctionHandler);
+      let groups = result.match(
+        /注册时间[\s\S]*<\/div>[\s\S]*<div item-value>(?<registDate>.*)<\/div>[\s\S]*/
+      )?.groups;
+      if (groups && groups.registDate) {
+        let date = dayjs(
+          groups.registDate
+            .replaceAll("年", "-")
+            .replaceAll("月", "-")
+            .replaceAll("日", "")
+        );
+        element.textContent = convertTimeOffsetToHumanReadable(date);
+        element.title = date.format("YYYY-MM-DD");
+        element.className = "";
+      } else {
+        element.textContent = "未找到";
+        element.clasName = "__website_value_error";
+      }
+    }
+  } catch (e) {
+    errorLog(e);
+    element.onclick = (event) => {
+      renderWebsiteWhois(element, website);
+    };
+    element.textContent = "检测失败，点击重新检测";
+    element.className = "__website_value_loading";
+  }
+}
+
+async function renderWebsiteStatus(element, website) {
+  try {
+    element.onclick = null;
+    element.textContent = "检测中⌛︎";
+    element.className = "__website_value_loading";
+    if (website.length <= 1) {
+      //找不到网址，会显示-符号
+      element.textContent = "-";
+      element.className = "";
+    } else {
+      let abortFunctionHandler = null;
+      let url = `${autoFillHttp(website)}`;
+      await httpFetchGetText(url, (abortFunction) => {
+        abortFunctionHandler = abortFunction;
+        //加入请求手动中断列表
+        abortFunctionHandlerMap.set(abortFunctionHandler, null);
+      });
+      //请求正常结束，从手动中断列表中移除
+      abortFunctionHandlerMap.delete(abortFunctionHandler);
+      element.textContent = "可访问";
+      element.style = "background-color:yellowgreen;color:white;";
+    }
+  } catch (e) {
+    errorLog(e);
+    element.onclick = (event) => {
+      renderWebsiteStatus(element, website);
+    };
+    element.textContent = "不可访问";
+    element.className = "__website_value_loading";
+  }
 }
 
 async function getCompanyInfoByAiqicha(keyword) {
@@ -824,6 +994,18 @@ function createSearchCompanyLink(keyword) {
   let govLabelDiv = document.createElement("div");
   govLabelDiv.className = "__company_info_quick_search_item_label";
   govLabelDiv.textContent = "- 政府渠道";
+  govDiv.appendChild(
+    createATagWithSearch(
+      `https://beian.miit.gov.cn/#/Integrated/recordQuery`,
+      "工信部"
+    )
+  );
+  govDiv.appendChild(
+    createATagWithSearch(
+      `https://www.creditchina.gov.cn/xinyongxinxixiangqing/xyDetail.html?keyword=${decode}`,
+      "信用中国"
+    )
+  );
   govDiv.appendChild(
     createATagWithSearch(
       `https://www.gsxt.gov.cn/corp-query-homepage.html`,

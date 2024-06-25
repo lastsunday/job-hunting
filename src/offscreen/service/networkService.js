@@ -3,7 +3,7 @@ import { postSuccessMessage, postErrorMessage } from "../util";
 const callbackIdAndAbortControllerMap = new Map();
 
 export const NetworkService = {
-    /**
+  /**
    * 提交网络请求
    * @param {*} message
    * @param {string} param url
@@ -14,8 +14,16 @@ export const NetworkService = {
       const signal = controller.signal;
       callbackIdAndAbortControllerMap.set(message.callbackId, controller);
       const response = await fetch(param, { signal });
-      const result = await response.text();
-      postSuccessMessage(message, result);
+      if (response.status == 200) {
+        const result = await response.text();
+        postSuccessMessage(message, result);
+      } else {
+        let errorMessage = `statusCode = ${response.status}`;
+        postErrorMessage(
+          message,
+          "[worker] httpFetchGetText error : " + errorMessage
+        );
+      }
     } catch (e) {
       postErrorMessage(
         message,
@@ -42,4 +50,4 @@ export const NetworkService = {
       );
     }
   },
-}
+};

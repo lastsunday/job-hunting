@@ -63,6 +63,8 @@ export function convertTimeOffsetToHumanReadable(dateTime) {
   let dayC = curDate.diff(date, "day", true);
   // 计算时间差共有多少个月
   let monthC = curDate.diff(date, "month", true);
+  // 计算时间差共有多少个年
+  let yearC = curDate.diff(date, "year", true);
 
   if (minC < 1) {
     return `刚刚`;
@@ -72,8 +74,10 @@ export function convertTimeOffsetToHumanReadable(dateTime) {
     return `${parseInt(hourC)}小时前`;
   } else if (monthC < 1) {
     return `${parseInt(dayC)}天前`;
-  } else {
+  } else if (yearC < 1) {
     return `${parseInt(monthC)}月前`;
+  } else {
+    return `${parseInt(yearC)}年前`;
   }
 }
 
@@ -150,6 +154,13 @@ export function autoFillHttp(url) {
   } else {
     return "http://" + url;
   }
+}
+
+export function getDomain(url) {
+  if (url) {
+    return url.replace("http://", "").replace("https://", "").replace("www.","").replace("/","");
+  }
+  return url;
 }
 
 export function convertDateStringToDateObject(text) {

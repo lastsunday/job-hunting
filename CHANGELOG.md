@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (ContentScript)自动检查官网可达性。
+2. (ContentScript)工信部,信用中国快捷查询。
+3. (ContentScript)建站时间,备案信息自动查询。
+4. (ContentScript)公司成立时间添加距今时间的可读文本。
+
 ## 1.9.0(2024-06-23)
 
 ### ⭐ Added
