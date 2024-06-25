@@ -224,3 +224,21 @@ div[data-search-sol-meta] {
   padding: 10px;
   margin: 10px;
 }
+
+.__website_value_success {
+  background-color: yellowgreen;
+  color: white;
+  font-size: 12px;
+}
+
+.__website_value_error {
+  background-color: red;
+  color: white;
+  font-size: 12px;
+}
+
+.__website_value_loading {
+  background-color: black;
+  color: white;
+  font-size: 12px;
+}
