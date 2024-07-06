@@ -184,11 +184,23 @@
         label="查看数"
         prop="browseDetailCount"
         sortable
-        width="100"
+        width="90"
       >
         <template #default="scope">
           <el-text line-clamp="1">
             {{ scope.row.browseDetailCount }}
+          </el-text>
+        </template>
+      </el-table-column>
+      <el-table-column
+        prop="latestBrowseDetailDatetime"
+        sortable="custom"
+        label="最近查看时间"
+        width="160"
+      >
+        <template #default="scope">
+          <el-text line-clamp="1">
+            {{ datetimeFormatHHMM(scope.row.latestBrowseDetailDatetime) }}
           </el-text>
         </template>
       </el-table-column>
@@ -203,7 +215,7 @@
       </el-table-column>
       <el-table-column label="公司">
         <template #default="scope">
-          <el-text line-clamp="1">
+          <el-text line-clamp="1" :title="scope.row.jobCompanyName">
             {{ scope.row.jobCompanyName }}
           </el-text>
         </template>
@@ -360,7 +372,12 @@ const background = ref(false);
 const disabled = ref(false);
 const datetimeFormat = computed(() => {
   return function (value: string) {
-    return dayjs(value).isValid() ? dayjs(value).format("YYYY-MM-DD") : "未知";
+    return dayjs(value).isValid() ? dayjs(value).format("YYYY-MM-DD") : "-";
+  };
+});
+const datetimeFormatHHMM = computed(() => {
+  return function (value: string) {
+    return dayjs(value).isValid() ? dayjs(value).format("YYYY-MM-DD HH:mm") : "-";
   };
 });
 const jobSearchName = ref(null);

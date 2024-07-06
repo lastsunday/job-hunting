@@ -4,7 +4,7 @@
 
 ### ⭐ Added
 
-1. (SidePanel)职位列表新增职位查看次数。
+1. (SidePanel)职位列表新增职位查看次数，最近查看时间。
 2. (SidePanel)职位列表新增招聘平台。
 3. (SidePanel)统计新增今天/总职位查看次数。
 
