@@ -8,7 +8,7 @@ import {
 } from "../../commonRender";
 import { createDOM } from "./index";
 import { mutationContainer, getListValue } from "./index";
-import { PLATFORM_LAGOU } from "../../common";
+import { PLATFORM_LAGOU } from "../../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
 import { JobApi } from "../../../common/api";
 

@@ -8,7 +8,7 @@ import {
   renderFunctionPanel,
 } from "../../commonRender";
 import { randomDelay } from "../../../common/utils";
-import { PLATFORM_JOBSDB } from "../../common";
+import { PLATFORM_JOBSDB } from "../../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
 import { JobApi } from "../../../common/api";
 

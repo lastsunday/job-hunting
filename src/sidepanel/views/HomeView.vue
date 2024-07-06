@@ -1,13 +1,21 @@
 <template>
   <el-row v-loading="loading">
-    <el-col :span="8">
-      <el-statistic title="今天职位扫描次数" :value="todayBrowseCount" />
+    <el-col :span="6">
+      <el-statistic title="今天职位查看数" :value="todayBrowseDetailCount" />
     </el-col>
-    <el-col :span="8">
-      <el-statistic title="职位扫描总数" :value="totalBrowseCount" />
+    <el-col :span="6">
+      <el-statistic title="职位查看总数" :value="totalBrowseDetailCount" />
     </el-col>
-    <el-col :span="8">
+    <el-col :span="6">
       <el-statistic title="总职位数" :value="totalJobCount" />
+    </el-col>
+    <el-col :span="6">
+      <div class="el-statistic">
+        <div class="el-statistic__head">今天/总职位扫描数</div>
+        <div class="el-statistic__content">
+          {{ todayBrowseCountSource }}/{{ totalBrowseCountSource }}
+        </div>
+      </div>
     </el-col>
   </el-row>
   <el-col class="search">
@@ -32,13 +40,13 @@
           <el-button @click="searchResultExport">导出</el-button>
           <el-button @click="reset">重置</el-button>
           <el-button @click="onClickSearch"
-            ><el-icon><Search /></el-icon
+            ><el-icon> <Search /> </el-icon
           ></el-button>
         </div>
       </div>
     </div>
-    <el-collapse :hidden="!showAdvanceSearch">
-      <el-collapse-item title="高级搜索条件">
+    <el-collapse :hidden="!showAdvanceSearch" v-model="activeNames">
+      <el-collapse-item title="高级搜索条件" name="advanceCondition">
         <div class="flex gap-4 mb-4">
           <el-input
             style="width: 240px"
@@ -134,12 +142,6 @@
               </el-descriptions-item>
               <el-descriptions-item>
                 <template #label>
-                  <div class="cell-item">招聘平台</div>
-                </template>
-                {{ props.row.jobPlatform }}
-              </el-descriptions-item>
-              <el-descriptions-item>
-                <template #label>
                   <div class="cell-item">工作地址</div>
                 </template>
                 {{ props.row.jobAddress }}
@@ -150,8 +152,7 @@
               style="width: 100%; height: 300px"
               disabled
               :value="props.row.jobDescription?.replace(/<\/?.+?\/?>/g, '')"
-            >
-            </textarea>
+            ></textarea>
           </div>
         </template>
       </el-table-column>
@@ -162,7 +163,9 @@
         width="140"
       >
         <template #default="scope">
-          {{ datetimeFormat(scope.row.createDatetime) }}
+          <el-text line-clamp="1">
+            {{ datetimeFormat(scope.row.createDatetime) }}
+          </el-text>
         </template>
       </el-table-column>
       <el-table-column
@@ -172,7 +175,21 @@
         width="110"
       >
         <template #default="scope">
-          {{ datetimeFormat(scope.row.jobFirstPublishDatetime) }}
+          <el-text line-clamp="1">
+            {{ datetimeFormat(scope.row.jobFirstPublishDatetime) }}
+          </el-text>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="查看数"
+        prop="browseDetailCount"
+        sortable
+        width="100"
+      >
+        <template #default="scope">
+          <el-text line-clamp="1">
+            {{ scope.row.browseDetailCount }}
+          </el-text>
         </template>
       </el-table-column>
       <el-table-column label="名称">
@@ -234,10 +251,17 @@
           </el-text>
         </template>
       </el-table-column>
-      <el-table-column label="学历" prop="jobDegreeName" sortable width="120">
+      <el-table-column label="学历" prop="jobDegreeName" sortable width="100">
         <template #default="scope">
           <el-text line-clamp="1">
             {{ scope.row.jobDegreeName }}
+          </el-text>
+        </template>
+      </el-table-column>
+      <el-table-column label="招聘平台" prop="jobPlatform" width="100">
+        <template #default="scope">
+          <el-text line-clamp="1">
+            {{ jobPlatformFormat(scope.row.jobPlatform) }}
           </el-text>
         </template>
       </el-table-column>
@@ -287,7 +311,13 @@ import {
   LegendComponent,
 } from "echarts/components";
 import VChart from "vue-echarts";
-import { toLine } from "../../common/utils";
+import {
+  PLATFORM_51JOB,
+  PLATFORM_BOSS,
+  PLATFORM_LAGOU,
+  PLATFORM_LIEPIN,
+  PLATFORM_ZHILIAN,
+} from "../../common";
 
 use([
   CanvasRenderer,
@@ -299,11 +329,19 @@ use([
 
 const todayBrowseCountSource = ref(0);
 const totalBrowseCountSource = ref(0);
+const todayBrowseDetailCountSource = ref(0);
+const totalBrowseDetailCountSource = ref(0);
 const totalJobCountSource = ref(0);
 const todayBrowseCount = useTransition(todayBrowseCountSource, {
-  duration: 1000,
+  duration: 0,
 });
 const totalBrowseCount = useTransition(totalBrowseCountSource, {
+  duration: 0,
+});
+const todayBrowseDetailCount = useTransition(todayBrowseDetailCountSource, {
+  duration: 1000,
+});
+const totalBrowseDetailCount = useTransition(totalBrowseDetailCountSource, {
   duration: 1000,
 });
 
@@ -339,6 +377,26 @@ const showAdvanceSearch = ref(false);
 const dialogAvgSalaryVisible = ref(false);
 const dialogAvgSalaryEchartVisible = ref(false);
 const avgSalaryEchartLoading = ref(true);
+const activeNames = ref(["advanceCondition"]);
+
+const jobPlatformFormat = computed(() => {
+  return function (value: string) {
+    switch (value) {
+      case PLATFORM_BOSS:
+        return "BOSS直聘";
+      case PLATFORM_51JOB:
+        return "前程无忧";
+      case PLATFORM_LAGOU:
+        return "拉钩网";
+      case PLATFORM_LIEPIN:
+        return "猎聘网";
+      case PLATFORM_ZHILIAN:
+        return "智联招聘";
+      default:
+        return value;
+    }
+  };
+});
 
 const handleSizeChange = (val: number) => {
   search();
@@ -407,7 +465,7 @@ const showDialogAvgSalary = async () => {
 
 const sortChange = function (column) {
   if (column.order !== null && column.prop) {
-    jobSearchOrderByColumn.value = toLine(column.prop);
+    jobSearchOrderByColumn.value = column.prop;
     if (column.order === "descending") {
       jobSearchOrderBy.value = "DESC";
     } else if (column.order === "ascending") {
@@ -519,6 +577,10 @@ const refreshStatistic = async () => {
   const statisticJobBrowseDTO = await JobApi.statisticJobBrowse();
   todayBrowseCountSource.value = statisticJobBrowseDTO.todayBrowseCount;
   totalBrowseCountSource.value = statisticJobBrowseDTO.totalBrowseCount;
+  todayBrowseDetailCountSource.value =
+    statisticJobBrowseDTO.todayBrowseDetailCount;
+  totalBrowseDetailCountSource.value =
+    statisticJobBrowseDTO.totalBrowseDetailCount;
   totalJobCountSource.value = statisticJobBrowseDTO.totalJob;
   loading.value = false;
 };
@@ -528,29 +590,35 @@ const refreshStatistic = async () => {
 .el-col {
   text-align: center;
 }
+
 .el-row {
   padding-top: 10px;
 }
+
 .chart {
   height: 400px;
 }
+
 .expand {
   padding: 10px;
 }
+
 .search {
   padding: 10px;
   text-align: left;
 }
+
 .operation_menu {
   display: flex;
   justify-content: end;
   padding: 5px;
 }
+
 .operation_menu_left {
   flex: 1;
 }
+
 .dialog_avg_salary {
   height: 400px;
 }
 </style>
-../../common/api/index.js../../common/data/bo/searchJobBO.js../../common/utils/index.js

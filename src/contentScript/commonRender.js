@@ -8,11 +8,13 @@ import {
   getDomain,
 } from "../common/utils";
 import {
-  JOB_STATUS_DESC_NEWEST,
   PLATFORM_AIQICHA,
   PLATFORM_BOSS,
   PLATFORM_JOBSDB,
   PLATFORM_LIEPIN,
+} from "../common";
+import {
+  JOB_STATUS_DESC_NEWEST
 } from "./common";
 import {
   genJobItemIdWithSha256,
@@ -663,9 +665,8 @@ function createCompanyInfoDetail(company, quickSearchHandle) {
   if (company.companyWebSite && company.companyWebSite.length > 1) {
     websiteElement = `<a href="${autoFillHttp(
       company.companyWebSite
-    )}" target = "_blank"; ref = "noopener noreferrer">${
-      company.companyWebSite
-    }</a>`;
+    )}" target = "_blank"; ref = "noopener noreferrer">${company.companyWebSite
+      }</a>`;
   } else {
     websiteElement = "-";
   }
@@ -706,8 +707,7 @@ function createCompanyInfoDetail(company, quickSearchHandle) {
     $(`<div class="__company_info_quick_search_item"></div>`)
       .append(
         $(
-          `<div><div class="__company_info_quick_search_item_label">社保人数：</div>${
-            company.companyInsuranceNum ?? "-"
+          `<div><div class="__company_info_quick_search_item_label">社保人数：</div>${company.companyInsuranceNum ?? "-"
           }</div>`
         )
       )

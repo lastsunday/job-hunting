@@ -15,7 +15,7 @@ import {
   JOB_STATUS_DESC_RECRUITING,
   JOB_STATUS_DESC_UNKNOW,
 } from "../../common";
-import { PLATFORM_BOSS } from "../../common";
+import { PLATFORM_BOSS } from "../../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
 import { JobApi } from "../../../common/api";
 

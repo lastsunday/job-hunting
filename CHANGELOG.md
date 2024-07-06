@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (SidePanel)职位列表新增职位查看次数。
+2. (SidePanel)职位列表新增招聘平台。
+3. (SidePanel)统计新增今天/总职位查看次数。
+
+### ✏️ Changed
+
+1. (SidePanel)自动展开高级搜索条件
+
+### 🐛 Fixed
+
+1. (Offscreen)职位扫描计数逻辑修复。
+
 ## 1.10.0(2024-06-26)
 
 ### ⭐ Added

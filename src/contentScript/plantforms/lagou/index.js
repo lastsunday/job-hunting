@@ -8,7 +8,7 @@ import {
   renderFunctionPanel,
 } from "../../commonRender";
 import { debounce } from "../../../common/utils";
-import { PLATFORM_LAGOU } from "../../common";
+import { PLATFORM_LAGOU } from "../../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
 import { JobApi } from "../../../common/api";
 

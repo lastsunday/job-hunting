@@ -7,7 +7,7 @@ import {
   finalRender,
   renderFunctionPanel,
 } from "../../commonRender";
-import { PLATFORM_ZHILIAN } from "../../common";
+import { PLATFORM_ZHILIAN } from "../../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
 import { JobApi } from "../../../common/api";
 

@@ -1,4 +1,4 @@
-import { PLATFORM_LIEPIN } from "../../common";
+import { PLATFORM_LIEPIN } from "../../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
 import { JobApi } from "../../../common/api";
 import {

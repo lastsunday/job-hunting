@@ -1,11 +1,11 @@
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import webExtension, { readJsonFile } from "vite-plugin-web-extension";
-const target = process.env.TARGET || "chrome";
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import webExtension, { readJsonFile } from 'vite-plugin-web-extension';
+const target = process.env.TARGET || 'chrome';
 
 function generateManifest() {
-  const manifest = readJsonFile("src/manifest.json");
-  const pkg = readJsonFile("package.json");
+  const manifest = readJsonFile('src/manifest.json');
+  const pkg = readJsonFile('package.json');
   return {
     name: pkg.name,
     description: pkg.description,
@@ -15,10 +15,10 @@ function generateManifest() {
 }
 
 function getBuildOutputDir() {
-  if (target === "firefox") {
-    return "dist-firefox";
+  if (target === 'firefox') {
+    return 'dist-firefox';
   } else {
-    return "dist-chrome";
+    return 'dist-chrome';
   }
 }
 
@@ -36,12 +36,13 @@ export default defineConfig({
     webExtension({
       manifest: generateManifest,
       disableAutoLaunch: true,
-      watchFilePaths: ["package.json", "manifest.json"],
+      watchFilePaths: ['package.json', 'manifest.json'],
       additionalInputs: [
-        "src/offscreen/offscreen.html",
-        "src/sidepanel/index.html",
+        'src/offscreen/offscreen.html',
+        'src/sidepanel/index.html',
       ],
-      browser: process.env.TARGET || "chrome",
+      browser: process.env.TARGET || 'chrome',
+      skipManifestValidation: true,
     }),
   ],
 });

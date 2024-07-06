@@ -1,4 +1,4 @@
-import { PLATFORM_51JOB } from "../../common";
+import { PLATFORM_51JOB } from "../../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
 import { JobApi } from "../../../common/api";
 import {

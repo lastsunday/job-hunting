@@ -4,9 +4,11 @@ import {
   PLATFORM_LAGOU,
   PLATFORM_ZHILIAN,
   PLATFORM_JOBSDB,
-  JOB_STATUS_DESC_NEWEST,
   PLATFORM_LIEPIN,
   PLATFORM_AIQICHA,
+} from "../common";
+import {
+  JOB_STATUS_DESC_NEWEST
 } from "./common";
 import { Job } from "../common/data/domain/job";
 import { CompanyApi, JobApi } from "../common/api";
@@ -25,9 +27,9 @@ const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
 export async function saveBrowseJob(list, platform) {
   infoLog(
     "saveBrowseJob start,record size = " +
-      list.length +
-      ",platform = " +
-      platform
+    list.length +
+    ",platform = " +
+    platform
   );
   let jobs;
   if (PLATFORM_51JOB == platform) {

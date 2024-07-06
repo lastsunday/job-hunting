@@ -274,7 +274,7 @@ export const JobService = {
         .add(1, "day")
         .format("YYYY-MM-DD HH:mm:ss");
       const SQL_QUERY_JOB_BOWSE_HISTORY_COUNT_TODAY =
-        "SELECT COUNT(*) AS count FROM job_browse_history WHERE job_visit_datetime >= $startDatetime AND job_visit_datetime < $endDatetime";
+        "SELECT COUNT(*) AS count FROM job_browse_history WHERE job_visit_datetime >= $startDatetime AND job_visit_datetime < $endDatetime AND job_visit_type = $visitType";
       let browseCountToday = [];
       (await getDb()).exec({
         sql: SQL_QUERY_JOB_BOWSE_HISTORY_COUNT_TODAY,
@@ -283,15 +283,39 @@ export const JobService = {
         bind: {
           $startDatetime: todayStart,
           $endDatetime: todayEnd,
+          $visitType: JOB_VISIT_TYPE_SEARCH
+        },
+      });
+      let browseCountDetailToday = [];
+      (await getDb()).exec({
+        sql: SQL_QUERY_JOB_BOWSE_HISTORY_COUNT_TODAY,
+        rowMode: "object",
+        resultRows: browseCountDetailToday,
+        bind: {
+          $startDatetime: todayStart,
+          $endDatetime: todayEnd,
+          $visitType: JOB_VISIT_TYPE_DETAIL
         },
       });
       const SQL_QUERY_JOB_BOWSE_HISTORY_COUNT_TOTAL =
-        "SELECT COUNT(*) AS count FROM job_browse_history";
+        "SELECT COUNT(*) AS count FROM job_browse_history WHERE job_visit_type = $visitType";
       let browseTotalCount = [];
       (await getDb()).exec({
         sql: SQL_QUERY_JOB_BOWSE_HISTORY_COUNT_TOTAL,
         rowMode: "object",
         resultRows: browseTotalCount,
+        bind: {
+          $visitType: JOB_VISIT_TYPE_SEARCH
+        },
+      });
+      let browseTotalDetailCount = [];
+      (await getDb()).exec({
+        sql: SQL_QUERY_JOB_BOWSE_HISTORY_COUNT_TOTAL,
+        rowMode: "object",
+        resultRows: browseTotalDetailCount,
+        bind: {
+          $visitType: JOB_VISIT_TYPE_DETAIL
+        },
       });
       const SQL_QUERY_JOB_COUNT_TOTAL = "SELECT COUNT(*) AS count FROM job;";
       let jobTotalCount = [];
@@ -302,6 +326,8 @@ export const JobService = {
       });
       result.todayBrowseCount = browseCountToday[0].count;
       result.totalBrowseCount = browseTotalCount[0].count;
+      result.todayBrowseDetailCount = browseCountDetailToday[0].count;
+      result.totalBrowseDetailCount = browseTotalDetailCount[0].count;
       result.totalJob = jobTotalCount[0].count;
       postSuccessMessage(message, result);
     } catch (e) {
@@ -431,8 +457,8 @@ async function insertJobAndBrowseHistory(param, now) {
         $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
       },
     });
-    await addJobBrowseHistory(param.jobId, now, JOB_VISIT_TYPE_SEARCH);
   }
+  await addJobBrowseHistory(param.jobId, now, JOB_VISIT_TYPE_SEARCH);
 }
 
 async function addJobBrowseHistory(jobId, date, type) {
@@ -450,7 +476,8 @@ async function addJobBrowseHistory(jobId, date, type) {
 }
 
 const SQL_JOB_SEARCH_QUERY =
-  "SELECT job_id AS jobId,job_platform AS jobPlatform,job_url AS jobUrl,job_name AS jobName,job_company_name AS jobCompanyName,job_location_name AS jobLocationName,job_address AS jobAddress,job_longitude AS jobLongitude,job_latitude AS jobLatitude,job_description AS jobDescription,job_degree_name AS jobDegreeName,job_year AS jobYear,job_salary_min AS jobSalaryMin,job_salary_max AS jobSalaryMax,job_salary_total_month AS jobSalaryTotalMonth,job_first_publish_datetime AS jobFirstPublishDatetime,boss_name AS bossName,boss_company_name AS bossCompanyName,boss_position AS bossPosition,create_datetime AS createDatetime,update_datetime AS updateDatetime FROM job";
+  `SELECT job_id AS jobId,job_platform AS jobPlatform,job_url AS jobUrl,job_name AS jobName,job_company_name AS jobCompanyName,job_location_name AS jobLocationName,job_address AS jobAddress,job_longitude AS jobLongitude,job_latitude AS jobLatitude,job_description AS jobDescription,job_degree_name AS jobDegreeName,job_year AS jobYear,job_salary_min AS jobSalaryMin,job_salary_max AS jobSalaryMax,job_salary_total_month AS jobSalaryTotalMonth,job_first_publish_datetime AS jobFirstPublishDatetime,boss_name AS bossName,boss_company_name AS bossCompanyName,boss_position AS bossPosition,create_datetime AS createDatetime,update_datetime AS updateDatetime,IFNULL(t2.browseDetailCount,0) AS browseDetailCount FROM job AS t1 
+  LEFT JOIN (SELECT job_id AS _jobId,COUNT(job_id) as browseDetailCount FROM JOB_BROWSE_HISTORY WHERE job_visit_type = 'DETAIL' GROUP BY job_id) AS t2 ON t1.job_id = t2._jobId`;
 
 const SQL_GROUP_BY_COUNT_AVG_SALARY = `
 SELECT 

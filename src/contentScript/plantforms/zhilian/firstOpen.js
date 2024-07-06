@@ -7,7 +7,7 @@ import {
   renderFunctionPanel,
 } from "../../commonRender";
 import { createDOM } from "./index";
-import { PLATFORM_ZHILIAN } from "../../common";
+import { PLATFORM_ZHILIAN } from "../../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
 import { JobApi } from "../../../common/api";
 
