@@ -7,6 +7,8 @@ import { SearchJobDTO } from "../data/dto/searchJobDTO";
 import { StatisticJobSearchGroupByAvgSalaryDTO } from "../data/dto/statisticJobSearchGroupByAvgSalaryDTO";
 import { Company } from "../data/domain/company";
 import { CONTENT_SCRIPT } from "./bridgeCommon";
+import { CompanyTagBO } from "../data/bo/companyTagBO";
+import { CompanyTagDTO } from "../data/dto/companyTagDTO"
 
 export const JobApi = {
   /**
@@ -116,4 +118,33 @@ export const CompanyApi = {
   addOrUpdateCompany: async function (company) {
     return await invoke(this.addOrUpdateCompany.name, company);
   },
+
+  /**
+  *
+  * @param {CompanyTagBO} param
+  */
+  addOrUpdateCompanyTag: async function (param) {
+    return await invoke(this.addOrUpdateCompanyTag.name, param);
+  },
+  /**
+   * 
+   * @param {string} id companyId 
+   * @returns CompanyTagDTO[]
+   */
+  getAllCompanyTagDTOByCompanyId: async function (id) {
+    let result = await invoke(this.getAllCompanyTagDTOByCompanyId.name, id);
+    return result.data;
+  }
 };
+
+export const TagApi = {
+  /**
+   *
+   * 
+   * @returns Tag[]
+   */
+  getAllTag: async function () {
+    let result = await invoke(this.getAllTag.name, {});
+    return result.data;
+  }
+}

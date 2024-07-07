@@ -2,6 +2,7 @@ import { infoLog, debugLog, errorLog } from "../common/log";
 import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 import { ChangeLogV1 } from "./changeLog/changeLogV1";
 import { ChangeLogV2 } from "./changeLog/changeLogV2";
+import { ChangeLogV3 } from './changeLog/changeLogV3';
 import { initChangeLog, getChangeLogList } from "./changeLog";
 import { bytesToBase64, base64ToBytes } from "../common/utils/base64.js";
 import JSZip from "jszip";
@@ -41,6 +42,30 @@ export async function getOne(sql, bind, obj) {
   return resultItem;
 }
 
+export async function getAll(sql, bind, obj) {
+  let rows = [];
+  (await getDb()).exec({
+    sql: sql,
+    rowMode: "object",
+    bind: bind,
+    resultRows: rows,
+  });
+  let result = [];
+  if (rows.length > 0) {
+    for (let i = 0; i < rows.length; i++) {
+      let item = rows[i];
+      let resultItem = Object.assign({}, obj);
+      let keys = Object.keys(item);
+      for (let n = 0; n < keys.length; n++) {
+        let key = keys[n];
+        resultItem[toHump(key)] = item[key];
+      }
+      result.push(resultItem);
+    }
+  }
+  return result;
+}
+
 export const Database = {
   /**
    *
@@ -66,6 +91,7 @@ export const Database = {
       let changelogList = [];
       changelogList.push(new ChangeLogV1());
       changelogList.push(new ChangeLogV2());
+      changelogList.push(new ChangeLogV3());
       initChangeLog(changelogList);
       sqlite3InitModule({
         print: debugLog,
@@ -220,18 +246,18 @@ const initDb = async function (sqlite3) {
         let sqlList = changelog.getSqlList();
         infoLog(
           "[DB] schema upgrade changelog version = " +
-            currentVersion +
-            ", sql total = " +
-            sqlList.length
+          currentVersion +
+          ", sql total = " +
+          sqlList.length
         );
         for (let seq = 0; seq < sqlList.length; seq++) {
           infoLog(
             "[DB] schema upgrade changelog version = " +
-              currentVersion +
-              ", execute sql = " +
-              (seq + 1) +
-              "/" +
-              sqlList.length
+            currentVersion +
+            ", execute sql = " +
+            (seq + 1) +
+            "/" +
+            sqlList.length
           );
           let sql = sqlList[seq];
           db.exec(sql);

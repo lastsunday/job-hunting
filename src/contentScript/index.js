@@ -11,16 +11,19 @@ import { createLink, createScript } from "../common/utils.js";
 import $ from "jquery";
 import { initBridge } from "../common/api/common.js";
 
+import "@yaireo/tagify/dist/tagify.css";
+import "@yaireo/dragsort/dist/dragsort.css";
+import "../assets/css/app.css";
 
 (async function () {
   // 这里的 window 和页面的 window 不是同一个
   window.$ = window.jQuery = $;
   const head = document.head;
   // eslint-disable-next-line no-undef
-  const proxyScript = createScript(chrome.runtime.getURL("./proxyAjax.js"));
+  const proxyScript = createScript(chrome.runtime.getURL("proxyAjax.js"));
   // eslint-disable-next-line no-undef
-  const link = createLink(chrome.runtime.getURL("./app.css"));
-  head.appendChild(link);
+  const styleLink = createLink(chrome.runtime.getURL("style.css"));
+  head.appendChild(styleLink);
 
   if (head.firstChild) {
     // proxyScript 要保证在第一个插入

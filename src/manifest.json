@@ -35,7 +35,7 @@
   ],
   "{{chrome}}.web_accessible_resources": [
     {
-      "resources": ["proxyAjax.js", "app.css"],
+      "resources": ["proxyAjax.js","style.css"],
       "matches": [
         "https://www.zhipin.com/*",
         "https://sou.zhaopin.com/*",

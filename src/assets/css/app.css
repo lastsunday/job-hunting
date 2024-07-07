@@ -1,3 +1,56 @@
+.tagify {
+  --readonly-striped: 0;
+}
+
+.tagify[disabled]:not(.tagify--mix):not(.tagify--select), .tagify[readonly]:not(.tagify--mix):not(.tagify--select){
+  border: none;
+  align-items: stretch;
+}
+
+.tagify[disabled]:not(.tagify--mix):not(.tagify--select)>.tagify__input, .tagify[readonly]:not(.tagify--mix):not(.tagify--select)>.tagify__input{
+  min-width: 0px;
+}
+
+.__company_tag{
+  flex:1;
+
+  .tagify{
+    flex:1;
+  }
+}
+
+.tags-look .tagify__dropdown__item{
+  display: inline-block;
+  vertical-align: middle;
+  border-radius: 3px;
+  padding: .3em .5em;
+  border: 1px solid #CCC;
+  background: #F3F3F3;
+  margin: .2em;
+  font-size: .85em;
+  color: black;
+  transition: 0s;
+}
+
+.tags-look .tagify__dropdown__item--active{
+  border-color: black;
+}
+
+.tags-look .tagify__dropdown__item:hover{
+  background: lightyellow;
+  border-color: gold;
+}
+
+.tags-look .tagify__dropdown__item--hidden {
+  max-width: 0;
+  max-height: initial;
+  padding: .3em 0;
+  margin: .2em 0;
+  white-space: nowrap;
+  text-indent: -20px;
+  border: 0;
+}
+
 .__boss_time_tag,
 .__zhipin_time_tag,
 .__zhilian_time_tag,
@@ -122,6 +175,7 @@ div[data-search-sol-meta] {
   display: flex;
   align-items: inherit;
   padding-right: 10px;
+  text-wrap: nowrap;
 }
 
 .__company_info_quick_search_item_label {
@@ -142,6 +196,7 @@ div[data-search-sol-meta] {
   cursor: pointer;
   display: inline-block;
   margin: 5px;
+  text-wrap: nowrap;
 }
 
 .__company_info_other_channel {
@@ -242,3 +297,4 @@ div[data-search-sol-meta] {
   color: white;
   font-size: 12px;
 }
+

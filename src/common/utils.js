@@ -1,4 +1,7 @@
 import dayjs from "dayjs";
+import { v4 as uuidv4 } from "uuid";
+import sha256 from "crypto-js/sha256";
+
 export function createScript(src) {
   const script = document.createElement("script");
   script.setAttribute("src", src);
@@ -170,4 +173,12 @@ export function convertDateStringToDateObject(text) {
 export function convertPureJobDetailUrl(link) {
   let url = new URL(link);
   return url.origin + url.pathname;
+}
+
+export function genIdFromText(value) {
+  return sha256(value)+"";
+}
+
+export function genUniqueId(){
+  return uuidv4();
 }

@@ -6,6 +6,7 @@ import {
   convertTimeOffsetToHumanReadable,
   autoFillHttp,
   getDomain,
+  genIdFromText,
 } from "../common/utils";
 import {
   PLATFORM_AIQICHA,
@@ -27,11 +28,15 @@ import { httpFetchGetText } from "../common/api/common";
 
 import { logoBase64 } from "./assets/logo";
 import $ from "jquery";
-import { CompanyApi } from "../common/api";
+import { CompanyApi, TagApi } from "../common/api";
 import { Company } from "../common/data/domain/company";
 import { errorLog } from "../common/log";
 
 const ACTIVE_TIME_MATCH = /(?<num>[0-9\.]*)/;
+
+import Tagify from '@yaireo/tagify';
+import DragSort from '@yaireo/dragsort';
+import { CompanyTagBO } from "../common/data/bo/companyTagBO";
 
 export function renderTimeTag(
   divElement,
@@ -563,6 +568,7 @@ function createCompanyInfo(item, { getCompanyInfoFunction } = {}) {
       mainChannelDiv.appendChild(fixValidHummanButton);
     } finally {
       otherChannelDiv.appendChild(createCompanyReputation(companyName));
+      otherChannelDiv.appendChild(createCompanyTag(companyName));
       otherChannelDiv.appendChild(createSearchCompanyLink(companyName));
     }
   };
@@ -1024,6 +1030,111 @@ function createSearchCompanyLink(keyword) {
   govDiv.appendChild(govLabelDiv);
   dom.appendChild(govDiv);
   return dom;
+}
+
+function createCompanyTag(companyName) {
+  const dom = document.createElement("div");
+  dom.className = "__company_info_quick_search_item";
+  let labelDiv = document.createElement("div");
+  labelDiv.className = "__company_info_quick_search_item_label";
+  labelDiv.textContent = "公司标签：";
+  dom.appendChild(labelDiv);
+  const tagDiv = document.createElement("div");
+  tagDiv.className = "__company_tag";
+  dom.appendChild(tagDiv);
+  asyncRenderTag(tagDiv, companyName);
+  return dom;
+}
+
+async function asyncRenderTag(div, companyName) {
+  let inputReadOnly = true;
+  let input = document.createElement("input");
+  div.appendChild(input);
+  let tagify = new Tagify(input, {
+    transformTag: transformTag,
+    dropdown: {
+      maxItems: 20,           // <- mixumum allowed rendered suggestions
+      classname: 'tags-look', // <- custom classname for this dropdown, so it could be targeted
+      enabled: 0,             // <- show suggestions on focus
+      closeOnSelect: false    // <- do not hide the suggestions dropdown once an item has been selected
+    }
+  });
+  //get company tag
+  let companyId = genIdFromText(companyName);
+  let companyTagArray = await CompanyApi.getAllCompanyTagDTOByCompanyId(companyId);
+  companyTagArray.forEach(item => {
+    tagify.addTags(item.tagName);
+  });
+  var dragsort = new DragSort(tagify.DOM.scope, {
+    selector: '.' + tagify.settings.classNames.tag,
+    callbacks: {
+      dragEnd: (elem) => {
+        tagify.updateValueByDOMTags();
+      }
+    }
+  });
+  tagify.setReadonly(true);
+  //add tag to tagify
+  let operationButton = document.createElement("div");
+  operationButton.className = "__company_info_quick_search_button";
+  operationButton.textContent = "📝编辑"
+  div.append(operationButton);
+  let saving = false;
+  operationButton.addEventListener("click", async () => {
+    if (saving) return;
+    inputReadOnly = !inputReadOnly;
+    if (inputReadOnly) {
+      //禁用 operationButton 的点击事件
+      saving = true;
+      operationButton.textContent = "公司标签保存中⌛︎";
+      tagify.setReadonly(true);
+      //save company tag
+      let value = tagify.getInputValue();
+      let result = [];
+      if (value) {
+        result = JSON.parse(tagify.getInputValue());
+      }
+      let tags = [];
+      result.forEach((item) => {
+        tags.push(item.value);
+      })
+      let param = new CompanyTagBO();
+      param.companyName = companyName;
+      param.tags = tags;
+      await CompanyApi.addOrUpdateCompanyTag(param)
+      operationButton.textContent = "📝编辑";
+      tagify.setReadonly(true);
+      saving = false;
+    } else {
+      let allTags = await TagApi.getAllTag();
+      let tagItems = [];
+      allTags.forEach(item => {
+        tagItems.push(item.tagName);
+      });
+      tagify.whitelist = tagItems;
+      operationButton.textContent = "✅保存";
+      tagify.setReadonly(false);
+      tagify.DOM.input.focus();
+    }
+  });
+}
+
+// generate a random color (in HSL format, which I like to use)
+function getRandomColor() {
+  function rand(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  var h = rand(1, 360) | 0,
+    s = rand(40, 70) | 0,
+    l = rand(65, 72) | 0;
+
+  return 'hsl(' + h + ',' + s + '%,' + l + '%)';
+}
+
+function transformTag(tagData) {
+  tagData.color = getRandomColor();
+  tagData.style = "--tag-bg:" + tagData.color;
 }
 
 function createCompanyReputation(keyword) {

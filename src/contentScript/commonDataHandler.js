@@ -20,6 +20,7 @@ import {
   convertDateStringToDateObject,
   convertPureJobDetailUrl,
 } from "../common/utils";
+import { CompanyTagBO } from "../common/data/bo/companyTagBO";
 
 const SALARY_MATCH = /(?<min>[0-9\.]*)(?<minUnit>\D*)(?<max>[0-9\.]*)(?<maxUnit>\D*)(?<month>\d*)/;
 const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
@@ -520,6 +521,16 @@ function handleAiqichaData(source) {
     source.refreshTime
   );
   return company;
+}
+
+export async function saveOrUpdateCompanyTag(companyName, tags) {
+  let companyId = genSha256(companyNameConvert(companyName)) + "";
+  infoLog("save company tag");
+  let companyTagBO = new CompanyTagBO();
+  companyTagBO.id = companyId;
+  companyTagBO.tags = tags;
+  await CompanyApi.addOrUpdateCompanyTag(companyTagBO);
+  infoLog("save company tag success");
 }
 
 /**

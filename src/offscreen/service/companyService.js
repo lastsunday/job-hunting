@@ -2,8 +2,10 @@ import { Message } from "../../common/api/message";
 import { postSuccessMessage, postErrorMessage } from "../util";
 import { getDb, getOne } from "../database";
 import { Company } from "../../common/data/domain/company";
-import { convertEmptyStringToNull } from "../../common/utils";
+import { convertEmptyStringToNull, genIdFromText } from "../../common/utils";
 import dayjs from "dayjs";
+import { CompanyTagBO } from "../../common/data/bo/companyTagBO";
+import { Tag } from "../../common/data/domain/tag";
 
 export const CompanyService = {
   /**

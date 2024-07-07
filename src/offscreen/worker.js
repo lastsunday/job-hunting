@@ -5,6 +5,8 @@ import { NetworkService } from "./service/networkService";
 import { JobService } from "./service/jobService";
 import { CompanyService } from "./service/companyService";
 import { Database } from "./database";
+import { TagService } from "./service/tagService";
+import { CompanyTagService } from "./service/companyTagService";
 
 debugLog("worker ready");
 const ACTION_FUNCTION = new Map();
@@ -20,6 +22,8 @@ mergeServiceMethod(ACTION_FUNCTION, Database);
 mergeServiceMethod(ACTION_FUNCTION, NetworkService);
 mergeServiceMethod(ACTION_FUNCTION, JobService);
 mergeServiceMethod(ACTION_FUNCTION, CompanyService);
+mergeServiceMethod(ACTION_FUNCTION, TagService);
+mergeServiceMethod(ACTION_FUNCTION, CompanyTagService);
 
 function mergeServiceMethod(actionFunction, source) {
   let keys = Object.keys(source);
