@@ -8,6 +8,7 @@
 2. (SidePanel)职位列表新增招聘平台。
 3. (SidePanel)统计新增今天/总职位查看次数。
 4. (ContentScript)新增公司自定义标签（可添加，修改，拖拽排序）。
+5. (Data)内置外包公司标签数据。
 
 ### ✏️ Changed
 
