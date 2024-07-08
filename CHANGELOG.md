@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## WIP
+## 1.11.0(2024-07-08)
 
 ### ⭐ Added
 
@@ -18,6 +18,11 @@
 ### 🐛 Fixed
 
 1. (Offscreen)职位扫描计数逻辑修复。
+
+### 🔨 Dependency
+
+1. Add @yaireo/dragsort ^1.3.2
+2. Add @yaireo/tagify ^4.27.0
 
 ## 1.10.0(2024-06-26)
 
