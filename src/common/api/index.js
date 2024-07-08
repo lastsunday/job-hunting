@@ -8,7 +8,10 @@ import { StatisticJobSearchGroupByAvgSalaryDTO } from "../data/dto/statisticJobS
 import { Company } from "../data/domain/company";
 import { CONTENT_SCRIPT } from "./bridgeCommon";
 import { CompanyTagBO } from "../data/bo/companyTagBO";
-import { CompanyTagDTO } from "../data/dto/companyTagDTO"
+import { CompanyTagDTO } from "../data/dto/companyTagDTO";
+import { SearchCompanyTagBO } from "../data/bo/searchCompanyTagBO";
+import { SearchCompanyTagDTO } from "../data/dto/searchCompanyTagDTO";
+import { StatisticCompanyTagDTO } from "../data/dto/statisticCompanyTagDTO";
 
 export const JobApi = {
   /**
@@ -126,6 +129,15 @@ export const CompanyApi = {
   addOrUpdateCompanyTag: async function (param) {
     return await invoke(this.addOrUpdateCompanyTag.name, param);
   },
+
+  /**
+  *
+  * @param {CompanyTagBO[]} param
+  */
+  batchAddOrUpdateCompanyTag: async function (param) {
+    return await invoke(this.batchAddOrUpdateCompanyTag.name, param);
+  },
+
   /**
    * 
    * @param {string} id companyId 
@@ -134,7 +146,34 @@ export const CompanyApi = {
   getAllCompanyTagDTOByCompanyId: async function (id) {
     let result = await invoke(this.getAllCompanyTagDTOByCompanyId.name, id);
     return result.data;
-  }
+  },
+
+  /**
+   * 
+   * @param {SearchCompanyTagBO} param 
+   * @returns SearchCompanyTagDTO
+   */
+  searchCompanyTag: async function (param) {
+    let result = await invoke(this.searchCompanyTag.name, param);
+    return result.data;
+  },
+
+  /**
+   * 
+   * @returns StatisticCompanyTagDTO
+   */
+  statisticCompanyTag: async function () {
+    let result = await invoke(this.statisticCompanyTag.name, {});
+    return result.data;
+  },
+  /**
+   * 
+   * @param {string[]} param companyIds
+   * @returns 
+   */
+  deleteCompanyTagByCompanyIds: async function (param) {
+    return await invoke(this.deleteCompanyTagByCompanyIds.name, param);
+  },
 };
 
 export const TagApi = {
