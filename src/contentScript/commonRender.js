@@ -1065,7 +1065,7 @@ async function asyncRenderTag(div, companyName) {
   companyTagArray.forEach(item => {
     tagify.addTags(item.tagName);
   });
-  var dragsort = new DragSort(tagify.DOM.scope, {
+  let dragsort = new DragSort(tagify.DOM.scope, {
     selector: '.' + tagify.settings.classNames.tag,
     callbacks: {
       dragEnd: (elem) => {
@@ -1125,7 +1125,7 @@ function getRandomColor() {
     return min + Math.random() * (max - min);
   }
 
-  var h = rand(1, 360) | 0,
+  let h = rand(1, 360) | 0,
     s = rand(40, 70) | 0,
     l = rand(65, 72) | 0;
 

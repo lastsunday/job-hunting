@@ -5,6 +5,7 @@
 import { onMounted, ref } from "vue";
 import Tagify from "@yaireo/tagify";
 import "@yaireo/tagify/dist/tagify.css";
+import DragSort from '@yaireo/dragsort';
 import { watch } from "vue";
 
 const model = defineModel()
@@ -51,6 +52,14 @@ onMounted(() => {
     tagify.value = new Tagify(inputRef.value, settings);
     tagify.value.loadOriginalValues(props.modelValue);
     tagify.value.whitelist = props.whitelist.value;
+    let dragsort = new DragSort(tagify.value.DOM.scope, {
+    selector: '.' + tagify.value.settings.classNames.tag,
+    callbacks: {
+      dragEnd: (elem) => {
+        tagify.value.updateValueByDOMTags();
+      }
+    }
+  });
 });
 
 </script>
