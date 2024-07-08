@@ -41,7 +41,7 @@
 
 <p>
 	<div style="margin-top:20px">
-        <img src="docs\introduction\job-item-51job.png" alt="51job" width="1000px"/>
+        <img src="docs\introduction\job-item-51job.jpg" alt="51job" width="1000px"/>
         <div style="text-align:center;">
             前程无忧
         </div>
@@ -58,15 +58,21 @@
         </div>
 	</div>
     <div style="margin-top:20px">
-        <img src="docs\introduction\sidepanel_admin_home.png" alt="sidepanel_admin_home" width="1000px"/>
+        <img src="docs\introduction\sidepanel_admin_home.jpg" alt="sidepanel_admin_home" width="1000px"/>
         <div style="text-align:center">
             管理页面（需点击插件图标打开）
         </div>
 	</div>
     <div style="margin-top:20px">
-        <img src="docs\introduction\sidepanel_admin_charts_avg_salary.png" alt="sidepanel_admin_charts_avg_salary" width="1000px"/>
+        <img src="docs\introduction\sidepanel_admin_company_tag.jpg" alt="sidepanel_admin_company_tag" width="1000px"/>
         <div style="text-align:center">
-            根据指定搜索条件统计薪酬区间职位数
+            公司标签管理
+        </div>
+	</div>
+    <div style="margin-top:20px">
+        <img src="docs\introduction\sidepanel_admin_setting.jpg" alt="sidepanel_admin_setting" width="1000px"/>
+        <div style="text-align:center">
+            系统设置
         </div>
 	</div>
 </p>
