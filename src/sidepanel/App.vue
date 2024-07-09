@@ -9,8 +9,9 @@
   >
   <div class="flex-grow" /> 
     <el-menu-item index="1" route="/">首页</el-menu-item>
-    <el-menu-item index="2" route="/companyTag">公司标签</el-menu-item>
-    <el-menu-item index="3" route="/setting">设置</el-menu-item>
+    <el-menu-item index="2" route="/company">公司</el-menu-item>
+    <el-menu-item index="3" route="/companyTag">公司标签</el-menu-item>
+    <el-menu-item index="4" route="/setting">设置</el-menu-item>
   </el-menu>
   <router-view />
   <el-backtop />

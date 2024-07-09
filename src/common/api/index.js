@@ -12,6 +12,9 @@ import { CompanyTagDTO } from "../data/dto/companyTagDTO";
 import { SearchCompanyTagBO } from "../data/bo/searchCompanyTagBO";
 import { SearchCompanyTagDTO } from "../data/dto/searchCompanyTagDTO";
 import { StatisticCompanyTagDTO } from "../data/dto/statisticCompanyTagDTO";
+import { SearchCompanyBO } from "../data/bo/searchCompanyBO";
+import { SearchCompanyDTO } from "../data/dto/searchCompanyDTO";
+import { StatisticCompanyDTO } from "../data/dto/statisticCompanyDTO";
 
 export const JobApi = {
   /**
@@ -115,6 +118,25 @@ export const CompanyApi = {
   },
 
   /**
+   * 
+   * @returns StatisticCompanyDTO
+   */
+  statisticCompany: async function () {
+    let result = await invoke(this.statisticCompany.name, {});
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {SearchCompanyBO} param 
+   * @returns SearchCompanyDTO
+   */
+  searchCompany: async function (param) {
+    let result = await invoke(this.searchCompany.name, param);
+    return result.data;
+  },
+
+  /**
    *
    * @param {Company} company
    */
@@ -166,6 +188,7 @@ export const CompanyApi = {
     let result = await invoke(this.statisticCompanyTag.name, {});
     return result.data;
   },
+
   /**
    * 
    * @param {string[]} param companyIds
