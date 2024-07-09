@@ -65,6 +65,12 @@
         </div>
 	</div>
     <div style="margin-top:20px">
+        <img src="docs\introduction\sidepanel_admin_company.jpg" alt="sidepanel_admin_company" width="1000px"/>
+        <div style="text-align:center">
+            公司管理
+        </div>
+	</div>
+    <div style="margin-top:20px">
         <img src="docs\introduction\sidepanel_admin_company_tag.jpg" alt="sidepanel_admin_company_tag" width="1000px"/>
         <div style="text-align:center">
             公司标签管理
