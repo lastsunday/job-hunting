@@ -2,24 +2,26 @@
   --readonly-striped: 0;
 }
 
-.tagify[disabled]:not(.tagify--mix):not(.tagify--select), .tagify[readonly]:not(.tagify--mix):not(.tagify--select){
+.tagify[disabled]:not(.tagify--mix):not(.tagify--select),
+.tagify[readonly]:not(.tagify--mix):not(.tagify--select) {
   border: none;
   align-items: stretch;
 }
 
-.tagify[disabled]:not(.tagify--mix):not(.tagify--select)>.tagify__input, .tagify[readonly]:not(.tagify--mix):not(.tagify--select)>.tagify__input{
+.tagify[disabled]:not(.tagify--mix):not(.tagify--select)>.tagify__input,
+.tagify[readonly]:not(.tagify--mix):not(.tagify--select)>.tagify__input {
   min-width: 0px;
 }
 
-.__company_tag{
-  flex:1;
+.__company_tag {
+  flex: 1;
 
-  .tagify{
-    flex:1;
+  .tagify {
+    flex: 1;
   }
 }
 
-.tags-look .tagify__dropdown__item{
+.tags-look .tagify__dropdown__item {
   display: inline-block;
   vertical-align: middle;
   border-radius: 3px;
@@ -32,11 +34,11 @@
   transition: 0s;
 }
 
-.tags-look .tagify__dropdown__item--active{
+.tags-look .tagify__dropdown__item--active {
   border-color: black;
 }
 
-.tags-look .tagify__dropdown__item:hover{
+.tags-look .tagify__dropdown__item:hover {
   background: lightyellow;
   border-color: gold;
 }
@@ -65,6 +67,7 @@
   border-radius: 0 0 0 4px;
   text-align: right;
 }
+
 /* 
 .__zhipin_time_tag {
     position: absolute;
@@ -111,15 +114,16 @@ div[data-search-sol-meta] {
 .__boss_filter.condition-filter-select .current-select::after {
   content: unset;
 }
+
 .__boss_filter.condition-filter-select .current-select {
   padding-right: 12px;
 }
+
 .__boss_filter_result-hidden {
   display: none;
 }
 
-.__is_outsourcing_or_training {
-}
+.__is_outsourcing_or_training {}
 
 .__rencent_update {
   color: red;
@@ -131,11 +135,9 @@ div[data-search-sol-meta] {
   line-height: 18px;
 }
 
-.echo-like .echo-like__icon {
-}
+.echo-like .echo-like__icon {}
 
-.echo-like__count {
-}
+.echo-like__count {}
 
 .__company_info_search {
   display: flex;
@@ -159,6 +161,7 @@ div[data-search-sol-meta] {
   display: flex;
   padding: 2px;
   align-items: baseline;
+
   a {
     padding-right: 10px;
     font-size: 14px;
@@ -171,7 +174,7 @@ div[data-search-sol-meta] {
   }
 }
 
-.__company_info_quick_search_item > div {
+.__company_info_quick_search_item>div {
   display: flex;
   align-items: inherit;
   padding-right: 10px;
@@ -205,11 +208,13 @@ div[data-search-sol-meta] {
 
 .__BOSS_function_panel {
   padding-left: 10px;
+  margin-right: 10px;
 }
 
 .__51JOB_function_panel {
   margin-left: -10px;
   margin-top: 5px;
+  margin-right: 12px;
 }
 
 .__ZHILIAN_function_panel {
@@ -227,8 +232,7 @@ div[data-search-sol-meta] {
   position: relative;
 }
 
-.__LIEPIN_function_panel {
-}
+.__LIEPIN_function_panel {}
 
 .__comment_wrapper {
   display: flex;
@@ -242,11 +246,9 @@ div[data-search-sol-meta] {
   padding-bottom: 10px;
 }
 
-.__51JOB_comment_wrapper {
-}
+.__51JOB_comment_wrapper {}
 
-.__ZHILIAN_comment_wrapper {
-}
+.__ZHILIAN_comment_wrapper {}
 
 .__LAGOU_comment_wrapper {
   padding-right: 10px;
@@ -298,3 +300,8 @@ div[data-search-sol-meta] {
   font-size: 12px;
 }
 
+.__ZHILIAN_job_item {
+  position: relative;
+  padding-left: 20px;
+  padding-bottom: 10px;
+}

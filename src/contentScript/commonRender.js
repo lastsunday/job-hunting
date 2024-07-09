@@ -308,6 +308,13 @@ export function setupSortJobItem(node) {
   if (!node) return;
   node.style = "display:flex;flex-direction: column;";
   //for zhilian
+  const jobListItemList = node.querySelectorAll(".joblist-item");
+  if(jobListItemList && jobListItemList.length > 0){
+    for(let i=0;i<jobListItemList.length;i++){
+      let item = jobListItemList[i];
+      item.classList.add("__ZHILIAN_job_item");
+    }
+  }
   const paginationNode = node.querySelector(".pagination");
   if (paginationNode) {
     paginationNode.style = "order:99999;";

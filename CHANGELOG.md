@@ -12,6 +12,10 @@
 
 1. (SidePanel)修改设置页面功能描述。
 
+### 🐛 Fixed
+
+1. (ContentScript)修复页面样式（前程无忧，BOOS直聘）。
+
 ## 1.11.0(2024-07-08)
 
 ### ⭐ Added
