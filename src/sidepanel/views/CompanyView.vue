@@ -128,7 +128,7 @@
                             </el-descriptions-item>
                             <el-descriptions-item>
                                 <template #label>
-                                    <div class="cell-item">维度</div>
+                                    <div class="cell-item">纬度</div>
                                 </template>
                                 {{ props.row.companyLatitude }}
                             </el-descriptions-item>
@@ -429,7 +429,7 @@ const onExportHandle = () => {
             所属行业: item.companyIndustry,
             工商注册号: item.companyLicenseNumber,
             经度: item.companyLongitude,
-            维度: item.companyLatitude,
+            纬度: item.companyLatitude,
             数据来源地址: item.sourceUrl,
             数据来源平台: item.sourcePlatform,
             数据来源记录编号: item.sourceRecordId,

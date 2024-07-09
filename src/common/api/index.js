@@ -15,6 +15,7 @@ import { StatisticCompanyTagDTO } from "../data/dto/statisticCompanyTagDTO";
 import { SearchCompanyBO } from "../data/bo/searchCompanyBO";
 import { SearchCompanyDTO } from "../data/dto/searchCompanyDTO";
 import { StatisticCompanyDTO } from "../data/dto/statisticCompanyDTO";
+import { CompanyBO } from "../data/bo/companyBO";
 
 export const JobApi = {
   /**
@@ -142,6 +143,14 @@ export const CompanyApi = {
    */
   addOrUpdateCompany: async function (company) {
     return await invoke(this.addOrUpdateCompany.name, company);
+  },
+
+  /**
+   *
+   * @param {CompanyBO} param
+   */
+  batchAddOrUpdateCompany: async function (param) {
+    return await invoke(this.batchAddOrUpdateCompany.name, param);
   },
 
   /**

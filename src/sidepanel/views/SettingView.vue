@@ -1,23 +1,35 @@
 <template>
   <el-col>
     <el-row class="setting_item">
-      <el-descriptions title="全量数据">
+      <el-descriptions title="数据库">
         <el-descriptions-item>
           <el-popconfirm title="确认备份数据？" @confirm="onClickDbExport" confirm-button-text="确定" cancel-button-text="取消">
             <template #reference>
-              <el-button :icon="DocumentCopy" v-loading="exportLoading">数据备份</el-button>
+              <el-button :icon="DocumentCopy" v-loading="exportLoading">数据库备份</el-button>
             </template>
           </el-popconfirm>
-          <el-button :icon="CopyDocument" @click="importDialogVisible = true">数据恢复</el-button>
+          <el-button :icon="CopyDocument" @click="importDialogVisible = true">数据库恢复</el-button>
         </el-descriptions-item>
       </el-descriptions>
     </el-row>
     <el-row class="setting_item">
-      <el-descriptions title="全量公司标签">
+      <el-descriptions title="公司数据">
+        <el-descriptions-item>
+          <el-popconfirm title="确认导出数据？" @confirm="onCompanyExport" confirm-button-text="确定" cancel-button-text="取消">
+            <template #reference>
+              <el-button :icon="DocumentCopy">全量公司数据导出</el-button>
+            </template>
+          </el-popconfirm>
+          <el-button :icon="CopyDocument" @click="importCompanyDialogVisible = true">公司数据导入</el-button>
+        </el-descriptions-item>
+      </el-descriptions>
+    </el-row>
+    <el-row class="setting_item">
+      <el-descriptions title="公司标签数据">
         <el-descriptions-item>
           <el-popconfirm title="确认导出数据？" @confirm="onCompanyTagExport" confirm-button-text="确定" cancel-button-text="取消">
             <template #reference>
-              <el-button :icon="DocumentCopy">公司标签数据导出</el-button>
+              <el-button :icon="DocumentCopy">全量公司标签数据导出</el-button>
             </template>
           </el-popconfirm>
           <el-button :icon="CopyDocument" @click="importCompanyTagDialogVisible = true">公司标签数据导入</el-button>
@@ -54,6 +66,26 @@
       </el-row>
     </template>
   </el-dialog>
+  <el-dialog v-model="importCompanyDialogVisible" title="公司数据导入" width="500">
+    <div>
+      <el-text class="mx-1" type="danger">注意：相同公司的数据会被替换!!!</el-text>
+    </div>
+    <div>
+      <el-text class="mx-1" type="info">请选择公司备份文件</el-text>
+    </div>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-row>
+          <input type="file" accept=".xlsx" ref="importCompanyFileInput" @change="handleCompanyFileImport" />
+        </el-row>
+        <el-row class="dialog_menu">
+          <el-button type="primary" @click="confirmCompanyFileImport">
+            确定
+          </el-button>
+        </el-row>
+      </div>
+    </template>
+  </el-dialog>
   <el-dialog v-model="importCompanyTagDialogVisible" title="公司标签数据导入" width="500">
     <div>
       <el-text class="mx-1" type="danger">注意：相同公司的数据会被替换!!!</el-text>
@@ -86,6 +118,9 @@ import { utils, writeFileXLSX, read } from "xlsx";
 import { CompanyApi } from "../../common/api/index";
 import { SearchCompanyTagBO } from "../../common/data/bo/searchCompanyTagBO";
 import { CompanyTagBO } from "../../common/data/bo/companyTagBO";
+import { SearchCompanyBO } from "../../common/data/bo/searchCompanyBO";
+import { CompanyBO } from "../../common/data/bo/companyBO";
+import { genIdFromText, convertDateStringToDateObject } from "../../common/utils";
 
 const activeName = ref("export");
 const exportLoading = ref(false);
@@ -185,6 +220,179 @@ const downloadURL = function (data, fileName) {
 //10 million
 const MAX_RECORD_COUNT = 10000000;
 
+const onCompanyExport = async () => {
+  let searchParam = new SearchCompanyBO();
+  searchParam.pageNum = 1;
+  searchParam.pageSize = MAX_RECORD_COUNT;
+  searchParam.orderByColumn = "updateDatetime";
+  searchParam.orderBy = "DESC";
+  let data = await CompanyApi.searchCompany(searchParam);
+  let list = data.items;
+  let result = [];
+  for (let i = 0; i < list.length; i++) {
+    let item = list[i];
+    result.push({
+      公司: item.companyName,
+      公司描述: item.companyDesc,
+      成立时间: item.companyStartDate,
+      经营状态: item.companyStatus,
+      法人: item.companyLegalPerson,
+      统一社会信用代码: item.companyUnifiedCode,
+      官网: item.companyWebSite,
+      社保人数: item.companyInsuranceNum,
+      自身风险数: item.companySelfRisk,
+      关联风险数: item.companyUnionRisk,
+      地址: item.companyAddress,
+      经营范围: item.companyScope,
+      纳税人识别号: item.companyTaxNo,
+      所属行业: item.companyIndustry,
+      工商注册号: item.companyLicenseNumber,
+      经度: item.companyLongitude,
+      纬度: item.companyLatitude,
+      数据来源地址: item.sourceUrl,
+      数据来源平台: item.sourcePlatform,
+      数据来源记录编号: item.sourceRecordId,
+      数据来源更新时间: item.sourceRefreshDatetime,
+    });
+  }
+  const ws = utils.json_to_sheet(result);
+  const wb = utils.book_new();
+  utils.book_append_sheet(wb, ws, "Data");
+  writeFileXLSX(wb, dayjs(new Date()).format("公司-YYYYMMDDHHmmss") + ".xlsx");
+}
+
+const importCompanyDialogVisible = ref(false);
+const importCompanyFileInput = ref<HTMLInputElement | null>(null);
+const companyFiles = ref();
+
+const handleCompanyFileImport = async () => {
+  companyFiles.value = importCompanyFileInput.value?.files;
+};
+
+const confirmCompanyFileImport = async () => {
+  let loading;
+  try {
+    if (companyFiles.value && companyFiles.value.length > 0) {
+      loading = ElLoading.service({
+        lock: true,
+        text: "公司数据导入中...",
+        background: "rgba(0, 0, 0, 0.7)",
+      });
+      const reader = new FileReader();
+      reader.readAsArrayBuffer(companyFiles.value[0]);
+      reader.onload = async function (event) {
+        let arrayBuffer = event.target.result;
+        try {
+          let wb = read(arrayBuffer);
+          let validResultObject = validImportData(utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }), COMPANY_FILE_HEADER);
+          if (!validResultObject.validResult) {
+            ElMessage({
+              message: `公司文件校验失败，缺少数据列(${validResultObject.lackColumn.length}):${validResultObject.lackColumn.join(",")}`,
+              type: "error",
+            });
+            return;
+          }
+          const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2 });
+          let companyBOList = [];
+          for (let i = 0; i < data.length; i++) {
+            let dataItem = data[i];
+            let item = new CompanyBO();
+            item.companyId = genIdFromText(dataItem['公司']);
+            item.companyName = dataItem['公司'];
+            item.companyDesc = dataItem['公司描述'];
+            item.companyStartDate = convertDateStringToDateObject(dataItem['成立时间']);
+            item.companyStatus = dataItem['经营状态'];
+            item.companyLegalPerson = dataItem['法人'];
+            item.companyUnifiedCode = dataItem['统一社会信用代码'];
+            item.companyWebSite = dataItem['官网'];
+            item.companyInsuranceNum = dataItem['社保人数'];
+            item.companySelfRisk = dataItem['自身风险数'];
+            item.companyUnionRisk = dataItem['关联风险数'];
+            item.companyAddress = dataItem['地址'];
+            item.companyScope = dataItem['经营范围'];
+            item.companyTaxNo = dataItem['纳税人识别号'];
+            item.companyIndustry = dataItem['所属行业'];
+            item.companyLicenseNumber = dataItem['工商注册号'];
+            item.companyLongitude = dataItem['经度'];
+            item.companyLatitude = dataItem['纬度'];
+            item.sourceUrl = dataItem['数据来源地址'];
+            item.sourcePlatform = dataItem['数据来源平台'];
+            item.sourceRecordId = dataItem['数据来源记录编号'];
+            item.sourceRefreshDatetime = convertDateStringToDateObject(dataItem['数据来源更新时间']);
+            companyBOList.push(item);
+          }
+          await CompanyApi.batchAddOrUpdateCompany(companyBOList);
+          importCompanyDialogVisible.value = false;
+          ElMessage({
+            message: `导入公司数据成功，共${companyBOList.length}条`,
+            type: "success",
+          });
+        } catch (e) {
+          ElMessage({
+            message: "导入公司数据失败[" + e.message + "]",
+            type: "error",
+          });
+        }
+      };
+      reader.onerror = function (event) {
+        ElMessage({
+          message: "读取公司文件失败",
+          type: "error",
+        });
+      };
+    } else {
+      ElMessage("请选择有效的公司文件");
+    }
+  } finally {
+    if (loading) {
+      loading.close();
+    }
+  }
+};
+
+const COMPANY_FILE_HEADER = [
+  "公司",
+  "公司描述",
+  "成立时间",
+  "经营状态",
+  "法人",
+  "统一社会信用代码",
+  "官网",
+  "社保人数",
+  "自身风险数",
+  "关联风险数",
+  "地址",
+  "经营范围",
+  "纳税人识别号",
+  "所属行业",
+  "工商注册号",
+  "经度",
+  "纬度",
+  "数据来源地址",
+  "数据来源平台",
+  "数据来源记录编号",
+  "数据来源更新时间",
+];
+
+function validImportData(data, validArray) {
+  let colCount = 0;
+  let lackColumnMap = new Map();
+  for (let i = 0; i < validArray.length; i++) {
+    lackColumnMap.set(validArray[i], null);
+  }
+  if (data.length > 0) {
+    let headerRowArray = data[0];
+    for (let i = 0; i < headerRowArray.length; i++) {
+      let header = headerRowArray[i];
+      if (lackColumnMap.has(header)) {
+        colCount++;
+        lackColumnMap.delete(header);
+      }
+    }
+  }
+  return { validResult: colCount == validArray.length, lackColumn: lackColumnMap.keys().toArray() };
+}
+
 const onCompanyTagExport = async () => {
   let searchParam = new SearchCompanyTagBO();
   searchParam.pageNum = 1;
@@ -215,6 +423,11 @@ const handleCompanyTagFileImport = async () => {
   companyTagFiles.value = importCompanyTagFileInput.value?.files;
 };
 
+const COMPANY_TAG_FILE_HEADER = [
+  "公司",
+  "标签",
+];
+
 const confirmCompanyTagFileImport = async () => {
   let loading;
   try {
@@ -230,6 +443,14 @@ const confirmCompanyTagFileImport = async () => {
         let arrayBuffer = event.target.result;
         try {
           let wb = read(arrayBuffer);
+          let validResultObject = validImportData(utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }), COMPANY_TAG_FILE_HEADER);
+          if (!validResultObject.validResult) {
+            ElMessage({
+              message: `公司标签文件校验失败，缺少数据列(${validResultObject.lackColumn.length}):${validResultObject.lackColumn.join(",")}`,
+              type: "error",
+            });
+            return;
+          }
           const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2 });
           let companyTagBOList = [];
           for (let i = 0; i < data.length; i++) {

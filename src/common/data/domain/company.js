@@ -68,7 +68,7 @@ export class Company {
    */
   companyLongitude;
   /**
-   * 维度
+   * 纬度
    */
   companyLatitude;
   /**

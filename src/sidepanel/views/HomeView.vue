@@ -509,7 +509,7 @@ const searchResultExport = async () => {
       地区: item.jobLocationName,
       地址: item.jobAddress,
       经度: item.jobLongitude,
-      维度: item.jobLatitude,
+      纬度: item.jobLatitude,
       职位描述: item.jobDescription,
       学历: item.jobDegreeName,
       所需经验: item.jobYear,

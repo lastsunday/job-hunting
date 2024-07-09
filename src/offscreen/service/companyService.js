@@ -10,6 +10,7 @@ import { CompanyDTO } from "../../common/data/dto/companyDTO";
 import { StatisticCompanyDTO } from "../../common/data/dto/statisticCompanyDTO";
 import { toHump, toLine } from "../../common/utils";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
+import { CompanyBO } from "../../common/data/bo/companyBO";
 
 export const CompanyService = {
   /**
@@ -37,115 +38,36 @@ export const CompanyService = {
    */
   addOrUpdateCompany: async function (message, param) {
     try {
-      const now = new Date();
-      let rows = [];
-      (await getDb()).exec({
-        sql: SQL_SELECT_BY_ID,
-        rowMode: "object",
-        bind: [param.companyId],
-        resultRows: rows,
-      });
-      if (rows.length > 0) {
-        (await getDb()).exec({
-          sql: SQL_UPDATE_JOB,
-          bind: {
-            $company_id: convertEmptyStringToNull(param.companyId),
-            $company_name: convertEmptyStringToNull(param.companyName),
-            $company_desc: convertEmptyStringToNull(param.companyDesc),
-            $company_start_date: dayjs(param.companyStartDate).isValid()
-              ? dayjs(param.companyStartDate).format("YYYY-MM-DD HH:mm:ss")
-              : null,
-            $company_status: convertEmptyStringToNull(param.companyStatus),
-            $company_legal_person: convertEmptyStringToNull(
-              param.companyLegalPerson
-            ),
-            $company_unified_code: convertEmptyStringToNull(
-              param.companyUnifiedCode
-            ),
-            $company_web_site: convertEmptyStringToNull(param.companyWebSite),
-            $company_insurance_num: convertEmptyStringToNull(
-              param.companyInsuranceNum
-            ),
-            $company_self_risk: convertEmptyStringToNull(param.companySelfRisk),
-            $company_union_risk: convertEmptyStringToNull(
-              param.companyUnionRisk
-            ),
-            $company_address: convertEmptyStringToNull(param.companyAddress),
-            $company_scope: convertEmptyStringToNull(param.companyScope),
-            $company_tax_no: convertEmptyStringToNull(param.companyTaxNo),
-            $company_industry: convertEmptyStringToNull(param.companyIndustry),
-            $company_license_number: convertEmptyStringToNull(
-              param.companyLicenseNumber
-            ),
-            $company_longitude: convertEmptyStringToNull(
-              param.companyLongitude
-            ),
-            $company_latitude: convertEmptyStringToNull(param.companyLatitude),
-            $source_url: convertEmptyStringToNull(param.sourceUrl),
-            $source_platform: convertEmptyStringToNull(param.sourcePlatform),
-            $source_record_id: convertEmptyStringToNull(param.sourceRecordId),
-            $source_refresh_datetime: dayjs(
-              param.sourceRefreshDatetime
-            ).isValid()
-              ? dayjs(param.sourceRefreshDatetime).format("YYYY-MM-DD HH:mm:ss")
-              : null,
-            $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-          },
-        });
-      } else {
-        (await getDb()).exec({
-          sql: SQL_INSERT_JOB,
-          bind: {
-            $company_id: convertEmptyStringToNull(param.companyId),
-            $company_name: convertEmptyStringToNull(param.companyName),
-            $company_desc: convertEmptyStringToNull(param.companyDesc),
-            $company_start_date: dayjs(param.companyStartDate).isValid()
-              ? dayjs(param.companyStartDate).format("YYYY-MM-DD HH:mm:ss")
-              : null,
-            $company_status: convertEmptyStringToNull(param.companyStatus),
-            $company_legal_person: convertEmptyStringToNull(
-              param.companyLegalPerson
-            ),
-            $company_unified_code: convertEmptyStringToNull(
-              param.companyUnifiedCode
-            ),
-            $company_web_site: convertEmptyStringToNull(param.companyWebSite),
-            $company_insurance_num: convertEmptyStringToNull(
-              param.companyInsuranceNum
-            ),
-            $company_self_risk: convertEmptyStringToNull(param.companySelfRisk),
-            $company_union_risk: convertEmptyStringToNull(
-              param.companyUnionRisk
-            ),
-            $company_address: convertEmptyStringToNull(param.companyAddress),
-            $company_scope: convertEmptyStringToNull(param.companyScope),
-            $company_tax_no: convertEmptyStringToNull(param.companyTaxNo),
-            $company_industry: convertEmptyStringToNull(param.companyIndustry),
-            $company_license_number: convertEmptyStringToNull(
-              param.companyLicenseNumber
-            ),
-            $company_longitude: convertEmptyStringToNull(
-              param.companyLongitude
-            ),
-            $company_latitude: convertEmptyStringToNull(param.companyLatitude),
-            $source_url: convertEmptyStringToNull(param.sourceUrl),
-            $source_platform: convertEmptyStringToNull(param.sourcePlatform),
-            $source_record_id: convertEmptyStringToNull(param.sourceRecordId),
-            $source_refresh_datetime: dayjs(
-              param.sourceRefreshDatetime
-            ).isValid()
-              ? dayjs(param.sourceRefreshDatetime).format("YYYY-MM-DD HH:mm:ss")
-              : null,
-            $create_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-            $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-          },
-        });
-      }
+      await _addOrUpdateCompany(param);
       postSuccessMessage(message, {});
     } catch (e) {
       postErrorMessage(
         message,
         "[worker] addOrUpdateCompany error : " + e.message
+      );
+    }
+  },
+  /**
+     * 
+     * @param {Message} message 
+     * @param {CompanyBO[]} param 
+     */
+  batchAddOrUpdateCompany: async function (message, param) {
+    try {
+      (await getDb()).exec({
+        sql: "BEGIN TRANSACTION",
+      });
+      for (let i = 0; i < param.length; i++) {
+        await _addOrUpdateCompany(param[i]);
+      }
+      (await getDb()).exec({
+        sql: "COMMIT",
+      });
+      postSuccessMessage(message, {});
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[worker] batchAddOrUpdateCompany error : " + e.message
       );
     }
   },
@@ -270,6 +192,117 @@ export const CompanyService = {
     }
   },
 };
+
+/**
+ * 
+ * @param {Company} param
+ */
+async function _addOrUpdateCompany(param) {
+  const now = new Date();
+  let rows = [];
+  (await getDb()).exec({
+    sql: SQL_SELECT_BY_ID,
+    rowMode: "object",
+    bind: [param.companyId],
+    resultRows: rows,
+  });
+  if (rows.length > 0) {
+    (await getDb()).exec({
+      sql: SQL_UPDATE_JOB,
+      bind: {
+        $company_id: convertEmptyStringToNull(param.companyId),
+        $company_name: convertEmptyStringToNull(param.companyName),
+        $company_desc: convertEmptyStringToNull(param.companyDesc),
+        $company_start_date: dayjs(param.companyStartDate).isValid()
+          ? dayjs(param.companyStartDate).format("YYYY-MM-DD HH:mm:ss")
+          : null,
+        $company_status: convertEmptyStringToNull(param.companyStatus),
+        $company_legal_person: convertEmptyStringToNull(
+          param.companyLegalPerson
+        ),
+        $company_unified_code: convertEmptyStringToNull(
+          param.companyUnifiedCode
+        ),
+        $company_web_site: convertEmptyStringToNull(param.companyWebSite),
+        $company_insurance_num: convertEmptyStringToNull(
+          param.companyInsuranceNum
+        ),
+        $company_self_risk: convertEmptyStringToNull(param.companySelfRisk),
+        $company_union_risk: convertEmptyStringToNull(
+          param.companyUnionRisk
+        ),
+        $company_address: convertEmptyStringToNull(param.companyAddress),
+        $company_scope: convertEmptyStringToNull(param.companyScope),
+        $company_tax_no: convertEmptyStringToNull(param.companyTaxNo),
+        $company_industry: convertEmptyStringToNull(param.companyIndustry),
+        $company_license_number: convertEmptyStringToNull(
+          param.companyLicenseNumber
+        ),
+        $company_longitude: convertEmptyStringToNull(
+          param.companyLongitude
+        ),
+        $company_latitude: convertEmptyStringToNull(param.companyLatitude),
+        $source_url: convertEmptyStringToNull(param.sourceUrl),
+        $source_platform: convertEmptyStringToNull(param.sourcePlatform),
+        $source_record_id: convertEmptyStringToNull(param.sourceRecordId),
+        $source_refresh_datetime: dayjs(
+          param.sourceRefreshDatetime
+        ).isValid()
+          ? dayjs(param.sourceRefreshDatetime).format("YYYY-MM-DD HH:mm:ss")
+          : null,
+        $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
+      },
+    });
+  } else {
+    (await getDb()).exec({
+      sql: SQL_INSERT_JOB,
+      bind: {
+        $company_id: convertEmptyStringToNull(param.companyId),
+        $company_name: convertEmptyStringToNull(param.companyName),
+        $company_desc: convertEmptyStringToNull(param.companyDesc),
+        $company_start_date: dayjs(param.companyStartDate).isValid()
+          ? dayjs(param.companyStartDate).format("YYYY-MM-DD HH:mm:ss")
+          : null,
+        $company_status: convertEmptyStringToNull(param.companyStatus),
+        $company_legal_person: convertEmptyStringToNull(
+          param.companyLegalPerson
+        ),
+        $company_unified_code: convertEmptyStringToNull(
+          param.companyUnifiedCode
+        ),
+        $company_web_site: convertEmptyStringToNull(param.companyWebSite),
+        $company_insurance_num: convertEmptyStringToNull(
+          param.companyInsuranceNum
+        ),
+        $company_self_risk: convertEmptyStringToNull(param.companySelfRisk),
+        $company_union_risk: convertEmptyStringToNull(
+          param.companyUnionRisk
+        ),
+        $company_address: convertEmptyStringToNull(param.companyAddress),
+        $company_scope: convertEmptyStringToNull(param.companyScope),
+        $company_tax_no: convertEmptyStringToNull(param.companyTaxNo),
+        $company_industry: convertEmptyStringToNull(param.companyIndustry),
+        $company_license_number: convertEmptyStringToNull(
+          param.companyLicenseNumber
+        ),
+        $company_longitude: convertEmptyStringToNull(
+          param.companyLongitude
+        ),
+        $company_latitude: convertEmptyStringToNull(param.companyLatitude),
+        $source_url: convertEmptyStringToNull(param.sourceUrl),
+        $source_platform: convertEmptyStringToNull(param.sourcePlatform),
+        $source_record_id: convertEmptyStringToNull(param.sourceRecordId),
+        $source_refresh_datetime: dayjs(
+          param.sourceRefreshDatetime
+        ).isValid()
+          ? dayjs(param.sourceRefreshDatetime).format("YYYY-MM-DD HH:mm:ss")
+          : null,
+        $create_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
+        $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
+      },
+    });
+  }
+}
 
 /**
  *
