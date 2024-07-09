@@ -1,7 +1,7 @@
 <template>
     <el-row v-loading="loading">
         <el-col :span="12">
-            <el-statistic title="今日新增记录" :value="todayAddCount" />
+            <el-statistic title="今天新增记录" :value="todayAddCount" />
         </el-col>
         <el-col :span="12">
             <el-statistic title="公司总数" :value="totalCompanyCount" />
