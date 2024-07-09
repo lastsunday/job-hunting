@@ -200,8 +200,7 @@ export const CompanyTagService = {
                     ids.push(item.companyId);
                     itemIdObjectMap.set(item.companyId, item);
                 });
-                let sqlSelectDTOByCompanyIds = genSqlSelectDTOByCompanyIds(ids);
-                let companyTagDTOList = await getAll(sqlSelectDTOByCompanyIds, [], new CompanyTagDTO());
+                let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids);
                 companyTagDTOList.forEach(item => {
                     itemIdObjectMap.get(item.companyId).tagNameArray.push(item.tagName);
                     itemIdObjectMap.get(item.companyId).tagIdArray.push(item.tagId);
@@ -266,6 +265,7 @@ export const CompanyTagService = {
         }
     },
 };
+
 /**
  * 
  * @param {CompanyTagBO} param 
@@ -355,6 +355,17 @@ export async function _getCompanyTagById(param) {
  */
 export async function _getAllCompanyTagDTOByCompanyId(param) {
     return getAll(SQL_SELECT_DTO_BY_COMPANY_ID, [param], new CompanyTagDTO());
+}
+
+/**
+ * 
+ * @param {string[]} param ids
+ * 
+ * @return CompanyTagDTO[]
+ */
+export async function _getAllCompanyTagDTOByCompanyIds(param) {
+    let sqlSelectDTOByCompanyIds = genSqlSelectDTOByCompanyIds(param);
+    return await getAll(sqlSelectDTOByCompanyIds, [], new CompanyTagDTO());
 }
 
 /**

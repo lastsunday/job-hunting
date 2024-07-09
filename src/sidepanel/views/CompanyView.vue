@@ -133,7 +133,22 @@
                                 {{ props.row.companyLatitude }}
                             </el-descriptions-item>
                         </el-descriptions>
-                        <el-descriptions class="margin-top" :column="1" size="small" border>
+                        <el-descriptions class="margin-top" :column="1" size="small" border direction="vertical">
+                            <el-descriptions-item>
+                                <template #label>
+                                    <div class="cell-item">标签</div>
+                                </template>
+                                <div>
+                                    <el-text v-if="props.row.tagNameArray.length > 0" class="compang_tag">
+                                        <el-tag v-for="(value, key, index) in props.row.tagNameArray" type="primary">{{
+                                            value
+                                            }}</el-tag>
+                                    </el-text>
+                                    <el-text v-else>-</el-text>
+                                </div>
+                            </el-descriptions-item>
+                        </el-descriptions>
+                        <el-descriptions class="margin-top" :column="1" size="small" border direction="vertical">
                             <el-descriptions-item>
                                 <template #label>
                                     <div class="cell-item">经营范围</div>
@@ -207,11 +222,25 @@
                     </el-text>
                 </template>
             </el-table-column>
+            <el-table-column prop="tagNameArray" label="标签数" show-overflow-tooltip width="70">
+                <template #default="scope">
+                    <el-text line-clamp="1">
+                        {{ scope.row.tagNameArray.length }}
+                    </el-text>
+                </template>
+            </el-table-column>
             <el-table-column prop="updateDatetime" sortable="custom" label="更新时间" width="160">
                 <template #default="scope">
                     <el-text line-clamp="1">
                         {{ datetimeFormatHHMM(scope.row.updateDatetime) }}
                     </el-text>
+                </template>
+            </el-table-column>
+            <el-table-column fixed="right" label="操作" width="120">
+                <template #default="scope">
+                    <el-button link type="primary" size="small" @click="onUpdateHandle(scope.row)">
+                        编辑标签
+                    </el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -222,18 +251,40 @@
             layout="total, sizes, prev, pager, next" :total="total" @size-change="handleSizeChange"
             @current-change="handleCurrentChange" />
     </el-row>
+    <el-dialog v-model="dialogFormVisible" :title="formTitle" width="800px">
+        <el-form ref="formRef" :model="form" label-width="auto" :rules="rules">
+            <el-form-item label="公司名" prop="name">
+                <el-input :disabled="!formAddMode" v-model="form.name" placeholder="清输入公司名" />
+            </el-form-item>
+            <el-form-item label="标签" prop="tagNameArray">
+                <TagInput ref="formTagRef" v-model="form.tagNameArray" :settings="tagSettings" :whitelist="whitelist"
+                    placeholder="请选择标签" @value-change="formCheck(formRef)"></TagInput>
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <div class="dialog-footer">
+                <el-button @click="dialogFormVisible = false">取消</el-button>
+                <el-button type="primary" @click="confirmAdd(formRef)">
+                    确定
+                </el-button>
+            </div>
+        </template>
+    </el-dialog>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, reactive, nextTick } from "vue";
 import { useTransition } from "@vueuse/core";
 import { CompanyApi, TagApi } from "../../common/api/index";
 import dayjs from "dayjs";
 import TagInput from "../components/TagInput.vue";
 import { SearchCompanyBO } from "../../common/data/bo/searchCompanyBO";
+import { CompanyTagBO } from "../../common/data/bo/companyTagBO";
 
 import { ElTable, ElMessage } from "element-plus";
 import { utils, writeFileXLSX } from "xlsx";
+import { genIdFromText } from "../../common/utils";
+import type { FormInstance, FormRules } from 'element-plus'
 
 const todayAddCountSource = ref(0);
 const todayAddCount = useTransition(todayAddCountSource, {
@@ -391,6 +442,125 @@ const onExportHandle = () => {
     writeFileXLSX(wb, dayjs(new Date()).format("公司-YYYYMMDDHHmmss") + ".xlsx");
 }
 
+const formRef = ref<FormInstance>()
+const dialogFormVisible = ref(false);
+const formTitle = ref("");
+const formAddMode = ref(true);
+const form = reactive({
+    name: '',
+    tagNameArray: [],
+})
+const tagSettings = {
+  dropdown: {
+    maxItems: 30,
+    classname: 'tags-look', // <- custom classname for this dropdown, so it could be targeted
+    enabled: 0,             // <- show suggestions on focus
+    closeOnSelect: false    // <- do not hide the suggestions dropdown once an item has been selected
+  }
+};
+
+const validateCompanyTagExistsByCompanyName = (rule: any, value: any, callback: any) => {
+    if (!formAddMode.value) {
+        callback();
+    } else {
+        if (value === '') {
+            callback(new Error('请输入公司名'));
+        } else {
+            CompanyApi.getAllCompanyTagDTOByCompanyId(genIdFromText(form.name)).then((value) => {
+                if (value.length > 0) {
+                    callback(new Error('公司已存在'));
+                } else {
+                    callback();
+                }
+            }).catch((e) => {
+                callback(new Error('公司名校验失败'));
+            });
+        }
+    }
+}
+
+const validateCompanyTag = (rule: any, value: any, callback: any) => {
+    if (value && value.length > 0) {
+        callback();
+    } else {
+        callback(new Error('请选择标签'));
+    }
+}
+
+const rules = reactive<FormRules<typeof form>>({
+    name: [
+        { required: true, validator: validateCompanyTagExistsByCompanyName, trigger: 'blur' }
+    ],
+    tagNameArray: [
+        { required: true, validator: validateCompanyTag, trigger: 'blur' }
+    ],
+})
+
+const formTagRef = ref();
+
+const onUpdateHandle = async (row: any) => {
+    formAddMode.value = false;
+    formTitle.value = "编辑公司标签";
+    dialogFormVisible.value = true;
+    resetForm();
+    resetFormValue();
+    form.name = row.companyName;
+    form.tagNameArray = row.tagNameArray;
+    nextTick(async () => {
+        await loadWhitelist();
+    })
+}
+
+const loadWhitelist = async () => {
+    let allTags = await TagApi.getAllTag();
+    let tagItems = [];
+    allTags.forEach(item => {
+        tagItems.push({ value: item.tagName, code: item.tagId });
+    });
+    whitelist.value.length = 0;
+    whitelist.value.push(...tagItems);
+}
+
+
+const resetForm = () => {
+    if (formRef.value) {
+        formRef.value.resetFields();
+    }
+    if (formTagRef.value) {
+        formTagRef.value.clear();
+    }
+}
+
+const resetFormValue = () => {
+    form.name = "";
+    form.tagNameArray = [];
+}
+
+const formCheck = async (formEl: FormInstance | undefined) => {
+    if (!formEl) return
+    formEl.validate(async (valid) => {
+    })
+}
+
+const confirmAdd = async (formEl: FormInstance | undefined) => {
+    if (!formEl) return
+    formEl.validate(async (valid) => {
+        if (valid) {
+            //save
+            let companyTagBO = new CompanyTagBO();
+            companyTagBO.companyName = form.name;
+            companyTagBO.tags = form.tagNameArray.map(item => item.value);
+            await CompanyApi.addOrUpdateCompanyTag(companyTagBO);
+            dialogFormVisible.value = false;
+            ElMessage({
+                message: `${companyTagBO.companyName}-公司标签编辑成功`,
+                type: 'success',
+            });
+            search();
+            await loadWhitelist();
+        }
+    })
+}
 </script>
 
 <style scoped>
@@ -421,4 +591,9 @@ const onExportHandle = () => {
     flex: 1;
 }
 
+.compang_tag {
+    .el-tag {
+        margin: 5px;
+    }
+}
 </style>

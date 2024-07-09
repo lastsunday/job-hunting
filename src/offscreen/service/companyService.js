@@ -9,6 +9,7 @@ import { SearchCompanyDTO } from "../../common/data/dto/searchCompanyDTO";
 import { CompanyDTO } from "../../common/data/dto/companyDTO";
 import { StatisticCompanyDTO } from "../../common/data/dto/statisticCompanyDTO";
 import { toHump, toLine } from "../../common/utils";
+import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
 
 export const CompanyService = {
   /**
@@ -190,11 +191,26 @@ export const CompanyService = {
           let key = keys[n];
           resultItem[toHump(key)] = item[key];
         }
+        resultItem.tagNameArray = [];
+        resultItem.tagIdArray = [];
         items.push(resultItem);
       }
       let sqlCountSubTable = "";
       sqlCountSubTable += sqlSearchQuery;
       sqlCountSubTable += whereCondition;
+      let ids = [];
+      let itemIdObjectMap = new Map();
+      if (items.length > 0) {
+        items.forEach(item => {
+          ids.push(item.companyId);
+          itemIdObjectMap.set(item.companyId, item);
+        });
+        let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids);
+        companyTagDTOList.forEach(item => {
+          itemIdObjectMap.get(item.companyId).tagNameArray.push(item.tagName);
+          itemIdObjectMap.get(item.companyId).tagIdArray.push(item.tagId);
+        });
+      }
       //count
       let sqlCount = `SELECT COUNT(*) AS total FROM (${sqlCountSubTable}) AS t1`;
       let queryCountRows = [];
