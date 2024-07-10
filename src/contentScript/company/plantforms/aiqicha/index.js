@@ -1,5 +1,8 @@
 import dayjs from "dayjs";
-import { companyNameConvert, genCompanyIdWithSha256, getCompanyFromCompanyInfo } from "../../../commonDataHandler";
+import {
+    companyNameConvert, genCompanyIdWithSha256,
+    getCompanyFromCompanyInfo, stopAndCleanAbortFunctionHandler
+} from "../../../commonDataHandler";
 import { CompanyApi } from "../../../../common/api";
 import { genIdFromText } from "../../../../common/utils";
 import {
@@ -14,6 +17,7 @@ let init = true;
 let functionPanelDivList = [];
 export function handle(data, firstTimeOpen) {
     mutationContainer(data, firstTimeOpen).then((node) => {
+        stopAndCleanAbortFunctionHandler();
         handleData(data || [], getListByNode(node));
     });
 }
@@ -77,7 +81,7 @@ function handleData(list, getListItem) {
                     //数据过期时间设置为60天
                     //数据库没有数据或数据过期了，则进行网络查询，保存数据到数据库
                     let companyInfo = item;
-                    company = await getCompanyFromCompanyInfo(companyInfo,convertedCompanyName);
+                    company = await getCompanyFromCompanyInfo(companyInfo, convertedCompanyName);
                 }
                 clearAllChildNode(functionPanelDiv);
                 functionPanelDiv.appendChild(createCompanyInfoDetail(company, quickSearchHandle));
