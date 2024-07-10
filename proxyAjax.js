@@ -88,6 +88,9 @@
         },
         lagou: {
             initialState: window.__NEXT_DATA__
+        },
+        aiqicha:{
+            initialState: window.pageData
         }
     } });
     window.dispatchEvent(event);
