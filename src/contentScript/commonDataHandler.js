@@ -21,9 +21,32 @@ import {
   convertPureJobDetailUrl,
 } from "../common/utils";
 import { CompanyTagBO } from "../common/data/bo/companyTagBO";
+import { httpFetchGetText } from "../common/api/common";
 
 const SALARY_MATCH = /(?<min>[0-9\.]*)(?<minUnit>\D*)(?<max>[0-9\.]*)(?<maxUnit>\D*)(?<month>\d*)/;
 const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
+const AIQICHA_PAGE_DATA_MATCH = /window.pageData = (?<data>\{.*\})/;
+
+//请求中断列表
+let abortFunctionHandlerMap = new Map();
+
+export function stopAndCleanAbortFunctionHandler() {
+  if (abortFunctionHandlerMap && abortFunctionHandlerMap.size > 0) {
+    //中断上一次的查询请求
+    abortFunctionHandlerMap.forEach((value, key, map) => {
+      key();
+    });
+  }
+  abortFunctionHandlerMap.clear();
+}
+
+export function addAbortFunctionHandler(abortFunctionHandler) {
+  abortFunctionHandlerMap.set(abortFunctionHandler, null);
+}
+
+export function deleteAbortFunctionHandler(abortFunctionHandler) {
+  abortFunctionHandlerMap.delete(abortFunctionHandler);
+}
 
 export async function saveBrowseJob(list, platform) {
   infoLog(
@@ -513,7 +536,7 @@ function handleAiqichaData(source) {
   company.companyIndustry = source.industry;
   company.companyLicenseNumber = source.licenseNumber;
   company.companyLongitude = source?.geoInfo?.lng;
-  company.companyLatitude = source?.geoInfo.lat;
+  company.companyLatitude = source?.geoInfo?.lat;
   company.sourceUrl = source.sourceUrl;
   company.sourcePlatform = PLATFORM_AIQICHA;
   company.sourceRecordId = source.pid;
@@ -521,6 +544,58 @@ function handleAiqichaData(source) {
     source.refreshTime
   );
   return company;
+}
+
+export async function getCompanyFromCompanyInfo(companyInfo,convertedCompanyName) {
+  let companyInfoDetail = await getCompanyInfoDetailByAiqicha(
+    companyInfo.pid
+  );
+  let companyDetail = companyInfoDetail;
+  companyDetail.selfRiskTotal = companyInfo?.risk?.selfRiskTotal;
+  companyDetail.unionRiskTotal = companyInfo?.risk?.unionRiskTotal;
+  companyDetail.sourceUrl = `https://aiqicha.baidu.com/company_detail_${companyDetail.pid}`;
+  await saveCompany(companyDetail, PLATFORM_AIQICHA);
+  let company = await CompanyApi.getCompanyById(
+    genSha256(convertedCompanyName) + ""
+  );
+  return company;
+}
+
+async function getCompanyInfoDetailByAiqicha(pid) {
+  const url = `https://aiqicha.baidu.com/company_detail_${pid}`;
+  let abortFunctionHandler = null;
+  const result = await httpFetchGetText(url, (abortFunction) => {
+    abortFunctionHandler = abortFunction;
+    //加入请求手动中断列表
+    abortFunctionHandlerMap.set(abortFunctionHandler, null);
+  });
+  //请求正常结束，从手动中断列表中移除
+  abortFunctionHandlerMap.delete(abortFunctionHandler);
+  let data = JSON.parse(result.match(AIQICHA_PAGE_DATA_MATCH).groups["data"]);
+  let companyInfoDetail = data.result;
+  return companyInfoDetail;
+}
+
+export async function getCompanyInfoByAiqicha(keyword) {
+  const decode = encodeURIComponent(keyword);
+  const url = `https://aiqicha.baidu.com/s?q=${decode}`;
+  let abortFunctionHandler = null;
+  const result = await httpFetchGetText(url, (abortFunction) => {
+    abortFunctionHandler = abortFunction;
+    //加入请求手动中断列表
+    abortFunctionHandlerMap.set(abortFunctionHandler, null);
+  });
+  //请求正常结束，从手动中断列表中移除
+  abortFunctionHandlerMap.delete(abortFunctionHandler);
+  let data = JSON.parse(result.match(AIQICHA_PAGE_DATA_MATCH).groups["data"]);
+  let resultList = data.result.resultList;
+  for (let i = 0; i < resultList.length; i++) {
+    let companyInfo = resultList[i];
+    if (isCompanyNameSame(companyInfo.titleName, keyword)) {
+      return companyInfo;
+    }
+  }
+  return null;
 }
 
 export async function saveOrUpdateCompanyTag(companyName, tags) {
@@ -552,4 +627,17 @@ export function genCompanyIdWithSha256(value) {
 
 export function genJobItemIdWithSha256(value) {
   return genSha256("JOBITEM_" + value);
+}
+
+/**
+ * 公司名对比，将中文括号进行替换英文括号，然后进行对比
+ * @param {*} name1
+ * @param {*} name2
+ * @returns
+ */
+function isCompanyNameSame(name1, name2) {
+  return (
+    name1.replaceAll("（", "(").replaceAll("）", ")") ==
+    name2.replaceAll("（", "(").replaceAll("）", ")")
+  );
 }

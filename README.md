@@ -15,6 +15,13 @@
 | jobsdb-hk | https://hk.jobsdb.com/              | 需点击搜索按钮才有效果 |
 | 猎聘网    | https://www.liepin.com/zhaopin      | 需点击搜索按钮才有效果 |
 
+## 企业搜索平台支持列表
+
+| 企业搜索平台  | 访问地址                            | 备注                   |
+| --------- | ----------------------------------- | ---------------------- |
+| 爱企查 | https://aiqicha.baidu.com/s |                        |
+
+
 ## 功能列表
 
 1. 显示职位发布时间与自动排序(按职位发布时间,hr 活跃时间（只支持 BOSS）)。
@@ -31,6 +38,7 @@
 11. 公司自定义标签（可添加，修改，拖拽排序），内置外包公司标签数据。
 12. 公司标签数据管理页面，公司标签数据导出，导入。
 13. 公司数据管理页面，公司数据导出，导入。
+14. 增强爱企查企业搜索页面。（显示额外信息，公司数据同步，公司标签编辑）
 
 ## Browsers support
 
@@ -45,6 +53,15 @@
         <img src="docs\introduction\job-item-51job.jpg" alt="51job" width="1000px"/>
         <div style="text-align:center;">
             前程无忧
+        </div>
+	</div>
+</p>
+
+<p>
+	<div style="margin-top:20px">
+        <img src="docs\introduction\company-aiqicha.jpg" alt="aiqicha" width="1000px"/>
+        <div style="text-align:center;">
+            爱企查
         </div>
 	</div>
 </p>

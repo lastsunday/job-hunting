@@ -9,7 +9,6 @@ import {
   genIdFromText,
 } from "../common/utils";
 import {
-  PLATFORM_AIQICHA,
   PLATFORM_BOSS,
   PLATFORM_JOBSDB,
   PLATFORM_LIEPIN,
@@ -20,9 +19,13 @@ import {
 import {
   genJobItemIdWithSha256,
   genCompanyIdWithSha256,
-  saveCompany,
   genSha256,
   companyNameConvert,
+  getCompanyFromCompanyInfo,
+  getCompanyInfoByAiqicha,
+  stopAndCleanAbortFunctionHandler,
+  addAbortFunctionHandler,
+  deleteAbortFunctionHandler,
 } from "./commonDataHandler";
 import { httpFetchGetText } from "../common/api/common";
 
@@ -154,7 +157,7 @@ export function finalRender(jobDTOList, { platform }) {
   }
 }
 
-function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id) {
+export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id) {
   const dialogDiv = document.createElement("div");
   dialogDiv.style =
     "position: absolute;background-color: white;z-index: 9999;color: black;padding: 6px;border-radius: 10px;box-shadow: 0 2px 10px rgba(0, 0, 0, .08);";
@@ -438,21 +441,14 @@ function convertHrActiveTimeDescToOffsetTime(hrActiveTimeDesc) {
   return offsetTime;
 }
 
-//请求中断列表
-let abortFunctionHandlerMap = new Map();
+
 
 export function renderFunctionPanel(
   list,
   getListItem,
   { platform, getCompanyInfoFunction } = {}
 ) {
-  if (abortFunctionHandlerMap && abortFunctionHandlerMap.size > 0) {
-    //中断上一次的查询请求
-    abortFunctionHandlerMap.forEach((value, key, map) => {
-      key();
-    });
-  }
-  abortFunctionHandlerMap.clear();
+  stopAndCleanAbortFunctionHandler();
   list.forEach((item, index) => {
     const dom = getListItem(index);
     let targetDom;
@@ -481,7 +477,7 @@ export function renderFunctionPanel(
   });
 }
 
-function createLogo() {
+export function createLogo() {
   let logo = document.createElement("img");
   logo.src = "data:image/png;base64," + logoBase64;
   logo.classList.add("__logo_in_function_panel");
@@ -595,8 +591,6 @@ function createCompanyInfo(item, { getCompanyInfoFunction } = {}) {
   return dom;
 }
 
-const AIQICHA_PAGE_DATA_MATCH = /window.pageData = (?<data>\{.*\})/;
-
 async function asyncRenderCompanyInfo(
   div,
   keyword,
@@ -604,10 +598,10 @@ async function asyncRenderCompanyInfo(
   quickSearchHandle
 ) {
   try {
-    let convertdCompanyName = companyNameConvert(keyword);
+    let convertedCompanyName = companyNameConvert(keyword);
     //查询数据库是否有公司信息
     let company = await CompanyApi.getCompanyById(
-      genSha256(convertdCompanyName) + ""
+      genSha256(convertedCompanyName) + ""
     );
     let now = dayjs();
     if (
@@ -620,21 +614,7 @@ async function asyncRenderCompanyInfo(
       //数据过期时间设置为60天
       //数据库没有数据或数据过期了，则进行网络查询，保存数据到数据库
       let companyInfo = await getCompanyInfoByAiqicha(keyword);
-      if (companyInfo) {
-        let companyInfoDetail = await getCompanyInfoDetailByAiqicha(
-          companyInfo.pid
-        );
-        let companyDetail = companyInfoDetail;
-        companyDetail.selfRiskTotal = companyInfo?.risk?.selfRiskTotal;
-        companyDetail.unionRiskTotal = companyInfo?.risk?.unionRiskTotal;
-        companyDetail.sourceUrl = `https://aiqicha.baidu.com/company_detail_${companyDetail.pid}`;
-        await saveCompany(companyDetail, PLATFORM_AIQICHA);
-        company = await CompanyApi.getCompanyById(
-          genSha256(convertdCompanyName) + ""
-        );
-      } else {
-        throw "company search fail";
-      }
+      company = await getCompanyFromCompanyInfo(companyInfo,convertedCompanyName);
     }
     div.appendChild(createCompanyInfoDetail(company, quickSearchHandle));
   } catch (e) {
@@ -648,7 +628,7 @@ async function asyncRenderCompanyInfo(
  * @param {Company} company
  * @returns
  */
-function createCompanyInfoDetail(company, quickSearchHandle) {
+export function createCompanyInfoDetail(company, quickSearchHandle) {
   let contentDiv = $("<div></div>");
   contentDiv.append(
     $(`<div class="__company_info_quick_search_item"></div>`)
@@ -784,10 +764,10 @@ async function renderWebsiteIpc(element, website) {
       const result = await httpFetchGetText(url, (abortFunction) => {
         abortFunctionHandler = abortFunction;
         //加入请求手动中断列表
-        abortFunctionHandlerMap.set(abortFunctionHandler, null);
+        addAbortFunctionHandler(abortFunctionHandler);
       });
       //请求正常结束，从手动中断列表中移除
-      abortFunctionHandlerMap.delete(abortFunctionHandler);
+      deleteAbortFunctionHandler(abortFunctionHandler);
       let firstMatchArray = result.match(
         /<table class="table">[\s\S]*<tr><td class="thead">主办单位名称<\/td><td>.*[<\td>]?/
       );
@@ -855,10 +835,10 @@ async function renderWebsiteWhois(element, website) {
       const result = await httpFetchGetText(url, (abortFunction) => {
         abortFunctionHandler = abortFunction;
         //加入请求手动中断列表
-        abortFunctionHandlerMap.set(abortFunctionHandler, null);
+        addAbortFunctionHandler(abortFunctionHandler);
       });
       //请求正常结束，从手动中断列表中移除
-      abortFunctionHandlerMap.delete(abortFunctionHandler);
+      deleteAbortFunctionHandler(abortFunctionHandler);
       let groups = result.match(
         /注册时间[\s\S]*<\/div>[\s\S]*<div item-value>(?<registDate>.*)<\/div>[\s\S]*/
       )?.groups;
@@ -902,10 +882,10 @@ async function renderWebsiteStatus(element, website) {
       await httpFetchGetText(url, (abortFunction) => {
         abortFunctionHandler = abortFunction;
         //加入请求手动中断列表
-        abortFunctionHandlerMap.set(abortFunctionHandler, null);
+        addAbortFunctionHandler(abortFunctionHandler);
       });
       //请求正常结束，从手动中断列表中移除
-      abortFunctionHandlerMap.delete(abortFunctionHandler);
+      deleteAbortFunctionHandler(abortFunctionHandler);
       element.textContent = "可访问";
       element.style = "background-color:yellowgreen;color:white;";
     }
@@ -919,57 +899,7 @@ async function renderWebsiteStatus(element, website) {
   }
 }
 
-async function getCompanyInfoByAiqicha(keyword) {
-  const decode = encodeURIComponent(keyword);
-  const url = `https://aiqicha.baidu.com/s?q=${decode}`;
-  let abortFunctionHandler = null;
-  const result = await httpFetchGetText(url, (abortFunction) => {
-    abortFunctionHandler = abortFunction;
-    //加入请求手动中断列表
-    abortFunctionHandlerMap.set(abortFunctionHandler, null);
-  });
-  //请求正常结束，从手动中断列表中移除
-  abortFunctionHandlerMap.delete(abortFunctionHandler);
-  let data = JSON.parse(result.match(AIQICHA_PAGE_DATA_MATCH).groups["data"]);
-  let resultList = data.result.resultList;
-  for (let i = 0; i < resultList.length; i++) {
-    let companyInfo = resultList[i];
-    if (isCompanyNameSame(companyInfo.titleName, keyword)) {
-      return companyInfo;
-    }
-  }
-  return null;
-}
-
-/**
- * 公司名对比，将中文括号进行替换英文括号，然后进行对比
- * @param {*} name1
- * @param {*} name2
- * @returns
- */
-function isCompanyNameSame(name1, name2) {
-  return (
-    name1.replaceAll("（", "(").replaceAll("）", ")") ==
-    name2.replaceAll("（", "(").replaceAll("）", ")")
-  );
-}
-
-async function getCompanyInfoDetailByAiqicha(pid) {
-  const url = `https://aiqicha.baidu.com/company_detail_${pid}`;
-  let abortFunctionHandler = null;
-  const result = await httpFetchGetText(url, (abortFunction) => {
-    abortFunctionHandler = abortFunction;
-    //加入请求手动中断列表
-    abortFunctionHandlerMap.set(abortFunctionHandler, null);
-  });
-  //请求正常结束，从手动中断列表中移除
-  abortFunctionHandlerMap.delete(abortFunctionHandler);
-  let data = JSON.parse(result.match(AIQICHA_PAGE_DATA_MATCH).groups["data"]);
-  let companyInfoDetail = data.result;
-  return companyInfoDetail;
-}
-
-function createSearchCompanyLink(keyword) {
+export function createSearchCompanyLink(keyword) {
   const decode = encodeURIComponent(keyword);
   const dom = document.createElement("div");
   const internetDiv = document.createElement("div");
@@ -1039,7 +969,7 @@ function createSearchCompanyLink(keyword) {
   return dom;
 }
 
-function createCompanyTag(companyName) {
+export function createCompanyTag(companyName) {
   const dom = document.createElement("div");
   dom.className = "__company_info_quick_search_item";
   let labelDiv = document.createElement("div");
@@ -1144,7 +1074,7 @@ function transformTag(tagData) {
   tagData.style = "--tag-bg:" + tagData.color;
 }
 
-function createCompanyReputation(keyword) {
+export function createCompanyReputation(keyword) {
   const dom = document.createElement("div");
   dom.className = "__company_info_quick_search_item";
   let labelDiv = document.createElement("div");
@@ -1177,10 +1107,10 @@ async function asyncRenderRuobilin(div, keyword) {
     const result = await httpFetchGetText(url, (abortFunction) => {
       abortFunctionHandler = abortFunction;
       //加入请求手动中断列表
-      abortFunctionHandlerMap.set(abortFunctionHandler, null);
+      addAbortFunctionHandler(abortFunctionHandler);
     });
     //请求正常结束，从手动中断列表中移除
-    abortFunctionHandlerMap.delete(abortFunctionHandler);
+    deleteAbortFunctionHandler(abortFunctionHandler);
     let hyperlinks = $(result).find(".ap-questions-hyperlink");
     clearAllChildNode(div);
     if (hyperlinks && hyperlinks.length > 0) {
@@ -1213,7 +1143,7 @@ async function asyncRenderRuobilin(div, keyword) {
   }
 }
 
-function clearAllChildNode(div) {
+export function clearAllChildNode(div) {
   div.replaceChildren();
 }
 

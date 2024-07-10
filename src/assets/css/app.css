@@ -234,6 +234,12 @@ div[data-search-sol-meta] {
 
 .__LIEPIN_function_panel {}
 
+.__AIQICHA_function_panel {
+  position: relative;
+  clear: both;
+  margin: 20px
+}
+
 .__comment_wrapper {
   display: flex;
   justify-content: end;

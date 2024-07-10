@@ -7,6 +7,8 @@ import { getLiepinData } from "./plantforms/liepin/index.js";
 import zhilianFirstOpen from "./plantforms/zhilian/firstOpen.js";
 import lagouFirstOpen from "./plantforms/lagou/firstOpen.js";
 
+import { handle as aiqichaHandle } from "./company/plantforms/aiqicha/index.js"
+
 import { createLink, createScript } from "../common/utils.js";
 import $ from "jquery";
 import { initBridge } from "../common/api/common.js";
@@ -71,6 +73,12 @@ import "../assets/css/app.css";
       if (responseURL.indexOf("/api/com.liepin.searchfront4c.pc-search-job") !== -1) {
         getLiepinData(data?.response);
       }
+
+      // aiqicha
+      if (responseURL.indexOf("/s/advanceFilterAjax") !== -1) {
+        let list = JSON.parse(data?.response)?.data?.resultList;
+        aiqichaHandle(list, false);
+      }
     }
   });
 
@@ -87,6 +95,12 @@ import "../assets/css/app.css";
       // 拉勾首次打开
       const data = e?.detail?.lagou?.initialState;
       lagouFirstOpen(data || {});
+    }
+
+    if (location.host === "aiqicha.baidu.com") {
+      // 爱企查首次打开
+      const data = e?.detail?.aiqicha?.initialState?.result?.resultList;
+      aiqichaHandle(data, true);
     }
   });
 })();
