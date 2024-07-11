@@ -1,7 +1,7 @@
 {
   "name": "job-hunting",
   "private": true,
-  "version": "1.13.0",
+  "version": "1.14.0",
   "description": "协助找工作",
   "type": "module",
   "homepage": "https://github.com/lastsunday/job-hunting",
