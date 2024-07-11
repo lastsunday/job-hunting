@@ -36,6 +36,23 @@
         </el-descriptions-item>
       </el-descriptions>
     </el-row>
+    <el-row class="setting_item">
+      <el-descriptions title="程序信息">
+        <el-descriptions-item>
+          <el-row>
+            <el-col>
+              <el-text type="primary" size="large">版本 {{ version }}</el-text>
+            </el-col>
+            <el-col class="appInfoOperation">
+              <el-button><el-link :href="homepage" target="_blank">访问主页</el-link></el-button>
+              <el-button>
+                <el-link :href="bugs" target="_blank">问题反馈</el-link>
+              </el-button>
+            </el-col>
+          </el-row>
+        </el-descriptions-item>
+      </el-descriptions>
+    </el-row>
   </el-col>
   <el-dialog v-model="importDialogVisible" title="数据恢复" width="500">
     <div>
@@ -489,13 +506,20 @@ const confirmCompanyTagFileImport = async () => {
   }
 };
 
+const version = __APP_VERSION__;
+const homepage = __HOMEPAGE__;
+const bugs = __BUGS__;
 </script>
 <style lang="scss">
 .setting_item {
-  padding: 10px;
+  padding: 5px;
 }
 
 .dialog_menu {
   justify-content: end;
+}
+
+.appInfoOperation {
+  margin-top: 10px;
 }
 </style>

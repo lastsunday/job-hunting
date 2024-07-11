@@ -1,17 +1,13 @@
 <template>
-  <el-menu
-    :default-active="activeIndex"
-    class="el-menu"
-    mode="horizontal"
-    :ellipsis="false"
-    router="true"
-    @select="handleSelect"
-  >
-  <div class="flex-grow" /> 
+  <el-menu :default-active="activeIndex" class="el-menu" mode="horizontal" :ellipsis="false" router="true"
+    @select="handleSelect">
+    <img class="logo" src="./assets/images/logo.png" alt="logo" />
+    <div class="flex-grow" />
     <el-menu-item index="1" route="/">首页</el-menu-item>
-    <el-menu-item index="2" route="/company">公司</el-menu-item>
-    <el-menu-item index="3" route="/companyTag">公司标签</el-menu-item>
-    <el-menu-item index="4" route="/setting">设置</el-menu-item>
+    <el-menu-item index="2" route="/job">职位</el-menu-item>
+    <el-menu-item index="3" route="/company">公司</el-menu-item>
+    <el-menu-item index="4" route="/companyTag">公司标签</el-menu-item>
+    <el-menu-item index="5" route="/setting">设置</el-menu-item>
   </el-menu>
   <router-view />
   <el-backtop />
@@ -21,16 +17,19 @@ import { ref } from "vue";
 
 const activeIndex = ref("1");
 const handleSelect = (key: string, keyPath: string[]) => {
-  
+
 };
 </script>
 <style lang="scss">
-#app {
-}
-.el-menu{
+#app {}
 
-}
+.el-menu {}
+
 .flex-grow {
   flex-grow: 1;
+}
+
+.logo {
+  height: 50px;
 }
 </style>

@@ -26,6 +26,9 @@ function getBuildOutputDir() {
 export default defineConfig({
   define: {
     __BROWSER__: JSON.stringify(target),
+    __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+    __HOMEPAGE__: JSON.stringify(process.env.npm_package_homepage),
+    __BUGS__: JSON.stringify(process.env.npm_package_bugs),
   },
   build: {
     outDir: getBuildOutputDir(),
@@ -45,4 +48,8 @@ export default defineConfig({
       skipManifestValidation: true,
     }),
   ],
+  optimizeDeps: {
+    include: ["leaflet"],
+  },
 });
+
