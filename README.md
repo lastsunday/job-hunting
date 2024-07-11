@@ -39,6 +39,7 @@
 12. 公司标签数据管理页面，公司标签数据导出，导入。
 13. 公司数据管理页面，公司数据导出，导入。
 14. 增强爱企查企业搜索页面。（显示额外信息，公司数据同步，公司标签编辑）
+15. 首页展示最近查看职位以及在地图上显示，招聘网站和企业搜索网站的快捷入口。
 
 ## Browsers support
 
@@ -78,7 +79,13 @@
     <div style="margin-top:20px">
         <img src="docs\introduction\sidepanel_admin_home.jpg" alt="sidepanel_admin_home" width="1000px"/>
         <div style="text-align:center">
-            管理页面（需点击插件图标打开）
+            管理页面首页（需点击插件图标打开）
+        </div>
+	</div>
+    <div style="margin-top:20px">
+        <img src="docs\introduction\sidepanel_admin_job.jpg" alt="sidepanel_admin_job" width="1000px"/>
+        <div style="text-align:center">
+            职位
         </div>
 	</div>
     <div style="margin-top:20px">
