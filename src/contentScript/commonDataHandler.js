@@ -336,6 +336,8 @@ function handleZhilianData(list) {
       salaryReal,
       firstPublishTime,
       salaryCount,
+      latitude,
+      longitude,
     } = item;
     const { staffName, hrJob } = item.staffCard;
     job.jobId = genId(jobId, PLATFORM_ZHILIAN);
@@ -348,8 +350,13 @@ function handleZhilianData(list) {
     job.jobCompanyName = companyName;
     job.jobLocationName = workCity;
     job.jobAddress = streetName;
-    job.jobLongitude = null;
-    job.jobLatitude = null;
+    job.jobLongitude = longitude;
+    job.jobLatitude = latitude;
+    if (job.jobLongitude && job.jobLatitude) {
+      let wgs84 = gcj02ToWgs84(Number.parseFloat(job.jobLongitude), Number.parseFloat(job.jobLatitude));
+      job.jobLongitude = wgs84[0];
+      job.jobLatitude = wgs84[1];
+    }
     job.jobDescription = jobSummary;
     job.jobDegreeName = education;
     //handle job year

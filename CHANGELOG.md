@@ -8,6 +8,7 @@
 2. (SidePanel)显示LOGO。
 3. (SidePanel)设置页面显示版本号，访问主页，问题反馈。
 4. (SidePanel)Element Plus组件显示中文。
+4. (ContentScript)新增JobItem坐标。（智联招聘)
 
 ### 🔨 Dependency
 
