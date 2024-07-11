@@ -27,6 +27,8 @@ const SALARY_MATCH = /(?<min>[0-9\.]*)(?<minUnit>\D*)(?<max>[0-9\.]*)(?<maxUnit>
 const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
 const AIQICHA_PAGE_DATA_MATCH = /window.pageData = (?<data>\{.*\})/;
 
+import { bd09ToWgs84, gcj02ToWgs84 } from '@pansy/lnglat-transform'
+
 //请求中断列表
 let abortFunctionHandlerMap = new Map();
 
@@ -283,6 +285,11 @@ function handleLagouData(list) {
     job.jobAddress = positionAddress;
     job.jobLongitude = longitude;
     job.jobLatitude = latitude;
+    if (job.jobLongitude && job.jobLatitude) {
+      let wgs84 = gcj02ToWgs84(Number.parseFloat(job.jobLongitude), Number.parseFloat(job.jobLatitude));
+      job.jobLongitude = wgs84[0];
+      job.jobLatitude = wgs84[1];
+    }
     job.jobDescription = positionDetail;
     job.jobDegreeName = education;
     //handle job year
@@ -405,6 +412,11 @@ function handleBossData(list) {
     job.jobAddress = address;
     job.jobLongitude = longitude;
     job.jobLatitude = latitude;
+    if (job.jobLongitude && job.jobLatitude) {
+      let wgs84 = gcj02ToWgs84(job.jobLongitude, job.jobLatitude);
+      job.jobLongitude = wgs84[0];
+      job.jobLatitude = wgs84[1];
+    }
     job.jobDescription = postDescription;
     job.jobDegreeName = degreeName;
     //handle job year
@@ -478,6 +490,11 @@ function handle51JobData(list) {
     job.jobAddress = jobAreaString;
     job.jobLongitude = lon;
     job.jobLatitude = lat;
+    if (job.jobLongitude && job.jobLatitude) {
+      let wgs84 = bd09ToWgs84(job.jobLongitude, job.jobLatitude);
+      job.jobLongitude = wgs84[0];
+      job.jobLatitude = wgs84[1];
+    }
     job.jobDescription = jobDescribe;
     job.jobDegreeName = degreeString;
     if (workYearString.endsWith("无需经验")) {
@@ -537,6 +554,13 @@ function handleAiqichaData(source) {
   company.companyLicenseNumber = source.licenseNumber;
   company.companyLongitude = source?.geoInfo?.lng;
   company.companyLatitude = source?.geoInfo?.lat;
+  //原始数据为百度坐标
+  if (company.companyLongitude && company.companyLatitude) {
+    //TODO 转换后仍有偏移
+    let wgs84 = bd09ToWgs84(company.companyLongitude, company.companyLatitude);
+    company.companyLongitude = wgs84[0];
+    company.companyLatitude = wgs84[1];
+  }
   company.sourceUrl = source.sourceUrl;
   company.sourcePlatform = PLATFORM_AIQICHA;
   company.sourceRecordId = source.pid;
@@ -546,7 +570,7 @@ function handleAiqichaData(source) {
   return company;
 }
 
-export async function getCompanyFromCompanyInfo(companyInfo,convertedCompanyName) {
+export async function getCompanyFromCompanyInfo(companyInfo, convertedCompanyName) {
   let companyInfoDetail = await getCompanyInfoDetailByAiqicha(
     companyInfo.pid
   );

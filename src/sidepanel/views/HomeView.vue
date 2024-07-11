@@ -58,6 +58,9 @@
                             <el-row>
                                 <el-text line-clamp="1">公司名：{{ item.jobCompanyName }}</el-text>
                             </el-row>
+                            <el-row>
+                                <el-text line-clamp="1">地址：{{ item.jobAddress }}</el-text>
+                            </el-row>
                         </l-popup>
                         <l-icon className="icon">
                             <div class="mapIcon">
@@ -111,6 +114,7 @@ import {
     LPolygon,
     LRectangle,
 } from "@vue-leaflet/vue-leaflet";
+import { wgs84ToGcj02 } from '@pansy/lnglat-transform'
 
 const todayBrowseDetailCountSource = ref(0);
 const todayBrowseDetailCount = useTransition(todayBrowseDetailCountSource, {
@@ -178,6 +182,14 @@ const todayJobs = ref([]);
 const todayJobSearch = async () => {
     let searchResult = await JobApi.searchJob(getSearchParam());
     todayJobs.value = searchResult.items;
+    //地球坐标转火星坐标
+    todayJobs.value.forEach(item => {
+        if (item.jobLongitude && item.jobLatitude) {
+            let gcj02 = wgs84ToGcj02(item.jobLongitude, item.jobLatitude);
+            item.jobLongitude = gcj02[0];
+            item.jobLatitude = gcj02[1];
+        }
+    });
 }
 
 function getSearchParam() {
@@ -205,10 +217,10 @@ const companyWebsiteList = [
 
 const map = ref();
 const zoom = ref(10);
-const todayJobsFilterEmptyLocation = computed(() => todayJobs.value.filter((item) => (item.jobLatitude && item.jobLongitude)))
+const todayJobsFilterEmptyLocation = computed(() => todayJobs.value.filter((item) => (item.jobLatitude && item.jobLongitude && item.latestBrowseDetailDatetime)))
 const idAndPopupIndexMap = computed(() => {
     let result = new Map();
-    let filtered = todayJobs.value.filter((item) => (item.jobLatitude && item.jobLongitude));
+    let filtered = todayJobs.value.filter((item) => (item.jobLatitude && item.jobLongitude && item.latestBrowseDetailDatetime));
     filtered.forEach((element, index) => {
         result.set(element.jobId, index);
     });

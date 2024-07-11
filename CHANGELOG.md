@@ -13,6 +13,7 @@
 
 1. Add @vue-leaflet/vue-leaflet^0.10.1
 2. Add leaflet ^1.9.4
+3. Add @pansy/lnglat-transform ^1.0.3
 
 ## 1.13.0(2024-07-10)
 
