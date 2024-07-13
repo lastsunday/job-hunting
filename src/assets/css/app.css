@@ -321,3 +321,29 @@ div[data-search-sol-meta] {
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
 }
+
+.__comment_submit_button {
+  background-color: rgb(205, 198, 0);
+  color: white;
+  padding: 1px 8px;
+  border-radius: 5px;
+  font-size: 15px;
+  cursor: pointer;
+  display: inline-block;
+  margin: 5px;
+  text-wrap: nowrap;
+}
+
+.__comment_loading {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border-radius: 5px;
+}

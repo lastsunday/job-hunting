@@ -1,25 +1,46 @@
 import { AuthApi } from "../index"
+import { UserDTO } from "../../data/dto/userDTO";
+import { GITHUB_URL_GET_USER } from "../../config";
 
 const URL_GRAPHQL = "https://api.github.com/graphql";
 const GITHUB_APP_REPO = "lastsunday/job-hunting-github-app";
+
+const URL_POST_ISSUES = "https://api.github.com/repos/lastsunday/job-hunting-github-app/issues";
+
 
 export const GithubApi = {
 
   async queryComment({ first, after, last, before, id } = {}) {
     let data = genQueryCommentHQL({ first, after, last, before, id });
-    let result = await fetchPost(URL_GRAPHQL, data);
-    if(result.errors?.length > 0){
+    let result = await fetchJson(URL_GRAPHQL, data);
+    if (result.errors?.length > 0) {
       throw result.errors;
-    }else{
+    } else {
       return result?.data;
     }
   },
 
+  async addComment(title, body) {
+    await fetchJson(URL_POST_ISSUES, {
+      title, body
+    });
+    return;
+  },
+
+  /**
+   * 
+   * @returns UserDTO
+   */
+  async getUser() {
+    let userObject = await fetchJson(GITHUB_URL_GET_USER, null, { method: "GET" });
+    let userDTO = parseToLineObjectToToHumpObject(new UserDTO(), userObject);
+    return userDTO;
+  }
+
 }
 
 function genQueryCommentHQL({ first, after, last, before, id }) {
-  //TODO set actual id
-  let targetId = "";
+  let targetId = id;
   return {
     query: `
     {
@@ -51,24 +72,24 @@ function genQueryCommentHQL({ first, after, last, before, id }) {
 }
 
 
-async function fetchPost(url, data) {
+async function fetchJson(url, data, { method } = { method: "POST" }) {
   try {
     let oauthDTO = await AuthApi.authGetToken();
     let response = await fetch(url, {
-      method: 'POST',
+      method,
       headers: {
         "Authorization": `Bearer ${oauthDTO.accessToken}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(data)
+      body: data ? JSON.stringify(data) : null
     });
     let status = response.status;
-    if(status == 200){
+    if (status == 200 || status == 201) {
       return await response.json();
-    }else if(status = 401){
+    } else if (status = 401) {
       //TODO refresh token
       //TODO 如果refresh token也过期，那么需要将token清除，重新登录
-    }else{
+    } else {
       throw `unknown error,status code = ${status}`
     }
   } catch (e) {

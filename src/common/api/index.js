@@ -250,6 +250,26 @@ export const AuthApi = {
   },
 }
 
+export const UserApi = {
+
+  /**
+  *
+  * @returns UserDTO
+  */
+  userGet: async function () {
+    let result = await invoke(this.userGet.name, {});
+    return result.data;
+  },
+
+  /**
+    *
+    * @param {UserDTO} param
+    */
+  userSet: async function (param) {
+    return await invoke(this.userSet.name, param);
+  },
+}
+
 export const ConfigApi = {
 
   /**

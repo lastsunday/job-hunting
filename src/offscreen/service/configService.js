@@ -108,5 +108,5 @@ const SQL_INSERT = `
 INSERT INTO config (key, value, create_datetime, update_datetime) VALUES ($key,$value,$create_datetime,$update_datetime)
 `;
 const SQL_UPDATE = `
-UPDATE config SET key=$key,update_datetime=$update_datetime WHERE value = $value;
+UPDATE config SET value=$value,update_datetime=$update_datetime WHERE key = $key;
 `;

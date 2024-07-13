@@ -1,0 +1,34 @@
+export class UserDTO {
+    login;
+    id;
+    nodeId;
+    avatarUrl;
+    gravatarId;
+    url;
+    htmlUrl;
+    followersUrl;
+    followingUrl;
+    gistsUrl;
+    starredUrl;
+    subscriptionsUrl;
+    organizationsUrl;
+    reposUrl;
+    eventsUrl;
+    receivedEventsUrl;
+    type;
+    siteAdmin;
+    name;
+    company;
+    blog;
+    location;
+    email;
+    hireable;
+    bio;
+    twitterUsername;
+    publicRepos;
+    publicGists;
+    followers;
+    following;
+    createdAt;
+    updatedAt;
+}

@@ -1,6 +1,41 @@
 <template>
   <el-col>
     <el-row class="setting_item">
+      <el-descriptions title="GitHubApp登录">
+        <el-descriptions-item>
+          <div class="loginStatus">
+            <div v-if="login">
+              <el-avatar :size="50" :src="avatar" />
+            </div>
+            <div>
+              <div>
+                <el-text v-if="login">{{ username }}</el-text>
+              </div>
+              <div>
+                <el-text>登录状态：</el-text>
+                <el-text v-if="login" type="success">在线</el-text>
+                <el-text v-else type="warning">离线</el-text>
+              </div>
+            </div>
+          </div>
+          <el-button v-if="!login" @click="onClickLogin">
+            <el-icon class="el-icon--left">
+              <Icon icon="mdi:github" />
+            </el-icon>
+            登录</el-button>
+          <el-popconfirm v-else title="确定登出？" @confirm="onClickLogout" confirm-button-text="确定" cancel-button-text="取消">
+            <template #reference>
+              <el-button>
+                <el-icon class="el-icon--left">
+                  <Icon icon="mdi:github" />
+                </el-icon>
+                登出</el-button>
+            </template>
+          </el-popconfirm>
+        </el-descriptions-item>
+      </el-descriptions>
+    </el-row>
+    <el-row class="setting_item">
       <el-descriptions title="数据库">
         <el-descriptions-item>
           <el-popconfirm title="确认备份数据？" @confirm="onClickDbExport" confirm-button-text="确定" cancel-button-text="取消">
@@ -125,19 +160,20 @@
   </el-dialog>
 </template>
 <script lang="ts" setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import dayjs from "dayjs";
 import { dbExport, dbImport } from "../../common/api/common";
 import { base64ToBytes, bytesToBase64 } from "../../common/utils/base64.js";
 import { ElMessage, ElLoading } from "element-plus";
 import { DocumentCopy, CopyDocument } from "@element-plus/icons-vue";
 import { utils, writeFileXLSX, read } from "xlsx";
-import { CompanyApi } from "../../common/api/index";
+import { CompanyApi, AuthApi, UserApi } from "../../common/api/index";
 import { SearchCompanyTagBO } from "../../common/data/bo/searchCompanyTagBO";
 import { CompanyTagBO } from "../../common/data/bo/companyTagBO";
 import { SearchCompanyBO } from "../../common/data/bo/searchCompanyBO";
 import { CompanyBO } from "../../common/data/bo/companyBO";
 import { genIdFromText, convertDateStringToDateObject } from "../../common/utils";
+import { Icon } from '@iconify/vue';
 
 const activeName = ref("export");
 const exportLoading = ref(false);
@@ -509,6 +545,40 @@ const confirmCompanyTagFileImport = async () => {
 const version = __APP_VERSION__;
 const homepage = __HOMEPAGE__;
 const bugs = __BUGS__;
+
+const login = ref(false);
+const username = ref("");
+const avatar = ref("");
+
+const onClickLogin = async () => {
+  await AuthApi.authOauth2Login();
+  await checkLoginStatus();
+}
+
+const onClickLogout = async () => {
+  await AuthApi.authSetToken(null);
+  await UserApi.userSet(null);
+  await checkLoginStatus()
+}
+
+const checkLoginStatus = async () => {
+  let oauthDTO = await AuthApi.authGetToken();
+  if (oauthDTO) {
+    login.value = true;
+  } else {
+    login.value = false;
+  }
+  let userDTO = await UserApi.userGet();
+  if (userDTO) {
+    username.value = userDTO.login;
+    avatar.value = userDTO.avatarUrl;
+  }
+}
+
+onMounted(async () => {
+  await checkLoginStatus()
+})
+
 </script>
 <style lang="scss">
 .setting_item {
@@ -521,5 +591,10 @@ const bugs = __BUGS__;
 
 .appInfoOperation {
   margin-top: 10px;
+}
+
+.loginStatus {
+  display: inline-flex;
+  margin-right: 5px;
 }
 </style>

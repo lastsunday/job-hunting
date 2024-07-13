@@ -45,7 +45,7 @@ export const AuthService = {
     } catch (e) {
       postErrorMessage(
         message,
-        "[background] authOauth2Login error : " + e.message
+        "[background] authGetToken error : " + e.message
       );
     }
   },
@@ -60,7 +60,7 @@ export const AuthService = {
     } catch (e) {
       postErrorMessage(
         message,
-        "[background] authOauth2Login error : " + e.message
+        "[background] authSetToken error : " + e.message
       );
     }
   },
@@ -89,9 +89,13 @@ export async function getToken() {
   let oauthDTO = new OauthDTO();
   let config = await ConfigApi.getConfigByKey(KEY_GITHUB_OAUTH_TOKEN, { invokeEnv: BACKGROUND });
   if (config) {
-    Object.assign(oauthDTO, JSON.parse(config.value));
+    let value = JSON.parse(config.value);
+    if (value) {
+      Object.assign(oauthDTO, value);
+      return oauthDTO;
+    }
   }
-  return oauthDTO;
+  return null;
 }
 
 

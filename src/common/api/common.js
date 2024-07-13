@@ -47,6 +47,30 @@ export async function httpFetchGetText(
 }
 
 /**
+ * 
+ * @param {{url,method,headers,body}} param
+ * @param function onReturnAbortHandlerCallbackFunction 返回中断网络请求的函数
+ * @returns Object
+ */
+export async function httpFetchJson(
+  param,
+  onReturnAbortHandlerCallbackFunction,
+  { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }
+) {
+  let result = await invoke("httpFetchJson", param, {
+    onMessageCallback: (message) => {
+      if (onReturnAbortHandlerCallbackFunction) {
+        onReturnAbortHandlerCallbackFunction(() => {
+          httpFetchGetTextAbort(message.callbackId);
+        });
+      }
+    },
+    invokeEnv: invokeEnv,
+  });
+  return result.data;
+}
+
+/**
  * 中断网络请求
  * @param {string} param callbackId
  * @returns

@@ -7,6 +7,7 @@ import {
   autoFillHttp,
   getDomain,
   genIdFromText,
+  genUniqueId,
 } from "../common/utils";
 import {
   PLATFORM_BOSS,
@@ -29,10 +30,11 @@ import { httpFetchGetText } from "../common/api/common";
 
 import { logoBase64 } from "./assets/logo";
 import $ from "jquery";
-import { CompanyApi, TagApi, AuthApi } from "../common/api";
+import { CompanyApi, TagApi, AuthApi, UserApi } from "../common/api";
 import { GithubApi } from "../common/api/github";
 import { Company } from "../common/data/domain/company";
-import { errorLog } from "../common/log";
+import { errorLog, infoLog } from "../common/log";
+import { COMMENT_PAGE_SIZE } from "../common/config";
 
 const ACTIVE_TIME_MATCH = /(?<num>[0-9\.]*)/;
 
@@ -156,8 +158,6 @@ export function finalRender(jobDTOList, { platform }) {
   }
 }
 
-const COMMENT_PAGE_SIZE = 1;
-
 export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id) {
   const dialogDiv = document.createElement("div");
   dialogDiv.className = "comment_dialog";
@@ -193,9 +193,9 @@ export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle
     event.stopPropagation();
     maximize = !maximize;
     if (maximize) {
-      dialogDiv.style = "width:800px;;height:800px;overflow:scroll;display: flex;flex-direction: column;";
+      dialogDiv.style = "width:800px;;height:800px;overflow:auto;display: flex;flex-direction: column;";
     } else {
-      dialogDiv.style = "width:400px;;height:400px;overflow:scroll;display: flex;flex-direction: column;";
+      dialogDiv.style = "width:400px;;height:400px;overflow:auto;display: flex;flex-direction: column;";
     }
   };
   maximizeDiv.addEventListener("click", maximizeFunction);
@@ -209,7 +209,7 @@ export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle
     event.preventDefault();
     event.stopPropagation();
     commentWrapperDiv.appendChild(dialogDiv);
-    dialogDiv.style = "width:400px;;height:400px;overflow:scroll;display: flex;flex-direction: column;";
+    dialogDiv.style = "width:400px;;height:400px;overflow:auto;display: flex;flex-direction: column;";
     clearAllChildNode(contentDiv);
     dialogDiv.append(contentDiv);
 
@@ -221,7 +221,7 @@ export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle
 
 async function renderCommentContent({ first, after, last, before, id } = {}, contentDiv) {
   let loadingLabel = $('<div>正加载评论⌛︎</div>')[0];
-  let loadingDiv = $(`<div style="position: absolute;left: 0;right: 0;bottom: 0;top: 0;display:flex;justify-content: center;align-items: center;background-color: rgba(0, 0, 0, 0.1);"></div>`)
+  let loadingDiv = $(`<div class="__comment_loading"></div>`)
     .append(loadingLabel)[0];
   contentDiv.appendChild(loadingDiv);
   //获取loginInfo，如获取成功
@@ -250,14 +250,22 @@ async function renderCommentContent({ first, after, last, before, id } = {}, con
     let items = data?.search?.nodes;
     let pageInfo = data?.search?.pageInfo;
     let total = data?.search?.issueCount;
-    for (let i = 0; i < items.length; i++) {
-      let item = items[i];
-      let author = item.author;
-      contentDiv.appendChild(createCommentRow(author.avatarUrl, author.login, item.createdAt, item.lastEditedAt, item.bodyText, item.bodyUrl));
+    if (total == 0) {
+      contentDiv.appendChild(createEmptyComment());
+    } else {
+      for (let i = 0; i < items.length; i++) {
+        let item = items[i];
+        let author = item.author;
+        contentDiv.appendChild(createCommentRow(author.avatarUrl, author.login, item.createdAt, item.lastEditedAt, item.bodyText, item.bodyUrl));
+      }
+      contentDiv.appendChild(createCommonPageOperationMenu(pageInfo.hasPreviousPage, pageInfo.hasNextPage, pageInfo.startCursor, pageInfo.endCursor, total, async ({ first, after, last, before } = {}) => {
+        renderCommentContent({ first, after, last, before, id }, contentDiv)
+      }));
     }
-    contentDiv.appendChild(createCommonPageOperationMenu(pageInfo.hasPreviousPage, pageInfo.hasNextPage, pageInfo.startCursor, pageInfo.endCursor, total, async ({ first, after, last, before } = {}) => {
-      renderCommentContent({ first, after, last, before, id }, contentDiv)
-    }));
+    let userDTO = await UserApi.userGet();
+    contentDiv.appendChild(createAddCommentRow(contentDiv, loadingDiv, () => {
+      renderCommentContent({ first: COMMENT_PAGE_SIZE, id }, contentDiv)
+    }, id, userDTO?.avatarUrl, userDTO?.login));
   } catch (e) {
     errorLog(e);
     loadingLabel.textContent = "加载评论失败，点击重新加载";
@@ -272,11 +280,16 @@ async function queryComment({ first, after, last, before, id } = {}) {
   return await GithubApi.queryComment({ first, after, last, before, id });
 }
 
+function createEmptyComment() {
+  let result = $(`<div style="display: flex;justify-content: center;padding: 20px;font-size: 20px;">没有评论</div>`);
+  return result[0];
+}
+
 function createCommentRow(avatarUrl, username, createdAt, lastEditedAt, content, bodyUrl) {
   let result = $(`
     <div style="display: flex;margin: 10px;flex-direction: row;">
       <div>
-        <img style="border-radius: 20px;margin-right: 10px;" src="${avatarUrl}" width="40" height="40" alt="@${{ username }}">
+        <img style="border-radius: 20px;margin-right: 10px;" src="${avatarUrl}" width="40" height="40" alt="@${username}">
       </div>
       <div style="flex:1;">
         <div style="display: flex;flex-direction: row;border: 0.5px solid black;border-radius: 5px 5px 0 0;">
@@ -292,6 +305,66 @@ function createCommentRow(avatarUrl, username, createdAt, lastEditedAt, content,
       </div>
     </div>
     `);
+  return result[0];
+}
+
+function createAddCommentRow(contentDiv, loadingDiv, queryFunction, id, avatarUrl, username) {
+  let textareaId = genUniqueId();
+  let submitComment = $(`<div style="display: flex;justify-content: end;padding:5px;"><div class="__comment_submit_button">提交评论</div></div>`)[0];
+  const submitFunction = async () => {
+    loadingDiv.textContent = "评论提交中⌛︎";
+    try {
+      contentDiv.appendChild(loadingDiv);
+      let content = $(`#${textareaId}`)[0].value;
+      if (content && content.length > 10) {
+        infoLog(`submit comment title(company id)=${id},body=${content}`)
+        await GithubApi.addComment(id, content);
+        loadingDiv.textContent = "评论内容成功，点击刷新列表";
+        contentDiv.appendChild(loadingDiv);
+        let removeLoadingFunction = () => {
+          loadingDiv.removeEventListener("click", removeLoadingFunction);
+          contentDiv.removeChild(loadingDiv);
+          queryFunction();
+        };
+        loadingDiv.addEventListener("click", removeLoadingFunction);
+      } else {
+        loadingDiv.textContent = "评论内容长度过短，请重新编辑后提交";
+        contentDiv.appendChild(loadingDiv);
+        let removeLoadingFunction = () => {
+          loadingDiv.removeEventListener("click", removeLoadingFunction);
+          contentDiv.removeChild(loadingDiv);
+        };
+        loadingDiv.addEventListener("click", removeLoadingFunction);
+      }
+    } catch (e) {
+      errorLog(e);
+      loadingDiv.textContent = "评论提交失败，点击后，重新提交";
+      contentDiv.appendChild(loadingDiv);
+      let removeLoadingFunction = () => {
+        loadingDiv.removeEventListener("click", removeLoadingFunction);
+        contentDiv.removeChild(loadingDiv);
+      };
+      loadingDiv.addEventListener("click", removeLoadingFunction);
+    }
+  };
+  submitComment.addEventListener("click", submitFunction);
+  let result = $(`
+    <div>
+    <div style="display: flex;margin: 10px;flex-direction: row;">
+      <div>
+        <img style="border-radius: 20px;margin-right: 10px;" src="${avatarUrl}" width="40" height="40" alt="@${username}">
+      </div>
+      <div style="flex:1;">
+        <div style="display: flex;flex-direction: row;border: 0.5px solid black;border-radius: 5px 5px 0 0;">
+          <div style="padding: 5px;padding-left: 10px;">添加一条评论</div>
+        </div>
+        <div style="padding: 10px;border: 0.5px solid black;border-top: 0;border-radius: 0 0 5px 5px;">
+            <textarea id="${textareaId}" style="width: 100%;height: 100px;" placeholder="在这里写下评论"></textarea>
+        </div>
+      </div>
+    </div>
+    </div>
+    `).append(submitComment);
   return result[0];
 }
 

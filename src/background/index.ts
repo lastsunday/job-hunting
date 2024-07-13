@@ -6,12 +6,15 @@ import {
 } from "../common/api/bridgeCommon";
 import { convertPureJobDetailUrl, paramsToObject, parseToLineObjectToToHumpObject } from "../common/utils";
 import { JobApi } from "../common/api";
-import { httpFetchGetText } from "../common/api/common";
+import { httpFetchGetText, httpFetchJson } from "../common/api/common";
 import { getAndRemovePromiseHook } from "../common/api/bridge";
 import { AuthService, getOauth2LoginMessageMap, setToken, getToken } from "./service/authService";
 import { postSuccessMessage, postErrorMessage } from "./util";
 import { OauthDTO } from "../common/data/dto/oauthDTO";
-import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_URL_GET_ACCESS_TOKEN } from "../common/config";
+import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_URL_GET_USER } from "../common/config";
+import { UserService } from "./service/userService";
+import { UserDTO } from "../common/data/dto/userDTO";
+import { setUser } from "./service/userService";
 
 debugLog("background ready");
 debugLog("keepAlive start");
@@ -37,10 +40,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   let urlText = tab.url;
   if (urlText?.startsWith(GITHUB_APP_INSTALL_CALLBACK_URL) && !isSavedByInstallUrl(urlText)) {
     let oauth2LoginMessageMap = getOauth2LoginMessageMap();
-    console.log(oauth2LoginMessageMap);
     recordSavedInstallUrl(urlText);
     let url = new URL(urlText);
-    console.log(url)
     let result = "";
     if (url.searchParams.has("error")) {
       //错误，如果有error
@@ -52,7 +53,6 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     } else {
       //获取到code，访问https://github.com/login/oauth/access_token获取access_token和refresh_token
       let code = url.searchParams.get("code");
-      console.log(`login success code = ${code}`)
       try {
         const searchParams = new URLSearchParams({
           client_id: GITHUB_APP_CLIENT_ID,
@@ -65,10 +65,18 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
         const tokenObject = paramsToObject(tokenURLSearchParam);
         let oauthDTO = parseToLineObjectToToHumpObject(new OauthDTO(), tokenObject);
         await setToken(oauthDTO);
+        let userResultJson = await httpFetchJson({
+          url: GITHUB_URL_GET_USER, headers: {
+            "Authorization": `Bearer ${oauthDTO.accessToken}`,
+          }
+        }, (abortFunction) => { }, { invokeEnv: BACKGROUND });
+        let userDTO = parseToLineObjectToToHumpObject(new UserDTO(), userResultJson);
+        await setUser(userDTO);
         let targetToken = await getToken();
         oauth2LoginMessageMap.keys().forEach(message => {
           postSuccessMessage(message, targetToken);
         });
+        chrome.tabs.remove(tabId);
         oauth2LoginMessageMap.clear();
       } catch (e) {
         errorLog(e);
@@ -124,6 +132,7 @@ function mergeServiceMethod(actionFunction, source) {
 }
 
 mergeServiceMethod(ACTION_FUNCTION, AuthService)
+mergeServiceMethod(ACTION_FUNCTION, UserService);
 
 let creating: any;
 async function setupOffscreenDocument(path: string) {
