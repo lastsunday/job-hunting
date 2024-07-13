@@ -112,6 +112,21 @@ export function toLine(name) {
 }
 
 /**
+ * 对象转换，下划线参数的对象转换为驼峰参数的对象
+ * @param {*} target 驼峰参数的对象
+ * @param {*} source 下划线参数的对象
+ */
+export function parseToLineObjectToToHumpObject(target,source){
+  let resultItem = Object.assign({},target);
+  let keys = Object.keys(source);
+  for (let n = 0; n < keys.length; n++) {
+    let key = keys[n];
+    resultItem[toHump(key)] = source[key];
+  }
+  return resultItem;
+}
+
+/**
  * 随机等待
  * @param {*} delayTime 等待时间，单位ms
  * @param {*} randomRange 随机时间范围，单位ms
@@ -161,7 +176,7 @@ export function autoFillHttp(url) {
 
 export function getDomain(url) {
   if (url) {
-    return url.replace("http://", "").replace("https://", "").replace("www.","").replace("/","");
+    return url.replace("http://", "").replace("https://", "").replace("www.", "").replace("/", "");
   }
   return url;
 }
@@ -176,9 +191,18 @@ export function convertPureJobDetailUrl(link) {
 }
 
 export function genIdFromText(value) {
-  return sha256(value)+"";
+  return sha256(value) + "";
 }
 
-export function genUniqueId(){
+export function genUniqueId() {
   return uuidv4();
+}
+
+export function paramsToObject(entries) {
+  const result = {};
+  for (const [key, value] of entries) {
+    // each 'entry' is a [key, value] tupple
+    result[key] = value;
+  }
+  return result;
 }

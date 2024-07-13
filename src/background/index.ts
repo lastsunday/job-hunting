@@ -4,9 +4,14 @@ import {
   CONTENT_SCRIPT,
   OFFSCREEN,
 } from "../common/api/bridgeCommon";
-import { convertPureJobDetailUrl } from "../common/utils";
+import { convertPureJobDetailUrl, paramsToObject, parseToLineObjectToToHumpObject } from "../common/utils";
 import { JobApi } from "../common/api";
+import { httpFetchGetText } from "../common/api/common";
 import { getAndRemovePromiseHook } from "../common/api/bridge";
+import { AuthService, getOauth2LoginMessageMap, setToken, getToken } from "./service/authService";
+import { postSuccessMessage, postErrorMessage } from "./util";
+import { OauthDTO } from "../common/data/dto/oauthDTO";
+import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_URL_GET_ACCESS_TOKEN } from "../common/config";
 
 debugLog("background ready");
 debugLog("keepAlive start");
@@ -23,9 +28,57 @@ chrome.action.onClicked.addListener(() => {
 
 //TODO 没有定时清理，可能会有问题
 const saveBrowseDetailTabIdMap = new Map();
+const saveInstallUrlMap = new Map();
+
+const GITHUB_APP_INSTALL_CALLBACK_URL = "https://github.com/lastsunday/job-hunting-github-app/blob/main/INSTALL";
 
 //detect job detail access
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  let urlText = tab.url;
+  if (urlText?.startsWith(GITHUB_APP_INSTALL_CALLBACK_URL) && !isSavedByInstallUrl(urlText)) {
+    let oauth2LoginMessageMap = getOauth2LoginMessageMap();
+    console.log(oauth2LoginMessageMap);
+    recordSavedInstallUrl(urlText);
+    let url = new URL(urlText);
+    console.log(url)
+    let result = "";
+    if (url.searchParams.has("error")) {
+      //错误，如果有error
+      result = "error";
+      oauth2LoginMessageMap.keys().forEach(message => {
+        postErrorMessage(message, "error");
+      });
+      oauth2LoginMessageMap.clear();
+    } else {
+      //获取到code，访问https://github.com/login/oauth/access_token获取access_token和refresh_token
+      let code = url.searchParams.get("code");
+      console.log(`login success code = ${code}`)
+      try {
+        const searchParams = new URLSearchParams({
+          client_id: GITHUB_APP_CLIENT_ID,
+          client_secret: GITHUB_APP_CLIENT_SECRET,
+          code,
+        });
+        let urlWithParam = `${GITHUB_URL_GET_ACCESS_TOKEN}?${searchParams.toString()}`;
+        let tokenText = await httpFetchGetText(urlWithParam, (abortFunction) => { }, { invokeEnv: BACKGROUND })
+        let tokenURLSearchParam = new URLSearchParams(tokenText);
+        const tokenObject = paramsToObject(tokenURLSearchParam);
+        let oauthDTO = parseToLineObjectToToHumpObject(new OauthDTO(), tokenObject);
+        await setToken(oauthDTO);
+        let targetToken = await getToken();
+        oauth2LoginMessageMap.keys().forEach(message => {
+          postSuccessMessage(message, targetToken);
+        });
+        oauth2LoginMessageMap.clear();
+      } catch (e) {
+        errorLog(e);
+        oauth2LoginMessageMap.keys().forEach(message => {
+          postErrorMessage(message, "error");
+        });
+      }
+    }
+    return;
+  }
   if (changeInfo?.status == "complete" && !isSavedByTabId(tab.id)) {
     if (tab.url) {
       let pureUrl = convertPureJobDetailUrl(tab.url);
@@ -44,6 +97,14 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   }
 });
 
+function isSavedByInstallUrl(url) {
+  return saveInstallUrlMap.has(url);
+}
+
+function recordSavedInstallUrl(url) {
+  saveInstallUrlMap.set(url, null);
+}
+
 function isSavedByTabId(tabId) {
   return saveBrowseDetailTabIdMap.has(tabId);
 }
@@ -51,6 +112,18 @@ function isSavedByTabId(tabId) {
 function recordSavedByTabId(tabId) {
   saveBrowseDetailTabIdMap.set(tabId, null);
 }
+
+const ACTION_FUNCTION = new Map();
+
+function mergeServiceMethod(actionFunction, source) {
+  let keys = Object.keys(source);
+  for (let i = 0; i < keys.length; i++) {
+    let key = keys[i];
+    actionFunction.set(key, source[key]);
+  }
+}
+
+mergeServiceMethod(ACTION_FUNCTION, AuthService)
 
 let creating: any;
 async function setupOffscreenDocument(path: string) {
@@ -86,6 +159,28 @@ async function setupOffscreenDocument(path: string) {
         }
         debugLog(
           "2.[background][receive][" +
+          message.from +
+          " -> " +
+          message.to +
+          "] message [action=" +
+          message.action +
+          ",invokeEnv=" +
+          message.invokeEnv +
+          ",callbackId=" +
+          message.callbackId +
+          ",error=" +
+          message.error +
+          "]"
+        );
+        let action = message.action;
+        if (ACTION_FUNCTION.has(action)) {
+          debugLog("[background] invoke action = " + action);
+          ACTION_FUNCTION.get(action)(message, message.param);
+        } else {
+          message.from = BACKGROUND;
+          message.to = OFFSCREEN;
+          debugLog(
+            "3.[background][send][" +
             message.from +
             " -> " +
             message.to +
@@ -98,58 +193,42 @@ async function setupOffscreenDocument(path: string) {
             ",error=" +
             message.error +
             "]"
-        );
-        message.from = BACKGROUND;
-        message.to = OFFSCREEN;
-        debugLog(
-          "3.[background][send][" +
-            message.from +
-            " -> " +
-            message.to +
-            "] message [action=" +
-            message.action +
-            ",invokeEnv=" +
-            message.invokeEnv +
-            ",callbackId=" +
-            message.callbackId +
-            ",error=" +
-            message.error +
-            "]"
-        );
-        chrome.runtime.sendMessage(message);
+          );
+          chrome.runtime.sendMessage(message);
+        }
       } else if (message.from == OFFSCREEN && message.to == BACKGROUND) {
         debugLog(
           "10.[background][receive][" +
-            message.from +
-            " -> " +
-            message.to +
-            "] message [action=" +
-            message.action +
-            ",invokeEnv=" +
-            message.invokeEnv +
-            ",callbackId=" +
-            message.callbackId +
-            ",error=" +
-            message.error +
-            "]"
+          message.from +
+          " -> " +
+          message.to +
+          "] message [action=" +
+          message.action +
+          ",invokeEnv=" +
+          message.invokeEnv +
+          ",callbackId=" +
+          message.callbackId +
+          ",error=" +
+          message.error +
+          "]"
         );
         if (message.invokeEnv == CONTENT_SCRIPT) {
           message.from = BACKGROUND;
           message.to = CONTENT_SCRIPT;
           debugLog(
             "11.[background][send][" +
-              message.from +
-              " -> " +
-              message.to +
-              "] message [action=" +
-              message.action +
-              ",invokeEnv=" +
-              message.invokeEnv +
-              ",callbackId=" +
-              message.callbackId +
-              ",error=" +
-              message.error +
-              "]"
+            message.from +
+            " -> " +
+            message.to +
+            "] message [action=" +
+            message.action +
+            ",invokeEnv=" +
+            message.invokeEnv +
+            ",callbackId=" +
+            message.callbackId +
+            ",error=" +
+            message.error +
+            "]"
           );
           if (message.tabId) {
             //content script invoke

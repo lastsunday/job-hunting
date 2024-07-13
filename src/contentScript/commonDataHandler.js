@@ -652,14 +652,6 @@ export function genSha256(value) {
   return sha256(value);
 }
 
-export function genCompanyIdWithSha256(value) {
-  return genSha256("COMPANY_" + value);
-}
-
-export function genJobItemIdWithSha256(value) {
-  return genSha256("JOBITEM_" + value);
-}
-
 /**
  * 公司名对比，将中文括号进行替换英文括号，然后进行对比
  * @param {*} name1

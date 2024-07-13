@@ -311,3 +311,13 @@ div[data-search-sol-meta] {
   padding-left: 20px;
   padding-bottom: 10px;
 }
+
+.comment_dialog {
+  position: absolute;
+  background-color: white;
+  z-index: 9999;
+  color: black;
+  padding: 6px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+}

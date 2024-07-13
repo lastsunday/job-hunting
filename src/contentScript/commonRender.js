@@ -17,8 +17,6 @@ import {
   JOB_STATUS_DESC_NEWEST
 } from "./common";
 import {
-  genJobItemIdWithSha256,
-  genCompanyIdWithSha256,
   genSha256,
   companyNameConvert,
   getCompanyFromCompanyInfo,
@@ -31,7 +29,8 @@ import { httpFetchGetText } from "../common/api/common";
 
 import { logoBase64 } from "./assets/logo";
 import $ from "jquery";
-import { CompanyApi, TagApi } from "../common/api";
+import { CompanyApi, TagApi, AuthApi } from "../common/api";
+import { GithubApi } from "../common/api/github";
 import { Company } from "../common/data/domain/company";
 import { errorLog } from "../common/log";
 
@@ -134,9 +133,9 @@ export function finalRender(jobDTOList, { platform }) {
   for (let i = 0; i < jobDTOList.length; i++) {
     let item = jobDTOList[i];
     let jobId = item.jobId;
-    let jobItemIdSha256 = genJobItemIdWithSha256(jobId);
+    let jobItemIdSha256 = genIdFromText(jobId);
     //TODO 需要考虑如何使用公司全称
-    let companyIdSha256 = genCompanyIdWithSha256(item.jobCompanyName);
+    let companyIdSha256 = genIdFromText(item.jobCompanyName);
     let commentWrapperDiv = document.getElementById("wrapper" + jobId);
     commentWrapperDiv.classList.add("__comment_wrapper");
     commentWrapperDiv.classList.add("__" + platform + "_comment_wrapper");
@@ -157,10 +156,11 @@ export function finalRender(jobDTOList, { platform }) {
   }
 }
 
+const COMMENT_PAGE_SIZE = 1;
+
 export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id) {
   const dialogDiv = document.createElement("div");
-  dialogDiv.style =
-    "position: absolute;background-color: white;z-index: 9999;color: black;padding: 6px;border-radius: 10px;box-shadow: 0 2px 10px rgba(0, 0, 0, .08);";
+  dialogDiv.className = "comment_dialog";
 
   const menuDiv = document.createElement("div");
   menuDiv.style = "display: flex;justify-content: end;}";
@@ -185,44 +185,137 @@ export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle
   titleDiv.style = "font-size: 15px;text-align: left;padding: 5px;";
   titleDiv.textContent = dialogTitle;
   dialogDiv.appendChild(titleDiv);
-
-  const commentIframe = document.createElement("iframe");
-  commentIframe.src =
-    "https://widget.0xecho.com/?color-theme=light&desc=&has-h-padding=true&has-v-padding=true&modules=comment%2Clike%2Cdislike&receiver=&target_uri=" +
-    id +
-    "&height=800&display=iframe";
-  commentIframe.width = 400;
-  commentIframe.height = 400;
-  commentIframe.style = "border: none;";
-  dialogDiv.appendChild(commentIframe);
-
+  const contentDiv = document.createElement("div");
+  contentDiv.style = "flex: 1;position: relative;"
   let maximize = false;
   const maximizeFunction = (event) => {
     event.preventDefault();
     event.stopPropagation();
     maximize = !maximize;
     if (maximize) {
-      commentIframe.width = 800;
-      commentIframe.height = 800;
+      dialogDiv.style = "width:800px;;height:800px;overflow:scroll;display: flex;flex-direction: column;";
     } else {
-      commentIframe.width = 400;
-      commentIframe.height = 400;
+      dialogDiv.style = "width:400px;;height:400px;overflow:scroll;display: flex;flex-direction: column;";
     }
   };
   maximizeDiv.addEventListener("click", maximizeFunction);
   menuDiv.addEventListener("dblclick", maximizeFunction);
 
-  const copmmentButtonDiv = document.createElement("div");
-  copmmentButtonDiv.textContent = buttonLabel;
-  copmmentButtonDiv.style =
+  const commentButtonDiv = document.createElement("div");
+  commentButtonDiv.textContent = buttonLabel;
+  commentButtonDiv.style =
     "cursor: pointer;margin-left: 5px;text-decoration: underline; color:blue;";
-  copmmentButtonDiv.addEventListener("click", (event) => {
+  commentButtonDiv.addEventListener("click", async (event) => {
     event.preventDefault();
     event.stopPropagation();
     commentWrapperDiv.appendChild(dialogDiv);
-  });
+    dialogDiv.style = "width:400px;;height:400px;overflow:scroll;display: flex;flex-direction: column;";
+    clearAllChildNode(contentDiv);
+    dialogDiv.append(contentDiv);
 
-  return copmmentButtonDiv;
+    renderCommentContent({ first: COMMENT_PAGE_SIZE, id }, contentDiv);
+
+  });
+  return commentButtonDiv;
+}
+
+async function renderCommentContent({ first, after, last, before, id } = {}, contentDiv) {
+  let loadingLabel = $('<div>正加载评论⌛︎</div>')[0];
+  let loadingDiv = $(`<div style="position: absolute;left: 0;right: 0;bottom: 0;top: 0;display:flex;justify-content: center;align-items: center;background-color: rgba(0, 0, 0, 0.1);"></div>`)
+    .append(loadingLabel)[0];
+  contentDiv.appendChild(loadingDiv);
+  //获取loginInfo，如获取成功
+  let loginInfo = await AuthApi.authGetToken();
+  if (!loginInfo) {
+    //获取失败
+    //执行登录流程
+    try {
+      loadingLabel.textContent = "登录中⌛︎";
+      loginInfo = await AuthApi.authOauth2Login();
+      loadingLabel.textContent = "登录成功";
+    } catch (e) {
+      errorLog(e);
+      //TODO handle login failure
+      loadingLabel.textContent = "登录失败，点击重新登录";
+      loadingLabel.addEventListener("click", (event) => {
+        renderCommentContent({ first, after, last, before, id }, contentDiv);
+      });
+    }
+  }
+  loadingLabel.textContent = "正加载评论⌛︎";
+  let data = null;
+  try {
+    data = await queryComment({ first, after, last, before, id });
+    clearAllChildNode(contentDiv);
+    let items = data?.search?.nodes;
+    let pageInfo = data?.search?.pageInfo;
+    let total = data?.search?.issueCount;
+    for (let i = 0; i < items.length; i++) {
+      let item = items[i];
+      let author = item.author;
+      contentDiv.appendChild(createCommentRow(author.avatarUrl, author.login, item.createdAt, item.lastEditedAt, item.bodyText, item.bodyUrl));
+    }
+    contentDiv.appendChild(createCommonPageOperationMenu(pageInfo.hasPreviousPage, pageInfo.hasNextPage, pageInfo.startCursor, pageInfo.endCursor, total, async ({ first, after, last, before } = {}) => {
+      renderCommentContent({ first, after, last, before, id }, contentDiv)
+    }));
+  } catch (e) {
+    errorLog(e);
+    loadingLabel.textContent = "加载评论失败，点击重新加载";
+    loadingLabel.addEventListener("click", (event) => {
+      renderCommentContent({ first, after, last, before, id }, contentDiv);
+    });
+  }
+
+}
+
+async function queryComment({ first, after, last, before, id } = {}) {
+  return await GithubApi.queryComment({ first, after, last, before, id });
+}
+
+function createCommentRow(avatarUrl, username, createdAt, lastEditedAt, content, bodyUrl) {
+  let result = $(`
+    <div style="display: flex;margin: 10px;flex-direction: row;">
+      <div>
+        <img style="border-radius: 20px;margin-right: 10px;" src="${avatarUrl}" width="40" height="40" alt="@${{ username }}">
+      </div>
+      <div style="flex:1;">
+        <div style="display: flex;flex-direction: row;border: 0.5px solid black;border-radius: 5px 5px 0 0;">
+          <div style="padding: 5px;padding-left: 10px;">${username}</div>
+          <div style="padding: 5px;flex:1;" title="${dayjs(lastEditedAt || createdAt).format("YYYY-MM-DD HH:mm:ss")}">更新于${convertTimeOffsetToHumanReadable(lastEditedAt || createdAt)}</div>
+          <div style="padding: 5px;"><a target="_blank" href="${bodyUrl}">评论来源</a></div>
+        </div>
+        <div style="padding: 10px;border: 0.5px solid black;border-top: 0;border-radius: 0 0 5px 5px;">
+          <div>
+            <div>${content}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    `);
+  return result[0];
+}
+
+function createCommonPageOperationMenu(hasPreviousPage, hasNextPage, startCursor, endCursor, total, queryFunction) {
+  let result = $(`
+    <div style="display: flex;margin: 10px;flex-direction: row;justify-content: end;">
+      <div style="padding: 5px;align-content: center;">共${total}条</div>
+    </div>
+    `);
+  if (hasPreviousPage) {
+    let element = $(`<div style="padding: 5px;" class="__company_info_quick_search_button">上一页</div>`)[0];
+    element.addEventListener("click", async (event) => {
+      queryFunction({ last: COMMENT_PAGE_SIZE, before: `"${startCursor}"` });
+    })
+    result.append(element);
+  }
+  if (hasNextPage) {
+    let element = $(`<div style="padding: 5px;" class="__company_info_quick_search_button">下一页</div>`)[0];
+    element.addEventListener("click", async (event) => {
+      queryFunction({ first: COMMENT_PAGE_SIZE, after: `"${endCursor}"` });
+    })
+    result.append(element);
+  }
+  return result[0];
 }
 
 export function createLoadingDOM(brandName, styleClass) {
@@ -312,8 +405,8 @@ export function setupSortJobItem(node) {
   node.style = "display:flex;flex-direction: column;";
   //for zhilian
   const jobListItemList = node.querySelectorAll(".joblist-item");
-  if(jobListItemList && jobListItemList.length > 0){
-    for(let i=0;i<jobListItemList.length;i++){
+  if (jobListItemList && jobListItemList.length > 0) {
+    for (let i = 0; i < jobListItemList.length; i++) {
       let item = jobListItemList[i];
       item.classList.add("__ZHILIAN_job_item");
     }
@@ -614,7 +707,7 @@ async function asyncRenderCompanyInfo(
       //数据过期时间设置为60天
       //数据库没有数据或数据过期了，则进行网络查询，保存数据到数据库
       let companyInfo = await getCompanyInfoByAiqicha(keyword);
-      company = await getCompanyFromCompanyInfo(companyInfo,convertedCompanyName);
+      company = await getCompanyFromCompanyInfo(companyInfo, convertedCompanyName);
     }
     div.appendChild(createCompanyInfoDetail(company, quickSearchHandle));
   } catch (e) {

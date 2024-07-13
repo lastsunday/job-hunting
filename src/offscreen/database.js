@@ -3,6 +3,7 @@ import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 import { ChangeLogV1 } from "./changeLog/changeLogV1";
 import { ChangeLogV2 } from "./changeLog/changeLogV2";
 import { ChangeLogV3 } from './changeLog/changeLogV3';
+import { ChangeLogV4 } from './changeLog/changeLogV4';
 import { initChangeLog, getChangeLogList } from "./changeLog";
 import { bytesToBase64, base64ToBytes } from "../common/utils/base64.js";
 import JSZip from "jszip";
@@ -92,6 +93,7 @@ export const Database = {
       changelogList.push(new ChangeLogV1());
       changelogList.push(new ChangeLogV2());
       changelogList.push(new ChangeLogV3());
+      changelogList.push(new ChangeLogV4());
       initChangeLog(changelogList);
       sqlite3InitModule({
         print: debugLog,

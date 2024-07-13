@@ -16,6 +16,7 @@ import { SearchCompanyBO } from "../data/bo/searchCompanyBO";
 import { SearchCompanyDTO } from "../data/dto/searchCompanyDTO";
 import { StatisticCompanyDTO } from "../data/dto/statisticCompanyDTO";
 import { CompanyBO } from "../data/bo/companyBO";
+import { OauthDTO } from "../data/dto/oauthDTO";
 
 export const JobApi = {
   /**
@@ -218,4 +219,72 @@ export const TagApi = {
     let result = await invoke(this.getAllTag.name, {});
     return result.data;
   }
+}
+
+export const AuthApi = {
+
+  /**
+   *
+   * @returns OauthDTO
+   */
+  authOauth2Login: async function () {
+    let result = await invoke(this.authOauth2Login.name, {});
+    return result.data;
+  },
+
+  /**
+ *
+ * @returns OauthDTO
+ */
+  authGetToken: async function () {
+    let result = await invoke(this.authGetToken.name, {});
+    return result.data;
+  },
+
+  /**
+    *
+    * @param {OauthDTO} param
+    */
+  authSetToken: async function (param) {
+    return await invoke(this.authSetToken.name, param);
+  },
+}
+
+export const ConfigApi = {
+
+  /**
+   * 
+   * @param {string} param key
+   * 
+   * @returns Config
+   */
+  getConfigByKey: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.getConfigByKey.name, param, {
+      invokeEnv: invokeEnv,
+    });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @returns Config[]
+   */
+  getAllConfig: async function ({ invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.getAllConfig.name, {}, {
+      invokeEnv: invokeEnv,
+    });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {Config} param config
+   * 
+   */
+  addOrUpdateConfig: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    return await invoke(this.addOrUpdateConfig.name, param, {
+      invokeEnv: invokeEnv,
+    });
+  },
+
 }
