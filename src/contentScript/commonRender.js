@@ -160,18 +160,18 @@ export function finalRender(jobDTOList, { platform }) {
 
 export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id) {
   const dialogDiv = document.createElement("div");
-  dialogDiv.className = "comment_dialog";
+  dialogDiv.className = "__comment_dialog";
 
   const menuDiv = document.createElement("div");
-  menuDiv.style = "display: flex;justify-content: end;}";
+  menuDiv.className = "__comment_menu";
 
   const maximizeDiv = document.createElement("div");
-  maximizeDiv.style = "font-size: 20px;padding: 5px;";
+  maximizeDiv.className = "__comment_menu_button";
   maximizeDiv.textContent = "⬜";
   menuDiv.appendChild(maximizeDiv);
 
   const closeDiv = document.createElement("div");
-  closeDiv.style = "font-size: 20px;padding: 5px;";
+  closeDiv.className = "__comment_menu_button";
   closeDiv.textContent = "✖️";
   closeDiv.addEventListener("click", (event) => {
     event.preventDefault();
@@ -182,20 +182,22 @@ export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle
 
   dialogDiv.append(menuDiv);
   const titleDiv = document.createElement("div");
-  titleDiv.style = "font-size: 15px;text-align: left;padding: 5px;";
+  titleDiv.className = "__comment_dialog_title";
   titleDiv.textContent = dialogTitle;
   dialogDiv.appendChild(titleDiv);
   const contentDiv = document.createElement("div");
-  contentDiv.style = "flex: 1;position: relative;"
+  contentDiv.className = "__comment_content";
   let maximize = false;
   const maximizeFunction = (event) => {
     event.preventDefault();
     event.stopPropagation();
     maximize = !maximize;
     if (maximize) {
-      dialogDiv.style = "width:800px;;height:800px;overflow:auto;display: flex;flex-direction: column;";
+      dialogDiv.classList.remove("__dialog_normal");
+      dialogDiv.classList.add("__dialog_maximize");
     } else {
-      dialogDiv.style = "width:400px;;height:400px;overflow:auto;display: flex;flex-direction: column;";
+      dialogDiv.classList.remove("__dialog_maximize");
+      dialogDiv.classList.add("__dialog_normal");
     }
   };
   maximizeDiv.addEventListener("click", maximizeFunction);
@@ -203,13 +205,12 @@ export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle
 
   const commentButtonDiv = document.createElement("div");
   commentButtonDiv.textContent = buttonLabel;
-  commentButtonDiv.style =
-    "cursor: pointer;margin-left: 5px;text-decoration: underline; color:blue;";
+  commentButtonDiv.className = "__comment_button";
   commentButtonDiv.addEventListener("click", async (event) => {
     event.preventDefault();
     event.stopPropagation();
     commentWrapperDiv.appendChild(dialogDiv);
-    dialogDiv.style = "width:400px;;height:400px;overflow:auto;display: flex;flex-direction: column;";
+    dialogDiv.classList.add("__dialog_normal");
     clearAllChildNode(contentDiv);
     dialogDiv.append(contentDiv);
 
@@ -292,23 +293,23 @@ async function queryComment({ first, after, last, before, id } = {}) {
 }
 
 function createEmptyComment() {
-  let result = $(`<div style="display: flex;justify-content: center;padding: 20px;font-size: 20px;">没有评论</div>`);
+  let result = $(`<div class="__comment_empty_content">没有评论</div>`);
   return result[0];
 }
 
 function createCommentRow(avatarUrl, username, createdAt, lastEditedAt, content, bodyUrl) {
   let result = $(`
-    <div style="display: flex;margin: 10px;flex-direction: row;">
+    <div class="__comment_row">
       <div>
-        <img style="border-radius: 20px;margin-right: 10px;" src="${avatarUrl}" width="40" height="40" alt="@${username}">
+        <img class="__avatar" src="${avatarUrl}" alt="@${username}">
       </div>
-      <div style="flex:1;">
-        <div style="display: flex;flex-direction: row;border: 0.5px solid black;border-radius: 5px 5px 0 0;">
-          <div style="padding: 5px;padding-left: 10px;">${username}</div>
-          <div style="padding: 5px;flex:1;" title="${dayjs(lastEditedAt || createdAt).format("YYYY-MM-DD HH:mm:ss")}">更新于${convertTimeOffsetToHumanReadable(lastEditedAt || createdAt)}</div>
-          <div style="padding: 5px;"><a target="_blank" href="${bodyUrl}">评论来源</a></div>
+      <div class="__right">
+        <div class="__header">
+          <div class="__time">${username}</div>
+          <div class="__username" title="${dayjs(lastEditedAt || createdAt).format("YYYY-MM-DD HH:mm:ss")}">更新于${convertTimeOffsetToHumanReadable(lastEditedAt || createdAt)}</div>
+          <div class="__source"><a target="_blank" href="${bodyUrl}">评论来源</a></div>
         </div>
-        <div style="padding: 10px;border: 0.5px solid black;border-top: 0;border-radius: 0 0 5px 5px;">
+        <div class="__content">
           <div>
             <div>${content}</div>
           </div>
@@ -321,7 +322,7 @@ function createCommentRow(avatarUrl, username, createdAt, lastEditedAt, content,
 
 function createAddCommentRow(contentDiv, loadingDiv, queryFunction, id, avatarUrl, username) {
   let textareaId = genUniqueId();
-  let submitComment = $(`<div style="display: flex;justify-content: end;padding:5px;"><div class="__comment_submit_button">提交评论</div></div>`)[0];
+  let submitComment = $(`<div class="__comment_submit_button_wrapper"><div class="__comment_submit_button">提交评论</div></div>`)[0];
   const submitFunction = async () => {
     loadingDiv.textContent = "评论提交中⌛︎";
     try {
@@ -361,16 +362,16 @@ function createAddCommentRow(contentDiv, loadingDiv, queryFunction, id, avatarUr
   submitComment.addEventListener("click", submitFunction);
   let result = $(`
     <div>
-    <div style="display: flex;margin: 10px;flex-direction: row;">
+    <div class="__comment_submit_content">
       <div>
-        <img style="border-radius: 20px;margin-right: 10px;" src="${avatarUrl}" width="40" height="40" alt="@${username}">
+        <img class="__avatar" src="${avatarUrl}" alt="@${username}">
       </div>
-      <div style="flex:1;">
-        <div style="display: flex;flex-direction: row;border: 0.5px solid black;border-radius: 5px 5px 0 0;">
-          <div style="padding: 5px;padding-left: 10px;">添加一条评论</div>
+      <div class="__comment_submit_content_wrapper">
+        <div class="__comment_title_wrapper">
+          <div class="__comment_title">添加一条评论</div>
         </div>
-        <div style="padding: 10px;border: 0.5px solid black;border-top: 0;border-radius: 0 0 5px 5px;">
-            <textarea id="${textareaId}" style="width: 100%;height: 100px;" placeholder="在这里写下评论"></textarea>
+        <div class="__comment_content_wrapper">
+            <textarea id="${textareaId}" class="__comment_content_wrapper_content" placeholder="在这里写下评论"></textarea>
         </div>
       </div>
     </div>
@@ -381,19 +382,19 @@ function createAddCommentRow(contentDiv, loadingDiv, queryFunction, id, avatarUr
 
 function createCommonPageOperationMenu(hasPreviousPage, hasNextPage, startCursor, endCursor, total, queryFunction) {
   let result = $(`
-    <div style="display: flex;margin: 10px;flex-direction: row;justify-content: end;">
-      <div style="padding: 5px;align-content: center;">共${total}条</div>
+    <div class="__comment_paging_wrapper">
+      <div class="__comment_paging_total">共${total}条</div>
     </div>
     `);
   if (hasPreviousPage) {
-    let element = $(`<div style="padding: 5px;" class="__company_info_quick_search_button">上一页</div>`)[0];
+    let element = $(`<div class="__company_info_quick_search_button __comment_paging_button">上一页</div>`)[0];
     element.addEventListener("click", async (event) => {
       queryFunction({ last: COMMENT_PAGE_SIZE, before: `"${startCursor}"` });
     })
     result.append(element);
   }
   if (hasNextPage) {
-    let element = $(`<div style="padding: 5px;" class="__company_info_quick_search_button">下一页</div>`)[0];
+    let element = $(`<div class="__company_info_quick_search_button __comment_paging_button">下一页</div>`)[0];
     element.addEventListener("click", async (event) => {
       queryFunction({ first: COMMENT_PAGE_SIZE, after: `"${endCursor}"` });
     })
