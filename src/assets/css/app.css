@@ -336,6 +336,10 @@ div[data-search-sol-meta] {
   color: white;
   border-radius: 5px;
   flex-direction: column;
+
+  div{
+    color: white;
+  }
 }
 
 .__dialog_normal {
