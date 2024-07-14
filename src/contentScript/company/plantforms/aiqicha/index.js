@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import {
-    companyNameConvert, genCompanyIdWithSha256,
+    companyNameConvert,
     getCompanyFromCompanyInfo, stopAndCleanAbortFunctionHandler
 } from "../../../commonDataHandler";
 import { CompanyApi } from "../../../../common/api";
@@ -115,7 +115,7 @@ function createFixValidHummanButton(companyName) {
 
 function createCommentWrapper(companyName) {
     let commentWrapperDiv = document.createElement("div");
-    let companyIdSha256 = genCompanyIdWithSha256(companyName);
+    let companyIdSha256 = genIdFromText(companyName);
     commentWrapperDiv.classList.add("__comment_wrapper");
     commentWrapperDiv.classList.add("__" + PLATFORM_AIQICHA + "_comment_wrapper");
     let companyCommentButton = genCommentTextButton(

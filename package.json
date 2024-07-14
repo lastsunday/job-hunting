@@ -40,6 +40,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@iconify/vue": "^4.1.2",
     "@sqlite.org/sqlite-wasm": "3.46.0-build2",
     "@types/chrome": "^0.0.246",
     "@types/webextension-polyfill": "^0.10.7",

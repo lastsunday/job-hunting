@@ -7,6 +7,7 @@ import { CompanyService } from "./service/companyService";
 import { Database } from "./database";
 import { TagService } from "./service/tagService";
 import { CompanyTagService } from "./service/companyTagService";
+import { ConfigService } from "./service/configService";
 
 debugLog("worker ready");
 const ACTION_FUNCTION = new Map();
@@ -24,6 +25,7 @@ mergeServiceMethod(ACTION_FUNCTION, JobService);
 mergeServiceMethod(ACTION_FUNCTION, CompanyService);
 mergeServiceMethod(ACTION_FUNCTION, TagService);
 mergeServiceMethod(ACTION_FUNCTION, CompanyTagService);
+mergeServiceMethod(ACTION_FUNCTION, ConfigService);
 
 function mergeServiceMethod(actionFunction, source) {
   let keys = Object.keys(source);
@@ -39,18 +41,18 @@ onmessage = function (e) {
     if (message.from == OFFSCREEN && message.to == WEB_WORKER) {
       debugLog(
         "6.[worker][receive][" +
-          message.from +
-          " -> " +
-          message.to +
-          "] message [action=" +
-          message.action +
-          ",invokeEnv=" +
-          message.invokeEnv +
-          ",callbackId=" +
-          message.callbackId +
-          ",error=" +
-          message.error +
-          "]"
+        message.from +
+        " -> " +
+        message.to +
+        "] message [action=" +
+        message.action +
+        ",invokeEnv=" +
+        message.invokeEnv +
+        ",callbackId=" +
+        message.callbackId +
+        ",error=" +
+        message.error +
+        "]"
       );
       let action = message.action;
       debugLog("[worker] invoke action = " + action);

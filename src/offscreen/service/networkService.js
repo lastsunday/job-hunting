@@ -33,6 +33,35 @@ export const NetworkService = {
   },
 
   /**
+   * 
+   * @param {*} message
+   * @param {{url,method,headers,body}} param param
+   */
+  httpFetchJson: async function (message, param) {
+    try {
+      const controller = new AbortController();
+      const signal = controller.signal;
+      callbackIdAndAbortControllerMap.set(message.callbackId, controller);
+      const response = await fetch(param.url, { signal, method: param.method, headers: param.headers, body: param.body });
+      if (response.status == 200) {
+        const result = await response.json();
+        postSuccessMessage(message, result);
+      } else {
+        let errorMessage = `statusCode = ${response.status}`;
+        postErrorMessage(
+          message,
+          "[worker] httpFetchJson error : " + errorMessage
+        );
+      }
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[worker] httpFetchJson error : " + e.message
+      );
+    }
+  },
+
+  /**
    *中断网络请求
    * @param {*} message
    * @param {string} param callbackId
