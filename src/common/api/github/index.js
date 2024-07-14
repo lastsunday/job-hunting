@@ -1,15 +1,10 @@
-import { GITHUB_URL_GET_USER, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET } from "../../config";
+import { GITHUB_URL_GET_USER, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, URL_GRAPHQL, GITHUB_APP_REPO, URL_POST_ISSUES } from "../../config";
 import { AuthApi } from "../index"
 import { UserDTO } from "../../data/dto/userDTO";
 import { OauthDTO } from "../../data/dto/oauthDTO";
 import { infoLog, errorLog } from "../../log";
 import { httpFetchJson } from "../../api/common";
 import { parseToLineObjectToToHumpObject } from "../../../common/utils";
-
-const URL_GRAPHQL = "https://api.github.com/graphql";
-const GITHUB_APP_REPO = "lastsunday/job-hunting-github-app";
-
-const URL_POST_ISSUES = "https://api.github.com/repos/lastsunday/job-hunting-github-app/issues";
 
 export const GithubApi = {
 

@@ -11,7 +11,7 @@ import { getAndRemovePromiseHook } from "../common/api/bridge";
 import { AuthService, getOauth2LoginMessageMap, setToken, getToken } from "./service/authService";
 import { postSuccessMessage, postErrorMessage } from "./util";
 import { OauthDTO } from "../common/data/dto/oauthDTO";
-import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_URL_GET_USER } from "../common/config";
+import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_URL_GET_USER, GITHUB_APP_INSTALL_CALLBACK_URL } from "../common/config";
 import { UserService } from "./service/userService";
 import { UserDTO } from "../common/data/dto/userDTO";
 import { setUser } from "./service/userService";
@@ -32,8 +32,6 @@ chrome.action.onClicked.addListener(() => {
 //TODO 没有定时清理，可能会有问题
 const saveBrowseDetailTabIdMap = new Map();
 const saveInstallUrlMap = new Map();
-
-const GITHUB_APP_INSTALL_CALLBACK_URL = "https://github.com/lastsunday/job-hunting-github-app/blob/main/INSTALL";
 
 //detect job detail access
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
