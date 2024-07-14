@@ -136,18 +136,9 @@ export function finalRender(jobDTOList, { platform }) {
     let item = jobDTOList[i];
     let jobId = item.jobId;
     let jobItemIdSha256 = genIdFromText(jobId);
-    //TODO 需要考虑如何使用公司全称
-    let companyIdSha256 = genIdFromText(item.jobCompanyName);
     let commentWrapperDiv = document.getElementById("wrapper" + jobId);
     commentWrapperDiv.classList.add("__comment_wrapper");
     commentWrapperDiv.classList.add("__" + platform + "_comment_wrapper");
-    let companyCommentButton = genCommentTextButton(
-      commentWrapperDiv,
-      "查看公司评论💬",
-      item.jobCompanyName,
-      companyIdSha256
-    );
-    commentWrapperDiv.append(companyCommentButton);
     let jobItemCommentButton = genCommentTextButton(
       commentWrapperDiv,
       "查看职位评论💬",
@@ -649,6 +640,7 @@ export function renderFunctionPanel(
     functionPanelDiv.appendChild(
       createCompanyInfo(item, {
         getCompanyInfoFunction: getCompanyInfoFunction,
+        platform
       })
     );
     functionPanelDiv.appendChild(createCommentWrapper(item));
@@ -693,7 +685,7 @@ function createFirstBrowse(jobDTO) {
   return firstBrowseTimeTag;
 }
 
-function createCompanyInfo(item, { getCompanyInfoFunction } = {}) {
+function createCompanyInfo(item, { getCompanyInfoFunction, platform } = {}) {
   const dom = document.createElement("div");
   dom.className = "__company_info_quick_search";
   let mainChannelDiv = document.createElement("div");
@@ -751,6 +743,17 @@ function createCompanyInfo(item, { getCompanyInfoFunction } = {}) {
       otherChannelDiv.appendChild(createCompanyReputation(companyName));
       otherChannelDiv.appendChild(createCompanyTag(companyName));
       otherChannelDiv.appendChild(createSearchCompanyLink(companyName));
+      let companyIdSha256 = genIdFromText(companyName);
+      let commentWrapperDiv = document.createElement("div");
+      commentWrapperDiv.className = `__comment_wrapper __${platform}_comment_wrapper`
+      let companyCommentButton = genCommentTextButton(
+        commentWrapperDiv,
+        "查看公司评论💬",
+        companyName,
+        companyIdSha256
+      );
+      commentWrapperDiv.appendChild(companyCommentButton);
+      otherChannelDiv.append(commentWrapperDiv);
     }
   };
   quickSearchButton.onclick = () => {

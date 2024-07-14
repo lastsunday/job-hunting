@@ -245,6 +245,7 @@ div[data-search-sol-meta] {
   justify-content: end;
   font-size: 14px;
   color: #414a60;
+  padding-top: 5px;
 }
 
 .__BOSS_comment_wrapper {
@@ -380,6 +381,7 @@ div[data-search-sol-meta] {
   margin-left: 5px;
   text-decoration: underline;
   color: blue;
+  padding-right:5px;
 }
 
 .__comment_empty_content {
