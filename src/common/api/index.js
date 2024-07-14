@@ -233,6 +233,15 @@ export const AuthApi = {
   },
 
   /**
+   *
+   * @returns OauthDTO
+   */
+  authInstallAndLogin: async function () {
+    let result = await invoke(this.authInstallAndLogin.name, {});
+    return result.data;
+  },
+
+  /**
  *
  * @returns OauthDTO
  */

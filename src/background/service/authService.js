@@ -2,7 +2,7 @@ import { postSuccessMessage, postErrorMessage } from "../util";
 import { OauthDTO } from "../../common/data/dto/oauthDTO";
 import { ConfigApi } from "../../common/api";
 import { Config } from "../../common/data/domain/config";
-import { GITHUB_APP_CLIENT_ID, GITHUB_URL_AUTHORIZE } from "../../common/config";
+import { GITHUB_APP_CLIENT_ID, GITHUB_URL_APP_INSTALL_AUTHORIZE, GITHUB_URL_AUTHORIZE } from "../../common/config";
 import {
   BACKGROUND,
 } from "../../common/api/bridgeCommon";
@@ -30,6 +30,27 @@ export const AuthService = {
       postErrorMessage(
         message,
         "[background] authOauth2Login error : " + e.message
+      );
+    }
+  },
+  /**
+   * authInstallAndLogin
+   * @param {*} message
+   * @param {string} param url
+   * 
+   * @return OauthDTO
+   */
+  authInstallAndLogin: async function (message, param) {
+    try {
+      chrome.tabs.create({
+        url: `${GITHUB_URL_APP_INSTALL_AUTHORIZE}`,
+      });
+      oauth2LoginMessageMap.set(message);
+      //other method handle post callback
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[background] authInstallAndLogin error : " + e.message
       );
     }
   },

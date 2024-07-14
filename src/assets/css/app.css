@@ -346,4 +346,5 @@ div[data-search-sol-meta] {
   background-color: rgba(0, 0, 0, 0.6);
   color: white;
   border-radius: 5px;
+  flex-direction: column;
 }

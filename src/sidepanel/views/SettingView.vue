@@ -23,7 +23,8 @@
               <Icon icon="mdi:github" />
             </el-icon>
             登录</el-button>
-          <el-popconfirm v-else title="确定登出？" @confirm="onClickLogout" confirm-button-text="确定" cancel-button-text="取消">
+          <el-popconfirm v-else title="确定登出？" @confirm="onClickLogout" confirm-button-text="确定"
+            cancel-button-text="取消">
             <template #reference>
               <el-button>
                 <el-icon class="el-icon--left">
@@ -32,6 +33,30 @@
                 登出</el-button>
             </template>
           </el-popconfirm>
+        </el-descriptions-item>
+      </el-descriptions>
+    </el-row>
+    <el-row class="setting_item">
+      <el-descriptions title="安装GitHub App">
+        <el-descriptions-item>
+          <el-tooltip v-if="login" content="安装GitHub App获得添加评论的能力" placement="top">
+            <el-button @click="onClickInstallAndLogin">
+              <el-icon class="el-icon--left">
+                <Icon icon="mdi:github" />
+              </el-icon>
+              安装GitHubApp获得评论能力<el-icon class="el-icon--left">
+                <Icon icon="ph:question" />
+              </el-icon></el-button>
+          </el-tooltip>
+          <el-tooltip v-if="!login" content="安装GitHub App获得添加评论的能力" placement="top">
+            <el-button @click="onClickInstallAndLogin">
+              <el-icon class="el-icon--left">
+                <Icon icon="mdi:github" />
+              </el-icon>
+              安装GitHubApp并登录<el-icon class="el-icon--left">
+                <Icon icon="ph:question" />
+              </el-icon></el-button>
+          </el-tooltip>
         </el-descriptions-item>
       </el-descriptions>
     </el-row>
@@ -552,6 +577,11 @@ const avatar = ref("");
 
 const onClickLogin = async () => {
   await AuthApi.authOauth2Login();
+  await checkLoginStatus();
+}
+
+const onClickInstallAndLogin = async () => {
+  await AuthApi.authInstallAndLogin();
   await checkLoginStatus();
 }
 

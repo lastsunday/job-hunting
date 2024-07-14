@@ -228,19 +228,30 @@ async function renderCommentContent({ first, after, last, before, id } = {}, con
   let loginInfo = await AuthApi.authGetToken();
   if (!loginInfo) {
     //获取失败
-    //执行登录流程
-    try {
-      loadingLabel.textContent = "登录中⌛︎";
-      loginInfo = await AuthApi.authOauth2Login();
-      loadingLabel.textContent = "登录成功";
-    } catch (e) {
-      errorLog(e);
-      //TODO handle login failure
-      loadingLabel.textContent = "登录失败，点击重新登录";
-      loadingLabel.addEventListener("click", (event) => {
+    contentDiv.removeChild(loadingDiv);
+    let login = $(`<div>点击登录到GitHub后可查看评论</div>`);
+    let installLogin = $(`<div>(如需添加评论，请到后台管理[设置]页面安装GitHubApp)</div>`);
+    let loginDiv = $(`<div class="__comment_loading"></div>`).append(login).append(installLogin)[0];
+    contentDiv.appendChild(loginDiv);
+    loginDiv.addEventListener("click", async () => {
+      //执行登录流程
+      clearAllChildNode(contentDiv);
+      contentDiv.appendChild(loadingDiv);
+      try {
+        loadingLabel.textContent = "登录中⌛︎";
+        loginInfo = await AuthApi.authOauth2Login();
+        loadingLabel.textContent = "登录成功";
         renderCommentContent({ first, after, last, before, id }, contentDiv);
-      });
-    }
+      } catch (e) {
+        errorLog(e);
+        //TODO handle login failure
+        loadingLabel.textContent = "登录失败，点击重新登录";
+        loadingLabel.addEventListener("click", (event) => {
+          renderCommentContent({ first, after, last, before, id }, contentDiv);
+        });
+      }
+    });
+    return;
   }
   loadingLabel.textContent = "正加载评论⌛︎";
   let data = null;
