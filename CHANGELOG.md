@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (Data)新增Config表。
+2. (SidePanel)新增GitHub Oauth登录和GitHub App Install。
+3. 新增manifest key以固定插件id。
+
+### ✏️ Changed
+
+1. (SidePanel)评论功能底层逻辑替换为GitHub Issues并联动Github App,实现查看公司（职位）评论，添加评论。
+
+### 🔨 Dependency
+
+1. Add @iconify/vue ^4.1.2
+
 ## 1.14.0(2024-07-11)
 
 ### ⭐ Added
@@ -12,7 +28,7 @@
 
 ### 🔨 Dependency
 
-1. Add @vue-leaflet/vue-leaflet^0.10.1
+1. Add @vue-leaflet/vue-leaflet ^0.10.1
 2. Add leaflet ^1.9.4
 3. Add @pansy/lnglat-transform ^1.0.3
 
