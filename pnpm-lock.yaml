@@ -62,6 +62,9 @@ importers:
       marked:
         specifier: ^13.0.2
         version: 13.0.2
+      semver:
+        specifier: ^7.6.2
+        version: 7.6.2
       uuid:
         specifier: ^10.0.0
         version: 10.0.0

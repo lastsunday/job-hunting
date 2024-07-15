@@ -158,6 +158,26 @@
           <el-row>
             <el-col>
               <el-text type="primary" size="large">版本 {{ version }}</el-text>
+              <el-text class="checkingVersion" @click="onCheckVersion" type="info">({{
+                checkingVersionText }})</el-text>
+              <span v-if="!versionChecking">
+                <span v-if="newVersion">
+                  <el-text class="newVersion" type="warning">(发现新版本[{{
+                    latestVersion }}]({{ dayjs(latestVersionCreatedAt).format("YYYY-MM-DD") }}))</el-text>
+                  <el-button @click="latestChangelogDialogVisible = true" type="primary" plain>
+                    <el-icon class="el-icon--left">
+                      <Icon icon="mdi:note" />
+                    </el-icon>
+                    查看新版本详情
+                  </el-button>
+                  <el-button @click="onDownloadLatest" type="primary" plain>
+                    <el-icon class="el-icon--left">
+                      <Icon icon="mdi:download" />
+                    </el-icon>下载新版本
+                  </el-button>
+                  <el-text v-if="!newVersion" type="success">(已是最新版本)</el-text>
+                </span>
+              </span>
             </el-col>
             <el-col class="appInfoOperation">
               <el-button @click="changelogDialogVisible = true">
@@ -166,9 +186,9 @@
               <el-button @click="licenseDialogVisible = true">
                 许可证
               </el-button>
-              <el-button><el-link :href="homepage" target="_blank">访问主页</el-link></el-button>
-              <el-button>
-                <el-link :href="bugs" target="_blank">问题反馈</el-link>
+              <el-button @click="onAccessHomePage">访问主页</el-button>
+              <el-button @click="onAccessIssuesPage">
+                问题反馈
               </el-button>
             </el-col>
           </el-row>
@@ -251,6 +271,9 @@
   <el-dialog v-model="licenseDialogVisible" title="许可证" width="800">
     <div v-html="licenseContent"></div>
   </el-dialog>
+  <el-dialog v-model="latestChangelogDialogVisible" title="版本更新详情" width="800">
+    <div v-html="latestChangelogContent"></div>
+  </el-dialog>
 </template>
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
@@ -268,6 +291,8 @@ import { CompanyBO } from "../../common/data/bo/companyBO";
 import { genIdFromText, convertDateStringToDateObject } from "../../common/utils";
 import { Icon } from '@iconify/vue';
 import { marked } from "marked";
+import { APP_URL_LATEST_VERSION } from "../../common/config";
+import semver from "semver";
 
 const activeName = ref("export");
 const exportLoading = ref(false);
@@ -688,6 +713,15 @@ const bugs = ref();
 
 const licenseDialogVisible = ref(false);
 const licenseContent = ref();
+const newVersion = ref(false);
+
+const versionChecking = ref(true);
+const latestVersion = ref();
+const versionObject = ref();
+const latestVersionCreatedAt = ref();
+const checkingVersionText = ref("正检查新版本");
+const latestChangelogDialogVisible = ref(false);
+const latestChangelogContent = ref();
 
 onMounted(async () => {
   await checkLoginStatus()
@@ -701,7 +735,61 @@ onMounted(async () => {
   let licenseUrl = chrome.runtime.getURL("LICENSE");
   let licenseContentFromFile = await (await fetch(licenseUrl)).text();
   licenseContent.value = marked.parse(licenseContentFromFile);
+  onCheckVersion();
 })
+
+const onCheckVersion = async () => {
+  versionChecking.value = true;
+  checkingVersionText.value = "正检查新版本"
+  try {
+    await checkVersion();
+    checkingVersionText.value = "已是最新版本，点击再检查"
+    versionChecking.value = false;
+  } catch (e) {
+    checkingVersionText.value = "版本检查失败，请点击再次检查"
+  }
+}
+
+const checkVersion = async () => {
+  try {
+    versionObject.value = await (await fetch(APP_URL_LATEST_VERSION)).json();
+    latestVersion.value = versionObject.value.tag_name;
+    newVersion.value = semver.gt(latestVersion.value, version);
+    latestVersionCreatedAt.value = versionObject.value.created_at;
+    latestChangelogContent.value = marked.parse(versionObject.value.body);
+  } catch (e) {
+    throw e;
+  }
+}
+
+const onDownloadLatest = async () => {
+  let assets = getLatestAssets();
+  let url = assets?.browser_download_url;
+  if (url) {
+    window.open(url);
+  } else {
+    ElMessage('未找到安装文件');
+  }
+}
+
+const getLatestAssets = () => {
+  let assets = versionObject.value.assets;
+  let targetUrl = null;
+  let chromeZipAssets = assets.filter(item => { return item.name.includes("chrome") && item.name.endsWith(".zip") });
+  if (chromeZipAssets && chromeZipAssets.length > 0) {
+    return chromeZipAssets[0];
+  } else {
+    return null;
+  }
+}
+
+const onAccessHomePage = () => {
+  window.open(homepage.value);
+}
+
+const onAccessIssuesPage = () => {
+  window.open(bugs.value);
+}
 
 </script>
 <style lang="scss">
@@ -730,5 +818,17 @@ onMounted(async () => {
   cursor: pointer;
   width: 24px;
   height: 24px;
+}
+
+.checkingVersion {
+  cursor: pointer;
+}
+
+.newVersion {
+  cursor: pointer;
+}
+
+.latestVersionChangelogDetailButton {
+  cursor: pointer;
 }
 </style>

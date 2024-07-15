@@ -9,3 +9,5 @@ export const URL_GRAPHQL = "https://api.github.com/graphql";
 export const GITHUB_APP_REPO = "lastsunday/job-hunting-github-app";
 export const URL_POST_ISSUES = "https://api.github.com/repos/lastsunday/job-hunting-github-app/issues";
 export const COMMENT_PAGE_SIZE = 20;
+
+export const APP_URL_LATEST_VERSION = "https://api.github.com/repos/lastsunday/job-hunting/releases/latest";
