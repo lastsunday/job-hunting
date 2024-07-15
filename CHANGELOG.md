@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (SidePanel)显示职位信息时，将公司标签也一并显示。（针对主页，职位页）
+
+### 🐛 Fixed
+
+1. (ContentScript)针对某些职位信息公司名不是全称的情况，在查询公司信息时进行补全处理。
+2. (SidePanel)Unmounted页面时，清理定时器。
+
 ## 1.16.0(2024-07-15)
 
 ### ⭐ Added
