@@ -15,14 +15,18 @@
   },
   "background": {
     "{{chrome}}.service_worker": "src/background/index.ts",
-    "{{firefox}}.scripts": ["src/background/indexFirefox.ts"]
+    "{{firefox}}.scripts": [
+      "src/background/indexFirefox.ts"
+    ]
   },
   "{{chrome}}.content_security_policy": {
     "extension_pages": "script-src 'self' 'wasm-unsafe-eval'"
   },
   "content_scripts": [
     {
-      "js": ["src/contentScript/index.js"],
+      "js": [
+        "src/contentScript/index.js"
+      ],
       "matches": [
         "https://www.zhipin.com/*",
         "https://sou.zhaopin.com/*",
@@ -36,7 +40,13 @@
   ],
   "{{chrome}}.web_accessible_resources": [
     {
-      "resources": ["proxyAjax.js","style.css"],
+      "resources": [
+        "proxyAjax.js",
+        "style.css",
+        "CHANGELOG.md",
+        "package.json",
+        "LICENSE"
+      ],
       "matches": [
         "https://www.zhipin.com/*",
         "https://sou.zhaopin.com/*",
@@ -48,7 +58,11 @@
       ]
     }
   ],
-  "{{chrome}}.permissions": ["webRequest", "offscreen", "unlimitedStorage"],
+  "{{chrome}}.permissions": [
+    "webRequest",
+    "offscreen",
+    "unlimitedStorage"
+  ],
   "{{firefox}}.permissions": [
     "https://www.zhipin.com/*",
     "https://sou.zhaopin.com/*",

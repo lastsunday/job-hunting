@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import webExtension, { readJsonFile } from 'vite-plugin-web-extension';
+import copy from 'rollup-plugin-copy';
 const target = process.env.TARGET || 'chrome';
 
 function generateManifest() {
@@ -27,8 +28,6 @@ export default defineConfig({
   define: {
     __BROWSER__: JSON.stringify(target),
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
-    __HOMEPAGE__: JSON.stringify(process.env.npm_package_homepage),
-    __BUGS__: JSON.stringify(process.env.npm_package_bugs),
   },
   build: {
     outDir: getBuildOutputDir(),
@@ -47,6 +46,15 @@ export default defineConfig({
       browser: process.env.TARGET || 'chrome',
       skipManifestValidation: true,
     }),
+    copy({
+      targets: [
+        { src: 'CHANGELOG.md', dest: getBuildOutputDir() },
+        { src: 'package.json', dest: getBuildOutputDir() },
+        { src: 'LICENSE', dest: getBuildOutputDir() },
+      ],
+      // 是否在构建时打印日志信息
+      verbose: true
+    })
   ],
   optimizeDeps: {
     include: ["leaflet"],

@@ -160,6 +160,12 @@
               <el-text type="primary" size="large">版本 {{ version }}</el-text>
             </el-col>
             <el-col class="appInfoOperation">
+              <el-button @click="changelogDialogVisible = true">
+                版本说明
+              </el-button>
+              <el-button @click="licenseDialogVisible = true">
+                许可证
+              </el-button>
               <el-button><el-link :href="homepage" target="_blank">访问主页</el-link></el-button>
               <el-button>
                 <el-link :href="bugs" target="_blank">问题反馈</el-link>
@@ -239,6 +245,12 @@
       </div>
     </template>
   </el-dialog>
+  <el-dialog v-model="changelogDialogVisible" title="版本说明" width="800">
+    <div v-html="changelogContentHtml"></div>
+  </el-dialog>
+  <el-dialog v-model="licenseDialogVisible" title="许可证" width="800">
+    <div v-html="licenseContent"></div>
+  </el-dialog>
 </template>
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
@@ -255,6 +267,7 @@ import { SearchCompanyBO } from "../../common/data/bo/searchCompanyBO";
 import { CompanyBO } from "../../common/data/bo/companyBO";
 import { genIdFromText, convertDateStringToDateObject } from "../../common/utils";
 import { Icon } from '@iconify/vue';
+import { marked } from "marked";
 
 const activeName = ref("export");
 const exportLoading = ref(false);
@@ -623,10 +636,6 @@ const confirmCompanyTagFileImport = async () => {
   }
 };
 
-const version = __APP_VERSION__;
-const homepage = __HOMEPAGE__;
-const bugs = __BUGS__;
-
 const login = ref(false);
 const username = ref("");
 const avatar = ref("");
@@ -661,10 +670,6 @@ const checkLoginStatus = async () => {
   }
 }
 
-onMounted(async () => {
-  await checkLoginStatus()
-})
-
 const githubRef = ref();
 const githubAppRef = ref();
 const databaseRef = ref();
@@ -673,6 +678,31 @@ const companyTagRef = ref();
 const infoRef = ref();
 
 const tourOpen = ref(false);
+
+const changelogDialogVisible = ref(false);
+const changelogContentHtml = ref("");
+
+const version = __APP_VERSION__;
+const homepage = ref();
+const bugs = ref();
+
+const licenseDialogVisible = ref(false);
+const licenseContent = ref();
+
+onMounted(async () => {
+  await checkLoginStatus()
+  let changelogUrl = chrome.runtime.getURL("CHANGELOG.md");
+  let changelogContent = await (await fetch(changelogUrl)).text();
+  changelogContentHtml.value = marked.parse(changelogContent);
+  let packageUrl = chrome.runtime.getURL("package.json");
+  let packageObject = await (await fetch(packageUrl)).json();
+  homepage.value = packageObject.homepage;
+  bugs.value = packageObject.bugs;
+  let licenseUrl = chrome.runtime.getURL("LICENSE");
+  let licenseContentFromFile = await (await fetch(licenseUrl)).text();
+  licenseContent.value = marked.parse(licenseContentFromFile);
+})
+
 </script>
 <style lang="scss">
 .setting_item {
