@@ -180,6 +180,11 @@
               </span>
             </el-col>
             <el-col class="appInfoOperation">
+              <el-button @click="updateAppDialogVisible = true">
+                如何更新程序版本<el-icon class="el-icon--right">
+                  <Icon icon="ph:question" />
+                </el-icon>
+              </el-button>
               <el-button @click="changelogDialogVisible = true">
                 版本说明
               </el-button>
@@ -218,7 +223,7 @@
   </el-dialog>
   <el-dialog v-model="reloadDialogVisible" title="数据恢复成功" width="500" :close-on-click-modal="false"
     :close-on-press-escape="false" :show-close="false">
-    <span>点击确定按钮重启插件</span>
+    <span>点击确定按钮重启程序</span>
     <template #footer>
       <el-row class="dialog_menu">
         <el-button type="primary" @click="reloadExtension"> 确定 </el-button>
@@ -265,6 +270,20 @@
       </div>
     </template>
   </el-dialog>
+  <el-dialog v-model="updateAppDialogVisible" title="如何更新程序版本" width="800">
+    <div>
+      <el-text>1.下载新版本程序安装文件（zip格式文件）</el-text>
+    </div>
+    <div>
+      <el-text>2.解压程序安装文件</el-text>
+    </div>
+    <div>
+      <el-text>3.访问 chrome://extensions/ 地址，点击加载已解压的扩展程序，选择解压后 manifest.json 文件所在的目录</el-text>
+    </div>
+    <div>
+      <el-text>4.ID为【{{APP_ID}}】的程序版本为新版本，即更新成功</el-text>
+    </div>
+  </el-dialog>
   <el-dialog v-model="changelogDialogVisible" title="版本说明" width="800">
     <div v-html="changelogContentHtml"></div>
   </el-dialog>
@@ -291,7 +310,7 @@ import { CompanyBO } from "../../common/data/bo/companyBO";
 import { genIdFromText, convertDateStringToDateObject } from "../../common/utils";
 import { Icon } from '@iconify/vue';
 import { marked } from "marked";
-import { APP_URL_LATEST_VERSION } from "../../common/config";
+import { APP_URL_LATEST_VERSION,APP_ID } from "../../common/config";
 import semver from "semver";
 
 const activeName = ref("export");
@@ -722,6 +741,7 @@ const latestVersionCreatedAt = ref();
 const checkingVersionText = ref("正检查新版本");
 const latestChangelogDialogVisible = ref(false);
 const latestChangelogContent = ref();
+const updateAppDialogVisible = ref(false);
 
 onMounted(async () => {
   await checkLoginStatus()
