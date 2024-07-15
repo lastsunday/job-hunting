@@ -29,6 +29,14 @@ export const JobApi = {
 
   /**
    *
+   * @param {Job[]} jobs
+   */
+  batchAddOrUpdateJob: async function (jobs) {
+    return await invoke(this.batchAddOrUpdateJob.name, jobs);
+  },
+
+  /**
+   *
    * @param {Job} job
    */
   addOrUpdateJobBrowse: async function (job) {

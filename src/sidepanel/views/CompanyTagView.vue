@@ -117,7 +117,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, computed, reactive, nextTick } from "vue";
+import { onMounted, ref, computed, reactive, nextTick, onUnmounted } from "vue";
 import { useTransition } from "@vueuse/core";
 import { CompanyApi, TagApi } from "../../common/api/index";
 import { SearchCompanyTagBO } from "../../common/data/bo/searchCompanyTagBO";
@@ -191,11 +191,20 @@ const handleCurrentChange = (val: number) => {
   search();
 };
 
+let refreshIntervalId = null;
+
 onMounted(async () => {
   await refreshStatistic();
-  setInterval(refreshStatistic, 10000);
+  refreshIntervalId = setInterval(refreshStatistic, 10000);
   await loadWhitelist();
   search();
+});
+
+onUnmounted(() => {
+  if (refreshIntervalId) {
+    clearInterval(refreshIntervalId);
+    refreshIntervalId = null;
+  }
 });
 
 const loadWhitelist = async () => {

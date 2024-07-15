@@ -30,7 +30,7 @@ import { httpFetchGetText } from "../common/api/common";
 
 import { logoBase64 } from "./assets/logo";
 import $ from "jquery";
-import { CompanyApi, TagApi, AuthApi, UserApi } from "../common/api";
+import { CompanyApi, TagApi, AuthApi, UserApi, JobApi } from "../common/api";
 import { GithubApi } from "../common/api/github";
 import { Company } from "../common/data/domain/company";
 import { errorLog, infoLog } from "../common/log";
@@ -700,60 +700,73 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform } = {}) {
   let quickSearchButtonLoading = document.createElement("div");
   quickSearchButtonLoading.className = "__company_info_quick_search_button";
   const quickSearchHandle = async (forceSyncData) => {
-    if (mainChannelDiv.contains(fixValidHummanButton)) {
-      mainChannelDiv.removeChild(fixValidHummanButton);
-    }
-    quickSearchButtonLoading.textContent = `🔎正查询公司全称⌛︎`;
-    if (mainChannelDiv.contains(quickSearchButton)) {
-      mainChannelDiv.removeChild(quickSearchButton);
-    }
-    mainChannelDiv.appendChild(quickSearchButtonLoading);
-    let companyName = item.jobCompanyName;
-    fixValidHummanButton.textContent =
-      "一直查询失败？点击该按钮去尝试解除人机验证吧！";
-    if (getCompanyInfoFunction) {
-      let targetCompanyName = await getCompanyInfoFunction(
-        item.jobCompanyApiUrl
-      );
-      if (targetCompanyName) {
-        companyName = targetCompanyName;
-      } else {
-        fixValidHummanButton.textContent = `找不到【${companyName}】的全称，点击该按钮去看看有没有相关记录`;
-      }
-    }
-    const decode = encodeURIComponent(companyName);
-    const url = `https://aiqicha.baidu.com/s?q=${decode}`;
-    fixValidHummanButton.href = url;
-    otherChannelDiv.replaceChildren();
     try {
-      quickSearchButtonLoading.textContent = `🔎正查询【${companyName}】⌛︎`;
-      await asyncRenderCompanyInfo(
-        mainChannelDiv,
-        companyName,
-        forceSyncData,
-        quickSearchHandle
-      );
-      mainChannelDiv.removeChild(quickSearchButtonLoading);
+      if (mainChannelDiv.contains(fixValidHummanButton)) {
+        mainChannelDiv.removeChild(fixValidHummanButton);
+      }
+      quickSearchButtonLoading.textContent = `🔎正查询公司全称⌛︎`;
+      if (mainChannelDiv.contains(quickSearchButton)) {
+        mainChannelDiv.removeChild(quickSearchButton);
+      }
+      mainChannelDiv.appendChild(quickSearchButtonLoading);
+      let companyName = item.jobCompanyName;
+      fixValidHummanButton.textContent =
+        "一直查询失败？点击该按钮去尝试解除人机验证吧！";
+      if (getCompanyInfoFunction) {
+        let targetCompanyName = await getCompanyInfoFunction(
+          item.jobCompanyApiUrl
+        );
+        if (targetCompanyName) {
+          if (companyNameConvert(companyName) == companyNameConvert(targetCompanyName)) {
+            infoLog(`company name equal = ${companyName}`);
+          } else {
+            companyName = targetCompanyName;
+            infoLog(`old company name = ${item.jobCompanyName}`);
+            item.jobCompanyName = companyNameConvert(companyName);
+            infoLog(`new company name = ${item.jobCompanyName}`);
+            await JobApi.batchAddOrUpdateJob([item]);
+            infoLog(`update job.id = ${item.jobId}`);
+          }
+        } else {
+          fixValidHummanButton.textContent = `找不到【${companyName}】的全称，点击该按钮去看看有没有相关记录`;
+        }
+      }
+      const decode = encodeURIComponent(companyName);
+      const url = `https://aiqicha.baidu.com/s?q=${decode}`;
+      fixValidHummanButton.href = url;
+      otherChannelDiv.replaceChildren();
+      try {
+        quickSearchButtonLoading.textContent = `🔎正查询【${companyName}】⌛︎`;
+        await asyncRenderCompanyInfo(
+          mainChannelDiv,
+          companyName,
+          forceSyncData,
+          quickSearchHandle
+        );
+        mainChannelDiv.removeChild(quickSearchButtonLoading);
+      } catch (e) {
+        mainChannelDiv.removeChild(quickSearchButtonLoading);
+        quickSearchButton.textContent = `🔎查询【${companyName}】失败，点击重新查询`;
+        mainChannelDiv.appendChild(quickSearchButton);
+        mainChannelDiv.appendChild(fixValidHummanButton);
+      } finally {
+        otherChannelDiv.appendChild(createCompanyReputation(companyName));
+        otherChannelDiv.appendChild(createCompanyTag(companyName));
+        otherChannelDiv.appendChild(createSearchCompanyLink(companyName));
+        let companyIdSha256 = genIdFromText(companyName);
+        let commentWrapperDiv = document.createElement("div");
+        commentWrapperDiv.className = `__comment_wrapper __${platform}_comment_wrapper`
+        let companyCommentButton = genCommentTextButton(
+          commentWrapperDiv,
+          "查看公司评论💬",
+          companyName,
+          companyIdSha256
+        );
+        commentWrapperDiv.appendChild(companyCommentButton);
+        otherChannelDiv.append(commentWrapperDiv);
+      }
     } catch (e) {
-      mainChannelDiv.removeChild(quickSearchButtonLoading);
-      quickSearchButton.textContent = `🔎查询【${companyName}】失败，点击重新查询`;
-      mainChannelDiv.appendChild(quickSearchButton);
-      mainChannelDiv.appendChild(fixValidHummanButton);
-    } finally {
-      otherChannelDiv.appendChild(createCompanyReputation(companyName));
-      otherChannelDiv.appendChild(createCompanyTag(companyName));
-      otherChannelDiv.appendChild(createSearchCompanyLink(companyName));
-      let companyIdSha256 = genIdFromText(companyName);
-      let commentWrapperDiv = document.createElement("div");
-      commentWrapperDiv.className = `__comment_wrapper __${platform}_comment_wrapper`
-      let companyCommentButton = genCommentTextButton(
-        commentWrapperDiv,
-        "查看公司评论💬",
-        companyName,
-        companyIdSha256
-      );
-      commentWrapperDiv.appendChild(companyCommentButton);
-      otherChannelDiv.append(commentWrapperDiv);
+      errorLog(e);
     }
   };
   quickSearchButton.onclick = () => {

@@ -57,8 +57,16 @@
                                 <el-link type="primary" :href="item.jobUrl" target="_blank">{{ item.jobName }}-{{
                                     item.jobCompanyName }}</el-link>
                             </el-row>
-                            <el-row justify="end"> <el-link v-if="item.jobLongitude && item.jobLatitude" type="primary"
-                                    @click="onJobMapLocate(item)">📍定位</el-link></el-row>
+                            <el-row justify="end">
+                                <el-text v-if="item.companyTagDTOList && item.companyTagDTOList.length > 0">
+                                    <Icon icon="mdi:tag" />{{
+                                        item.companyTagDTOList.length }}
+                                </el-text>
+                                <el-link v-if="item.jobLongitude && item.jobLatitude" type="primary"
+                                    @click="onJobMapLocate(item)">
+                                    <Icon icon="mdi:location" />定位
+                                </el-link>
+                            </el-row>
                         </el-timeline-item>
                     </el-timeline>
                     <el-text v-else>无</el-text>
@@ -75,7 +83,12 @@
                         :lat-lng="[item.jobLatitude, item.jobLongitude]">
                         <l-popup ref="popups" :lat-lng="[item.jobLatitude, item.jobLongitude]">
                             <el-row>
-                                <el-text line-clamp="1">职位名：{{ item.jobName }}</el-text>
+                                <el-text line-clamp="1">职位名： <el-link type="primary" :href="item.jobUrl"
+                                        target="_blank">{{ item.jobName }}</el-link></el-text>
+                            </el-row>
+                            <el-row>
+                                <el-text line-clamp="1">发布时间：{{ datetimeFormat(item.jobFirstPublishDatetime)
+                                    }}</el-text>
                             </el-row>
                             <el-row>
                                 <el-text line-clamp="1">薪资：💵{{ item.jobSalaryMin }} - 💵{{ item.jobSalaryMax
@@ -88,10 +101,19 @@
                                 <el-text line-clamp="1">招聘平台：{{ item.jobPlatform }}</el-text>
                             </el-row>
                             <el-row>
-                                <el-text line-clamp="1">公司名：{{ item.jobCompanyName }}</el-text>
+                                <el-text line-clamp="1">地址：{{ item.jobAddress }}</el-text>
                             </el-row>
                             <el-row>
-                                <el-text line-clamp="1">地址：{{ item.jobAddress }}</el-text>
+                                <el-text line-clamp="1">公司名：{{ item.jobCompanyName }}</el-text>
+                            </el-row>
+                            <el-row v-if="item.companyTagDTOList && item.companyTagDTOList.length > 0">
+                                <el-text line-clamp="1">公司标签({{ item.companyTagDTOList.length }})：</el-text>
+                                <el-text class="tagItem" v-for="(item, index) in item.companyTagDTOList">
+                                    <el-tag type="primary">
+                                        <Icon icon="mdi:tag" />{{
+                                            item.tagName }}
+                                    </el-tag>
+                                </el-text>
                             </el-row>
                         </l-popup>
                         <l-icon className="icon">
@@ -129,7 +151,7 @@
     </el-row>
 </template>
 <script lang="ts" setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, onUnmounted } from "vue";
 import { useTransition } from "@vueuse/core";
 import { JobApi, CompanyApi } from "../../common/api/index.js";
 import { SearchJobBO } from "../../common/data/bo/searchJobBO";
@@ -148,6 +170,7 @@ import {
 } from "@vue-leaflet/vue-leaflet";
 import { wgs84ToGcj02 } from '@pansy/lnglat-transform'
 import { Icon } from '@iconify/vue';
+import dayjs from "dayjs";
 
 const todayBrowseDetailCountSource = ref(0);
 const todayBrowseDetailCount = useTransition(todayBrowseDetailCountSource, {
@@ -168,10 +191,17 @@ const totalTagCompanyCount = useTransition(totalTagCompanyCountSource, {
 
 const loading = ref(true);
 const firstTimeLoading = ref(true);
+let refreshIntervalId = null;
+
+const datetimeFormat = computed(() => {
+    return function (value: string) {
+        return dayjs(value).isValid() ? dayjs(value).format("YYYY-MM-DD") : "-";
+    };
+});
 
 onMounted(async () => {
     await refresh();
-    setInterval(refresh, 10000);
+    refreshIntervalId = setInterval(refresh, 10000);
     //自动展开popup
     // popups.value.forEach(item => {
     //     item.leafletObject.options.autoClose = false;
@@ -187,6 +217,13 @@ onMounted(async () => {
         setTimeout(() => {
             map.value.leafletObject.flyTo(firstPopup.latLng);
         }, 300);
+    }
+});
+
+onUnmounted(() => {
+    if (refreshIntervalId) {
+        clearInterval(refreshIntervalId);
+        refreshIntervalId = null;
     }
 });
 
@@ -307,5 +344,9 @@ const tourOpen = ref(false);
     cursor: pointer;
     width: 24px;
     height: 24px;
+}
+
+.tagItem {
+    margin: 2px;
 }
 </style>

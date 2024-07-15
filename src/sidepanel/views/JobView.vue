@@ -116,6 +116,21 @@
                 {{ props.row.jobLatitude }}
               </el-descriptions-item>
             </el-descriptions>
+            <el-descriptions class="margin-top" :column="1" size="small" border direction="vertical">
+              <el-descriptions-item>
+                <template #label>
+                  <div class="cell-item">公司标签</div>
+                </template>
+                <div>
+                  <el-text v-if="props.row.companyTagDTOList&&props.row.companyTagDTOList.length > 0" class="compang_tag">
+                    <el-tag v-for="(value, key, index) in props.row.companyTagDTOList" type="primary">{{
+                      value.tagName
+                    }}</el-tag>
+                  </el-text>
+                  <el-text v-else>-</el-text>
+                </div>
+              </el-descriptions-item>
+            </el-descriptions>
             <textarea m="t-0 b-2" style="width: 100%; height: 300px" disabled
               :value="props.row.jobDescription?.replace(/<\/?.+?\/?>/g, '')"></textarea>
           </div>
@@ -162,6 +177,13 @@
         <template #default="scope">
           <el-text line-clamp="1" :title="scope.row.jobCompanyName">
             {{ scope.row.jobCompanyName }}
+          </el-text>
+        </template>
+      </el-table-column>
+      <el-table-column prop="companyTagDTOList" label="标签数" show-overflow-tooltip width="70">
+        <template #default="scope">
+          <el-text line-clamp="1">
+            {{ scope.row.companyTagDTOList ? scope.row.companyTagDTOList.length : 0 }}
           </el-text>
         </template>
       </el-table-column>
@@ -222,7 +244,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, computed, provide, nextTick } from "vue";
+import { onMounted, ref, computed, provide, nextTick, onUnmounted } from "vue";
 import { useTransition } from "@vueuse/core";
 import { JobApi } from "../../common/api/index.js";
 import { SearchJobBO } from "../../common/data/bo/searchJobBO.js";
@@ -337,10 +359,19 @@ const handleCurrentChange = (val: number) => {
   search();
 };
 
+let refreshIntervalId = null;
+
 onMounted(async () => {
   await refreshStatistic();
-  setInterval(refreshStatistic, 10000);
+  refreshIntervalId = setInterval(refreshStatistic, 10000);
   search();
+});
+
+onUnmounted(() => {
+  if (refreshIntervalId) {
+    clearInterval(refreshIntervalId);
+    refreshIntervalId = null;
+  }
 });
 
 const avgSalaryOption = ref({

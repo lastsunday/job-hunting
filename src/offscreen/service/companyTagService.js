@@ -144,7 +144,24 @@ export const CompanyTagService = {
                 await _getAllCompanyTagDTOByCompanyId(param)
             );
         } catch (e) {
-            postErrorMessage(message, "[worker] getTagById error : " + e.message);
+            postErrorMessage(message, "[worker] getAllCompanyTagDTOByCompanyId error : " + e.message);
+        }
+    },
+    /**
+     *
+     * @param {Message} message
+     * @param {string[]} param ids
+     *
+     * @returns CompanyTagDTO[]
+     */
+    getAllCompanyTagDTOByCompanyIds: async function (message, param) {
+        try {
+            postSuccessMessage(
+                message,
+                await _getAllCompanyTagDTOByCompanyIds(param)
+            );
+        } catch (e) {
+            postErrorMessage(message, "[worker] getAllCompanyTagDTOByCompanyIds error : " + e.message);
         }
     },
     /**

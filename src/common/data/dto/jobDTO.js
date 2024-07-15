@@ -4,4 +4,5 @@ export class JobDTO extends Job{
     browseCount;
     browseDetailCount;
     latestBrowseDetailDatetime;
+    companyTagDTOList;
 }

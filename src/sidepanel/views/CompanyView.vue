@@ -273,7 +273,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, computed, reactive, nextTick } from "vue";
+import { onMounted, ref, computed, reactive, nextTick ,onUnmounted} from "vue";
 import { useTransition } from "@vueuse/core";
 import { CompanyApi, TagApi } from "../../common/api/index";
 import dayjs from "dayjs";
@@ -332,12 +332,21 @@ const handleSizeChange = (val: number) => {
 const handleCurrentChange = (val: number) => {
     search();
 };
+let refreshIntervalId = null;
 
 onMounted(async () => {
     await refreshStatistic();
-    setInterval(refreshStatistic, 10000);
+    refreshIntervalId = setInterval(refreshStatistic, 10000);
     search();
 });
+
+onUnmounted(() => {
+    if (refreshIntervalId) {
+        clearInterval(refreshIntervalId);
+        refreshIntervalId = null;
+    }
+});
+
 
 const sortChange = function (column) {
     if (column.order !== null && column.prop) {
