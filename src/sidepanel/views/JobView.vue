@@ -1,5 +1,5 @@
 <template>
-  <el-row v-loading="loading">
+  <el-row v-loading="loading" class="statistic">
     <el-col :span="6">
       <el-statistic title="今天职位查看数" :value="todayBrowseDetailCount" />
     </el-col>
@@ -18,12 +18,13 @@
       </div>
     </el-col>
   </el-row>
-  <el-col class="search">
+  <div class="search">
     <div class="flex">
       <el-input placeholder="名称" v-model="jobSearchName" clearable @change="onClickSearch" />
       <div class="operation_menu">
         <div class="operation_menu_left">
           <el-switch v-model="showAdvanceSearch" active-text="高级搜索" inactive-text="普通搜索" inline-prompt />
+          <el-switch v-model="mapMode" active-text="地图模式" inactive-text="列表模式" inline-prompt />
         </div>
         <div>
           <el-button @click="showDialogAvgSalary">统计薪酬区间职位数</el-button>
@@ -51,186 +52,287 @@
         </div>
       </el-collapse-item>
     </el-collapse>
-  </el-col>
-  <el-row>
-    <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }" style="width: 100%"
-      stripe @sort-change="sortChange" sortable="custom">
-      <el-table-column type="expand" width="30">
-        <template #default="props">
-          <div m="4" class="expand">
-            <el-descriptions class="margin-top" :column="3" size="small" border>
-              <el-descriptions-item>
-                <template #label>
-                  <div class="cell-item">名称</div>
-                </template>
-                <a :href="props.row.jobUrl" target="_blank" :title="props.row.jobUrl">
-                  {{ props.row.jobName }}
-                </a>
-              </el-descriptions-item>
-              <el-descriptions-item>
-                <template #label>
-                  <div class="cell-item">学历</div>
-                </template>
-                {{ props.row.jobDegreeName }}
-              </el-descriptions-item>
-              <el-descriptions-item>
-                <template #label>
-                  <div class="cell-item">招聘平台</div>
-                </template>
-                {{ props.row.jobPlatform }}
-              </el-descriptions-item>
-              <el-descriptions-item>
-                <template #label>
-                  <div class="cell-item">公司</div>
-                </template>
-                {{ props.row.jobCompanyName }}
-              </el-descriptions-item>
-              <el-descriptions-item>
-                <template #label>
-                  <div class="cell-item">薪资</div>
-                </template>
-                {{ props.row.jobSalaryMin }}-{{ props.row.jobSalaryMax }}
-              </el-descriptions-item>
-              <el-descriptions-item>
-                <template #label>
-                  <div class="cell-item">招聘人</div>
-                </template>
-                {{ props.row.bossName }}【 {{ props.row.bossPosition }} 】
-              </el-descriptions-item>
-              <el-descriptions-item>
-                <template #label>
-                  <div class="cell-item">工作地址</div>
-                </template>
-                {{ props.row.jobAddress }}
-              </el-descriptions-item>
-              <el-descriptions-item>
-                <template #label>
-                  <div class="cell-item">经度</div>
-                </template>
-                {{ props.row.jobLongitude }}
-              </el-descriptions-item>
-              <el-descriptions-item>
-                <template #label>
-                  <div class="cell-item">纬度</div>
-                </template>
-                {{ props.row.jobLatitude }}
-              </el-descriptions-item>
-            </el-descriptions>
-            <el-descriptions class="margin-top" :column="1" size="small" border direction="vertical">
-              <el-descriptions-item>
-                <template #label>
-                  <div class="cell-item">公司标签</div>
-                </template>
-                <div>
-                  <el-text v-if="props.row.companyTagDTOList&&props.row.companyTagDTOList.length > 0" class="compang_tag">
-                    <el-tag v-for="(value, key, index) in props.row.companyTagDTOList" type="primary">{{
-                      value.tagName
-                    }}</el-tag>
-                  </el-text>
-                  <el-text v-else>-</el-text>
-                </div>
-              </el-descriptions-item>
-            </el-descriptions>
-            <textarea m="t-0 b-2" style="width: 100%; height: 300px" disabled
-              :value="props.row.jobDescription?.replace(/<\/?.+?\/?>/g, '')"></textarea>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column prop="createDatetime" sortable="custom" label="首次扫描时间" width="140">
-        <template #default="scope">
-          <el-text line-clamp="1">
-            {{ datetimeFormat(scope.row.createDatetime) }}
-          </el-text>
-        </template>
-      </el-table-column>
-      <el-table-column prop="jobFirstPublishDatetime" sortable="custom" label="发布时间" width="110">
-        <template #default="scope">
-          <el-text line-clamp="1">
-            {{ datetimeFormat(scope.row.jobFirstPublishDatetime) }}
-          </el-text>
-        </template>
-      </el-table-column>
-      <el-table-column label="查看数" prop="browseDetailCount" sortable width="90">
-        <template #default="scope">
-          <el-text line-clamp="1">
-            {{ scope.row.browseDetailCount }}
-          </el-text>
-        </template>
-      </el-table-column>
-      <el-table-column prop="latestBrowseDetailDatetime" sortable="custom" label="最近查看时间" width="160">
-        <template #default="scope">
-          <el-text line-clamp="1">
-            {{ datetimeFormatHHMM(scope.row.latestBrowseDetailDatetime) }}
-          </el-text>
-        </template>
-      </el-table-column>
-      <el-table-column label="名称">
-        <template #default="scope">
-          <a :href="scope.row.jobUrl" target="_blank" :title="scope.row.jobUrl">
+  </div>
+  <div class="content" v-if="!mapMode">
+    <el-scrollbar class="tableScrollbar">
+      <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }"
+        stripe @sort-change="sortChange" sortable="custom">
+        <el-table-column type="expand" width="30">
+          <template #default="props">
+            <div m="4" class="expand">
+              <el-descriptions class="margin-top" :column="3" size="small" border>
+                <el-descriptions-item>
+                  <template #label>
+                    <div class="cell-item">名称</div>
+                  </template>
+                  <a :href="props.row.jobUrl" target="_blank" :title="props.row.jobUrl">
+                    {{ props.row.jobName }}
+                  </a>
+                </el-descriptions-item>
+                <el-descriptions-item>
+                  <template #label>
+                    <div class="cell-item">学历</div>
+                  </template>
+                  {{ props.row.jobDegreeName }}
+                </el-descriptions-item>
+                <el-descriptions-item>
+                  <template #label>
+                    <div class="cell-item">招聘平台</div>
+                  </template>
+                  {{ props.row.jobPlatform }}
+                </el-descriptions-item>
+                <el-descriptions-item>
+                  <template #label>
+                    <div class="cell-item">公司</div>
+                  </template>
+                  {{ props.row.jobCompanyName }}
+                </el-descriptions-item>
+                <el-descriptions-item>
+                  <template #label>
+                    <div class="cell-item">薪资</div>
+                  </template>
+                  {{ props.row.jobSalaryMin }}-{{ props.row.jobSalaryMax }}
+                </el-descriptions-item>
+                <el-descriptions-item>
+                  <template #label>
+                    <div class="cell-item">招聘人</div>
+                  </template>
+                  {{ props.row.bossName }}【 {{ props.row.bossPosition }} 】
+                </el-descriptions-item>
+                <el-descriptions-item>
+                  <template #label>
+                    <div class="cell-item">工作地址</div>
+                  </template>
+                  {{ props.row.jobAddress }}
+                </el-descriptions-item>
+                <el-descriptions-item>
+                  <template #label>
+                    <div class="cell-item">经度</div>
+                  </template>
+                  {{ props.row.jobLongitude }}
+                </el-descriptions-item>
+                <el-descriptions-item>
+                  <template #label>
+                    <div class="cell-item">纬度</div>
+                  </template>
+                  {{ props.row.jobLatitude }}
+                </el-descriptions-item>
+              </el-descriptions>
+              <el-descriptions class="margin-top" :column="1" size="small" border direction="vertical">
+                <el-descriptions-item>
+                  <template #label>
+                    <div class="cell-item">公司标签</div>
+                  </template>
+                  <div>
+                    <el-text v-if="props.row.companyTagDTOList && props.row.companyTagDTOList.length > 0"
+                      class="compang_tag">
+                      <el-tag v-for="(value, key, index) in props.row.companyTagDTOList" type="primary">{{
+                        value.tagName
+                        }}</el-tag>
+                    </el-text>
+                    <el-text v-else>-</el-text>
+                  </div>
+                </el-descriptions-item>
+              </el-descriptions>
+              <textarea m="t-0 b-2" style="width: 100%; height: 300px" disabled
+                :value="props.row.jobDescription?.replace(/<\/?.+?\/?>/g, '')"></textarea>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createDatetime" sortable="custom" label="首次扫描时间" width="140">
+          <template #default="scope">
             <el-text line-clamp="1">
-              {{ scope.row.jobName }}
+              {{ datetimeFormat(scope.row.createDatetime) }}
             </el-text>
-          </a>
-        </template>
-      </el-table-column>
-      <el-table-column label="公司">
-        <template #default="scope">
-          <el-text line-clamp="1" :title="scope.row.jobCompanyName">
-            {{ scope.row.jobCompanyName }}
-          </el-text>
-        </template>
-      </el-table-column>
-      <el-table-column prop="companyTagDTOList" label="标签数" show-overflow-tooltip width="70">
-        <template #default="scope">
-          <el-text line-clamp="1">
-            {{ scope.row.companyTagDTOList ? scope.row.companyTagDTOList.length : 0 }}
-          </el-text>
-        </template>
-      </el-table-column>
-      <el-table-column label="地区" width="120">
-        <template #default="scope">
-          <el-text line-clamp="1">
-            {{ scope.row.jobLocationName }}
-          </el-text>
-        </template>
-      </el-table-column>
-      <el-table-column label="最低薪资" prop="jobSalaryMin" sortable="custom" width="120">
-        <template #default="scope">
-          <el-text line-clamp="1">
-            {{ scope.row.jobSalaryMin }}
-          </el-text>
-        </template>
-      </el-table-column>
-      <el-table-column label="最高薪资" prop="jobSalaryMax" sortable="custom" width="120">
-        <template #default="scope">
-          <el-text line-clamp="1">
-            {{ scope.row.jobSalaryMax }}
-          </el-text>
-        </template>
-      </el-table-column>
-      <el-table-column label="几薪" prop="jobSalaryTotalMonth" sortable="custom" width="80">
-        <template #default="scope">
-          <el-text line-clamp="1">
-            {{ scope.row.jobSalaryTotalMonth }}
-          </el-text>
-        </template>
-      </el-table-column>
-      <el-table-column label="学历" prop="jobDegreeName" sortable width="100">
-        <template #default="scope">
-          <el-text line-clamp="1">
-            {{ scope.row.jobDegreeName }}
-          </el-text>
-        </template>
-      </el-table-column>
-      <el-table-column label="招聘平台" prop="jobPlatform" width="100">
-        <template #default="scope">
-          <el-text line-clamp="1">
-            {{ jobPlatformFormat(scope.row.jobPlatform) }}
-          </el-text>
-        </template>
-      </el-table-column>
-    </el-table>
-  </el-row>
+          </template>
+        </el-table-column>
+        <el-table-column prop="jobFirstPublishDatetime" sortable="custom" label="发布时间" width="110">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{ datetimeFormat(scope.row.jobFirstPublishDatetime) }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column label="查看数" prop="browseDetailCount" sortable width="90">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{ scope.row.browseDetailCount }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column prop="latestBrowseDetailDatetime" sortable="custom" label="最近查看时间" width="160">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{ datetimeFormatHHMM(scope.row.latestBrowseDetailDatetime) }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column label="名称" show-overflow-tooltip>
+          <template #default="scope">
+            <a :href="scope.row.jobUrl" target="_blank" :title="scope.row.jobUrl">
+              <el-text line-clamp="1">
+                {{ scope.row.jobName }}
+              </el-text>
+            </a>
+          </template>
+        </el-table-column>
+        <el-table-column label="公司" show-overflow-tooltip>
+          <template #default="scope">
+            <el-text line-clamp="1" :title="scope.row.jobCompanyName">
+              {{ scope.row.jobCompanyName }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column prop="companyTagDTOList" label="标签数" show-overflow-tooltip width="70">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{ scope.row.companyTagDTOList ? scope.row.companyTagDTOList.length : 0 }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column label="地区" width="120">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{ scope.row.jobLocationName }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column label="最低薪资" prop="jobSalaryMin" sortable="custom" width="120">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{ scope.row.jobSalaryMin }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column label="最高薪资" prop="jobSalaryMax" sortable="custom" width="120">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{ scope.row.jobSalaryMax }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column label="几薪" prop="jobSalaryTotalMonth" sortable="custom" width="80">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{ scope.row.jobSalaryTotalMonth }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column label="学历" prop="jobDegreeName" sortable width="100">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{ scope.row.jobDegreeName }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column label="招聘平台" prop="jobPlatform" width="100">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{ jobPlatformFormat(scope.row.jobPlatform) }}
+            </el-text>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-scrollbar>
+  </div>
+  <div class="content" v-show="mapMode">
+      <el-scrollbar class="left">
+      <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }" style="width: 100%"
+        stripe @sort-change="sortChange" sortable="custom">
+        <el-table-column label="名称" show-overflow-tooltip width="100">
+          <template #default="scope">
+            <a :href="scope.row.jobUrl" target="_blank" :title="scope.row.jobUrl">
+              <el-text line-clamp="1">
+                {{ scope.row.jobName }}
+              </el-text>
+            </a>
+          </template>
+        </el-table-column>
+        <el-table-column label="公司" show-overflow-tooltip width="200">
+          <template #default="scope">
+            <el-text line-clamp="1" :title="scope.row.jobCompanyName">
+              {{ scope.row.jobCompanyName }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column prop="companyTagDTOList" label="标签数" show-overflow-tooltip width="70">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{ scope.row.companyTagDTOList ? scope.row.companyTagDTOList.length : 0 }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column fixed="right" label="操作" width="120">
+          <template #default="scope">
+            <el-link v-if="scope.row.jobLongitude && scope.row.jobLatitude" type="primary"
+              @click="onJobMapLocate(scope.row)">
+              <Icon icon="mdi:location" />定位
+            </el-link>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-scrollbar>
+    <div class="middle">
+      <div class="mapWrapper">
+        <l-map ref="map" v-model:zoom="zoom">
+          <l-tile-layer
+            url="http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
+            :subdomains="['1', '2', '3', '4']"></l-tile-layer>
+          <l-marker v-for="(item, index) in jobsFilterEmptyLocation" :lat-lng="[item.jobLatitude, item.jobLongitude]">
+            <l-popup ref="popups" :lat-lng="[item.jobLatitude, item.jobLongitude]">
+              <el-row>
+                <el-text line-clamp="1">职位名： <el-link type="primary" :href="item.jobUrl" target="_blank">{{ item.jobName
+                    }}</el-link></el-text>
+              </el-row>
+              <el-row>
+                <el-text line-clamp="1">发布时间：{{ datetimeFormat(item.jobFirstPublishDatetime)
+                  }}</el-text>
+              </el-row>
+              <el-row>
+                <el-text line-clamp="1">薪资：💵{{ item.jobSalaryMin }} - 💵{{ item.jobSalaryMax
+                  }}</el-text>
+              </el-row>
+              <el-row>
+                <el-text line-clamp="1">学历：{{ item.jobDegreeName }}</el-text>
+              </el-row>
+              <el-row>
+                <el-text line-clamp="1">招聘平台：{{ item.jobPlatform }}</el-text>
+              </el-row>
+              <el-row>
+                <el-text line-clamp="1">地址：{{ item.jobAddress }}</el-text>
+              </el-row>
+              <el-row>
+                <el-text line-clamp="1">公司名：{{ item.jobCompanyName }}</el-text>
+              </el-row>
+              <el-row v-if="item.companyTagDTOList && item.companyTagDTOList.length > 0">
+                <el-text line-clamp="1">公司标签({{ item.companyTagDTOList.length }})：</el-text>
+                <el-text class="tagItem" v-for="(item, index) in item.companyTagDTOList">
+                  <el-tag type="primary">
+                    <Icon icon="mdi:tag" />{{
+                      item.tagName }}
+                  </el-tag>
+                </el-text>
+              </el-row>
+            </l-popup>
+            <l-icon className="icon">
+              <div class="mapIcon">
+                <el-row>
+                  <el-text line-clamp="1"> {{ item.jobName }}</el-text>
+                </el-row>
+                <el-row>
+                  <el-text line-clamp="1">💵{{ item.jobSalaryMin }} - 💵{{ item.jobSalaryMax
+                    }}</el-text>
+                </el-row>
+                <el-row>
+                  <el-text line-clamp="1">{{ item.jobCompanyName }}</el-text>
+                </el-row>
+              </div>
+            </l-icon>
+          </l-marker>
+        </l-map>
+      </div>
+    </div>
+  </div>
   <el-row>
     <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
       :page-sizes="[10, 50, 100, 200, 500, 1000]" :small="small" :disabled="disabled" :background="background"
@@ -244,7 +346,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, computed, provide, nextTick, onUnmounted } from "vue";
+import { onMounted, ref, computed, provide, nextTick, onUnmounted, watch } from "vue";
 import { useTransition } from "@vueuse/core";
 import { JobApi } from "../../common/api/index.js";
 import { SearchJobBO } from "../../common/data/bo/searchJobBO.js";
@@ -266,6 +368,21 @@ import {
   PLATFORM_LIEPIN,
   PLATFORM_ZHILIAN,
 } from "../../common";
+import "leaflet/dist/leaflet.css";
+import {
+  LMap,
+  LIcon,
+  LTileLayer,
+  LMarker,
+  LControlLayers,
+  LTooltip,
+  LPopup,
+  LPolyline,
+  LPolygon,
+  LRectangle,
+} from "@vue-leaflet/vue-leaflet";
+import { wgs84ToGcj02 } from '@pansy/lnglat-transform';
+import { Icon } from '@iconify/vue';
 
 use([
   CanvasRenderer,
@@ -546,6 +663,45 @@ const refreshStatistic = async () => {
   totalJobCountSource.value = statisticJobBrowseDTO.totalJob;
   loading.value = false;
 };
+
+const mapMode = ref(false);
+
+const map = ref();
+const zoom = ref(10);
+const jobsFilterEmptyLocation = computed(() => tableData.value.filter((item) => (item.jobLatitude && item.jobLongitude)))
+const idAndPopupIndexMap = computed(() => {
+  let result = new Map();
+  let filtered = tableData.value.filter((item) => (item.jobLatitude && item.jobLongitude));
+  filtered.forEach((element, index) => {
+    result.set(element.jobId, index);
+  });
+  return result;
+})
+const onJobMapLocate = (item) => {
+  let popUpIndex = idAndPopupIndexMap.value.get(item.jobId);
+  let popUpObject = popups.value[popUpIndex];
+  popUpObject.leafletObject.openOn(map.value.leafletObject);
+  map.value.leafletObject.flyTo(popUpObject.latLng, 14);
+}
+const popups = ref([])
+
+watch(mapMode, async (newValue, oldValue) => {
+  if (newValue) {
+    nextTick(() => {
+      map.value.leafletObject.invalidateSize();
+      map.value.leafletObject.fitBounds(popups.value.map(item => item.latLng));
+      if (popups.value && popups.value.length > 0) {
+        let firstPopup = popups.value[0];
+        firstPopup.leafletObject.openOn(map.value.leafletObject);
+        //TODO clean the timeout
+        setTimeout(() => {
+          map.value.leafletObject.flyTo(firstPopup.latLng);
+        }, 300);
+      }
+    });
+  }
+})
+
 </script>
 
 <style scoped>
@@ -554,7 +710,7 @@ const refreshStatistic = async () => {
 }
 
 .el-row {
-  padding-top: 10px;
+  /* padding-top: 10px; */
 }
 
 .chart {
@@ -582,5 +738,52 @@ const refreshStatistic = async () => {
 
 .dialog_avg_salary {
   height: 400px;
+}
+
+.statistic {
+  .el-col {
+    text-align: center;
+  }
+
+  padding-top: 10px;
+}
+
+.mapWrapper {
+  flex: 1;
+}
+
+.mapIcon {
+  width: 200px;
+  background-color: lightgoldenrodyellow;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid yellowgreen;
+}
+
+.content {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  overflow: hidden;
+}
+
+.tableScrollbar {
+  width: 100%;
+}
+
+.left {
+  display: flex;
+  overflow: scroll;
+  padding-right: 10px;
+  scrollbar-width: thin;
+  min-width: 200px;
+  max-width: 35%;
+}
+
+.middle {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  margin-right: 10px;
 }
 </style>

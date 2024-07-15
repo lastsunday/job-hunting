@@ -1,5 +1,5 @@
 <template>
-  <el-col>
+  <div class="content">
     <el-row justify="end">
       <div class="menu">
         <el-tooltip content="帮助">
@@ -200,7 +200,7 @@
         </el-descriptions-item>
       </el-descriptions>
     </el-row>
-  </el-col>
+  </div>
   <el-dialog v-model="importDialogVisible" title="数据恢复" width="500">
     <div>
       <el-text class="mx-1" type="danger">注意：原数据会被清除!!!</el-text>
@@ -850,5 +850,12 @@ const onAccessIssuesPage = () => {
 
 .latestVersionChangelogDetailButton {
   cursor: pointer;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: scroll;
 }
 </style>

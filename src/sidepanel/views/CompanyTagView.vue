@@ -10,7 +10,7 @@
       <el-statistic title="已标签公司数" :value="totalTagCompanyCount" />
     </el-col>
   </el-row>
-  <el-col class="search">
+  <div class="search">
     <div class="flex">
       <el-input placeholder="公司名" v-model="searchName" clearable @change="onClickSearch" />
       <div class="operation_menu">
@@ -40,55 +40,57 @@
         </div>
       </el-collapse-item>
     </el-collapse>
-  </el-col>
-  <el-row>
-    <el-table ref="tableRef" :data="tableData" :default-sort="{ prop: 'updateDatetime', order: 'descending' }"
-      style="width: 100%" stripe @sort-change="sortChange" sortable="custom">
-      <el-table-column type="selection" width="55" />
-      <el-table-column label="公司全称" show-overflow-tooltip property="companyName">
-        <template #default="scope">
-          <el-text line-clamp="1">
-            {{ scope.row.companyName }}
-          </el-text>
-        </template>
-      </el-table-column>
-      <el-table-column prop="tagNameArray" label="标签" property="tagNameArray">
-        <template #default="scope">
-          <div>
-            <el-text class="compang_tag">
-              <el-tag v-for="(value, key, index) in scope.row.tagNameArray" type="primary">{{ value
-                }}</el-tag>
+  </div>
+  <div class="content">
+    <el-scrollbar class="tableScrollbar">
+      <el-table ref="tableRef" :data="tableData" :default-sort="{ prop: 'updateDatetime', order: 'descending' }"
+        style="width: 100%" stripe @sort-change="sortChange" sortable="custom">
+        <el-table-column type="selection" width="55" />
+        <el-table-column label="公司全称" show-overflow-tooltip property="companyName">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{ scope.row.companyName }}
             </el-text>
-          </div>
-        </template>
-      </el-table-column>
-      <el-table-column prop="tagNameArray" label="标签数" width="100">
-        <template #default="scope">
-          {{ scope.row.tagNameArray.length }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="updateDatetime" sortable="custom" label="更新时间" width="160">
-        <template #default="scope">
-          <el-text line-clamp="1">
-            {{ datetimeFormatHHMM(scope.row.updateDatetime) }}
-          </el-text>
-        </template>
-      </el-table-column>
-      <el-table-column fixed="right" label="操作" width="120">
-        <template #default="scope">
-          <el-button link type="primary" size="small" @click="onUpdateHandle(scope.row)">
-            编辑
-          </el-button>
-          <el-popconfirm title="确认删除此行数据？" @confirm="onDeleteHandle(scope.row)" confirm-button-text="确定"
-            cancel-button-text="取消">
-            <template #reference>
-              <el-button link type="primary" size="small">删除</el-button>
-            </template>
-          </el-popconfirm>
-        </template>
-      </el-table-column>
-    </el-table>
-  </el-row>
+          </template>
+        </el-table-column>
+        <el-table-column prop="tagNameArray" label="标签" property="tagNameArray">
+          <template #default="scope">
+            <div>
+              <el-text class="compang_tag">
+                <el-tag v-for="(value, key, index) in scope.row.tagNameArray" type="primary">{{ value
+                  }}</el-tag>
+              </el-text>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="tagNameArray" label="标签数" width="100">
+          <template #default="scope">
+            {{ scope.row.tagNameArray.length }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="updateDatetime" sortable="custom" label="更新时间" width="160">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{ datetimeFormatHHMM(scope.row.updateDatetime) }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column fixed="right" label="操作" width="120">
+          <template #default="scope">
+            <el-button link type="primary" size="small" @click="onUpdateHandle(scope.row)">
+              编辑
+            </el-button>
+            <el-popconfirm title="确认删除此行数据？" @confirm="onDeleteHandle(scope.row)" confirm-button-text="确定"
+              cancel-button-text="取消">
+              <template #reference>
+                <el-button link type="primary" size="small">删除</el-button>
+              </template>
+            </el-popconfirm>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-scrollbar>
+  </div>
   <el-row>
     <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
       :page-sizes="[10, 50, 100, 200, 500, 1000]" :small="small" :disabled="disabled" :background="background"
@@ -98,7 +100,7 @@
   <el-dialog v-model="dialogFormVisible" :title="formTitle" width="800px">
     <el-form ref="formRef" :model="form" label-width="auto" :rules="rules">
       <el-form-item label="公司名" prop="name">
-        <el-input :disabled="!formAddMode" v-model="form.name" placeholder="清输入公司名" />
+        <el-input :disabled="!formAddMode" v-model="form.name" placeholder="请输入公司名" />
       </el-form-item>
       <el-form-item label="标签" prop="tagNameArray">
         <TagInput ref="formTagRef" v-model="form.tagNameArray" :settings="tagSettings" :whitelist="whitelist"
@@ -461,5 +463,16 @@ const onExportHandle = () => {
 
 .tagWrapper {
   display: flex;
+}
+
+.content {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  overflow: hidden;
+}
+
+.tableScrollbar {
+  width: 100%;
 }
 </style>

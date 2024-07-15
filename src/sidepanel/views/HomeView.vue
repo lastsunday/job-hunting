@@ -39,23 +39,24 @@
                     <el-text>将含有位置坐标的职位显示到地图上</el-text>
                 </el-row>
             </el-tour-step>
-            <el-tour-step :target="websiteRef?.$el" title="网站" placement="left">
+            <el-tour-step :target="websiteRef" title="网站" placement="left">
                 <el-row>
                     <el-text>各类网站的快速导航</el-text>
                 </el-row>
             </el-tour-step>
         </el-tour>
     </el-divider>
-    <el-row justify="space-between">
-        <el-col :span="6">
+    <div class="content">
+        <div class="left">
             <el-descriptions ref="latestJobRef" title="最近查看职位" direction="vertical" :column="1">
                 <el-descriptions-item label="" v-loading="loading">
-                    <el-timeline v-if="todayJobs.length > 0" style="max-width: 600px">
+                    <el-timeline v-if="todayJobs.length > 0">
                         <el-timeline-item v-for="(item, index) in todayJobs" :key="index"
                             :timestamp="item.latestBrowseDetailDatetime" v-show="item.latestBrowseDetailDatetime">
                             <el-row>
-                                <el-link type="primary" :href="item.jobUrl" target="_blank">{{ item.jobName }}-{{
-                                    item.jobCompanyName }}</el-link>
+                                <el-link type="primary" :href="item.jobUrl" target="_blank">{{ item.jobName
+                                    }}-{{
+                                        item.jobCompanyName }}</el-link>
                             </el-row>
                             <el-row justify="end">
                                 <el-text v-if="item.companyTagDTOList && item.companyTagDTOList.length > 0">
@@ -72,10 +73,10 @@
                     <el-text v-else>无</el-text>
                 </el-descriptions-item>
             </el-descriptions>
-        </el-col>
-        <el-col :span="14">
+        </div>
+        <div class="middle">
             <div class="mapWrapper">
-                <l-map ref="map" v-model:zoom="zoom" :center="[39.906217, 116.3912757]" style="height:600px;">
+                <l-map id="map" ref="map" v-model:zoom="zoom">
                     <l-tile-layer
                         url="http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
                         :subdomains="['1', '2', '3', '4']"></l-tile-layer>
@@ -133,8 +134,8 @@
                     </l-marker>
                 </l-map>
             </div>
-        </el-col>
-        <el-col ref="websiteRef" :span="4">
+        </div>
+        <div ref="websiteRef" class="right">
             <el-descriptions direction="vertical" :column="1" size="small" border>
                 <el-descriptions-item label="招聘网站">
                     <el-row v-for="(item, index) in jobWebsiteList">
@@ -147,8 +148,8 @@
                     </el-row>
                 </el-descriptions-item>
             </el-descriptions>
-        </el-col>
-    </el-row>
+        </div>
+    </div>
 </template>
 <script lang="ts" setup>
 import { ref, onMounted, computed, onUnmounted } from "vue";
@@ -324,8 +325,8 @@ const tourOpen = ref(false);
 .el-row {}
 
 .mapWrapper {
-    margin-left: 10px;
-    margin-right: 10px;
+    display: flex;
+    flex: 1;
 }
 
 .mapIcon {
@@ -348,5 +349,34 @@ const tourOpen = ref(false);
 
 .tagItem {
     margin: 2px;
+}
+
+.content {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    overflow: hidden;
+}
+
+.left {
+    display: flex;
+    overflow: scroll;
+    padding-right: 20px;
+    scrollbar-width: thin;
+    min-width: 200px;
+    max-width: 25%;
+}
+
+.middle {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin-right: 10px;
+}
+
+.right {
+    min-width: 200px;
+    max-width: 400px;
+    overflow: scroll;
 }
 </style>

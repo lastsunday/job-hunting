@@ -1,5 +1,5 @@
 <template>
-    <el-row v-loading="loading">
+    <el-row v-loading="loading" class="statistic">
         <el-col :span="12">
             <el-statistic title="今天新增记录" :value="todayAddCount" />
         </el-col>
@@ -7,12 +7,13 @@
             <el-statistic title="公司总数" :value="totalCompanyCount" />
         </el-col>
     </el-row>
-    <el-col class="search">
+    <div class="search">
         <div class="flex">
             <el-input placeholder="公司名" v-model="searchName" clearable @change="onClickSearch" />
             <div class="operation_menu">
                 <div class="operation_menu_left">
                     <el-switch v-model="showAdvanceSearch" active-text="高级搜索" inactive-text="普通搜索" inline-prompt />
+                    <el-switch v-model="mapMode" active-text="地图模式" inactive-text="列表模式" inline-prompt />
                 </div>
                 <div>
                     <el-button @click="onExportHandle">导出</el-button>
@@ -29,222 +30,314 @@
                     end-placeholder="成立时间结束时间" v-model="startDateDatetime" clearable @change="onClickSearch" />
             </el-collapse-item>
         </el-collapse>
-    </el-col>
-    <el-row>
-        <el-table ref="tableRef" :data="tableData" :default-sort="{ prop: 'updateDatetime', order: 'descending' }"
-            style="width: 100%" stripe @sort-change="sortChange" sortable="custom">
-            <el-table-column type="expand" width="30">
-                <template #default="props">
-                    <div m="4" class="expand">
-                        <el-descriptions class="margin-top" :column="4" size="small" border>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">公司全称</div>
-                                </template>
-                                <el-link :href="props.row.sourceUrl" target="_blank">
-                                    {{ props.row.companyName }}
-                                </el-link>
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">经营状态</div>
-                                </template>
-                                {{ props.row.companyStatus }}
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">成立时间</div>
-                                </template>
-                                {{ datetimeFormat(props.row.companyStartDate) }}
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">所属行业</div>
-                                </template>
-                                {{ props.row.companyIndustry }}
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">统一社会信用代码</div>
-                                </template>
-                                {{ props.row.companyUnifiedCode }}
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">纳税人识别号</div>
-                                </template>
-                                {{ props.row.companyTaxNo }}
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">工商注册号</div>
-                                </template>
-                                {{ props.row.companyLicenseNumber }}
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">法人</div>
-                                </template>
-                                {{ props.row.companyLegalPerson }}
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">官网</div>
-                                </template>
-                                <el-link v-if="props.row.companyWebSite != '-'"
-                                    :href="'http://' + props.row.companyWebSite" target="_blank">{{
-                                        props.row.companyWebSite }}</el-link>
-                                <el-text v-else>-</el-text>
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">社保人数</div>
-                                </template>
-                                {{ props.row.companyInsuranceNum }}
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">自身风险数</div>
-                                </template>
-                                {{ props.row.companySelfRisk }}
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">关联风险数</div>
-                                </template>
-                                {{ props.row.companyUnionRisk }}
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">地址</div>
-                                </template>
-                                {{ props.row.companyAddress }}
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">经度</div>
-                                </template>
-                                {{ props.row.companyLongitude }}
-                            </el-descriptions-item>
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">纬度</div>
-                                </template>
-                                {{ props.row.companyLatitude }}
-                            </el-descriptions-item>
-                        </el-descriptions>
-                        <el-descriptions class="margin-top" :column="1" size="small" border direction="vertical">
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">标签</div>
-                                </template>
-                                <div>
-                                    <el-text v-if="props.row.tagNameArray.length > 0" class="compang_tag">
-                                        <el-tag v-for="(value, key, index) in props.row.tagNameArray" type="primary">{{
-                                            value
-                                            }}</el-tag>
-                                    </el-text>
+    </div>
+    <div class="content" v-if="!mapMode">
+        <el-scrollbar class="tableScrollbar">
+            <el-table ref="tableRef" :data="tableData" :default-sort="{ prop: 'updateDatetime', order: 'descending' }"
+                style="width: 100%" stripe @sort-change="sortChange" sortable="custom">
+                <el-table-column type="expand" width="30">
+                    <template #default="props">
+                        <div m="4" class="expand">
+                            <el-descriptions class="margin-top" :column="4" size="small" border>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">公司全称</div>
+                                    </template>
+                                    <el-link :href="props.row.sourceUrl" target="_blank">
+                                        {{ props.row.companyName }}
+                                    </el-link>
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">经营状态</div>
+                                    </template>
+                                    {{ props.row.companyStatus }}
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">成立时间</div>
+                                    </template>
+                                    {{ datetimeFormat(props.row.companyStartDate) }}
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">所属行业</div>
+                                    </template>
+                                    {{ props.row.companyIndustry }}
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">统一社会信用代码</div>
+                                    </template>
+                                    {{ props.row.companyUnifiedCode }}
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">纳税人识别号</div>
+                                    </template>
+                                    {{ props.row.companyTaxNo }}
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">工商注册号</div>
+                                    </template>
+                                    {{ props.row.companyLicenseNumber }}
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">法人</div>
+                                    </template>
+                                    {{ props.row.companyLegalPerson }}
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">官网</div>
+                                    </template>
+                                    <el-link v-if="props.row.companyWebSite != '-'"
+                                        :href="'http://' + props.row.companyWebSite" target="_blank">{{
+                                            props.row.companyWebSite }}</el-link>
                                     <el-text v-else>-</el-text>
-                                </div>
-                            </el-descriptions-item>
-                        </el-descriptions>
-                        <el-descriptions class="margin-top" :column="1" size="small" border direction="vertical">
-                            <el-descriptions-item>
-                                <template #label>
-                                    <div class="cell-item">经营范围</div>
-                                </template>
-                                {{ props.row.companyScope }}
-                            </el-descriptions-item>
-                        </el-descriptions>
-                    </div>
-                </template>
-            </el-table-column>
-            <el-table-column label="公司全称" show-overflow-tooltip width="260" property="companyName">
-                <template #default="scope">
-                    <el-text line-clamp="1">
-                        <el-link :href="scope.row.sourceUrl" target="_blank">{{ scope.row.companyName }}</el-link>
-                    </el-text>
-                </template>
-            </el-table-column>
-            <el-table-column prop="companyStatus" label="经营状态" width="80">
-                <template #default="scope">
-                    <el-text line-clamp="1">
-                        {{ scope.row.companyStatus }}
-                    </el-text>
-                </template>
-            </el-table-column>
-            <el-table-column prop="companyStartDate" sortable="custom" label="成立时间" width="110">
-                <template #default="scope">
-                    <el-text line-clamp="1">
-                        {{ datetimeFormat(scope.row.companyStartDate) }}
-                    </el-text>
-                </template>
-            </el-table-column>
-            <el-table-column prop="companyUnifiedCode" label="统一社会信用代码" show-overflow-tooltip width="200">
-                <template #default="scope">
-                    <el-text line-clamp="1">
-                        {{ scope.row.companyUnifiedCode }}
-                    </el-text>
-                </template>
-            </el-table-column>
-            <el-table-column prop="companyLegalPerson" label="法人" show-overflow-tooltip width="100">
-                <template #default="scope">
-                    <el-text line-clamp="1">
-                        {{ scope.row.companyLegalPerson }}
-                    </el-text>
-                </template>
-            </el-table-column>
-            <el-table-column prop="companyInsuranceNum" label="社保人数" width="100">
-                <template #default="scope">
-                    <el-text line-clamp="1">
-                        {{ scope.row.companyInsuranceNum ?? "-" }}
-                    </el-text>
-                </template>
-            </el-table-column>
-            <el-table-column prop="companyWebSite" label="官网" show-overflow-tooltip>
-                <template #default="scope">
-                    <el-link v-if="scope.row.companyWebSite != '-'" :href="'http://' + scope.row.companyWebSite"
-                        target="_blank">{{ scope.row.companyWebSite }}</el-link>
-                    <el-text v-else>-</el-text>
-                </template>
-            </el-table-column>
-            <el-table-column prop="companyAddress" label="地址" show-overflow-tooltip>
-                <template #default="scope">
-                    <el-text line-clamp="1">
-                        {{ scope.row.companyAddress }}
-                    </el-text>
-                </template>
-            </el-table-column>
-            <el-table-column prop="companyIndustry" label="所属行业" show-overflow-tooltip>
-                <template #default="scope">
-                    <el-text line-clamp="1">
-                        {{ scope.row.companyIndustry }}
-                    </el-text>
-                </template>
-            </el-table-column>
-            <el-table-column prop="tagNameArray" label="标签数" show-overflow-tooltip width="70">
-                <template #default="scope">
-                    <el-text line-clamp="1">
-                        {{ scope.row.tagNameArray.length }}
-                    </el-text>
-                </template>
-            </el-table-column>
-            <el-table-column prop="updateDatetime" sortable="custom" label="更新时间" width="160">
-                <template #default="scope">
-                    <el-text line-clamp="1">
-                        {{ datetimeFormatHHMM(scope.row.updateDatetime) }}
-                    </el-text>
-                </template>
-            </el-table-column>
-            <el-table-column fixed="right" label="操作" width="120">
-                <template #default="scope">
-                    <el-button link type="primary" size="small" @click="onUpdateHandle(scope.row)">
-                        编辑标签
-                    </el-button>
-                </template>
-            </el-table-column>
-        </el-table>
-    </el-row>
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">社保人数</div>
+                                    </template>
+                                    {{ props.row.companyInsuranceNum }}
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">自身风险数</div>
+                                    </template>
+                                    {{ props.row.companySelfRisk }}
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">关联风险数</div>
+                                    </template>
+                                    {{ props.row.companyUnionRisk }}
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">地址</div>
+                                    </template>
+                                    {{ props.row.companyAddress }}
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">经度</div>
+                                    </template>
+                                    {{ props.row.companyLongitude }}
+                                </el-descriptions-item>
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">纬度</div>
+                                    </template>
+                                    {{ props.row.companyLatitude }}
+                                </el-descriptions-item>
+                            </el-descriptions>
+                            <el-descriptions class="margin-top" :column="1" size="small" border direction="vertical">
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">标签</div>
+                                    </template>
+                                    <div>
+                                        <el-text v-if="props.row.tagNameArray.length > 0" class="compang_tag">
+                                            <el-tag v-for="(value, key, index) in props.row.tagNameArray"
+                                                type="primary">{{
+                                                    value
+                                                }}</el-tag>
+                                        </el-text>
+                                        <el-text v-else>-</el-text>
+                                    </div>
+                                </el-descriptions-item>
+                            </el-descriptions>
+                            <el-descriptions class="margin-top" :column="1" size="small" border direction="vertical">
+                                <el-descriptions-item>
+                                    <template #label>
+                                        <div class="cell-item">经营范围</div>
+                                    </template>
+                                    {{ props.row.companyScope }}
+                                </el-descriptions-item>
+                            </el-descriptions>
+                        </div>
+                    </template>
+                </el-table-column>
+                <el-table-column label="公司全称" show-overflow-tooltip width="260" property="companyName">
+                    <template #default="scope">
+                        <el-text line-clamp="1">
+                            <el-link :href="scope.row.sourceUrl" target="_blank">{{ scope.row.companyName }}</el-link>
+                        </el-text>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="companyStatus" label="经营状态" width="80">
+                    <template #default="scope">
+                        <el-text line-clamp="1">
+                            {{ scope.row.companyStatus }}
+                        </el-text>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="companyStartDate" sortable="custom" label="成立时间" width="110">
+                    <template #default="scope">
+                        <el-text line-clamp="1">
+                            {{ datetimeFormat(scope.row.companyStartDate) }}
+                        </el-text>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="companyUnifiedCode" label="统一社会信用代码" show-overflow-tooltip width="200">
+                    <template #default="scope">
+                        <el-text line-clamp="1">
+                            {{ scope.row.companyUnifiedCode }}
+                        </el-text>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="companyLegalPerson" label="法人" show-overflow-tooltip width="100">
+                    <template #default="scope">
+                        <el-text line-clamp="1">
+                            {{ scope.row.companyLegalPerson }}
+                        </el-text>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="companyInsuranceNum" label="社保人数" width="100">
+                    <template #default="scope">
+                        <el-text line-clamp="1">
+                            {{ scope.row.companyInsuranceNum ?? "-" }}
+                        </el-text>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="companyWebSite" label="官网" show-overflow-tooltip>
+                    <template #default="scope">
+                        <el-link v-if="scope.row.companyWebSite != '-'" :href="'http://' + scope.row.companyWebSite"
+                            target="_blank">{{ scope.row.companyWebSite }}</el-link>
+                        <el-text v-else>-</el-text>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="companyAddress" label="地址" show-overflow-tooltip>
+                    <template #default="scope">
+                        <el-text line-clamp="1">
+                            {{ scope.row.companyAddress }}
+                        </el-text>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="companyIndustry" label="所属行业" show-overflow-tooltip>
+                    <template #default="scope">
+                        <el-text line-clamp="1">
+                            {{ scope.row.companyIndustry }}
+                        </el-text>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="tagNameArray" label="标签数" show-overflow-tooltip width="70">
+                    <template #default="scope">
+                        <el-text line-clamp="1">
+                            {{ scope.row.tagNameArray.length }}
+                        </el-text>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="updateDatetime" sortable="custom" label="更新时间" width="160">
+                    <template #default="scope">
+                        <el-text line-clamp="1">
+                            {{ datetimeFormatHHMM(scope.row.updateDatetime) }}
+                        </el-text>
+                    </template>
+                </el-table-column>
+                <el-table-column fixed="right" label="操作" width="120">
+                    <template #default="scope">
+                        <el-button link type="primary" size="small" @click="onUpdateHandle(scope.row)">
+                            编辑标签
+                        </el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-scrollbar>
+    </div>
+    <div class="content" v-show="mapMode">
+        <el-scrollbar class="left">
+            <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }" stripe
+                @sort-change="sortChange" sortable="custom">
+                <el-table-column label="公司全称" show-overflow-tooltip width="250">
+                    <template #default="scope">
+                        <el-text line-clamp="1">
+                            {{ scope.row.companyName }}
+                        </el-text>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="tagNameArray" label="标签数" show-overflow-tooltip width="70">
+                    <template #default="scope">
+                        <el-text line-clamp="1">
+                            {{ scope.row.tagNameArray ? scope.row.tagNameArray.length : 0 }}
+                        </el-text>
+                    </template>
+                </el-table-column>
+                <el-table-column fixed="right" label="操作" width="120">
+                    <template #default="scope">
+                        <el-link v-if="scope.row.companyLongitude && scope.row.companyLatitude" type="primary"
+                            @click="onItemMapLocate(scope.row)">
+                            <Icon icon="mdi:location" />定位
+                        </el-link>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-scrollbar>
+        <div class="middle">
+            <div class="mapWrapper">
+                <l-map ref="map" v-model:zoom="zoom">
+                    <l-tile-layer
+                        url="http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
+                        :subdomains="['1', '2', '3', '4']"></l-tile-layer>
+                    <l-marker v-for="(item, index) in itemFilterEmptyLocation"
+                        :lat-lng="[item.companyLatitude, item.companyLongitude]">
+                        <l-popup ref="popups" :lat-lng="[item.companyLatitude, item.companyLongitude]">
+                            <el-row>
+                                <el-text line-clamp="1">公司全称：{{ item.companyName }}</el-text>
+                            </el-row>
+                            <el-row>
+                                <el-text line-clamp="1">所属行业：{{ item.companyIndustry }}</el-text>
+                            </el-row>
+                            <el-row>
+                                <el-text line-clamp="1">经营状态：{{ item.companyStatus }}</el-text>
+                            </el-row>
+                            <el-row>
+                                <el-text line-clamp="1">成立时间：{{ datetimeFormat(item.companyStartDate) }}</el-text>
+                            </el-row>
+                            <el-row>
+                                <el-text line-clamp="1">法人：{{ item.companyLegalPerson }}</el-text>
+                            </el-row>
+                            <el-row>
+                                <el-text line-clamp="1">社保人数：{{ item.companyInsuranceNum }}</el-text>
+                            </el-row>
+                            <el-row>
+                                <el-text line-clamp="1">地址：{{ item.companyAddress }}</el-text>
+                            </el-row>
+                            <el-row v-if="item.tagNameArray && item.tagNameArray.length > 0">
+                                <el-text line-clamp="1">公司标签({{ item.tagNameArray.length }})：</el-text>
+                                <el-text class="tagItem" v-for="(item, index) in item.tagNameArray">
+                                    <el-tag type="primary">
+                                        <Icon icon="mdi:tag" />{{
+                                            item }}
+                                    </el-tag>
+                                </el-text>
+                            </el-row>
+                        </l-popup>
+                        <l-icon className="icon">
+                            <div class="mapIcon">
+                                <el-row>
+                                    <el-text line-clamp="1"> {{ item.companyName }}</el-text>
+                                </el-row>
+                                <el-row>
+                                    <el-text line-clamp="1">{{ item.companyIndustry }}</el-text>
+                                </el-row>
+                                <el-row>
+                                    <el-text line-clamp="1"> {{ datetimeFormat(item.companyStartDate) }}</el-text>
+                                </el-row>
+                                <el-row>
+                                    <el-text line-clamp="1"> {{ item.companyAddress }}</el-text>
+                                </el-row>
+                            </div>
+                        </l-icon>
+                    </l-marker>
+                </l-map>
+            </div>
+        </div>
+    </div>
     <el-row>
         <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
             :page-sizes="[10, 50, 100, 200, 500, 1000]" :small="small" :disabled="disabled" :background="background"
@@ -254,7 +347,7 @@
     <el-dialog v-model="dialogFormVisible" :title="formTitle" width="800px">
         <el-form ref="formRef" :model="form" label-width="auto" :rules="rules">
             <el-form-item label="公司名" prop="name">
-                <el-input :disabled="!formAddMode" v-model="form.name" placeholder="清输入公司名" />
+                <el-input :disabled="!formAddMode" v-model="form.name" placeholder="请输入公司名" />
             </el-form-item>
             <el-form-item label="标签" prop="tagNameArray">
                 <TagInput ref="formTagRef" v-model="form.tagNameArray" :settings="tagSettings" :whitelist="whitelist"
@@ -273,7 +366,7 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, computed, reactive, nextTick ,onUnmounted} from "vue";
+import { onMounted, ref, computed, reactive, nextTick, onUnmounted, watch } from "vue";
 import { useTransition } from "@vueuse/core";
 import { CompanyApi, TagApi } from "../../common/api/index";
 import dayjs from "dayjs";
@@ -285,6 +378,21 @@ import { ElTable, ElMessage } from "element-plus";
 import { utils, writeFileXLSX } from "xlsx";
 import { genIdFromText } from "../../common/utils";
 import type { FormInstance, FormRules } from 'element-plus'
+import "leaflet/dist/leaflet.css";
+import {
+    LMap,
+    LIcon,
+    LTileLayer,
+    LMarker,
+    LControlLayers,
+    LTooltip,
+    LPopup,
+    LPolyline,
+    LPolygon,
+    LRectangle,
+} from "@vue-leaflet/vue-leaflet";
+import { wgs84ToGcj02 } from '@pansy/lnglat-transform';
+import { Icon } from '@iconify/vue';
 
 const todayAddCountSource = ref(0);
 const todayAddCount = useTransition(todayAddCountSource, {
@@ -460,12 +568,12 @@ const form = reactive({
     tagNameArray: [],
 })
 const tagSettings = {
-  dropdown: {
-    maxItems: 30,
-    classname: 'tags-look', // <- custom classname for this dropdown, so it could be targeted
-    enabled: 0,             // <- show suggestions on focus
-    closeOnSelect: false    // <- do not hide the suggestions dropdown once an item has been selected
-  }
+    dropdown: {
+        maxItems: 30,
+        classname: 'tags-look', // <- custom classname for this dropdown, so it could be targeted
+        enabled: 0,             // <- show suggestions on focus
+        closeOnSelect: false    // <- do not hide the suggestions dropdown once an item has been selected
+    }
 };
 
 const validateCompanyTagExistsByCompanyName = (rule: any, value: any, callback: any) => {
@@ -570,6 +678,45 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
         }
     })
 }
+
+
+const mapMode = ref(false);
+
+const map = ref();
+const zoom = ref(10);
+const itemFilterEmptyLocation = computed(() => tableData.value.filter((item) => (item.companyLatitude && item.companyLongitude)))
+const idAndPopupIndexMap = computed(() => {
+    let result = new Map();
+    let filtered = tableData.value.filter((item) => (item.companyLatitude && item.companyLongitude));
+    filtered.forEach((element, index) => {
+        result.set(element.companyId, index);
+    });
+    return result;
+})
+const onItemMapLocate = (item) => {
+    let popUpIndex = idAndPopupIndexMap.value.get(item.companyId);
+    let popUpObject = popups.value[popUpIndex];
+    popUpObject.leafletObject.openOn(map.value.leafletObject);
+    map.value.leafletObject.flyTo(popUpObject.latLng, 14);
+}
+const popups = ref([])
+
+watch(mapMode, async (newValue, oldValue) => {
+    if (newValue) {
+        nextTick(() => {
+            map.value.leafletObject.invalidateSize();
+            map.value.leafletObject.fitBounds(popups.value.map(item => item.latLng));
+            if (popups.value && popups.value.length > 0) {
+                let firstPopup = popups.value[0];
+                firstPopup.leafletObject.openOn(map.value.leafletObject);
+                //TODO clean the timeout
+                setTimeout(() => {
+                    map.value.leafletObject.flyTo(firstPopup.latLng);
+                }, 300);
+            }
+        });
+    }
+})
 </script>
 
 <style scoped>
@@ -577,9 +724,7 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
     text-align: center;
 }
 
-.el-row {
-    padding-top: 10px;
-}
+.el-row {}
 
 .expand {
     padding: 10px;
@@ -604,5 +749,52 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
     .el-tag {
         margin: 5px;
     }
+}
+
+.statistic {
+    .el-col {
+        text-align: center;
+    }
+
+    padding-top: 10px;
+}
+
+.mapWrapper {
+    flex: 1;
+}
+
+.mapIcon {
+    width: 200px;
+    background-color: lightgoldenrodyellow;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid yellowgreen;
+}
+
+.content {
+    display: flex;
+    flex-direction: row;
+    flex: 1;
+    overflow: hidden;
+}
+
+.tableScrollbar {
+    width: 100%;
+}
+
+.left {
+    display: flex;
+    overflow: scroll;
+    padding-right: 10px;
+    scrollbar-width: thin;
+    min-width: 200px;
+    max-width: 30%;
+}
+
+.middle {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    margin-right: 10px;
 }
 </style>
