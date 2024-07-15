@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (SidePanel)为首页，设置页面添加漫游式引导。
+
 ## 1.15.0(2024-07-14)
 
 ### ⭐ Added

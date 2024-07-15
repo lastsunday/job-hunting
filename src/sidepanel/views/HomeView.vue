@@ -1,5 +1,5 @@
 <template>
-    <el-row v-loading="loading" class="statistic">
+    <el-row ref="statisticRef" v-loading="loading" class="statistic">
         <el-col :span="6">
             <el-statistic title="今天职位查看数" :value="todayBrowseDetailCount" />
         </el-col>
@@ -13,10 +13,42 @@
             <el-statistic title="公司标签数" :value="totalTagCompanyCount" />
         </el-col>
     </el-row>
-    <el-divider />
+    <el-divider content-position="right" class="divider">
+        <el-tooltip content="帮助">
+            <Icon icon="ph:question" class="icon" @click="tourOpen = true" />
+        </el-tooltip>
+        <el-tour v-model="tourOpen">
+            <el-tour-step :target="statisticRef?.$el" title="统计">
+                <el-row>
+                    <el-text>显示职位，公司，公司标签的数量</el-text>
+                </el-row>
+            </el-tour-step>
+            <el-tour-step :target="latestJobRef?.$el" title="最近查看职位" placement="right">
+                <el-row>
+                    <el-text>1.显示最近查看的职位</el-text>
+                </el-row>
+                <el-row>
+                    <el-text>2.点击标题，跳转到详情页</el-text>
+                </el-row>
+                <el-row>
+                    <el-text>3.点击定位，移动到地图上当前的职位</el-text>
+                </el-row>
+            </el-tour-step>
+            <el-tour-step :target="map?.$el" title="职位定位地图">
+                <el-row>
+                    <el-text>将含有位置坐标的职位显示到地图上</el-text>
+                </el-row>
+            </el-tour-step>
+            <el-tour-step :target="websiteRef?.$el" title="网站" placement="left">
+                <el-row>
+                    <el-text>各类网站的快速导航</el-text>
+                </el-row>
+            </el-tour-step>
+        </el-tour>
+    </el-divider>
     <el-row justify="space-between">
         <el-col :span="6">
-            <el-descriptions title="最近查看职位" direction="vertical" :column="1">
+            <el-descriptions ref="latestJobRef" title="最近查看职位" direction="vertical" :column="1">
                 <el-descriptions-item label="" v-loading="loading">
                     <el-timeline v-if="todayJobs.length > 0" style="max-width: 600px">
                         <el-timeline-item v-for="(item, index) in todayJobs" :key="index"
@@ -80,7 +112,7 @@
                 </l-map>
             </div>
         </el-col>
-        <el-col :span="4">
+        <el-col ref="websiteRef" :span="4">
             <el-descriptions direction="vertical" :column="1" size="small" border>
                 <el-descriptions-item label="招聘网站">
                     <el-row v-for="(item, index) in jobWebsiteList">
@@ -115,6 +147,7 @@ import {
     LRectangle,
 } from "@vue-leaflet/vue-leaflet";
 import { wgs84ToGcj02 } from '@pansy/lnglat-transform'
+import { Icon } from '@iconify/vue';
 
 const todayBrowseDetailCountSource = ref(0);
 const todayBrowseDetailCount = useTransition(todayBrowseDetailCountSource, {
@@ -233,6 +266,13 @@ const onJobMapLocate = (item) => {
     map.value.leafletObject.flyTo(popUpObject.latLng, 14);
 }
 const popups = ref([])
+
+
+const statisticRef = ref();
+const latestJobRef = ref();
+const websiteRef = ref();
+
+const tourOpen = ref(false);
 </script>
 
 <style scoped>
@@ -251,13 +291,21 @@ const popups = ref([])
     margin-right: 10px;
 }
 
-.icon {}
-
 .mapIcon {
     width: 200px;
     background-color: lightgoldenrodyellow;
     padding: 5px;
     border-radius: 5px;
     border: 1px solid yellowgreen;
+}
+
+.divider {
+    margin: 16px;
+}
+
+.icon {
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
 }
 </style>

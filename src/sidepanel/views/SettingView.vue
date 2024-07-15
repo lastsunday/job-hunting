@@ -1,7 +1,64 @@
 <template>
   <el-col>
-    <el-row class="setting_item">
-      <el-descriptions title="GitHubApp登录">
+    <el-row justify="end">
+      <div class="menu">
+        <el-tooltip content="帮助">
+          <Icon icon="ph:question" class="icon" @click="tourOpen = true" />
+        </el-tooltip>
+        <el-tour v-model="tourOpen">
+          <el-tour-step :target="githubRef?.$el" title="GitHub登录">
+            <el-row>
+              <el-text>1.显示当前GitHub账号的登录状态</el-text>
+            </el-row>
+            <el-row>
+              <el-text>2.登录按钮进行登录，登录后可查看公司（职位）评论</el-text>
+            </el-row>
+            <el-row>
+              <el-text>3.登出按钮进行登出，清除本地保存的token信息</el-text>
+            </el-row>
+          </el-tour-step>
+          <el-tour-step :target="githubAppRef?.$el" title="GitHub App">
+            <el-row>
+              <el-text>1.安装GitHub App，跳转到GitHub App安装页面，授权后获得添加评论的能力</el-text>
+            </el-row>
+            <el-row>
+              <el-text>2.如果已安装，则会跳转到GitHub App配置页面</el-text>
+            </el-row>
+          </el-tour-step>
+          <el-tour-step :target="databaseRef?.$el" title="数据库">
+            <el-row>
+              <el-text>1.数据库备份，将程序的数据库(sqlite)文件压缩成zip后，以下载文件的方式呈现</el-text>
+            </el-row>
+            <el-row>
+              <el-text>2.数据库恢复，接受程序备份的数据库(sqlite)文件，执行恢复后程序的数据将被覆盖</el-text>
+            </el-row>
+          </el-tour-step>
+          <el-tour-step :target="companyRef?.$el" title="公司数据">
+            <el-row>
+              <el-text>1.全量公司数据导出，将全部公司数据导出成excel文件，以下载文件的方式呈现</el-text>
+            </el-row>
+            <el-row>
+              <el-text>2.公司数据导入，接受程序导出的公司数据excel文件或符合格式的excel文件，执行导入后，相同公司的数据会被覆盖</el-text>
+            </el-row>
+          </el-tour-step>
+          <el-tour-step :target="companyTagRef?.$el" title="公司标签数据">
+            <el-row>
+              <el-text>1.全量公司标签数据导出，将全部公司标签数据导出成excel文件，以下载文件的方式呈现</el-text>
+            </el-row>
+            <el-row>
+              <el-text>2.公司标签数据导入，接受程序导出的公司标签数据excel文件或符合格式的excel文件，执行导入后，相同公司的数据会被覆盖</el-text>
+            </el-row>
+          </el-tour-step>
+          <el-tour-step :target="infoRef?.$el" title="程序信息">
+            <el-row>
+              <el-text>显示程序的版本和其他操作</el-text>
+            </el-row>
+          </el-tour-step>
+        </el-tour>
+      </div>
+    </el-row>
+    <el-row ref="githubRef" class="setting_item">
+      <el-descriptions title="GitHub登录">
         <el-descriptions-item>
           <div class="loginStatus">
             <div v-if="login">
@@ -23,8 +80,7 @@
               <Icon icon="mdi:github" />
             </el-icon>
             登录</el-button>
-          <el-popconfirm v-else title="确定登出？" @confirm="onClickLogout" confirm-button-text="确定"
-            cancel-button-text="取消">
+          <el-popconfirm v-else title="确定登出？" @confirm="onClickLogout" confirm-button-text="确定" cancel-button-text="取消">
             <template #reference>
               <el-button>
                 <el-icon class="el-icon--left">
@@ -36,8 +92,8 @@
         </el-descriptions-item>
       </el-descriptions>
     </el-row>
-    <el-row class="setting_item">
-      <el-descriptions title="安装GitHub App">
+    <el-row ref="githubAppRef" class="setting_item">
+      <el-descriptions title="GitHub App">
         <el-descriptions-item>
           <el-tooltip v-if="login" content="安装GitHub App获得添加评论的能力" placement="top">
             <el-button @click="onClickInstallAndLogin">
@@ -60,7 +116,7 @@
         </el-descriptions-item>
       </el-descriptions>
     </el-row>
-    <el-row class="setting_item">
+    <el-row ref="databaseRef" class="setting_item">
       <el-descriptions title="数据库">
         <el-descriptions-item>
           <el-popconfirm title="确认备份数据？" @confirm="onClickDbExport" confirm-button-text="确定" cancel-button-text="取消">
@@ -72,7 +128,7 @@
         </el-descriptions-item>
       </el-descriptions>
     </el-row>
-    <el-row class="setting_item">
+    <el-row ref="companyRef" class="setting_item">
       <el-descriptions title="公司数据">
         <el-descriptions-item>
           <el-popconfirm title="确认导出数据？" @confirm="onCompanyExport" confirm-button-text="确定" cancel-button-text="取消">
@@ -84,7 +140,7 @@
         </el-descriptions-item>
       </el-descriptions>
     </el-row>
-    <el-row class="setting_item">
+    <el-row ref="companyTagRef" class="setting_item">
       <el-descriptions title="公司标签数据">
         <el-descriptions-item>
           <el-popconfirm title="确认导出数据？" @confirm="onCompanyTagExport" confirm-button-text="确定" cancel-button-text="取消">
@@ -96,7 +152,7 @@
         </el-descriptions-item>
       </el-descriptions>
     </el-row>
-    <el-row class="setting_item">
+    <el-row ref="infoRef" class="setting_item">
       <el-descriptions title="程序信息">
         <el-descriptions-item>
           <el-row>
@@ -609,6 +665,14 @@ onMounted(async () => {
   await checkLoginStatus()
 })
 
+const githubRef = ref();
+const githubAppRef = ref();
+const databaseRef = ref();
+const companyRef = ref();
+const companyTagRef = ref();
+const infoRef = ref();
+
+const tourOpen = ref(false);
 </script>
 <style lang="scss">
 .setting_item {
@@ -626,5 +690,15 @@ onMounted(async () => {
 .loginStatus {
   display: inline-flex;
   margin-right: 5px;
+}
+
+.menu {
+  padding: 5px;
+}
+
+.icon {
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
 }
 </style>
