@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### 🐛 Fixed
+
+1. (SidePanel)修复新版本检测显示逻辑。
+
 ## 1.17.0(2024-07-16)
 
 ### ⭐ Added

@@ -158,7 +158,7 @@
           <el-row>
             <el-col>
               <el-text type="primary" size="large">版本 {{ version }}</el-text>
-              <el-text class="checkingVersion" @click="onCheckVersion" type="info">({{
+              <el-text v-if="!newVersion" class="checkingVersion" @click="onCheckVersion" type="info">({{
                 checkingVersionText }})</el-text>
               <span v-if="!versionChecking">
                 <span v-if="newVersion">
@@ -845,7 +845,7 @@ const onAccessIssuesPage = () => {
 }
 
 .newVersion {
-  cursor: pointer;
+  
 }
 
 .latestVersionChangelogDetailButton {
