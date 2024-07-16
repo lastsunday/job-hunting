@@ -188,8 +188,9 @@ export const JobService = {
       let limitStart = (param.pageNum - 1) * param.pageSize;
       let limitEnd = param.pageSize;
       let limit = " limit " + limitStart + "," + limitEnd;
-      sqlQuery += SQL_JOB_SEARCH_QUERY;
+      sqlQuery += genSqlJobSearchQuery(param);
       sqlQuery += whereCondition;
+      let sqlQueryCountSubSql = sqlQuery;
       sqlQuery += orderBy;
       sqlQuery += limit;
       let items = [];
@@ -225,9 +226,8 @@ export const JobService = {
       items.forEach(item => {
         item.companyTagDTOList = companyIdAndCompanyTagListMap.get(genIdFromText(item.jobCompanyName));
       });
-      let sqlCount = "SELECT COUNT(*) AS total from job";
       //count
-      sqlCount += whereCondition;
+      let sqlCount = `SELECT COUNT(*) AS total from (${sqlQueryCountSubSql}) AS t1`;
       let queryCountRows = [];
       (await getDb()).exec({
         sql: sqlCount,
@@ -276,7 +276,7 @@ export const JobService = {
       let result = new StatisticJobSearchGroupByAvgSalaryDTO();
       let resultSqlQuery = SQL_GROUP_BY_COUNT_AVG_SALARY.replace(
         "#{injectSql}",
-        SQL_JOB_SEARCH_QUERY + genJobSearchWhereConditionSql(param)
+        genSqlJobSearchQuery(param) + genJobSearchWhereConditionSql(param)
       );
       let queryRows = [];
       (await getDb()).exec({
@@ -443,6 +443,9 @@ function genJobSearchWhereConditionSql(param) {
       dayjs(param.firstPublishEndDatetime).format("YYYY-MM-DD HH:mm:ss") +
       "'";
   }
+  if (param.hasCoordinate) {
+    whereCondition += ` AND job_longitude IS NOT NULL AND job_longitude <> '' AND job_latitude IS NOT NULL AND job_latitude <> ''`;
+  }
   if (whereCondition.startsWith(" AND")) {
     whereCondition = whereCondition.replace("AND", "");
     whereCondition = " WHERE " + whereCondition;
@@ -554,9 +557,15 @@ async function addJobBrowseHistory(jobId, date, type) {
   });
 }
 
-const SQL_JOB_SEARCH_QUERY =
-  `SELECT job_id AS jobId,job_platform AS jobPlatform,job_url AS jobUrl,job_name AS jobName,job_company_name AS jobCompanyName,job_location_name AS jobLocationName,job_address AS jobAddress,job_longitude AS jobLongitude,job_latitude AS jobLatitude,job_description AS jobDescription,job_degree_name AS jobDegreeName,job_year AS jobYear,job_salary_min AS jobSalaryMin,job_salary_max AS jobSalaryMax,job_salary_total_month AS jobSalaryTotalMonth,job_first_publish_datetime AS jobFirstPublishDatetime,boss_name AS bossName,boss_company_name AS bossCompanyName,boss_position AS bossPosition,create_datetime AS createDatetime,update_datetime AS updateDatetime,IFNULL(t2.browseDetailCount,0) AS browseDetailCount,t2.latestBrowseDetailDatetime AS latestBrowseDetailDatetime FROM job AS t1 
-  LEFT JOIN (SELECT job_id AS _jobId,COUNT(job_id) AS browseDetailCount,MAX(job_visit_datetime) AS latestBrowseDetailDatetime FROM JOB_BROWSE_HISTORY WHERE job_visit_type = 'DETAIL' GROUP BY job_id) AS t2 ON t1.job_id = t2._jobId`;
+function genSqlJobSearchQuery(param) {
+  let joinSql = null;
+  if (param.hasBrowseTime) {
+    joinSql = `RIGHT JOIN (SELECT job_id AS _jobId,COUNT(job_id) AS browseDetailCount,MAX(job_visit_datetime) AS latestBrowseDetailDatetime FROM JOB_BROWSE_HISTORY WHERE job_visit_type = 'DETAIL' GROUP BY job_id) AS t2 ON t1.job_id = t2._jobId AND t2.browseDetailCount > 0`
+  } else {
+    joinSql = `LEFT JOIN (SELECT job_id AS _jobId,COUNT(job_id) AS browseDetailCount,MAX(job_visit_datetime) AS latestBrowseDetailDatetime FROM JOB_BROWSE_HISTORY WHERE job_visit_type = 'DETAIL' GROUP BY job_id) AS t2 ON t1.job_id = t2._jobId`;
+  }
+  return `SELECT job_id AS jobId,job_platform AS jobPlatform,job_url AS jobUrl,job_name AS jobName,job_company_name AS jobCompanyName,job_location_name AS jobLocationName,job_address AS jobAddress,job_longitude AS jobLongitude,job_latitude AS jobLatitude,job_description AS jobDescription,job_degree_name AS jobDegreeName,job_year AS jobYear,job_salary_min AS jobSalaryMin,job_salary_max AS jobSalaryMax,job_salary_total_month AS jobSalaryTotalMonth,job_first_publish_datetime AS jobFirstPublishDatetime,boss_name AS bossName,boss_company_name AS bossCompanyName,boss_position AS bossPosition,create_datetime AS createDatetime,update_datetime AS updateDatetime,IFNULL(t2.browseDetailCount,0) AS browseDetailCount,t2.latestBrowseDetailDatetime AS latestBrowseDetailDatetime FROM job AS t1 ${joinSql}`;
+}
 
 const SQL_GROUP_BY_COUNT_AVG_SALARY = `
 SELECT 

@@ -14,4 +14,13 @@ export class SearchJobBO extends PageBO {
    * ASC,DESC
    */
   orderBy;
+
+  /**
+   * 是否有查看时间
+   */
+  hasBrowseTime;
+  /**
+   * 是否有坐标信息
+   */
+  hasCoordinate;
 }

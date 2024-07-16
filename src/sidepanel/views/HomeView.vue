@@ -50,8 +50,8 @@
         <div class="left">
             <el-descriptions ref="latestJobRef" title="最近查看职位" direction="vertical" :column="1">
                 <el-descriptions-item label="" v-loading="loading">
-                    <el-timeline v-if="todayJobs.length > 0">
-                        <el-timeline-item v-for="(item, index) in todayJobs" :key="index"
+                    <el-timeline v-if="tableData.length > 0">
+                        <el-timeline-item v-for="(item, index) in tableData" :key="index"
                             :timestamp="item.latestBrowseDetailDatetime" v-show="item.latestBrowseDetailDatetime">
                             <el-row>
                                 <el-link type="primary" :href="item.jobUrl" target="_blank">{{ item.jobName
@@ -80,8 +80,7 @@
                     <l-tile-layer
                         url="http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
                         :subdomains="['1', '2', '3', '4']"></l-tile-layer>
-                    <l-marker v-for="(item, index) in todayJobsFilterEmptyLocation"
-                        :lat-lng="[item.jobLatitude, item.jobLongitude]">
+                    <l-marker v-for="(item, index) in tableData" :lat-lng="[item.jobLatitude, item.jobLongitude]">
                         <l-popup ref="popups" :lat-lng="[item.jobLatitude, item.jobLongitude]">
                             <el-row>
                                 <el-text line-clamp="1">职位名： <el-link type="primary" :href="item.jobUrl"
@@ -150,6 +149,12 @@
             </el-descriptions>
         </div>
     </div>
+    <el-row>
+        <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
+            :page-sizes="[10, 50, 100, 200, 500, 1000]" :small="small" :disabled="disabled" :background="background"
+            layout="total, sizes, prev, pager, next" :total="total" @size-change="handleSizeChange"
+            @current-change="handleCurrentChange" />
+    </el-row>
 </template>
 <script lang="ts" setup>
 import { ref, onMounted, computed, onUnmounted } from "vue";
@@ -243,18 +248,34 @@ const refresh = async () => {
     const statisticCompanyTag = await CompanyApi.statisticCompanyTag();
     totalTagCompanyCountSource.value = statisticCompanyTag.totalTagCompany;
 
-    await todayJobSearch();
+    await search();
 
     loading.value = false;
 };
 
-const todayJobs = ref([]);
+const tableData = ref([]);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
+const small = ref(false);
+const background = ref(false);
+const disabled = ref(false);
 
-const todayJobSearch = async () => {
+const handleSizeChange = (val: number) => {
+    search();
+};
+
+const handleCurrentChange = (val: number) => {
+    search();
+};
+
+
+const search = async () => {
     let searchResult = await JobApi.searchJob(getSearchParam());
-    todayJobs.value = searchResult.items;
+    tableData.value = searchResult.items;
+    total.value = parseInt(searchResult.total);
     //地球坐标转火星坐标
-    todayJobs.value.forEach(item => {
+    tableData.value.forEach(item => {
         if (item.jobLongitude && item.jobLatitude) {
             let gcj02 = wgs84ToGcj02(item.jobLongitude, item.jobLatitude);
             item.jobLongitude = gcj02[0];
@@ -265,8 +286,9 @@ const todayJobSearch = async () => {
 
 function getSearchParam() {
     let searchParam = new SearchJobBO();
-    searchParam.pageNum = 1
-    searchParam.pageSize = 10;
+    searchParam.pageNum = currentPage.value;
+    searchParam.pageSize = pageSize.value;
+    searchParam.hasBrowseTime = true;
     searchParam.orderByColumn = "latestBrowseDetailDatetime";
     searchParam.orderBy = "DESC";
     return searchParam;
@@ -285,13 +307,11 @@ const companyWebsiteList = [
     { url: "https://aiqicha.baidu.com/s", label: "爱企查" },
 ]
 
-
 const map = ref();
 const zoom = ref(10);
-const todayJobsFilterEmptyLocation = computed(() => todayJobs.value.filter((item) => (item.jobLatitude && item.jobLongitude && item.latestBrowseDetailDatetime)))
 const idAndPopupIndexMap = computed(() => {
     let result = new Map();
-    let filtered = todayJobs.value.filter((item) => (item.jobLatitude && item.jobLongitude && item.latestBrowseDetailDatetime));
+    let filtered = tableData.value.filter((item) => (item.jobLatitude && item.jobLongitude));
     filtered.forEach((element, index) => {
         result.set(element.jobId, index);
     });
