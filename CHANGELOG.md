@@ -2,6 +2,10 @@
 
 ## WIP
 
+### ⭐ Added
+
+1. (ContentScript)自动检测公司风评，支持互联网企业黑名单(job.me88.top)。
+
 ### 🐛 Fixed
 
 1. (SidePanel)修复新版本检测显示逻辑。

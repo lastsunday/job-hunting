@@ -1278,6 +1278,9 @@ export function createCompanyReputation(keyword) {
   const ruobilinDiv = document.createElement("div");
   dom.appendChild(ruobilinDiv);
   asyncRenderRuobilin(ruobilinDiv, keyword);
+  const itJobBlackListDiv = document.createElement("div");
+  dom.appendChild(itJobBlackListDiv);
+  asyncRenderITJobBlackList(itJobBlackListDiv, keyword);
   return dom;
 }
 
@@ -1295,7 +1298,7 @@ async function asyncRenderRuobilin(div, keyword) {
     }
   );
   div.appendChild(loaddingTag);
-  renderRuobilinColor(loaddingTag, "black");
+  renderCompanyReputationColor(loaddingTag, "black");
   try {
     let abortFunctionHandler = null;
     const result = await httpFetchGetText(url, (abortFunction) => {
@@ -1312,12 +1315,12 @@ async function asyncRenderRuobilin(div, keyword) {
       const count = hyperlinks.length;
       let tag = createATag("📡", url, `若比邻黑名单(疑似${count}条记录)`);
       div.appendChild(tag);
-      renderRuobilinColor(tag, "red");
+      renderCompanyReputationColor(tag, "red");
     } else {
       //不存在
       let tag = createATag("📡", url, "若比邻黑名单(无记录)");
       div.appendChild(tag);
-      renderRuobilinColor(tag, "yellowgreen");
+      renderCompanyReputationColor(tag, "yellowgreen");
     }
   } catch (e) {
     clearAllChildNode(div);
@@ -1333,7 +1336,63 @@ async function asyncRenderRuobilin(div, keyword) {
     errorDiv.href = "javaScript:void(0);";
     errorDiv.target = "";
     div.appendChild(errorDiv);
-    renderRuobilinColor(errorDiv, "black");
+    renderCompanyReputationColor(errorDiv, "black");
+  }
+}
+
+async function asyncRenderITJobBlackList(div, keyword) {
+  div.title = "信息来源:互联网企业黑名单 https://job.me88.top/";
+  const decode = encodeURIComponent(keyword);
+  const url = `https://job.me88.top/index.php/search/=${decode}`;
+  const loaddingTag = createATag(
+    "📡",
+    url,
+    "互联网企业黑名单(检测中⌛︎)",
+    (event) => {
+      clearAllChildNode(div);
+      asyncRenderITJobBlackList(div, keyword);
+    }
+  );
+  div.appendChild(loaddingTag);
+  renderCompanyReputationColor(loaddingTag, "black");
+  try {
+    let abortFunctionHandler = null;
+    const result = await httpFetchGetText(url, (abortFunction) => {
+      abortFunctionHandler = abortFunction;
+      //加入请求手动中断列表
+      addAbortFunctionHandler(abortFunctionHandler);
+    });
+    //请求正常结束，从手动中断列表中移除
+    deleteAbortFunctionHandler(abortFunctionHandler);
+    let hyperlinks = $(result).find("div[class=\"post-box paddingall\"]");
+    clearAllChildNode(div);
+    if (hyperlinks && hyperlinks.length > 0) {
+      //存在于黑名单
+      const count = hyperlinks.length;
+      let tag = createATag("📡", url, `互联网企业黑名单(疑似${count}条记录)`);
+      div.appendChild(tag);
+      renderCompanyReputationColor(tag, "red");
+    } else {
+      //不存在
+      let tag = createATag("📡", url, "互联网企业黑名单(无记录)");
+      div.appendChild(tag);
+      renderCompanyReputationColor(tag, "yellowgreen");
+    }
+  } catch (e) {
+    clearAllChildNode(div);
+    const errorDiv = createATag(
+      "📡",
+      url,
+      "互联网企业黑名单(检测失败，点击重新检测)",
+      (event) => {
+        clearAllChildNode(div);
+        asyncRenderITJobBlackList(div, keyword);
+      }
+    );
+    errorDiv.href = "javaScript:void(0);";
+    errorDiv.target = "";
+    div.appendChild(errorDiv);
+    renderCompanyReputationColor(errorDiv, "black");
   }
 }
 
@@ -1341,12 +1400,8 @@ export function clearAllChildNode(div) {
   div.replaceChildren();
 }
 
-function renderRuobilinColor(div, color) {
+function renderCompanyReputationColor(div, color) {
   div.style = `background-color:${color};color:white`;
-}
-
-function clearRuobilinColor(div) {
-  div.style = null;
 }
 
 function createATagWithSearch(url, label) {
