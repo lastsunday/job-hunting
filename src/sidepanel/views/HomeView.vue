@@ -215,7 +215,11 @@ onMounted(async () => {
     // popups.value.forEach(item => {
     //     item.leafletObject.openOn(map.value.leafletObject);
     // });
-    map.value.leafletObject.fitBounds(popups.value.map(item => item.latLng));
+    if (popups.value.length > 0) {
+        map.value.leafletObject.fitBounds(popups.value.map(item => item.latLng));
+    } else {
+        map.value.leafletObject.setView([39.906217, 116.3912757], 4)
+    }
     if (popups.value && popups.value.length > 0) {
         let firstPopup = popups.value[0];
         firstPopup.leafletObject.openOn(map.value.leafletObject);
