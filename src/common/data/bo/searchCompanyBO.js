@@ -9,4 +9,9 @@ export class SearchCompanyBO extends PageBO {
    * ASC,DESC
    */
   orderBy;
+
+  minLat;
+  maxLat;
+  minLng;
+  maxLng;
 }

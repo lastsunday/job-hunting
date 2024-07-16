@@ -25,6 +25,8 @@
         <div class="operation_menu_left">
           <el-switch v-model="showAdvanceSearch" active-text="高级搜索" inactive-text="普通搜索" inline-prompt />
           <el-switch v-model="mapMode" active-text="地图模式" inactive-text="列表模式" inline-prompt />
+          <el-switch v-if="mapMode" v-model="mapSearchMode" active-text="地图范围搜索-开" inactive-text="地图范围搜索-关"
+            inline-prompt />
         </div>
         <div>
           <el-button @click="showDialogAvgSalary">统计薪酬区间职位数</el-button>
@@ -55,8 +57,8 @@
   </div>
   <div class="content" v-if="!mapMode">
     <el-scrollbar class="tableScrollbar">
-      <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }"
-        stripe @sort-change="sortChange" sortable="custom">
+      <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }" stripe
+        @sort-change="sortChange" sortable="custom">
         <el-table-column type="expand" width="30">
           <template #default="props">
             <div m="4" class="expand">
@@ -236,7 +238,7 @@
     </el-scrollbar>
   </div>
   <div class="content" v-show="mapMode">
-      <el-scrollbar class="left">
+    <el-scrollbar class="left">
       <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }" style="width: 100%"
         stripe @sort-change="sortChange" sortable="custom">
         <el-table-column label="名称" show-overflow-tooltip width="100">
@@ -274,7 +276,7 @@
     </el-scrollbar>
     <div class="middle">
       <div class="mapWrapper">
-        <l-map ref="map" v-model:zoom="zoom">
+        <l-map ref="map" v-model:zoom="zoom" :center="[39.906217, 116.3912757]">
           <l-tile-layer
             url="http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
             :subdomains="['1', '2', '3', '4']"></l-tile-layer>
@@ -489,6 +491,7 @@ onUnmounted(() => {
     clearInterval(refreshIntervalId);
     refreshIntervalId = null;
   }
+  map?.value?.leafletObject?.off("moveend");
 });
 
 const avgSalaryOption = ref({
@@ -609,6 +612,9 @@ const reset = async () => {
 };
 
 const search = async () => {
+  if (mapMode && mapSearchMode) {
+    map.value.leafletObject.closePopup();
+  }
   let searchResult = await JobApi.searchJob(getSearchParam());
   tableData.value = searchResult.items;
   total.value = parseInt(searchResult.total);
@@ -643,6 +649,17 @@ function getSearchParam() {
     searchParam.startDatetime = null;
     searchParam.endDatetime = null;
   }
+  if (mapMode.value && mapSearchMode.value) {
+    let latLngBounds = map.value.leafletObject.getBounds();
+    let minLat = latLngBounds._southWest.lat;
+    let maxLat = latLngBounds._northEast.lat;
+    let minLng = latLngBounds._southWest.lng;
+    let maxLng = latLngBounds._northEast.lng;
+    searchParam.minLat = minLat;
+    searchParam.maxLat = maxLat;
+    searchParam.minLng = minLng;
+    searchParam.maxLng = maxLng;
+  }
   searchParam.orderByColumn = jobSearchOrderByColumn.value;
   searchParam.orderBy = jobSearchOrderBy.value;
   return searchParam;
@@ -667,7 +684,7 @@ const refreshStatistic = async () => {
 const mapMode = ref(false);
 
 const map = ref();
-const zoom = ref(10);
+const zoom = ref(4);
 const jobsFilterEmptyLocation = computed(() => tableData.value.filter((item) => (item.jobLatitude && item.jobLongitude)))
 const idAndPopupIndexMap = computed(() => {
   let result = new Map();
@@ -689,10 +706,13 @@ watch(mapMode, async (newValue, oldValue) => {
   if (newValue) {
     nextTick(() => {
       map.value.leafletObject.invalidateSize();
-      if(popups.value.length > 0){
+      map.value.leafletObject.on("moveend", async (event) => {
+        await search();
+      });
+      if (popups.value.length > 0) {
         map.value.leafletObject.fitBounds(popups.value.map(item => item.latLng));
-      }else{
-        map.value.leafletObject.setView([39.906217,116.3912757],4)
+      } else {
+        map.value.leafletObject.setView([39.906217, 116.3912757], 4)
       }
       if (popups.value && popups.value.length > 0) {
         let firstPopup = popups.value[0];
@@ -706,6 +726,19 @@ watch(mapMode, async (newValue, oldValue) => {
   }
 })
 
+const mapSearchMode = ref(false);
+
+watch(mapSearchMode, async (newValue, oldValue) => {
+  if (newValue) {
+    map.value.leafletObject.on("moveend", async (event) => {
+      await search();
+    });
+    await search();
+  } else {
+    map.value.leafletObject.off("moveend");
+    await search();
+  }
+})
 </script>
 
 <style scoped>

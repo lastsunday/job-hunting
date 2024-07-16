@@ -116,8 +116,8 @@ export function toLine(name) {
  * @param {*} target 驼峰参数的对象
  * @param {*} source 下划线参数的对象
  */
-export function parseToLineObjectToToHumpObject(target,source){
-  let resultItem = Object.assign({},target);
+export function parseToLineObjectToToHumpObject(target, source) {
+  let resultItem = Object.assign({}, target);
   let keys = Object.keys(source);
   for (let n = 0; n < keys.length; n++) {
     let key = keys[n];
@@ -161,6 +161,10 @@ const isEmpty = (str) => !str?.length;
 
 function isBlank(str) {
   return !str || /^\s*$/.test(str);
+}
+
+export function isNotEmpty(value) {
+  return value != undefined && value != null && !(/^\s*$/.test(value));
 }
 
 export function autoFillHttp(url) {

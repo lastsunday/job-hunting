@@ -23,4 +23,9 @@ export class SearchJobBO extends PageBO {
    * 是否有坐标信息
    */
   hasCoordinate;
+
+  minLat;
+  maxLat;
+  minLng;
+  maxLng;
 }

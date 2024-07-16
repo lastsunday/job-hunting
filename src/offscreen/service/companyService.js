@@ -2,7 +2,7 @@ import { Message } from "../../common/api/message";
 import { postSuccessMessage, postErrorMessage } from "../util";
 import { getDb, getOne } from "../database";
 import { Company } from "../../common/data/domain/company";
-import { convertEmptyStringToNull, genIdFromText } from "../../common/utils";
+import { convertEmptyStringToNull, isNotEmpty } from "../../common/utils";
 import dayjs from "dayjs";
 import { SearchCompanyBO } from "../../common/data/bo/searchCompanyBO";
 import { SearchCompanyDTO } from "../../common/data/dto/searchCompanyDTO";
@@ -327,6 +327,12 @@ function genSearchWhereConditionSql(param) {
       " AND company_start_date < '" +
       dayjs(param.startDateEndDatetime).format("YYYY-MM-DD HH:mm:ss") +
       "'";
+  }
+  if (isNotEmpty(param.minLat) && isNotEmpty(param.maxLat)) {
+    whereCondition += ` AND company_latitude >= ${param.minLat} AND company_latitude <= ${param.maxLat}`;
+  }
+  if (isNotEmpty(param.minLng) && isNotEmpty(param.maxLng)) {
+    whereCondition += ` AND company_longitude >= ${param.minLng} AND company_longitude <= ${param.maxLng}`;
   }
   if (whereCondition.startsWith(" AND")) {
     whereCondition = whereCondition.replace("AND", "");

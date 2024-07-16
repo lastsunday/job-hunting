@@ -2,7 +2,7 @@ import { Job } from "../../common/data/domain/job";
 import { Message } from "../../common/api/message";
 import dayjs from "dayjs";
 import { JobDTO } from "../../common/data/dto/jobDTO";
-import { toHump, convertEmptyStringToNull, genIdFromText } from "../../common/utils";
+import { toHump, convertEmptyStringToNull, genIdFromText, isNotEmpty } from "../../common/utils";
 import { StatisticJobBrowseDTO } from "../../common/data/dto/statisticJobBrowseDTO";
 import { StatisticJobSearchGroupByAvgSalaryDTO } from "../../common/data/dto/statisticJobSearchGroupByAvgSalaryDTO";
 import { SearchJobBO } from "../../common/data/bo/searchJobBO";
@@ -444,7 +444,13 @@ function genJobSearchWhereConditionSql(param) {
       "'";
   }
   if (param.hasCoordinate) {
-    whereCondition += ` AND job_longitude IS NOT NULL AND job_longitude <> '' AND job_latitude IS NOT NULL AND job_latitude <> ''`;
+    whereCondition += ` AND job_longitude IS NOT NULL AND job_longitude <> '' AND  IS NOT NULL AND job_latitude <> ''`;
+  }
+  if (isNotEmpty(param.minLat) && isNotEmpty(param.maxLat)) {
+    whereCondition += ` AND job_latitude >= ${param.minLat} AND job_latitude <= ${param.maxLat}`;
+  }
+  if (isNotEmpty(param.minLng) && isNotEmpty(param.maxLng)) {
+    whereCondition += ` AND job_longitude >= ${param.minLng} AND job_longitude <= ${param.maxLng}`;
   }
   if (whereCondition.startsWith(" AND")) {
     whereCondition = whereCondition.replace("AND", "");

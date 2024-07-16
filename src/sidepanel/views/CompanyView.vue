@@ -14,6 +14,8 @@
                 <div class="operation_menu_left">
                     <el-switch v-model="showAdvanceSearch" active-text="高级搜索" inactive-text="普通搜索" inline-prompt />
                     <el-switch v-model="mapMode" active-text="地图模式" inactive-text="列表模式" inline-prompt />
+                    <el-switch v-if="mapMode" v-model="mapSearchMode" active-text="地图范围搜索-开" inactive-text="地图范围搜索-关"
+                        inline-prompt />
                 </div>
                 <div>
                     <el-button @click="onExportHandle">导出</el-button>
@@ -279,7 +281,7 @@
         </el-scrollbar>
         <div class="middle">
             <div class="mapWrapper">
-                <l-map ref="map" v-model:zoom="zoom">
+                <l-map ref="map" v-model:zoom="zoom" :center="[39.906217, 116.3912757]">
                     <l-tile-layer
                         url="http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
                         :subdomains="['1', '2', '3', '4']"></l-tile-layer>
@@ -453,6 +455,7 @@ onUnmounted(() => {
         clearInterval(refreshIntervalId);
         refreshIntervalId = null;
     }
+    map?.value?.leafletObject?.off("moveend");
 });
 
 
@@ -484,6 +487,9 @@ const reset = async () => {
 };
 
 const search = async () => {
+    if (mapMode && mapSearchMode) {
+        map.value.leafletObject.closePopup();
+    }
     let searchResult = await CompanyApi.searchCompany(getSearchParam());
     tableData.value = searchResult.items;
     total.value = parseInt(searchResult.total);
@@ -507,6 +513,17 @@ function getSearchParam() {
     } else {
         searchParam.startDateStartDatetime = null;
         searchParam.startDateEndDatetime = null;
+    }
+    if (mapMode.value && mapSearchMode.value) {
+        let latLngBounds = map.value.leafletObject.getBounds();
+        let minLat = latLngBounds._southWest.lat;
+        let maxLat = latLngBounds._northEast.lat;
+        let minLng = latLngBounds._southWest.lng;
+        let maxLng = latLngBounds._northEast.lng;
+        searchParam.minLat = minLat;
+        searchParam.maxLat = maxLat;
+        searchParam.minLng = minLng;
+        searchParam.maxLng = maxLng;
     }
     searchParam.orderByColumn = searchOrderByColumn.value;
     searchParam.orderBy = searchOrderBy.value;
@@ -679,11 +696,10 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
     })
 }
 
-
 const mapMode = ref(false);
 
 const map = ref();
-const zoom = ref(10);
+const zoom = ref(4);
 const itemFilterEmptyLocation = computed(() => tableData.value.filter((item) => (item.companyLatitude && item.companyLongitude)))
 const idAndPopupIndexMap = computed(() => {
     let result = new Map();
@@ -719,6 +735,20 @@ watch(mapMode, async (newValue, oldValue) => {
                 }, 300);
             }
         });
+    }
+})
+
+const mapSearchMode = ref(false);
+
+watch(mapSearchMode, async (newValue, oldValue) => {
+    if (newValue) {
+        map.value.leafletObject.on("moveend", async (event) => {
+            await search();
+        });
+        await search();
+    } else {
+        map.value.leafletObject.off("moveend");
+        await search();
     }
 })
 </script>
