@@ -8,19 +8,18 @@
 
 | 招聘平台  | 访问地址                            | 备注                   |
 | --------- | ----------------------------------- | ---------------------- |
-| BOSS 直聘 | https://www.zhipin.com/web/geek/job |                        |
-| 前程无忧  | https://we.51job.com/pc/search      |                        |
-| 智联招聘  | https://sou.zhaopin.com/            |                        |
-| 拉钩网    | https://www.lagou.com/wn/zhaopin    |                        |
-| jobsdb-hk | https://hk.jobsdb.com/              | 需点击搜索按钮才有效果 |
-| 猎聘网    | https://www.liepin.com/zhaopin      | 需点击搜索按钮才有效果 |
+| BOSS 直聘 | <https://www.zhipin.com/web/geek/job> |                        |
+| 前程无忧  | <https://we.51job.com/pc/search>      |                        |
+| 智联招聘  | <https://sou.zhaopin.com/>            |                        |
+| 拉钩网    | <https://www.lagou.com/wn/zhaopin>    |                        |
+| jobsdb-hk | <https://hk.jobsdb.com/>              | 需点击搜索按钮才有效果 |
+| 猎聘网    | <https://www.liepin.com/zhaopin>      | 需点击搜索按钮才有效果 |
 
 ## 企业搜索平台支持列表
 
 | 企业搜索平台  | 访问地址                            | 备注                   |
 | --------- | ----------------------------------- | ---------------------- |
-| 爱企查 | https://aiqicha.baidu.com/s |                        |
-
+| 爱企查 | <https://aiqicha.baidu.com/s> |                        |
 
 ## 功能列表
 
@@ -42,6 +41,19 @@
 15. 首页展示最近查看职位以及在地图上显示，招聘网站和企业搜索网站的快捷入口。
 16. 讨论区板块，根据省市区区分。
 
+## Road Map
+
+- [ ] 讨论区
+- [ ] 多语言
+  - [ ] 英文
+  - [ ] 简体中文
+  - [ ] 繁体中文
+- [ ] 皮肤
+  - [ ] 暗黑模式
+- [ ] 管理员页面（GitHub App管理员）
+  - [ ] 批量删除issues
+  - [ ] 流量监控
+
 ## Browsers support
 
 | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="Edge" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br/> Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br/>Chrome | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png" alt="Firefox" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br/>Firefox |
@@ -51,21 +63,21 @@
 ## 运行截图
 
 <p>
-	<div style="margin-top:20px">
+ <div style="margin-top:20px">
         <img src="docs\introduction\job-item-51job.jpg" alt="51job" width="1000px"/>
         <div style="text-align:center;">
             前程无忧
         </div>
-	</div>
+ </div>
 </p>
 
 <p>
-	<div style="margin-top:20px">
+ <div style="margin-top:20px">
         <img src="docs\introduction\company-aiqicha.jpg" alt="aiqicha" width="1000px"/>
         <div style="text-align:center;">
             爱企查
         </div>
-	</div>
+ </div>
 </p>
 
 ### 管理页面
@@ -76,37 +88,37 @@
         <div style="text-align:center">
             打开管理页面
         </div>
-	</div>
+ </div>
     <div style="margin-top:20px">
         <img src="docs\introduction\sidepanel_admin_home.jpg" alt="sidepanel_admin_home" width="1000px"/>
         <div style="text-align:center">
             管理页面首页（需点击插件图标打开）
         </div>
-	</div>
+ </div>
     <div style="margin-top:20px">
         <img src="docs\introduction\sidepanel_admin_job.jpg" alt="sidepanel_admin_job" width="1000px"/>
         <div style="text-align:center">
             职位
         </div>
-	</div>
+ </div>
     <div style="margin-top:20px">
         <img src="docs\introduction\sidepanel_admin_company.jpg" alt="sidepanel_admin_company" width="1000px"/>
         <div style="text-align:center">
             公司管理
         </div>
-	</div>
+ </div>
     <div style="margin-top:20px">
         <img src="docs\introduction\sidepanel_admin_company_tag.jpg" alt="sidepanel_admin_company_tag" width="1000px"/>
         <div style="text-align:center">
             公司标签管理
         </div>
-	</div>
+ </div>
     <div style="margin-top:20px">
         <img src="docs\introduction\sidepanel_admin_setting.jpg" alt="sidepanel_admin_setting" width="1000px"/>
         <div style="text-align:center">
             系统设置
         </div>
-	</div>
+ </div>
 </p>
 
 ## 运行及编译
@@ -172,8 +184,8 @@
 
 ## Thanks
 
-1. https://github.com/tangzhiyao/boss-show-time **_boss 直聘时间展示插件_**
-2. https://github.com/iibeibei/tampermonkey_scripts **_BOSS 直聘 跨境黑名单_**
-3. https://kjxb.org/ **_【跨境小白网】，跨境电商人的职场交流社区，互助网站。_**
-4. https://maimai.cn/article/detail?fid=1662335089&efid=I0IjMo8A_37C2pHoqU2HjA **_求职必备技能：教你如何扒了公司的底裤_**
-5. https://github.com/it-job-blacklist/996ICU.job.blacklist_company **_主要城市996公司名单，互联网企业黑名单，找工作防止掉坑_**
+1. <https://github.com/tangzhiyao/boss-show-time> **_boss 直聘时间展示插件_**
+2. <https://github.com/iibeibei/tampermonkey_scripts> **_BOSS 直聘 跨境黑名单_**
+3. <https://kjxb.org/> **_【跨境小白网】，跨境电商人的职场交流社区，互助网站。_**
+4. <https://maimai.cn/article/detail?fid=1662335089&efid=I0IjMo8A_37C2pHoqU2HjA> **_求职必备技能：教你如何扒了公司的底裤_**
+5. <https://github.com/it-job-blacklist/996ICU.job.blacklist_company> **_主要城市996公司名单，互联网企业黑名单，找工作防止掉坑_**
