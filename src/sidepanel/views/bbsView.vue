@@ -317,7 +317,7 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
 }
 
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
 .locationInput {
   display: flex;
 }

@@ -206,7 +206,7 @@ const onCommit = async () => {
 }
 
 </script>
-<style lang="css">
+<style lang="css" scoped>
 .wrapper {
     display: flex;
     flex-direction: column;
@@ -268,6 +268,17 @@ const onCommit = async () => {
     padding: 5px;
     padding-top: 0;
     padding-bottom: 10px;
+}
+
+.paging_icon {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.paging_icon_disable {
+  color: gray;
+  cursor: no-drop;
 }
 
 .commentAddWrapper {
