@@ -64,10 +64,14 @@ import hkMoTw from "../assets/data/HK-MO-TW.json";
 import { COMMENT_PAGE_SIZE } from "../../common/config";
 import { genIdFromText } from "../../common/utils";
 import { GithubApi, EXCEPTION } from "../../common/api/github";
+import { ConfigApi } from "../../common/api";
 import { ElMessage } from "element-plus";
 import { Icon } from '@iconify/vue';
 import dayjs from "dayjs";
 import IssuesComment from "../components/IssuesComment.vue";
+import { errorLog } from "../../common/log";
+import { Config } from "../../common/data/domain/config";
+import { BBSViewDTO } from "../dto/bbsViewDTO";
 
 const location = ref(["北京市"])
 const options = ref([]);
@@ -104,7 +108,25 @@ const pageInfo = reactive({
   startCursor: null,
 });
 
-const handleChange = (value) => {
+const handleChange = async (value) => {
+  let configFromStorage = await ConfigApi.getConfigByKey(CONFIG_KEY_VIEW_BBS);
+  let bbsViewDTO = new BBSViewDTO();
+  let configObject = configFromStorage;
+  if (!configObject) {
+    configObject = new Config();
+    configObject.key = CONFIG_KEY_VIEW_BBS;
+  } else {
+    if (configObject.value) {
+      try {
+        bbsViewDTO = JSON.parse(configObject.value);
+      } catch (e) {
+        errorLog(e);
+      }
+    }
+  }
+  bbsViewDTO.location = value;
+  configObject.value = JSON.stringify(bbsViewDTO);
+  await ConfigApi.addOrUpdateConfig(configObject);
   resetParam();
   search();
 }
@@ -210,7 +232,18 @@ const reset = () => {
   search();
 }
 
-onMounted(() => {
+const CONFIG_KEY_VIEW_BBS = "CONFIG_KEY_VIEW_BBS";
+const config = ref(<BBSViewDTO>{});
+onMounted(async () => {
+  try {
+    let configValue = await ConfigApi.getConfigByKey(CONFIG_KEY_VIEW_BBS);
+    if (configValue && configValue.value) {
+      config.value = JSON.parse(configValue.value);
+      location.value = config.value.location;
+    }
+  } catch (e) {
+    errorLog(e);
+  }
   options.value.push(...pcaCodeData, ...genHK_MO_TW_CodeName(hkMoTw));
   search();
 });
