@@ -22,11 +22,12 @@
       <div class="commentHeaderWrapper">
         <div class="commentHeader">
           <div class="username">{{ item.author.login }}</div>
-          <div class="createTime">{{ datetimeFormatHHMMSS(item.createdAt) }}</div>
+          <div class="createTime"><el-tooltip :content="datetimeFormatHHMMSS(item.createdAt)">{{
+            convertTimeOffsetToHumanReadable(item.createdAt) }} </el-tooltip></div>
           <el-link :href="item.bodyUrl" target="_blank" class="source">来源</el-link>
         </div>
         <div class="commentBottom">
-          <div v-html="item.bodyHTML"></div>
+          <div class="issuesCommentContent" v-html="item.bodyHTML"></div>
           <div class="issuesCommentWrapper">
             <IssuesComment :issues="item" :key="item.id"></IssuesComment>
           </div>
@@ -72,6 +73,7 @@ import IssuesComment from "../components/IssuesComment.vue";
 import { errorLog } from "../../common/log";
 import { Config } from "../../common/data/domain/config";
 import { BBSViewDTO } from "../dto/bbsViewDTO";
+import { convertTimeOffsetToHumanReadable } from "../../common/utils";
 
 const location = ref(["北京市"])
 const options = ref([]);
@@ -384,7 +386,7 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
 
 .commentWrapper {
   display: flex;
-  padding: 30px;
+  padding: 10px;
   padding-top: 10px;
 }
 
@@ -401,13 +403,12 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
 .commentHeader {
   display: flex;
   flex-direction: row;
-  border: 0.5px solid black;
   padding: 5px;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
+  border-bottom: 0.5px solid black;
 }
 
 .username {
+  padding-left: 5px;
   padding-right: 5px;
 }
 
@@ -420,15 +421,16 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
 }
 
 .commentBottom {
-  border: 0.5px solid black;
   border-top-width: 0;
   padding: 5px;
-  border-end-start-radius: 5px;
-  border-end-end-radius: 5px;
 }
 
 .issuesCommentWrapper {
   display: flex;
   justify-content: end;
+}
+
+.issuesCommentContent {
+  font-size: 14px;
 }
 </style>

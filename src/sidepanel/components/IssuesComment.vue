@@ -6,21 +6,22 @@
         <div v-if="show" class="issuesCommentMenu" @click="show = !show"><el-button size="small">收起评论
                 <Icon icon="solar:alt-arrow-up-outline" />
             </el-button></div>
-        <el-divider />
         <div v-if="show" v-loading="loading">
+            <el-divider />
             <el-empty v-if="!firstQuery && dataList.length == 0" description="没有数据" />
             <div v-for="(item, index) in dataList" class="issuesCommentWrapper">
                 <div class="avatarWrapper">
-                    <el-avatar :size="50" :src="item.user.avatar_url" />
+                    <el-avatar :size="30" :src="item.user.avatar_url" />
                 </div>
                 <div class="commentHeaderWrapper">
                     <div class="commentHeader">
                         <div class="username">{{ item.user.login }}</div>
-                        <div class="createTime">{{ datetimeFormatHHMMSS(item.created_at) }}</div>
+                        <div class="createTime"><el-tooltip :content="datetimeFormatHHMMSS(item.created_at)">{{
+                            convertTimeOffsetToHumanReadable(item.created_at) }} </el-tooltip></div>
                         <el-link :href="item.html_url" target="_blank" class="source">来源</el-link>
                     </div>
                     <div class="commentBottom">
-                        <div v-html="item.body"></div>
+                        <div class="commentContent" v-html="item.body"></div>
                     </div>
                 </div>
             </div>
@@ -59,6 +60,7 @@ import { UserApi } from "../../common/api";
 import { Icon } from '@iconify/vue';
 import { ElMessage } from "element-plus";
 import { COMMENT_PAGE_SIZE } from "../../common/config";
+import { convertTimeOffsetToHumanReadable } from "../../common/utils";
 
 const props = defineProps(["issues"]);
 const item = ref({});
@@ -220,6 +222,7 @@ const onCommit = async () => {
 .issuesCommentWrapper {
     display: flex;
     flex-direction: row;
+    padding: 5px;
 }
 
 .avatarWrapper {
@@ -235,10 +238,10 @@ const onCommit = async () => {
 .commentHeader {
     display: flex;
     flex-direction: row;
-    border: 0.5px solid black;
     padding: 5px;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
+    border-bottom: 0.5px solid black;
 }
 
 .username {
@@ -254,7 +257,6 @@ const onCommit = async () => {
 }
 
 .commentBottom {
-    border: 0.5px solid black;
     border-top-width: 0;
     padding: 5px;
     border-end-start-radius: 5px;
@@ -277,8 +279,8 @@ const onCommit = async () => {
 }
 
 .paging_icon_disable {
-  color: gray;
-  cursor: no-drop;
+    color: gray;
+    cursor: no-drop;
 }
 
 .commentAddWrapper {
@@ -294,5 +296,9 @@ const onCommit = async () => {
     padding: 5px;
     display: flex;
     justify-content: end;
+}
+
+.commentContent {
+    font-size: 14px;
 }
 </style>
