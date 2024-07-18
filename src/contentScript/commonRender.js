@@ -380,14 +380,14 @@ function createCommonPageOperationMenu(hasPreviousPage, hasNextPage, startCursor
   if (hasPreviousPage) {
     let element = $(`<div class="__company_info_quick_search_button __comment_paging_button">上一页</div>`)[0];
     element.addEventListener("click", async (event) => {
-      queryFunction({ last: COMMENT_PAGE_SIZE, before: `"${startCursor}"` });
+      queryFunction({ last: COMMENT_PAGE_SIZE, before: `${startCursor}` });
     })
     result.append(element);
   }
   if (hasNextPage) {
     let element = $(`<div class="__company_info_quick_search_button __comment_paging_button">下一页</div>`)[0];
     element.addEventListener("click", async (event) => {
-      queryFunction({ first: COMMENT_PAGE_SIZE, after: `"${endCursor}"` });
+      queryFunction({ first: COMMENT_PAGE_SIZE, after: `${endCursor}` });
     })
     result.append(element);
   }

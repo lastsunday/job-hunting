@@ -9,7 +9,8 @@
         <el-menu-item index="2" route="/job">职位</el-menu-item>
         <el-menu-item index="3" route="/company">公司</el-menu-item>
         <el-menu-item index="4" route="/companyTag">公司标签</el-menu-item>
-        <el-menu-item index="5" route="/setting">设置</el-menu-item>
+        <el-menu-item index="5" route="/bbs">讨论区</el-menu-item>
+        <el-menu-item index="6" route="/setting">设置</el-menu-item>
       </el-menu>
       <router-view />
       <el-backtop />

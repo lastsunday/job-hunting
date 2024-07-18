@@ -4,6 +4,7 @@ import SettingView from '../views/SettingView.vue'
 import CompanyTagView from '../views/CompanyTagView.vue'
 import CompanyView from '../views/CompanyView.vue'
 import JobView from '../views/JobView.vue'
+import BBSView from '../views/BBSView.vue'
 
 const routes = [
   {
@@ -25,6 +26,11 @@ const routes = [
     path: '/companyTag',
     name: 'companyTag',
     component: CompanyTagView
+  },
+  {
+    path: '/bbs',
+    name: 'bbs',
+    component: BBSView
   },
   {
     path: '/setting',

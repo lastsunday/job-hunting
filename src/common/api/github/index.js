@@ -6,6 +6,10 @@ import { infoLog, errorLog } from "../../log";
 import { httpFetchJson } from "../../api/common";
 import { parseToLineObjectToToHumpObject } from "../../../common/utils";
 
+export const EXCEPTION = {
+  NO_LOGIN: "NO_LOGIN"
+}
+
 export const GithubApi = {
 
   async queryComment({ first, after, last, before, id } = {}) {
@@ -33,8 +37,51 @@ export const GithubApi = {
     let userObject = await fetchJson(GITHUB_URL_GET_USER, null, { method: "GET" });
     let userDTO = parseToLineObjectToToHumpObject(new UserDTO(), userObject);
     return userDTO;
-  }
+  },
 
+  async listIssueComment(issueNumber, { pageSize, pageNum } = { pageSize: 2, pageNum: 1 }) {
+    let commentListObject = await fetchJson(`${URL_POST_ISSUES}/${issueNumber}/comments?per_page=${pageSize}&page=${pageNum}`, null, {
+      method: "GET", responseHeaderCallback: (jsonResult, headers) => {
+        let result = {};
+        result.items = jsonResult;
+        let urls = headers.get("Link")?.split(",");
+        const { url: nextUrl, pageNum: nextPageNum } = getUrlAndPageNum(urls, "next");
+        result.nextUrl = nextUrl;
+        result.nextPageNum = nextPageNum;
+        const { url: prevUrl, pageNum: prevPageNum } = getUrlAndPageNum(urls, "prev");
+        result.prevUrl = prevUrl;
+        result.prevPageNum = prevPageNum;
+        const { url: lastUrl, pageNum: lastPageNum } = getUrlAndPageNum(urls, "last");
+        result.lastUrl = lastUrl;
+        result.lastPageNum = lastPageNum;
+        const { url: firstUrl, pageNum: firstPageNum } = getUrlAndPageNum(urls, "first");
+        result.firstUrl = firstUrl;
+        result.firstPageNum = firstPageNum;
+        return result;
+      }
+    });
+    return commentListObject;
+  },
+
+  async createIssueComment(issueNumber, data) {
+    await fetchJson(`${URL_POST_ISSUES}/${issueNumber}/comments`, { "body": data });
+  },
+
+}
+
+function getUrlAndPageNum(urls, keyword) {
+  let url = null;
+  let pageNum = null;
+  if (urls && urls.length > 0) {
+    let filterUrls = urls.filter(item => { return item.includes(`rel=\"${keyword}\"`) });
+    if (filterUrls && filterUrls.length > 0) {
+      url = filterUrls[0].match(/<(?<url>.*)>/).groups.url;
+    }
+  }
+  if (url) {
+    pageNum = Number.parseInt(new URL(url).searchParams.get("page"));
+  }
+  return { url, pageNum }
 }
 
 function genQueryCommentHQL({ first, after, last, before, id }) {
@@ -42,9 +89,11 @@ function genQueryCommentHQL({ first, after, last, before, id }) {
   return {
     query: `
     {
-        search(query:"${targetId} in:title sort:updated-desc is:issue repo:${GITHUB_APP_REPO}", type: ISSUE, first: ${first ?? null}, after: ${after ?? null},last:${last ?? null},before:${before ?? null}){
+        search(query:"${targetId} in:title sort:updated-desc is:issue repo:${GITHUB_APP_REPO}", type: ISSUE, first: ${first ?? null}, after: ${after ? "\"" + after + "\"" : null},last:${last ?? null},before:${before ? "\"" + before + "\"" : null}){
           nodes{
             ... on Issue{
+              id
+              number
               title
               bodyUrl
               author{
@@ -54,6 +103,7 @@ function genQueryCommentHQL({ first, after, last, before, id }) {
               createdAt
               lastEditedAt
               bodyText
+              bodyHTML
             }
           }
           issueCount
@@ -69,13 +119,20 @@ function genQueryCommentHQL({ first, after, last, before, id }) {
   };
 }
 
-async function fetchJson(url, data, { method } = { method: "POST" }) {
+async function fetchJson(url, data, { method, responseHeaderCallback } = { method: "POST" }) {
   try {
     let oauthDTO = await AuthApi.authGetToken();
+    if (!oauthDTO) {
+      throw EXCEPTION.NO_LOGIN;
+    }
     let response = await fetchJsonReturnResponse(url, data, { method });
     let status = response.status;
     if (isStatusNoError(response)) {
-      return await response.json();
+      const jsonResult = await response.json();
+      if (responseHeaderCallback) {
+        return responseHeaderCallback(jsonResult, response.headers);
+      }
+      return jsonResult;
     } else if (status = 401 && oauthDTO?.refreshToken) {
       infoLog("start refresh token");
       //遇到401和拥有refresh token时，进行refresh token
@@ -127,11 +184,15 @@ async function fetchJson(url, data, { method } = { method: "POST" }) {
 
 async function fetchJsonReturnResponse(url, data, { method } = { method: "POST" }) {
   let oauthDTO = await AuthApi.authGetToken();
+  if (!oauthDTO) {
+    throw EXCEPTION.NO_LOGIN;
+  }
   let option = {
     method,
     headers: {
       "Authorization": `Bearer ${oauthDTO.accessToken}`,
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "Cache-Control": "no-cache"
     },
   };
   if (data) {
