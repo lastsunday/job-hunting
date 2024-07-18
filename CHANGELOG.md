@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (SidePanel)添加讨论区板块，根据省市区区分。
+
 ## 1.18.0(2024-07-16)
 
 ### ⭐ Added
