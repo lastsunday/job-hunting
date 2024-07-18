@@ -612,7 +612,7 @@ const reset = async () => {
 };
 
 const search = async () => {
-  if (mapMode && mapSearchMode) {
+  if (mapMode.value && mapSearchMode.value) {
     map.value.leafletObject.closePopup();
   }
   let searchResult = await JobApi.searchJob(getSearchParam());
@@ -706,9 +706,6 @@ watch(mapMode, async (newValue, oldValue) => {
   if (newValue) {
     nextTick(() => {
       map.value.leafletObject.invalidateSize();
-      map.value.leafletObject.on("moveend", async (event) => {
-        await search();
-      });
       if (popups.value.length > 0) {
         map.value.leafletObject.fitBounds(popups.value.map(item => item.latLng));
       } else {
@@ -731,7 +728,9 @@ const mapSearchMode = ref(false);
 watch(mapSearchMode, async (newValue, oldValue) => {
   if (newValue) {
     map.value.leafletObject.on("moveend", async (event) => {
-      await search();
+      if (mapMode.value && mapSearchMode.value) {
+        await search();
+      }
     });
     await search();
   } else {
