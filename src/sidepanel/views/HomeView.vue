@@ -146,6 +146,11 @@
                         <el-link :key="index" type="primary" :href="item.url" target="_blank">{{ item.label }}</el-link>
                     </el-row>
                 </el-descriptions-item>
+                <el-descriptions-item label="公司信息查询">
+                    <el-row v-for="(item, index) in companyInfoWebsiteList">
+                        <el-link :key="index" type="primary" :href="item.url" target="_blank">{{ item.label }}</el-link>
+                    </el-row>
+                </el-descriptions-item>
             </el-descriptions>
         </div>
     </div>
@@ -309,6 +314,15 @@ const jobWebsiteList = [
 
 const companyWebsiteList = [
     { url: "https://aiqicha.baidu.com/s", label: "爱企查" },
+]
+
+const companyInfoWebsiteList = [
+    { url: "https://beian.miit.gov.cn", label: "工信部" },
+    { url: "https://www.creditchina.gov.cn", label: "信用中国" },
+    { url: "https://www.gsxt.gov.cn/corp-query-homepage.html", label: "企业信用" },
+    { url: "http://zxgk.court.gov.cn/zhzxgk/", label: "执行信息" },
+    { url: "https://wenshu.court.gov.cn", label: "裁判文书" },
+    { url: "https://xwqy.gsxt.gov.cn", label: "个体私营" },
 ]
 
 const map = ref();
