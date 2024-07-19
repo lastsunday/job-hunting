@@ -14,7 +14,7 @@ export const GithubApi = {
 
   async queryComment({ first, after, last, before, id } = {}) {
     let data = genQueryCommentHQL({ first, after, last, before, id });
-    let result = await fetchJson(URL_GRAPHQL, data);
+    let result = await fetchJson(`${URL_GRAPHQL}?t=${new Date().getTime()}`, data);
     if (result.errors?.length > 0) {
       throw result.errors;
     } else {
@@ -40,7 +40,7 @@ export const GithubApi = {
   },
 
   async listIssueComment(issueNumber, { pageSize, pageNum } = { pageSize: 2, pageNum: 1 }) {
-    let commentListObject = await fetchJson(`${URL_POST_ISSUES}/${issueNumber}/comments?per_page=${pageSize}&page=${pageNum}`, null, {
+    let commentListObject = await fetchJson(`${URL_POST_ISSUES}/${issueNumber}/comments?per_page=${pageSize}&page=${pageNum}&t=${new Date().getTime()}`, null, {
       method: "GET", responseHeaderCallback: (jsonResult, headers) => {
         let result = {};
         result.items = jsonResult;
@@ -192,7 +192,6 @@ async function fetchJsonReturnResponse(url, data, { method } = { method: "POST" 
     headers: {
       "Authorization": `Bearer ${oauthDTO.accessToken}`,
       "Content-Type": "application/json",
-      "Cache-Control": "no-cache"
     },
   };
   if (data) {
