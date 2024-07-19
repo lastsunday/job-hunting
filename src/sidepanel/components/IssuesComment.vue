@@ -193,7 +193,7 @@ const onCommit = async () => {
                 message: '评论提交成功',
                 type: 'success',
             })
-            searchParam.pageNum = maxPageNum.value;
+            searchParam.pageNum = maxPageNum.value || 1;
             await search();
         } finally {
             commitLoading.value = false;
