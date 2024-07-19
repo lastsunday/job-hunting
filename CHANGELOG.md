@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (SidePanel)添加公司信息查询链接（主页）。
+
 ## 1.19.0(2024-07-18)
 
 ### ⭐ Added
