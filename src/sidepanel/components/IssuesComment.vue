@@ -118,9 +118,7 @@ onMounted(async () => {
 
 watch(show, async (newValue, oldValue) => {
     if (newValue) {
-        if (firstQuery.value || dataList.value.length == 0) {
-            queryComment();
-        }
+        queryComment();
     }
 });
 
