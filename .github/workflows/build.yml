@@ -11,35 +11,58 @@ permissions:
   contents: write
 
 jobs:
-  build-chrome-extension:
+  build-extension:
     runs-on: ubuntu-latest
     steps:
-      - name: 读取仓库
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 打包
+      - name: Package
         run: |
           npm install
           npm run build-chrome
+          npm run build-firefox
 
-      - name: 部署
+      - name: Deploy chrome dist branch
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           branch: dist/chrome-${{  github.ref_name }}
           folder: dist-chrome
-  build-firefox-extension:
-    runs-on: ubuntu-latest
-    steps:
-      - name: 读取仓库
-        uses: actions/checkout@v4
 
-      - name: 打包
-        run: |
-          npm install
-          npm run build-firefox
-
-      - name: 部署
+      - name: Deploy firefox dist branch
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           branch: dist/firefox-${{  github.ref_name }}
           folder: dist-firefox
+      
+      - name: Gen latest changelog
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          awk '/^##[^#]/{print NR}' CHANGELOG.md | head -n 2 | xargs | tr ' ' ',' | xargs -I {} sed -n {}p  CHANGELOG.md | sed '$d' > ${{ github.workspace }}-CHANGELOG.txt
+
+      - name: Rename dist
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          mv dist-chrome job-hunting-extension-chrome-${{  github.ref_name }}
+          mv dist-firefox job-hunting-extension-firefox-${{  github.ref_name }}
+
+      - name: Zip chrome dist
+        uses: montudor/action-zip@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          args: zip -qq -r job-hunting-extension-chrome-${{  github.ref_name }}.zip job-hunting-extension-chrome-${{  github.ref_name }}
+
+      - name: Zip firefox dist
+        uses: montudor/action-zip@v1
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          args: zip -qq -r job-hunting-extension-firefox-${{  github.ref_name }}.zip job-hunting-extension-firefox-${{  github.ref_name }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          body_path: ${{ github.workspace }}-CHANGELOG.txt
+          files: |
+            job-hunting-extension-chrome-${{  github.ref_name }}.zip
+            job-hunting-extension-firefox-${{  github.ref_name }}.zip
