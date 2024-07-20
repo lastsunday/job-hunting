@@ -89,7 +89,7 @@ function genQueryCommentHQL({ first, after, last, before, id }) {
   return {
     query: `
     {
-        search(query:"${targetId} in:title sort:updated-desc is:issue repo:${GITHUB_APP_REPO}", type: ISSUE, first: ${first ?? null}, after: ${after ? "\"" + after + "\"" : null},last:${last ?? null},before:${before ? "\"" + before + "\"" : null}){
+        search(query:"${targetId} in:title sort:updated-desc is:issue is:open repo:${GITHUB_APP_REPO}", type: ISSUE, first: ${first ?? null}, after: ${after ? "\"" + after + "\"" : null},last:${last ?? null},before:${before ? "\"" + before + "\"" : null}){
           nodes{
             ... on Issue{
               id
