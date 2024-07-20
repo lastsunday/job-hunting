@@ -2,9 +2,30 @@
 
 ## WIP
 
+### ✏️ Changed
+
+1. (SidePanel)只显示打开状态的讨论。（讨论区）
+
+### 🐛 Fixed
+
+1. (SidePanel)调整管理页面的滚动条显示逻辑（需要滚动时才显示）。
+
 ### 🔗 Build
 
 1. 当创建Tag,自动生成Release并自动上传chrome和firefox安装文件。
+
+### 🔨 Dependency
+
+1. Update dayjs ^1.11.12
+2. Update echarts ^5.5.1
+3. Update element-plus ^2.7.7
+4. Update semver ^7.6.3
+5. Update vue ^3.4.33
+6. Update sass ^1.77.8
+7. Update typescript ^5.5.3
+8. Update vite ^5.3.4
+9. Update vite-plugin-web-extension ^4.1.6
+10. Update vue-tsc ^2.0.26
 
 ## 1.20.0(2024-07-19)
 
