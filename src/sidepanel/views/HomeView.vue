@@ -368,7 +368,7 @@ const tourOpen = ref(false);
 }
 
 .mapIcon {
-    width: 200px;
+    width: 200px; 
     background-color: lightgoldenrodyellow;
     padding: 5px;
     border-radius: 5px;
@@ -398,7 +398,7 @@ const tourOpen = ref(false);
 
 .left {
     display: flex;
-    overflow: scroll;
+    overflow: auto;
     padding-right: 20px;
     scrollbar-width: thin;
     min-width: 200px;
@@ -415,6 +415,6 @@ const tourOpen = ref(false);
 .right {
     min-width: 200px;
     max-width: 400px;
-    overflow: scroll;
+    overflow: auto;
 }
 </style>

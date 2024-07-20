@@ -820,7 +820,7 @@ watch(mapSearchMode, async (newValue, oldValue) => {
 
 .left {
     display: flex;
-    overflow: scroll;
+    overflow: auto;
     padding-right: 10px;
     scrollbar-width: thin;
     min-width: 200px;

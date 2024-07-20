@@ -433,4 +433,11 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
 .issuesCommentContent {
   font-size: 14px;
 }
+
+.content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: auto;
+}
 </style>

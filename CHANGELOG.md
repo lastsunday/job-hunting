@@ -2,6 +2,10 @@
 
 ## WIP
 
+### 🐛 Fixed
+
+1. (SidePanel)调整管理页面的滚动条显示逻辑（需要滚动时才显示）。
+
 ### 🔗 Build
 
 1. 当创建Tag,自动生成Release并自动上传chrome和firefox安装文件。

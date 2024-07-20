@@ -812,7 +812,7 @@ const onAccessIssuesPage = () => {
 }
 
 </script>
-<style lang="scss">
+<style lang="scss" scoped>
 .setting_item {
   padding: 5px;
 }
@@ -856,6 +856,6 @@ const onAccessIssuesPage = () => {
   display: flex;
   flex-direction: column;
   flex: 1;
-  overflow: scroll;
+  overflow: auto;
 }
 </style>
