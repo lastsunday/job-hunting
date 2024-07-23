@@ -126,11 +126,12 @@
                     <div class="cell-item">公司标签</div>
                   </template>
                   <div>
-                    <el-text v-if="props.row.companyTagDTOList && props.row.companyTagDTOList.length > 0"
-                      class="compang_tag">
-                      <el-tag v-for="(value, key, index) in props.row.companyTagDTOList" type="primary">{{
-                        value.tagName
-                        }}</el-tag>
+                    <el-text v-if="
+                      props.row.companyTagDTOList &&
+                      props.row.companyTagDTOList.length > 0
+                    " class="compang_tag">
+                      <el-tag v-for="(value, key, index) in props.row
+                        .companyTagDTOList" type="primary">{{ value.tagName }}</el-tag>
                     </el-text>
                     <el-text v-else>-</el-text>
                   </div>
@@ -188,7 +189,11 @@
         <el-table-column prop="companyTagDTOList" label="标签数" show-overflow-tooltip width="70">
           <template #default="scope">
             <el-text line-clamp="1">
-              {{ scope.row.companyTagDTOList ? scope.row.companyTagDTOList.length : 0 }}
+              {{
+                scope.row.companyTagDTOList
+                  ? scope.row.companyTagDTOList.length
+                  : 0
+              }}
             </el-text>
           </template>
         </el-table-column>
@@ -260,7 +265,11 @@
         <el-table-column prop="companyTagDTOList" label="标签数" show-overflow-tooltip width="70">
           <template #default="scope">
             <el-text line-clamp="1">
-              {{ scope.row.companyTagDTOList ? scope.row.companyTagDTOList.length : 0 }}
+              {{
+                scope.row.companyTagDTOList
+                  ? scope.row.companyTagDTOList.length
+                  : 0
+              }}
             </el-text>
           </template>
         </el-table-column>
@@ -280,57 +289,63 @@
           <l-tile-layer
             url="http://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}"
             :subdomains="['1', '2', '3', '4']"></l-tile-layer>
-          <l-marker v-for="(item, index) in jobsFilterEmptyLocation" :lat-lng="[item.jobLatitude, item.jobLongitude]">
-            <l-popup ref="popups" :lat-lng="[item.jobLatitude, item.jobLongitude]">
-              <el-row>
-                <el-text line-clamp="1">职位名： <el-link type="primary" :href="item.jobUrl" target="_blank">{{ item.jobName
-                    }}</el-link></el-text>
-              </el-row>
-              <el-row>
-                <el-text line-clamp="1">发布时间：{{ datetimeFormat(item.jobFirstPublishDatetime)
-                  }}</el-text>
-              </el-row>
-              <el-row>
-                <el-text line-clamp="1">薪资：💵{{ item.jobSalaryMin }} - 💵{{ item.jobSalaryMax
-                  }}</el-text>
-              </el-row>
-              <el-row>
-                <el-text line-clamp="1">学历：{{ item.jobDegreeName }}</el-text>
-              </el-row>
-              <el-row>
-                <el-text line-clamp="1">招聘平台：{{ item.jobPlatform }}</el-text>
-              </el-row>
-              <el-row>
-                <el-text line-clamp="1">地址：{{ item.jobAddress }}</el-text>
-              </el-row>
-              <el-row>
-                <el-text line-clamp="1">公司名：{{ item.jobCompanyName }}</el-text>
-              </el-row>
-              <el-row v-if="item.companyTagDTOList && item.companyTagDTOList.length > 0">
-                <el-text line-clamp="1">公司标签({{ item.companyTagDTOList.length }})：</el-text>
-                <el-text class="tagItem" v-for="(item, index) in item.companyTagDTOList">
-                  <el-tag type="primary">
-                    <Icon icon="mdi:tag" />{{
-                      item.tagName }}
-                  </el-tag>
-                </el-text>
-              </el-row>
-            </l-popup>
-            <l-icon className="icon">
-              <div class="mapIcon">
+          <l-marker-cluster-group>
+            <l-marker v-for="(item, index) in jobsFilterEmptyLocation" :lat-lng="[item.jobLatitude, item.jobLongitude]">
+              <l-popup ref="popups" :lat-lng="[item.jobLatitude, item.jobLongitude]">
                 <el-row>
-                  <el-text line-clamp="1"> {{ item.jobName }}</el-text>
+                  <el-text line-clamp="1">职位名：
+                    <el-link type="primary" :href="item.jobUrl" target="_blank">{{ item.jobName }}</el-link></el-text>
                 </el-row>
                 <el-row>
-                  <el-text line-clamp="1">💵{{ item.jobSalaryMin }} - 💵{{ item.jobSalaryMax
+                  <el-text line-clamp="1">发布时间：{{
+                    datetimeFormat(item.jobFirstPublishDatetime)
+                  }}</el-text>
+                </el-row>
+                <el-row>
+                  <el-text line-clamp="1">薪资：💵{{ item.jobSalaryMin }} - 💵{{
+                    item.jobSalaryMax
+                  }}</el-text>
+                </el-row>
+                <el-row>
+                  <el-text line-clamp="1">学历：{{ item.jobDegreeName }}</el-text>
+                </el-row>
+                <el-row>
+                  <el-text line-clamp="1">招聘平台：{{ item.jobPlatform }}</el-text>
+                </el-row>
+                <el-row>
+                  <el-text line-clamp="1">地址：{{ item.jobAddress }}</el-text>
+                </el-row>
+                <el-row>
+                  <el-text line-clamp="1">公司名：{{ item.jobCompanyName }}</el-text>
+                </el-row>
+                <el-row v-if="
+                  item.companyTagDTOList && item.companyTagDTOList.length > 0
+                ">
+                  <el-text line-clamp="1">公司标签({{ item.companyTagDTOList.length }})：</el-text>
+                  <el-text class="tagItem" v-for="(item, index) in item.companyTagDTOList">
+                    <el-tag type="primary">
+                      <Icon icon="mdi:tag" />{{ item.tagName }}
+                    </el-tag>
+                  </el-text>
+                </el-row>
+              </l-popup>
+              <l-icon className="icon">
+                <div class="mapIcon">
+                  <el-row>
+                    <el-text line-clamp="1"> {{ item.jobName }}</el-text>
+                  </el-row>
+                  <el-row>
+                    <el-text line-clamp="1">💵{{ item.jobSalaryMin }} - 💵{{
+                      item.jobSalaryMax
                     }}</el-text>
-                </el-row>
-                <el-row>
-                  <el-text line-clamp="1">{{ item.jobCompanyName }}</el-text>
-                </el-row>
-              </div>
-            </l-icon>
-          </l-marker>
+                  </el-row>
+                  <el-row>
+                    <el-text line-clamp="1">{{ item.jobCompanyName }}</el-text>
+                  </el-row>
+                </div>
+              </l-icon>
+            </l-marker>
+          </l-marker-cluster-group>
         </l-map>
       </div>
     </div>
@@ -348,7 +363,15 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, computed, provide, nextTick, onUnmounted, watch } from "vue";
+import {
+  onMounted,
+  ref,
+  computed,
+  provide,
+  nextTick,
+  onUnmounted,
+  watch,
+} from "vue";
 import { useTransition } from "@vueuse/core";
 import { JobApi } from "../../common/api/index.js";
 import { SearchJobBO } from "../../common/data/bo/searchJobBO.js";
@@ -383,8 +406,10 @@ import {
   LPolygon,
   LRectangle,
 } from "@vue-leaflet/vue-leaflet";
-import { wgs84ToGcj02 } from '@pansy/lnglat-transform';
-import { Icon } from '@iconify/vue';
+import { LMarkerClusterGroup } from "vue-leaflet-markercluster";
+import "vue-leaflet-markercluster/dist/style.css";
+import { wgs84ToGcj02 } from "@pansy/lnglat-transform";
+import { Icon } from "@iconify/vue";
 
 use([
   CanvasRenderer,
@@ -432,7 +457,9 @@ const datetimeFormat = computed(() => {
 });
 const datetimeFormatHHMM = computed(() => {
   return function (value: string) {
-    return dayjs(value).isValid() ? dayjs(value).format("YYYY-MM-DD HH:mm") : "-";
+    return dayjs(value).isValid()
+      ? dayjs(value).format("YYYY-MM-DD HH:mm")
+      : "-";
   };
 });
 const jobSearchName = ref(null);
@@ -685,31 +712,37 @@ const mapMode = ref(false);
 
 const map = ref();
 const zoom = ref(4);
-const jobsFilterEmptyLocation = computed(() => tableData.value.filter((item) => (item.jobLatitude && item.jobLongitude)))
+const jobsFilterEmptyLocation = computed(() =>
+  tableData.value.filter((item) => item.jobLatitude && item.jobLongitude)
+);
 const idAndPopupIndexMap = computed(() => {
   let result = new Map();
-  let filtered = tableData.value.filter((item) => (item.jobLatitude && item.jobLongitude));
+  let filtered = tableData.value.filter(
+    (item) => item.jobLatitude && item.jobLongitude
+  );
   filtered.forEach((element, index) => {
     result.set(element.jobId, index);
   });
   return result;
-})
+});
 const onJobMapLocate = (item) => {
   let popUpIndex = idAndPopupIndexMap.value.get(item.jobId);
   let popUpObject = popups.value[popUpIndex];
   popUpObject.leafletObject.openOn(map.value.leafletObject);
   map.value.leafletObject.flyTo(popUpObject.latLng, 14);
-}
-const popups = ref([])
+};
+const popups = ref([]);
 
 watch(mapMode, async (newValue, oldValue) => {
   if (newValue) {
     nextTick(() => {
       map.value.leafletObject.invalidateSize();
       if (popups.value.length > 0) {
-        map.value.leafletObject.fitBounds(popups.value.map(item => item.latLng));
+        map.value.leafletObject.fitBounds(
+          popups.value.map((item) => item.latLng)
+        );
       } else {
-        map.value.leafletObject.setView([39.906217, 116.3912757], 4)
+        map.value.leafletObject.setView([39.906217, 116.3912757], 4);
       }
       if (popups.value && popups.value.length > 0) {
         let firstPopup = popups.value[0];
@@ -721,7 +754,7 @@ watch(mapMode, async (newValue, oldValue) => {
       }
     });
   }
-})
+});
 
 const mapSearchMode = ref(false);
 
@@ -737,7 +770,7 @@ watch(mapSearchMode, async (newValue, oldValue) => {
     map.value.leafletObject.off("moveend");
     await search();
   }
-})
+});
 </script>
 
 <style scoped>
