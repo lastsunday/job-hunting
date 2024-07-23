@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## WIP
+
+### ✏️ Changed
+
+1. (SidePanel)使用聚类显示地图上的点。（主页，职位页，公司页）
+
+### 🔨 Dependency
+
+1. Add vue-leaflet-markercluster ^0.6.1
+
 ## 1.20.1(2024-07-20)
 
 ### ✏️ Changed
