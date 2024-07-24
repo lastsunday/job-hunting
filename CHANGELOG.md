@@ -6,6 +6,10 @@
 
 1. (SidePanel)使用聚类显示地图上的点。（主页，职位页，公司页）
 
+### 🛀 Refactor
+
+1. (ContentScript)rename 51job job list style name。
+
 ### 🔨 Dependency
 
 1. Add vue-leaflet-markercluster ^0.6.1
