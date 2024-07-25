@@ -345,7 +345,7 @@
   </div>
   <el-row>
     <el-pagination v-model:current-page="currentPage" v-model:page-size="pageSize"
-      :page-sizes="[10, 50, 100, 200, 500, 1000]" :small="small" :disabled="disabled" :background="background"
+      :page-sizes="[10, 20, 50, 100, 200, 500, 1000]" :small="small" :disabled="disabled" :background="background"
       layout="total, sizes, prev, pager, next" :total="total" @size-change="handleSizeChange"
       @current-change="handleCurrentChange" />
   </el-row>
@@ -408,6 +408,7 @@ import { LMarkerClusterGroup } from "vue-leaflet-markercluster";
 import "vue-leaflet-markercluster/dist/style.css";
 import { wgs84ToGcj02 } from "@pansy/lnglat-transform";
 import { Icon } from "@iconify/vue";
+import { UI_DEFAULT_PAGE_SIZE } from "../../common/config";
 
 const todayAddCountSource = ref(0);
 const todayAddCount = useTransition(todayAddCountSource, {
@@ -423,7 +424,7 @@ const firstTimeLoading = ref(true);
 const tableRef = ref<InstanceType<typeof ElTable>>();
 const tableData = ref([]);
 const currentPage = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(UI_DEFAULT_PAGE_SIZE);
 const total = ref(0);
 const small = ref(false);
 const background = ref(false);

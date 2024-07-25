@@ -17,6 +17,7 @@ import { SearchCompanyDTO } from "../data/dto/searchCompanyDTO";
 import { StatisticCompanyDTO } from "../data/dto/statisticCompanyDTO";
 import { CompanyBO } from "../data/bo/companyBO";
 import { OauthDTO } from "../data/dto/oauthDTO";
+import { AssistantStatisticDTO } from "../data/dto/assistantStatisticDTO";
 
 export const JobApi = {
   /**
@@ -322,6 +323,45 @@ export const ConfigApi = {
     return await invoke(this.addOrUpdateConfig.name, param, {
       invokeEnv: invokeEnv,
     });
+  },
+
+}
+
+export const AssistantApi = {
+
+  /**
+   *
+   * @param {SearchJobBO} param
+   *
+   * @returns SearchJobDTO[]
+   */
+  assistantSearchFaviousJob: async function (param) {
+    let result = await invoke(this.assistantSearchFaviousJob.name, param);
+    return result.data;
+  },
+  /**
+   * 
+   * @param {JobFaviousSettingDTO} param
+   * 
+   */
+  assistantSetJobFaviousSetting: async function (param) {
+    return await invoke(this.assistantSetJobFaviousSetting.name, param);
+  },
+  /**
+   * 
+   * @returns JobFaviousSettingDTO
+   */
+  assistantGetJobFaviousSetting: async function () {
+    let result = await invoke(this.assistantGetJobFaviousSetting.name, {});
+    return result.data;
+  },
+  /**
+ * 
+ * @returns AssistantStatisticDTO
+ */
+  assistantStatistic: async function () {
+    let result = await invoke(this.assistantStatistic.name, {});
+    return result.data;
   },
 
 }

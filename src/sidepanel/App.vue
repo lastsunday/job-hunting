@@ -6,11 +6,15 @@
         <img class="logo" src="./assets/images/logo.png" alt="logo" />
         <div class="flex-grow" />
         <el-menu-item index="1" route="/">首页</el-menu-item>
-        <el-menu-item index="2" route="/job">职位</el-menu-item>
-        <el-menu-item index="3" route="/company">公司</el-menu-item>
-        <el-menu-item index="4" route="/companyTag">公司标签</el-menu-item>
-        <el-menu-item index="5" route="/bbs">讨论区</el-menu-item>
-        <el-menu-item index="6" route="/setting">设置</el-menu-item>
+        <el-menu-item index="2" route="/assistant">个人助理</el-menu-item>
+        <el-menu-item index="3" route="/bbs">讨论区</el-menu-item>
+        <el-sub-menu index="4">
+          <template #title>数据</template>
+          <el-menu-item index="4-1" route="/job">职位</el-menu-item>
+          <el-menu-item index="4-2" route="/company">公司</el-menu-item>
+          <el-menu-item index="4-3" route="/companyTag">公司标签</el-menu-item>
+        </el-sub-menu>
+        <el-menu-item index="5" route="/setting">设置</el-menu-item>
       </el-menu>
       <router-view />
       <el-backtop />

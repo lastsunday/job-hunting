@@ -13,3 +13,5 @@ export const COMMENT_PAGE_SIZE = 20;
 export const APP_URL_LATEST_VERSION = "https://api.github.com/repos/lastsunday/job-hunting/releases/latest";
 
 export const APP_ID = "boibmngajpgmamamchfhahehbkdfilam";
+
+export const UI_DEFAULT_PAGE_SIZE = 10;

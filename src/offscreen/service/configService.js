@@ -69,7 +69,7 @@ export async function _getConfigByKey(param) {
 
 /**
  * 
- * @param {Tag} param 
+ * @param {Config} param 
  */
 export async function _addOrUpdateConfig(param) {
     const now = new Date();

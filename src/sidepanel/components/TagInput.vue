@@ -2,7 +2,7 @@
     <input ref="inputRef" @change="handleChange" :placeholder="props.placeholder" />
 </template>
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, onUnmounted, ref } from "vue";
 import Tagify from "@yaireo/tagify";
 import "@yaireo/tagify/dist/tagify.css";
 import DragSort from '@yaireo/dragsort';
@@ -13,6 +13,7 @@ const props = defineProps(["settings", "whitelist", "placeholder"]);
 const emits = defineEmits(["value-change"]);
 const inputRef = ref();
 let tagify = ref();
+let observer = null;
 
 defineExpose({
     clear() {
@@ -50,17 +51,41 @@ onMounted(() => {
         emits("value-change");
     };
     tagify.value = new Tagify(inputRef.value, settings);
-    tagify.value.loadOriginalValues(props.modelValue);
-    tagify.value.whitelist = props.whitelist.value;
-    let dragsort = new DragSort(tagify.value.DOM.scope, {
-    selector: '.' + tagify.value.settings.classNames.tag,
-    callbacks: {
-      dragEnd: (elem) => {
-        tagify.value.updateValueByDOMTags();
-      }
+    let tagListDiv = tagify.value.DOM.scope;
+    //补全逻辑，当删除所有的tag，不会触发originalInputValueFormat去返回空列表，新增监听Tag元素变动时，检测结果是否为空，如果为空则触发数值更新
+    observer = new MutationObserver((mutationsList, observer) => {
+        for (let mutation of mutationsList) {
+            if (mutation.type === "childList") {
+                if (tagify.value.getInputValue() != undefined) {
+                    model.value = [];
+                    emits("value-change");
+                }
+            }
+        }
     }
-  });
+    );
+    observer.observe(tagListDiv, {
+        childList: true,
+        subtree: false,
+    });
+
+    tagify.value.loadOriginalValues(props.modelValue);
+    if (props.whitelist) {
+        tagify.value.whitelist = props.whitelist.value;
+    }
+    let dragsort = new DragSort(tagify.value.DOM.scope, {
+        selector: '.' + tagify.value.settings.classNames.tag,
+        callbacks: {
+            dragEnd: (elem) => {
+                tagify.value.updateValueByDOMTags();
+            }
+        }
+    });
 });
+
+onUnmounted(() => {
+    observer?.disconnect();
+})
 
 </script>
 <style lang="css">
