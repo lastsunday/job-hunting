@@ -2,9 +2,19 @@
 
 ## WIP
 
+### ⭐ Added
+
+1. (SidePanel)添加个人助理。（职位偏好）
+2. (SidePanel)表格分页添加20条数据每页设置。
+
+### 🐛 Fixed
+
+1. (SidePanel)修复TagInput空Tag赋值失效的问题。
+
 ### ✏️ Changed
 
 1. (SidePanel)使用聚类显示地图上的点。（主页，职位页，公司页）
+2. (SidePanel)调整菜单，聚合职位，公司，公司标签到数据。
 
 ### 🛀 Refactor
 
