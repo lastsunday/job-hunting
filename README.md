@@ -99,6 +99,19 @@
         </div>
  </div>
     <div style="margin-top:20px">
+        <img src="docs\introduction\sidepanel_admin_assistant.jpg" alt="sidepanel_admin_assistant" width="1000px"/>
+        <img src="docs\introduction\sidepanel_admin_assistant_favious_setting.jpg" alt="sidepanel_admin_favious_setting" width="1000px"/>
+        <div style="text-align:center">
+            个人助理
+        </div>
+ </div>
+     <div style="margin-top:20px">
+        <img src="docs\introduction\sidepanel_admin_comment.jpg" alt="sidepanel_admin_comment" width="1000px"/>
+        <div style="text-align:center">
+            讨论区
+        </div>
+ </div>
+    <div style="margin-top:20px">
         <img src="docs\introduction\sidepanel_admin_job.jpg" alt="sidepanel_admin_job" width="1000px"/>
         <div style="text-align:center">
             职位
