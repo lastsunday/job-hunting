@@ -53,20 +53,8 @@
           <el-timeline v-if="tableData.length > 0">
             <el-timeline-item v-for="(item, index) in tableData" :key="index"
               :timestamp="item.latestBrowseDetailDatetime" v-show="item.latestBrowseDetailDatetime">
-              <el-row>
-                <el-link type="primary" :href="item.jobUrl" target="_blank">{{ item.jobName }}-{{ item.jobCompanyName
-                  }}</el-link>
-              </el-row>
-              <el-row justify="end">
-                <el-text v-if="
-                  item.companyTagDTOList && item.companyTagDTOList.length > 0
-                ">
-                  <Icon icon="mdi:tag" />{{ item.companyTagDTOList.length }}
-                </el-text>
-                <el-link v-if="item.jobLongitude && item.jobLatitude" type="primary" @click="onJobMapLocate(item)">
-                  <Icon icon="mdi:location" />定位
-                </el-link>
-              </el-row>
+              <JobItemCard :item="item" :key="item.jobId"
+                @map-locate="onJobMapLocate(item)"></JobItemCard>
             </el-timeline-item>
           </el-timeline>
           <el-text v-else>无</el-text>
@@ -192,6 +180,7 @@ import { wgs84ToGcj02 } from "@pansy/lnglat-transform";
 import { Icon } from "@iconify/vue";
 import dayjs from "dayjs";
 import { UI_DEFAULT_PAGE_SIZE } from "../../common/config";
+import JobItemCard from "../components/JobItemCard.vue";
 
 const todayBrowseDetailCountSource = ref(0);
 const todayBrowseDetailCount = useTransition(todayBrowseDetailCountSource, {
@@ -414,7 +403,7 @@ const tourOpen = ref(false);
   padding-right: 20px;
   scrollbar-width: thin;
   min-width: 200px;
-  max-width: 25%;
+
 }
 
 .middle {

@@ -1,9 +1,9 @@
 export class JobFaviousSettingDTO {
-    nameKeywordList;
+    nameKeywordList = [];
     salary;
-    addressKeywordList;
-    descKeywordList;
-    descDislikeKeywordList
-    dislikeCompanyTagList;
+    addressKeywordList = [];
+    descKeywordList = [];
+    descDislikeKeywordList =[]
+    dislikeCompanyTagList = [];
     publishDateOffset;
 }

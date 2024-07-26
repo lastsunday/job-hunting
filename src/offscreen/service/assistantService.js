@@ -319,5 +319,5 @@ export async function _getJobFaviousSetting() {
             return item;
         }
     }
-    return null;
+    return item;
 }

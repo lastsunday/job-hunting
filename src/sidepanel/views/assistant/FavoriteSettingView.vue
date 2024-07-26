@@ -161,33 +161,8 @@
             </div>
             <div v-if="mapMode" class="mapContent">
                 <el-scrollbar class="left">
-                    <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }"
-                        style="width: 100%" stripe sortable="custom">
-                        <el-table-column label="名称" show-overflow-tooltip width="100">
-                            <template #default="scope">
-                                <a :href="scope.row.jobUrl" target="_blank" :title="scope.row.jobUrl">
-                                    <el-text line-clamp="1">
-                                        {{ scope.row.jobName }}
-                                    </el-text>
-                                </a>
-                            </template>
-                        </el-table-column>
-                        <el-table-column label="公司" show-overflow-tooltip width="200">
-                            <template #default="scope">
-                                <el-text line-clamp="1" :title="scope.row.jobCompanyName">
-                                    {{ scope.row.jobCompanyName }}
-                                </el-text>
-                            </template>
-                        </el-table-column>
-                        <el-table-column fixed="right" label="操作" width="120">
-                            <template #default="scope">
-                                <el-link v-if="scope.row.jobLongitude && scope.row.jobLatitude" type="primary"
-                                    @click="onJobMapLocate(scope.row)">
-                                    <Icon icon="mdi:location" />定位
-                                </el-link>
-                            </template>
-                        </el-table-column>
-                    </el-table>
+                    <JobItemCard v-for="(item, index) in tableData" :item="item" :key="item.jobId"
+                        @map-locate="onJobMapLocate(item)"></JobItemCard>
                 </el-scrollbar>
                 <div class="middle">
                     <div class="mapWrapper">
@@ -203,17 +178,17 @@
                                             <el-text line-clamp="1">职位名：
                                                 <el-link type="primary" :href="item.jobUrl" target="_blank">{{
                                                     item.jobName
-                                                    }}</el-link></el-text>
+                                                }}</el-link></el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">发布时间：{{
                                                 datetimeFormat(item.jobFirstPublishDatetime)
-                                                }}</el-text>
+                                            }}</el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">薪资：💵{{ item.jobSalaryMin }} - 💵{{
                                                 item.jobSalaryMax
-                                                }}</el-text>
+                                            }}</el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">学历：{{ item.jobDegreeName }}</el-text>
@@ -246,7 +221,7 @@
                                             <el-row>
                                                 <el-text line-clamp="1">💵{{ item.jobSalaryMin }} - 💵{{
                                                     item.jobSalaryMax
-                                                    }}</el-text>
+                                                }}</el-text>
                                             </el-row>
                                             <el-row>
                                                 <el-text line-clamp="1">{{ item.jobCompanyName }}</el-text>
@@ -295,7 +270,7 @@
                     <el-radio-group v-model="form.publishDateOffset">
                         <el-radio v-for="(item) in publishDateOffsetOptions" :value="item.value" :key="item.value">{{
                             item.label
-                        }}</el-radio>
+                            }}</el-radio>
                     </el-radio-group>
                 </el-form-item>
                 <el-form-item>
@@ -339,7 +314,10 @@ import { LMarkerClusterGroup } from "vue-leaflet-markercluster";
 import "vue-leaflet-markercluster/dist/style.css";
 import { ElMessage } from "element-plus";
 import { JobFaviousSettingDTO } from "../../../common/data/dto/jobFaviousSettingDTO";
+import { JobDTO } from "../../../common/data/dto/jobDTO";
 import { UI_DEFAULT_PAGE_SIZE } from "../../../common/config";
+import JobItemCard from '../../components/JobItemCard.vue';
+import { Icon } from "@iconify/vue";
 
 const form = reactive({
     nameKeywordList: [],
@@ -378,6 +356,19 @@ onMounted(async () => {
     let jobFaviousSetting = await AssistantApi.assistantGetJobFaviousSetting();
     setFormData(jobFaviousSetting);
     await search();
+    if (popups.value.length > 0) {
+        map.value.leafletObject.fitBounds(popups.value.map((item) => item.latLng));
+    } else {
+        map.value.leafletObject.setView([39.906217, 116.3912757], 4);
+    }
+    if (popups.value && popups.value.length > 0) {
+        let firstPopup = popups.value[0];
+        firstPopup.leafletObject.openOn(map.value.leafletObject);
+        //TODO clean the timeout
+        setTimeout(() => {
+            map.value.leafletObject.flyTo(firstPopup.latLng);
+        }, 300);
+    }
 });
 
 const setFormData = (jobFaviousSetting) => {
@@ -518,7 +509,7 @@ const handleCurrentChange = (val: number) => {
     search();
 };
 
-const mapMode = ref(false);
+const mapMode = ref(true);
 
 const map = ref();
 const zoom = ref(4);
@@ -608,8 +599,7 @@ watch(mapMode, async (newValue, oldValue) => {
     overflow: auto;
     padding-right: 10px;
     scrollbar-width: thin;
-    min-width: 200px;
-    max-width: 35%;
+
 }
 
 .mapWrapper {
