@@ -18,6 +18,7 @@ import { StatisticCompanyDTO } from "../data/dto/statisticCompanyDTO";
 import { CompanyBO } from "../data/bo/companyBO";
 import { OauthDTO } from "../data/dto/oauthDTO";
 import { AssistantStatisticDTO } from "../data/dto/assistantStatisticDTO";
+import { CompanyDTO } from "../data/dto/companyDTO";
 
 export const JobApi = {
   /**
@@ -125,6 +126,16 @@ export const CompanyApi = {
    */
   getCompanyById: async function (id) {
     let result = await invoke(this.getCompanyById.name, id);
+    return result.data;
+  },
+
+  /**
+ *
+ * @param {string[]} ids
+ * @returns CompanyDTO[]
+ */
+  getCompanyDTOByIds: async function (ids) {
+    let result = await invoke(this.getCompanyDTOByIds.name, ids);
     return result.data;
   },
 

@@ -10,6 +10,7 @@ import { SearchJobDTO } from "../../common/data/dto/searchJobDTO";
 import { postSuccessMessage, postErrorMessage } from "../util";
 import { getDb, getOne } from "../database";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
+import { _getCompanyDTOByIds } from "./companyService";
 
 const JOB_VISIT_TYPE_SEARCH = "SEARCH";
 const JOB_VISIT_TYPE_DETAIL = "DETAIL";
@@ -202,6 +203,7 @@ export const JobService = {
         resultRows: queryRows,
       });
       let companyIds = [];
+      let companyIdMap = new Map();
       for (let i = 0; i < queryRows.length; i++) {
         let item = queryRows[i];
         let resultItem = new JobDTO();
@@ -211,9 +213,9 @@ export const JobService = {
           resultItem[key] = item[key];
         }
         items.push(item);
-        companyIds.push(genIdFromText(item.jobCompanyName));
+        companyIdMap.set(genIdFromText(item.jobCompanyName))
       }
-
+      companyIds.push(...Array.from(companyIdMap.keys()));
       let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(companyIds);
       let companyIdAndCompanyTagListMap = new Map();
       companyTagDTOList.forEach(item => {
@@ -223,8 +225,17 @@ export const JobService = {
         }
         companyIdAndCompanyTagListMap.get(companyId).push(item);
       });
+      let companyDTOList = await _getCompanyDTOByIds(companyIds);
+      let companyIdAndCompanyDTOListMap = new Map();
+      companyDTOList.forEach(item => {
+        let companyId = item.companyId;
+        if (!companyIdAndCompanyDTOListMap.has(companyId)) {
+          companyIdAndCompanyDTOListMap.set(companyId, item);
+        }
+      });
       items.forEach(item => {
         item.companyTagDTOList = companyIdAndCompanyTagListMap.get(genIdFromText(item.jobCompanyName));
+        item.companyDTO = companyIdAndCompanyDTOListMap.get(genIdFromText(item.jobCompanyName));
       });
       //count
       let sqlCount = `SELECT COUNT(*) AS total from (${sqlQueryCountSubSql}) AS t1`;

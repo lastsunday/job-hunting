@@ -149,6 +149,21 @@ export const CompanyService = {
       postErrorMessage(message, "[worker] searchCompany error : " + e.message);
     }
   },
+
+  /**
+ *
+ * @param {Message} message
+ * @param {string[]} param ids
+ *
+ * @returns CompanyDTO[]
+ */
+  getCompanyDTOByIds: async function (message, param) {
+    try {
+      postSuccessMessage(message, await _getCompanyDTOByIds(param));
+    } catch (e) {
+      postErrorMessage(message, "[worker] getCompanyDTOByIds error : " + e.message);
+    }
+  },
   /**
   *
   * @param {Message} message
@@ -304,6 +319,56 @@ async function _addOrUpdateCompany(param) {
   }
 }
 
+
+/**
+ * 
+ * @param {string[]} companyIds 
+ * @returns CompanyDTO[]
+ */
+export async function _getCompanyDTOByIds(companyIds) {
+  if (companyIds && companyIds.length == 0) {
+    return [];
+  }
+  let items = [];
+  let sqlQuery = "";
+  let whereCondition = genIdsWhereConditionSql(companyIds);
+  const sqlSearchQuery = genSqlSearchQuery();
+  sqlQuery += sqlSearchQuery;
+  sqlQuery += whereCondition;
+  let queryRows = [];
+  (await getDb()).exec({
+    sql: sqlQuery,
+    rowMode: "object",
+    resultRows: queryRows,
+  });
+  for (let i = 0; i < queryRows.length; i++) {
+    let item = queryRows[i];
+    let resultItem = new CompanyDTO();
+    let keys = Object.keys(item);
+    for (let n = 0; n < keys.length; n++) {
+      let key = keys[n];
+      resultItem[toHump(key)] = item[key];
+    }
+    resultItem.tagNameArray = [];
+    resultItem.tagIdArray = [];
+    items.push(resultItem);
+  }
+  let ids = [];
+  let itemIdObjectMap = new Map();
+  if (items.length > 0) {
+    items.forEach(item => {
+      ids.push(item.companyId);
+      itemIdObjectMap.set(item.companyId, item);
+    });
+    let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids);
+    companyTagDTOList.forEach(item => {
+      itemIdObjectMap.get(item.companyId).tagNameArray.push(item.tagName);
+      itemIdObjectMap.get(item.companyId).tagIdArray.push(item.tagId);
+    });
+  }
+  return items;
+}
+
 /**
  *
  * @param {SearchCompanyBO} param
@@ -333,6 +398,19 @@ function genSearchWhereConditionSql(param) {
   }
   if (isNotEmpty(param.minLng) && isNotEmpty(param.maxLng)) {
     whereCondition += ` AND company_longitude >= ${param.minLng} AND company_longitude <= ${param.maxLng}`;
+  }
+  if (whereCondition.startsWith(" AND")) {
+    whereCondition = whereCondition.replace("AND", "");
+    whereCondition = " WHERE " + whereCondition;
+  }
+  return whereCondition;
+}
+
+function genIdsWhereConditionSql(companyIds) {
+  let ids = "'" + companyIds.join("','") + "'";
+  let whereCondition = "";
+  if (companyIds) {
+    whereCondition += ` AND company_id IN (${ids})`;
   }
   if (whereCondition.startsWith(" AND")) {
     whereCondition = whereCondition.replace("AND", "");

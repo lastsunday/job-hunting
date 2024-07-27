@@ -48,18 +48,21 @@
   </el-divider>
   <div class="content">
     <div class="left">
-      <el-descriptions ref="latestJobRef" title="最近查看职位" direction="vertical" :column="1">
-        <el-descriptions-item label="" v-loading="loading">
-          <el-timeline v-if="tableData.length > 0">
-            <el-timeline-item v-for="(item, index) in tableData" :key="index"
-              :timestamp="item.latestBrowseDetailDatetime" v-show="item.latestBrowseDetailDatetime">
-              <JobItemCard :item="item" :key="item.jobId"
-                @map-locate="onJobMapLocate(item)"></JobItemCard>
-            </el-timeline-item>
-          </el-timeline>
-          <el-text v-else>无</el-text>
-        </el-descriptions-item>
-      </el-descriptions>
+      <el-scrollbar>
+        <div class="leftSub">
+        <el-descriptions ref="latestJobRef" title="最近查看职位" direction="vertical" :column="1">
+          <el-descriptions-item label="" v-loading="loading">
+            <el-timeline v-if="tableData.length > 0">
+              <el-timeline-item v-for="(item, index) in tableData" :key="index"
+                :timestamp="item.latestBrowseDetailDatetime" v-show="item.latestBrowseDetailDatetime">
+                <JobItemCard :item="item" :key="item.jobId" @map-locate="onJobMapLocate(item)"></JobItemCard>
+              </el-timeline-item>
+            </el-timeline>
+            <el-text v-else>无</el-text>
+          </el-descriptions-item>
+        </el-descriptions>
+      </div>
+      </el-scrollbar>
     </div>
     <div class="middle">
       <div class="mapWrapper">
@@ -400,10 +403,12 @@ const tourOpen = ref(false);
 .left {
   display: flex;
   overflow: auto;
-  padding-right: 20px;
   scrollbar-width: thin;
   min-width: 200px;
+}
 
+.leftSub{
+  padding:10px;
 }
 
 .middle {

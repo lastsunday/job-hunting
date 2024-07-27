@@ -33,7 +33,7 @@
             <span>职位偏好</span>
           </div>
         </template>
-        <FavoriteSettingView></FavoriteSettingView>
+        <FavoriteJobView></FavoriteJobView>
       </el-tab-pane>
     </el-tabs>
   </div>
@@ -45,7 +45,7 @@ import {
   ref,
   onUnmounted,
 } from "vue";
-import FavoriteSettingView from "./assistant/FavoriteSettingView.vue";
+import FavoriteJobView from "./assistant/FavoriteJobView.vue";
 import { Icon } from "@iconify/vue";
 import { useTransition } from "@vueuse/core";
 import { AssistantApi } from "../../common/api/index";

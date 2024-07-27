@@ -11,6 +11,7 @@ import { JobDTO } from "../../common/data/dto/jobDTO";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
 import { _addOrUpdateConfig, _getConfigByKey } from "./configService";
 import dayjs from "dayjs";
+import { _getCompanyDTOByIds } from "./companyService";
 
 const KEY_JOB_FAVIOUS_SETTING = "KEY_JOB_FAVIOUS_SETTING";
 
@@ -52,6 +53,7 @@ export const AssistantService = {
                 resultRows: queryRows,
             });
             let companyIds = [];
+            let companyIdMap = new Map();
             for (let i = 0; i < queryRows.length; i++) {
                 let item = queryRows[i];
                 let resultItem = new JobDTO();
@@ -61,9 +63,9 @@ export const AssistantService = {
                     resultItem[key] = item[key];
                 }
                 items.push(item);
-                companyIds.push(genIdFromText(item.jobCompanyName));
+                companyIdMap.set(genIdFromText(item.jobCompanyName))
             }
-
+            companyIds.push(...Array.from(companyIdMap.keys()));
             let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(companyIds);
             let companyIdAndCompanyTagListMap = new Map();
             companyTagDTOList.forEach(item => {
@@ -73,8 +75,17 @@ export const AssistantService = {
                 }
                 companyIdAndCompanyTagListMap.get(companyId).push(item);
             });
+            let companyDTOList = await _getCompanyDTOByIds(companyIds);
+            let companyIdAndCompanyDTOListMap = new Map();
+            companyDTOList.forEach(item => {
+                let companyId = item.companyId;
+                if (!companyIdAndCompanyDTOListMap.has(companyId)) {
+                    companyIdAndCompanyDTOListMap.set(companyId, item);
+                }
+            });
             items.forEach(item => {
                 item.companyTagDTOList = companyIdAndCompanyTagListMap.get(genIdFromText(item.jobCompanyName));
+                item.companyDTO = companyIdAndCompanyDTOListMap.get(genIdFromText(item.jobCompanyName));
             });
             //count
             let sqlCount = `SELECT COUNT(*) AS total from (${sqlQueryCountSubSql}) AS t1`;

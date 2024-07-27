@@ -451,7 +451,7 @@ const total = ref(0);
 const small = ref(false);
 const background = ref(false);
 const disabled = ref(false);
-const jobSearchOrderByColumn = ref("createDatetime");
+const jobSearchOrderByColumn = ref("jobFirstPublishDatetime");
 const jobSearchOrderBy = ref("DESC");
 
 const datetimeFormat = computed(() => {
@@ -481,6 +481,7 @@ const jobPlatformFormat = computed(() => {
 
 const search = async () => {
     let searchResult = await AssistantApi.assistantSearchFaviousJob(getSearchParam());
+    console.log(searchResult)
     tableData.value = searchResult.items;
     total.value = parseInt(searchResult.total);
 };
