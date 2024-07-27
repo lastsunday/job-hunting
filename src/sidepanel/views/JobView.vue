@@ -56,7 +56,7 @@
     </el-collapse>
   </div>
   <div class="content" v-if="!mapMode">
-    <el-scrollbar class="tableScrollbar">
+    <el-scrollbar ref="scrollbar" class="tableScrollbar">
       <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }" stripe
         @sort-change="sortChange" sortable="custom">
         <el-table-column type="expand" width="30">
@@ -243,7 +243,7 @@
     </el-scrollbar>
   </div>
   <div class="content" v-show="mapMode">
-    <el-scrollbar class="left">
+    <el-scrollbar ref="scrollbarForMapMode" class="left">
       <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }" style="width: 100%"
         stripe @sort-change="sortChange" sortable="custom">
         <el-table-column label="名称" show-overflow-tooltip width="100">
@@ -639,6 +639,9 @@ const reset = async () => {
   search();
 };
 
+const scrollbar = ref();
+const scrollbarForMapMode = ref();
+
 const search = async () => {
   if (mapMode.value && mapSearchMode.value) {
     map.value.leafletObject.closePopup();
@@ -646,6 +649,8 @@ const search = async () => {
   let searchResult = await JobApi.searchJob(getSearchParam());
   tableData.value = searchResult.items;
   total.value = parseInt(searchResult.total);
+  scrollbar?.value?.setScrollTop(0);
+  scrollbarForMapMode?.value?.setScrollTop(0);
 };
 
 function getSearchParam() {

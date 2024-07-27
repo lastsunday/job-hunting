@@ -7,7 +7,7 @@
                 </div>
             </div>
             <div v-if="!mapMode" class="content">
-                <el-scrollbar class="tableScrollbar">
+                <el-scrollbar ref="scrollbar" class="tableScrollbar">
                     <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }" stripe
                         sortable="custom">
                         <el-table-column type="expand" width="30">
@@ -160,7 +160,7 @@
                 </el-scrollbar>
             </div>
             <div v-if="mapMode" class="mapContent">
-                <el-scrollbar class="left">
+                <el-scrollbar ref="scrollbar" class="left">
                     <JobItemCard v-for="(item, index) in tableData" :item="item" :key="item.jobId"
                         @map-locate="onJobMapLocate(item)"></JobItemCard>
                 </el-scrollbar>
@@ -178,17 +178,17 @@
                                             <el-text line-clamp="1">职位名：
                                                 <el-link type="primary" :href="item.jobUrl" target="_blank">{{
                                                     item.jobName
-                                                }}</el-link></el-text>
+                                                    }}</el-link></el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">发布时间：{{
                                                 datetimeFormat(item.jobFirstPublishDatetime)
-                                            }}</el-text>
+                                                }}</el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">薪资：💵{{ item.jobSalaryMin }} - 💵{{
                                                 item.jobSalaryMax
-                                            }}</el-text>
+                                                }}</el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">学历：{{ item.jobDegreeName }}</el-text>
@@ -221,7 +221,7 @@
                                             <el-row>
                                                 <el-text line-clamp="1">💵{{ item.jobSalaryMin }} - 💵{{
                                                     item.jobSalaryMax
-                                                }}</el-text>
+                                                    }}</el-text>
                                             </el-row>
                                             <el-row>
                                                 <el-text line-clamp="1">{{ item.jobCompanyName }}</el-text>
@@ -270,7 +270,7 @@
                     <el-radio-group v-model="form.publishDateOffset">
                         <el-radio v-for="(item) in publishDateOffsetOptions" :value="item.value" :key="item.value">{{
                             item.label
-                            }}</el-radio>
+                        }}</el-radio>
                     </el-radio-group>
                 </el-form-item>
                 <el-form-item>
@@ -479,11 +479,14 @@ const jobPlatformFormat = computed(() => {
     };
 });
 
+const scrollbar = ref();
+
 const search = async () => {
     let searchResult = await AssistantApi.assistantSearchFaviousJob(getSearchParam());
     console.log(searchResult)
     tableData.value = searchResult.items;
     total.value = parseInt(searchResult.total);
+    scrollbar.value.setScrollTop(0);
 };
 
 function getSearchParam() {

@@ -48,7 +48,7 @@
   </el-divider>
   <div class="content">
     <div class="left">
-      <el-scrollbar>
+      <el-scrollbar ref="scrollbar">
         <div class="leftSub">
         <el-descriptions ref="latestJobRef" title="最近查看职位" direction="vertical" :column="1">
           <el-descriptions-item label="" v-loading="loading">
@@ -271,6 +271,8 @@ const small = ref(false);
 const background = ref(false);
 const disabled = ref(false);
 
+const scrollbar = ref();
+
 const handleSizeChange = (val: number) => {
   search();
 };
@@ -291,6 +293,7 @@ const search = async () => {
       item.jobLatitude = gcj02[1];
     }
   });
+  scrollbar.value.setScrollTop(0);
 };
 
 function getSearchParam() {
