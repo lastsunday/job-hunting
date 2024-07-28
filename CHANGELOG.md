@@ -5,6 +5,7 @@
 ### ⭐ Added
 
 1. (SidePanel)新增职位数据全量导出，导入。
+2. (ContentScript)新增BOSS直聘推荐页支持。
 
 ### ✏️ Changed
 
