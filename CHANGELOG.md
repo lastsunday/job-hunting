@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (SidePanel)新增职位数据全量导出，导入。
+
+### ✏️ Changed
+
+1. (SidePanel)优化数据导出，导入的用户体验（加载标识正常显示）。
+
 ## 1.21.1(2024-07-28)
 
 ### ✏️ Changed
