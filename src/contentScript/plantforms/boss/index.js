@@ -27,7 +27,7 @@ export function getBossData(responseText) {
     const data = JSON.parse(responseText);
     mutationContainer().then((node) => {
       setupSortJobItem(node);
-      parseBossData(data?.zpData?.jobList || [], getListByNode(node));
+      handleData(data?.zpData?.jobList || [], getListByNode(node), getJobItemDetailUrlFunction, 0);
       onlineFilter();
     });
     return;
@@ -81,8 +81,14 @@ function convertJobStatusDesc(statusText) {
   }
 }
 
+function getJobItemDetailUrlFunction(dom) {
+  return dom
+    .querySelector(".job-card-body")
+    .querySelector(".job-card-left").href;
+}
+
 // 解析数据，插入时间标签
-function parseBossData(list, getListItem) {
+export function handleData(list, getListItem, getJobItemDetailUrlFunction, orderStartIndex) {
   const apiUrlList = [];
   const urlList = [];
   list.forEach((item, index) => {
@@ -94,9 +100,7 @@ function parseBossData(list, getListItem) {
       securityId;
     apiUrlList.push(pureJobItemDetailApiUrl);
     //jobUrl
-    const jobItemDetailUrl = dom
-      .querySelector(".job-card-body")
-      .querySelector(".job-card-left").href;
+    const jobItemDetailUrl = getJobItemDetailUrlFunction(dom);
     const url = new URL(jobItemDetailUrl);
     let pureJobItemDetailUrl = url.origin + url.pathname;
     urlList.push(pureJobItemDetailUrl);
@@ -149,7 +153,7 @@ function parseBossData(list, getListItem) {
         dom.appendChild(tag);
       });
       hiddenLoadingDOM();
-      renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_BOSS });
+      renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_BOSS, orderStartIndex });
       renderFunctionPanel(jobDTOList, getListItem, {
         platform: PLATFORM_BOSS,
         getCompanyInfoFunction: async function (url) {

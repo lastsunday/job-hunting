@@ -1,4 +1,5 @@
 import { getBossData } from "./plantforms/boss/index.js";
+import { handleBossRecommendData } from "./plantforms/boss/recommend.js"
 import { getZhiLianData } from "./plantforms/zhilian/index.js";
 import { getJob51Data } from "./plantforms/job51/index.js";
 import { getLaGouData } from "./plantforms/lagou/index.js";
@@ -38,10 +39,15 @@ import "../assets/css/app.css";
     const data = e?.detail;
     if (!data) return;
     const responseURL = data?.responseURL;
-    // boss 直聘接口
     if (responseURL) {
+      // boss直聘接口
       if (responseURL.indexOf("/search/joblist.json") !== -1) {
         getBossData(data?.response);
+      }
+
+      // boss直聘推荐页接口
+      if (responseURL.indexOf("/wapi/zpgeek/pc/recommend/job/list.json") !== -1) {
+        handleBossRecommendData(JSON.parse(data?.response)?.zpData?.jobList);
       }
 
       // 智联招聘接口

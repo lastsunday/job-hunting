@@ -503,7 +503,7 @@ export function setupSortJobItem(node) {
   }
 }
 
-export function renderSortJobItem(list, getListItem, { platform }) {
+export function renderSortJobItem(list, getListItem, { platform, orderStartIndex } = { orderStartIndex: 0 }) {
   const idAndSortIndexMap = new Map();
   //设置一个标识id,renderSortCustomId
   list.forEach((item, index) => {
@@ -562,7 +562,7 @@ export function renderSortJobItem(list, getListItem, { platform }) {
       targetDom = dom;
     }
     let styleString =
-      "order:" + idAndSortIndexMap.get(item.renderSortCustomId) + ";";
+      "order:" + (idAndSortIndexMap.get(item.renderSortCustomId) + orderStartIndex) + ";";
     targetDom.style = styleString;
   });
 }
@@ -940,14 +940,13 @@ export function createCompanyInfoDetail(company, quickSearchHandle) {
           `<div><div class="__company_info_quick_search_item_label">数据来源：</div><div class="__company_info_quick_search_item_value"><a href="${company.sourceUrl}" target = "_blank"; ref = "noopener noreferrer">${company.sourceUrl}</a></div></div>`
         )
       )
-      .append(
-        $(
-          `<div><div class="__company_info_quick_search_item_label">数据同步时间：</div><div class="__company_info_quick_search_item_value">${convertTimeOffsetToHumanReadable(
-            company.updateDatetime
-          )}</div></div>`
-        ).append(syncDataButton)
-      )
   );
+  contentDiv.append(
+    $(
+      `<div class="__company_info_quick_search_item"><div class="__company_info_quick_search_item_label">数据同步时间：</div><div class="__company_info_quick_search_item_value">${convertTimeOffsetToHumanReadable(
+        company.updateDatetime
+      )}</div></div>`
+    ).append(syncDataButton));
   return contentDiv[0];
 }
 
@@ -990,15 +989,12 @@ async function renderWebsiteIpc(element, website) {
           let ipc = groups.ipc.match(/<span>(?<ipc>.*)<\/span>/).groups.ipc;
           element.textContent = "";
           element.className = "";
-          element.className = "__company_info_quick_search_item";
-          element.title = name;
+          element.className = "__company_info_quick_search_sub_item";
+          element.title = `${name}(性质：${type})`;
           let rootElement = $(element);
           rootElement.append(
             $(
-              `<div><div class="__company_info_quick_search_item_label">网站备案：</div><div class="__company_info_quick_search_item_value">${ipc}</div></div>`
-            ),
-            $(
-              `<div><div class="__company_info_quick_search_item_label">单位性质：</div><div class="__company_info_quick_search_item_value">${type}</div></div>`
+              `<div class="__company_info_quick_search_item_label">备案：</div><div class="__company_info_quick_search_item_value">${ipc}</div>`
             )
           );
           return;

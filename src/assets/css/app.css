@@ -159,7 +159,8 @@ div[data-search-sol-meta] {
 
 .__company_info_quick_search_item {
   display: flex;
-  padding: 2px;
+  padding: 5px;
+  padding-bottom: 0px;
   align-items: baseline;
 
   a {
@@ -174,10 +175,14 @@ div[data-search-sol-meta] {
   }
 }
 
+.__company_info_quick_search_sub_item{
+  display:flex;
+}
+
 .__company_info_quick_search_item>div {
   display: flex;
   align-items: inherit;
-  padding-right: 10px;
+  margin-right: 8px;
   text-wrap: nowrap;
 }
 
@@ -193,12 +198,13 @@ div[data-search-sol-meta] {
 .__company_info_quick_search_button {
   background-color: mediumblue;
   color: white;
-  padding: 1px 8px;
+  padding-left:8px;
+  padding-right:8px;
   border-radius: 5px;
   font-size: 12px;
   cursor: pointer;
   display: inline-block;
-  margin: 5px;
+  margin: 0px;
   text-wrap: nowrap;
 }
 
@@ -208,7 +214,7 @@ div[data-search-sol-meta] {
 
 .__BOSS_function_panel {
   padding-left: 10px;
-  margin-right: 10px;
+  margin-right: 5px;
 }
 
 .__51JOB_function_panel {
