@@ -483,7 +483,6 @@ const scrollbar = ref();
 
 const search = async () => {
     let searchResult = await AssistantApi.assistantSearchFaviousJob(getSearchParam());
-    console.log(searchResult)
     tableData.value = searchResult.items;
     total.value = parseInt(searchResult.total);
     scrollbar.value.setScrollTop(0);

@@ -402,6 +402,15 @@ export function createLoadingDOM(brandName, styleClass) {
   return div;
 }
 
+export function setErrorLoadingDOM(text) {
+  let loadingTagList = document.querySelectorAll(".__loading_tag");
+  if (loadingTagList) {
+    loadingTagList.forEach((item) => {
+      item.textContent = text;
+    });
+  }
+}
+
 export function hiddenLoadingDOM() {
   let loadingTagList = document.querySelectorAll(".__loading_tag");
   if (loadingTagList) {

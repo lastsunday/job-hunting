@@ -6,6 +6,7 @@ import {
   hiddenLoadingDOM,
   finalRender,
   renderFunctionPanel,
+  setErrorLoadingDOM,
 } from "../../commonRender";
 import { PLATFORM_ZHILIAN } from "../../../common";
 import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
@@ -127,7 +128,7 @@ export async function parseZhilianData(list, getListItem) {
       finalRender(jobDTOList, { platform: PLATFORM_ZHILIAN });
     }).catch((error) => {
       console.log(error);
-      hiddenLoadingDOM();
+      setErrorLoadingDOM("加载职位信息失败，疑似详情页需要人机校验❕");
     });
 }
 
