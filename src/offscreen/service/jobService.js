@@ -486,40 +486,96 @@ async function _insertOrUpdateJob(param, now, { update = true } = {}) {
   });
   if (rows.length > 0) {
     if (update) {
-      const SQL_UPDATE_JOB = `
+      if (!param.updateDatetime) {
+        const SQL_UPDATE_JOB = `
     UPDATE job SET job_platform=$job_platform,job_url=$job_url,job_name=$job_name,job_company_name=$job_company_name,job_location_name=$job_location_name,job_address=$job_address,job_longitude=$job_longitude,job_latitude=$job_latitude,job_description=$job_description,job_degree_name=$job_degree_name,job_year=$job_year,job_salary_min=$job_salary_min,job_salary_max=$job_salary_max,job_salary_total_month=$job_salary_total_month,job_first_publish_datetime=$job_first_publish_datetime,boss_name=$boss_name,boss_company_name=$boss_company_name,boss_position=$boss_position,update_datetime=$update_datetime WHERE job_id = $job_id;
   `;
-      (await getDb()).exec({
-        sql: SQL_UPDATE_JOB,
-        bind: {
-          $job_id: param.jobId,
-          $job_platform: param.jobPlatform,
-          $job_url: convertEmptyStringToNull(param.jobUrl),
-          $job_name: convertEmptyStringToNull(param.jobName),
-          $job_company_name: convertEmptyStringToNull(param.jobCompanyName),
-          $job_location_name: convertEmptyStringToNull(param.jobLocationName),
-          $job_address: convertEmptyStringToNull(param.jobAddress),
-          $job_longitude: convertEmptyStringToNull(param.jobLongitude),
-          $job_latitude: convertEmptyStringToNull(param.jobLatitude),
-          $job_description: convertEmptyStringToNull(param.jobDescription),
-          $job_degree_name: convertEmptyStringToNull(param.jobDegreeName),
-          $job_year: convertEmptyStringToNull(param.jobYear),
-          $job_salary_min: convertEmptyStringToNull(param.jobSalaryMin),
-          $job_salary_max: convertEmptyStringToNull(param.jobSalaryMax),
-          $job_salary_total_month: convertEmptyStringToNull(
-            param.jobSalaryTotalMonth
-          ),
-          $job_first_publish_datetime: dayjs(
-            param.jobFirstPublishDatetime
-          ).isValid()
-            ? dayjs(param.jobFirstPublishDatetime).format("YYYY-MM-DD HH:mm:ss")
-            : null,
-          $boss_name: convertEmptyStringToNull(param.bossName),
-          $boss_company_name: convertEmptyStringToNull(param.bossCompanyName),
-          $boss_position: convertEmptyStringToNull(param.bossPosition),
-          $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-        },
-      });
+        (await getDb()).exec({
+          sql: SQL_UPDATE_JOB,
+          bind: {
+            $job_id: param.jobId,
+            $job_platform: param.jobPlatform,
+            $job_url: convertEmptyStringToNull(param.jobUrl),
+            $job_name: convertEmptyStringToNull(param.jobName),
+            $job_company_name: convertEmptyStringToNull(param.jobCompanyName),
+            $job_location_name: convertEmptyStringToNull(param.jobLocationName),
+            $job_address: convertEmptyStringToNull(param.jobAddress),
+            $job_longitude: convertEmptyStringToNull(param.jobLongitude),
+            $job_latitude: convertEmptyStringToNull(param.jobLatitude),
+            $job_description: convertEmptyStringToNull(param.jobDescription),
+            $job_degree_name: convertEmptyStringToNull(param.jobDegreeName),
+            $job_year: convertEmptyStringToNull(param.jobYear),
+            $job_salary_min: convertEmptyStringToNull(param.jobSalaryMin),
+            $job_salary_max: convertEmptyStringToNull(param.jobSalaryMax),
+            $job_salary_total_month: convertEmptyStringToNull(
+              param.jobSalaryTotalMonth
+            ),
+            $job_first_publish_datetime: dayjs(
+              param.jobFirstPublishDatetime
+            ).isValid()
+              ? dayjs(param.jobFirstPublishDatetime).format("YYYY-MM-DD HH:mm:ss")
+              : null,
+            $boss_name: convertEmptyStringToNull(param.bossName),
+            $boss_company_name: convertEmptyStringToNull(param.bossCompanyName),
+            $boss_position: convertEmptyStringToNull(param.bossPosition),
+            $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
+          },
+        });
+      } else {
+        let previousRowCreateDatetime = dayjs(rows[0].create_datetime);
+        let previousRowUpdateDatetime = dayjs(rows[0].update_datetime);
+        let currentRowCreateDatetime = dayjs(param.createDatetime);
+        let currentRowUpdateDatetime = dayjs(param.updateDatetime);
+        if (currentRowUpdateDatetime.isAfter(previousRowUpdateDatetime)) {
+          const SQL_UPDATE_JOB = `
+          UPDATE job SET job_platform=$job_platform,job_url=$job_url,job_name=$job_name,job_company_name=$job_company_name,job_location_name=$job_location_name,job_address=$job_address,job_longitude=$job_longitude,job_latitude=$job_latitude,job_description=$job_description,job_degree_name=$job_degree_name,job_year=$job_year,job_salary_min=$job_salary_min,job_salary_max=$job_salary_max,job_salary_total_month=$job_salary_total_month,job_first_publish_datetime=$job_first_publish_datetime,boss_name=$boss_name,boss_company_name=$boss_company_name,boss_position=$boss_position,update_datetime=$update_datetime WHERE job_id = $job_id;
+        `;
+          (await getDb()).exec({
+            sql: SQL_UPDATE_JOB,
+            bind: {
+              $job_id: param.jobId,
+              $job_platform: param.jobPlatform,
+              $job_url: convertEmptyStringToNull(param.jobUrl),
+              $job_name: convertEmptyStringToNull(param.jobName),
+              $job_company_name: convertEmptyStringToNull(param.jobCompanyName),
+              $job_location_name: convertEmptyStringToNull(param.jobLocationName),
+              $job_address: convertEmptyStringToNull(param.jobAddress),
+              $job_longitude: convertEmptyStringToNull(param.jobLongitude),
+              $job_latitude: convertEmptyStringToNull(param.jobLatitude),
+              $job_description: convertEmptyStringToNull(param.jobDescription),
+              $job_degree_name: convertEmptyStringToNull(param.jobDegreeName),
+              $job_year: convertEmptyStringToNull(param.jobYear),
+              $job_salary_min: convertEmptyStringToNull(param.jobSalaryMin),
+              $job_salary_max: convertEmptyStringToNull(param.jobSalaryMax),
+              $job_salary_total_month: convertEmptyStringToNull(
+                param.jobSalaryTotalMonth
+              ),
+              $job_first_publish_datetime: dayjs(
+                param.jobFirstPublishDatetime
+              ).isValid()
+                ? dayjs(param.jobFirstPublishDatetime).format("YYYY-MM-DD HH:mm:ss")
+                : null,
+              $boss_name: convertEmptyStringToNull(param.bossName),
+              $boss_company_name: convertEmptyStringToNull(param.bossCompanyName),
+              $boss_position: convertEmptyStringToNull(param.bossPosition),
+              $update_datetime: currentRowUpdateDatetime.format("YYYY-MM-DD HH:mm:ss"),
+            },
+          });
+        }
+        //获取职位最早出现的时间
+        if (currentRowCreateDatetime.isBefore(previousRowCreateDatetime)) {
+          const SQL_UPDATE_JOB = `
+          UPDATE job SET create_datetime=$create_datetime WHERE job_id = $job_id;
+        `;
+          (await getDb()).exec({
+            sql: SQL_UPDATE_JOB,
+            bind: {
+              $job_id: param.jobId,
+              $create_datetime: currentRowCreateDatetime.format("YYYY-MM-DD HH:mm:ss"),
+            },
+          });
+        }
+      }
     }
   } else {
     const SQL_INSERT_JOB = `
@@ -553,8 +609,8 @@ async function _insertOrUpdateJob(param, now, { update = true } = {}) {
         $boss_name: convertEmptyStringToNull(param.bossName),
         $boss_company_name: convertEmptyStringToNull(param.bossCompanyName),
         $boss_position: convertEmptyStringToNull(param.bossPosition),
-        $create_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-        $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
+        $create_datetime: dayjs(param.createDatetime ?? now).format("YYYY-MM-DD HH:mm:ss"),
+        $update_datetime: dayjs(param.updateDatetime ?? now).format("YYYY-MM-DD HH:mm:ss"),
       },
     });
   }
