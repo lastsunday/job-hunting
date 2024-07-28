@@ -8,12 +8,13 @@
 
 | 招聘平台  | 访问地址                            | 备注                   |
 | --------- | ----------------------------------- | ---------------------- |
-| BOSS 直聘 | <https://www.zhipin.com/web/geek/job> |                        |
-| 前程无忧  | <https://we.51job.com/pc/search>      |                        |
-| 智联招聘  | <https://sou.zhaopin.com/>            |                        |
-| 拉钩网    | <https://www.lagou.com/wn/zhaopin>    |                        |
-| jobsdb-hk | <https://hk.jobsdb.com/>              | 需点击搜索按钮才有效果 |
-| 猎聘网    | <https://www.liepin.com/zhaopin>      | 需点击搜索按钮才有效果 |
+| BOSS 直聘 | <https://www.zhipin.com/web/geek/job> | 搜索页 |
+|  | <https://www.zhipin.com/web/geek/job-recommend> | 推荐页 |
+| 前程无忧  | <https://we.51job.com/pc/search>      | 搜索页 |
+| 智联招聘  | <https://sou.zhaopin.com/>            | 搜索页 |
+| 拉钩网    | <https://www.lagou.com/wn/zhaopin>    | 搜索页 |
+| jobsdb-hk | <https://hk.jobsdb.com/>              | 搜索页,需点击搜索按钮才有效果 |
+| 猎聘网    | <https://www.liepin.com/zhaopin>      | 搜索页,需点击搜索按钮才有效果 |
 
 ## 企业搜索平台支持列表
 
@@ -65,77 +66,77 @@
 
 ## 运行截图
 
-<p>
- <div style="margin-top:20px">
-        <img src="docs\introduction\job-item-51job.jpg" alt="51job" width="1000px"/>
-        <div style="text-align:center;">
-            前程无忧
-        </div>
- </div>
-</p>
+### 招聘/企业信息网站页面
 
-<p>
- <div style="margin-top:20px">
-        <img src="docs\introduction\company-aiqicha.jpg" alt="aiqicha" width="1000px"/>
-        <div style="text-align:center;">
-            爱企查
-        </div>
- </div>
-</p>
+#### 搜索页（前程无忧）
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\job-item-51job.jpg" alt="51job" width="1000px"/>
+</div>
+
+#### 推荐页（BOSS直聘）
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\job-recommend-boss.jpg" alt="51job" width="1000px"/>
+</div>
+
+#### 爱企查
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\company-aiqicha.jpg" alt="aiqicha" width="1000px"/>
+</div>
 
 ### 管理页面
 
-<p>
-    <div style="margin-top:20px">
-        <img src="docs\introduction\chrome_extension_sidepanel_open.png" alt="chrome_extension_sidepanel_open" width="600px"/>
-        <div style="text-align:center">
-            打开管理页面
-        </div>
- </div>
-    <div style="margin-top:20px">
-        <img src="docs\introduction\sidepanel_admin_home.jpg" alt="sidepanel_admin_home" width="1000px"/>
-        <div style="text-align:center">
-            管理页面首页（需点击插件图标打开）
-        </div>
- </div>
-    <div style="margin-top:20px">
-        <img src="docs\introduction\sidepanel_admin_assistant.jpg" alt="sidepanel_admin_assistant" width="1000px"/>
-        <img src="docs\introduction\sidepanel_admin_assistant_favious_setting.jpg" alt="sidepanel_admin_favious_setting" width="1000px"/>
-        <div style="text-align:center">
-            个人助理
-        </div>
- </div>
-     <div style="margin-top:20px">
-        <img src="docs\introduction\sidepanel_admin_comment.jpg" alt="sidepanel_admin_comment" width="1000px"/>
-        <div style="text-align:center">
-            讨论区
-        </div>
- </div>
-    <div style="margin-top:20px">
-        <img src="docs\introduction\sidepanel_admin_job.jpg" alt="sidepanel_admin_job" width="1000px"/>
-        <div style="text-align:center">
-            职位
-        </div>
- </div>
-    <div style="margin-top:20px">
-        <img src="docs\introduction\sidepanel_admin_company.jpg" alt="sidepanel_admin_company" width="1000px"/>
-        <div style="text-align:center">
-            公司管理
-        </div>
- </div>
-    <div style="margin-top:20px">
-        <img src="docs\introduction\sidepanel_admin_company_tag.jpg" alt="sidepanel_admin_company_tag" width="1000px"/>
-        <div style="text-align:center">
-            公司标签管理
-        </div>
- </div>
-    <div style="margin-top:20px">
-        <img src="docs\introduction\sidepanel_admin_setting.jpg" alt="sidepanel_admin_setting" width="1000px"/>
-        <div style="text-align:center">
-            系统设置
-        </div>
- </div>
-</p>
+#### 打开管理页面
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\chrome_extension_sidepanel_open.png" alt="chrome_extension_sidepanel_open" width="600px"/>
+</div>
+
+#### 管理页面首页（需点击插件图标打开）
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\sidepanel_admin_home.jpg" alt="sidepanel_admin_home" width="1000px"/>
+</div>
+
+#### 个人助理
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\sidepanel_admin_assistant.jpg" alt="sidepanel_admin_assistant" width="1000px"/>
+    <img src="docs\introduction\sidepanel_admin_assistant_favious_setting.jpg" alt="sidepanel_admin_favious_setting" width="1000px"/>
+</div>
+
+#### 讨论区
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\sidepanel_admin_comment.jpg" alt="sidepanel_admin_comment" width="1000px"/>
+</div>
+
+#### 职位
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\sidepanel_admin_job.jpg" alt="sidepanel_admin_job" width="1000px"/>
+</div>
+
+#### 公司管理
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\sidepanel_admin_company.jpg" alt="sidepanel_admin_company" width="1000px"/>
+</div>
+
+#### 公司标签管理
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\sidepanel_admin_company_tag.jpg" alt="sidepanel_admin_company_tag" width="1000px"/>
+</div>
+
+#### 系统设置
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\sidepanel_admin_setting.jpg" alt="sidepanel_admin_setting" width="1000px"/>
+</div>
+
 
 ## 运行及编译
 
