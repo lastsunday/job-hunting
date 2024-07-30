@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### 🐛 Fixed
+
+1. (SidePanel)开发者模式无令牌访问时的错误提示。
+
 ## 1.23.0(2024-07-31)
 
 ### ⭐ Added
