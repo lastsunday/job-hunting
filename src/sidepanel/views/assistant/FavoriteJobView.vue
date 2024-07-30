@@ -172,23 +172,23 @@
                                 :subdomains="['1', '2', '3', '4']"></l-tile-layer>
                             <l-marker-cluster-group>
                                 <l-marker v-for="(item, index) in jobsFilterEmptyLocation"
-                                    :lat-lng="[item.jobLatitude, item.jobLongitude]" :key="item.jobId">
+                                    :lat-lng="[item.jobLatitude, item.jobLongitude]">
                                     <l-popup ref="popups" :lat-lng="[item.jobLatitude, item.jobLongitude]">
                                         <el-row>
                                             <el-text line-clamp="1">职位名：
                                                 <el-link type="primary" :href="item.jobUrl" target="_blank">{{
                                                     item.jobName
-                                                }}</el-link></el-text>
+                                                    }}</el-link></el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">发布时间：{{
                                                 datetimeFormat(item.jobFirstPublishDatetime)
-                                            }}</el-text>
+                                                }}</el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">薪资：💵{{ item.jobSalaryMin }} - 💵{{
                                                 item.jobSalaryMax
-                                            }}</el-text>
+                                                }}</el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">学历：{{ item.jobDegreeName }}</el-text>
@@ -213,7 +213,7 @@
                                             </el-text>
                                         </el-row>
                                     </l-popup>
-                                    <l-icon className="icon">
+                                    <l-icon className="icon" :key="item.jobId">
                                         <div class="mapIcon">
                                             <el-row>
                                                 <el-text line-clamp="1"> {{ item.jobName }}</el-text>
@@ -221,7 +221,7 @@
                                             <el-row>
                                                 <el-text line-clamp="1">💵{{ item.jobSalaryMin }} - 💵{{
                                                     item.jobSalaryMax
-                                                }}</el-text>
+                                                    }}</el-text>
                                             </el-row>
                                             <el-row>
                                                 <el-text line-clamp="1">{{ item.jobCompanyName }}</el-text>
@@ -270,7 +270,7 @@
                     <el-radio-group v-model="form.publishDateOffset">
                         <el-radio v-for="(item) in publishDateOffsetOptions" :value="item.value" :key="item.value">{{
                             item.label
-                            }}</el-radio>
+                        }}</el-radio>
                     </el-radio-group>
                 </el-form-item>
                 <el-form-item>

@@ -320,7 +320,7 @@
                   </el-text>
                 </el-row>
               </l-popup>
-              <l-icon className="icon">
+              <l-icon className="icon" :key="item.companyId">
                 <div class="mapIcon">
                   <el-row>
                     <el-text line-clamp="1"> {{ item.companyName }}</el-text>
