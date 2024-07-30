@@ -6,4 +6,5 @@ export class JobFaviousSettingDTO {
     descDislikeKeywordList =[]
     dislikeCompanyTagList = [];
     publishDateOffset;
+    bossPositionDislikeKeywordList = [];
 }

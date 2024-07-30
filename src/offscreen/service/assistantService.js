@@ -246,6 +246,16 @@ function genJobSearchWhereConditionSql(param) {
         });
         whereCondition += " )";
     }
+    if (param.bossPositionDislikeKeywordList && param.bossPositionDislikeKeywordList.length > 0) {
+        whereCondition += " AND (";
+        param.bossPositionDislikeKeywordList.forEach((item, index) => {
+            if (index > 0) {
+                whereCondition += " AND ";
+            }
+            whereCondition += " boss_position NOT LIKE '%" + item + "%' ";
+        });
+        whereCondition += " )";
+    }
     if (param.publishDateOffset && param.publishDateOffset > 0) {
         let offsetDatetime = dayjs().subtract(param.publishDateOffset, "millisecond");
         whereCondition +=

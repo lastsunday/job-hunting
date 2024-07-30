@@ -187,17 +187,17 @@
                                             <el-text line-clamp="1">职位名：
                                                 <el-link type="primary" :href="item.jobUrl" target="_blank">{{
                                                     item.jobName
-                                                }}</el-link></el-text>
+                                                    }}</el-link></el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">发布时间：{{
                                                 datetimeFormat(item.jobFirstPublishDatetime)
-                                            }}</el-text>
+                                                }}</el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">薪资：💵{{ item.jobSalaryMin }} - 💵{{
                                                 item.jobSalaryMax
-                                            }}</el-text>
+                                                }}</el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">学历：{{ item.jobDegreeName }}</el-text>
@@ -230,7 +230,7 @@
                                             <el-row>
                                                 <el-text line-clamp="1">💵{{ item.jobSalaryMin }} - 💵{{
                                                     item.jobSalaryMax
-                                                }}</el-text>
+                                                    }}</el-text>
                                             </el-row>
                                             <el-row>
                                                 <el-text line-clamp="1">{{ item.jobCompanyName }}</el-text>
@@ -271,6 +271,11 @@
                     <TagInput ref="jobDescDislikeTagRef" v-model="form.descDislikeKeywordList" :settings="tagSettings"
                         placeholder="请输入职位描述排除关键字"></TagInput>
                 </el-form-item>
+                <el-form-item label="招聘人职位排除关键字">
+                    <TagInput ref="bossPositionDislikeTagRef" v-model="form.bossPositionDislikeKeywordList"
+                        :whitelist="bossPositionDislikeWhitelist" :settings="tagSettings" placeholder="招聘人职位排除关键字">
+                    </TagInput>
+                </el-form-item>
                 <el-form-item label="不喜欢的公司标签">
                     <TagInput ref="dislikeCompanyTagRef" v-model="form.dislikeCompanyTagList" :settings="tagSettings"
                         :whitelist="whitelist" placeholder="请选择不喜欢的公司标签"></TagInput>
@@ -279,7 +284,7 @@
                     <el-radio-group v-model="form.publishDateOffset">
                         <el-radio v-for="(item) in publishDateOffsetOptions" :value="item.value" :key="item.value">{{
                             item.label
-                            }}</el-radio>
+                        }}</el-radio>
                     </el-radio-group>
                 </el-form-item>
                 <el-form-item>
@@ -336,7 +341,10 @@ const form = reactive({
     descDislikeKeywordList: [],
     dislikeCompanyTagList: [],
     publishDateOffset: -1,
+    bossPositionDislikeKeywordList: [],
 })
+
+const bossPositionDislikeWhitelist = ref([]);
 
 const tagSettings = {
     dropdown: {
@@ -359,6 +367,7 @@ const publishDateOffsetOptions = [
 ]
 
 const whitelist = ref([]);
+const bossPositionDislikeArray = ["猎头", "顾问"]
 
 onMounted(async () => {
     await loadWhitelist();
@@ -388,11 +397,14 @@ const setFormData = (jobFaviousSetting) => {
     form.descDislikeKeywordList = jobFaviousSetting.descDislikeKeywordList.flatMap(item => { return { "value": item } });
     form.dislikeCompanyTagList = jobFaviousSetting.dislikeCompanyTagList.flatMap(item => { return { "value": whitelistCodeValueMap.get(item), "code": item } });
     form.publishDateOffset = jobFaviousSetting.publishDateOffset;
+    form.bossPositionDislikeKeywordList = jobFaviousSetting.bossPositionDislikeKeywordList.flatMap(item => { return { "value": item } });
 }
 
 const whitelistCodeValueMap = new Map();
 
 const loadWhitelist = async () => {
+    bossPositionDislikeWhitelist.value.push(...bossPositionDislikeArray);
+
     let allTags = await TagApi.getAllTag();
     let tagItems = [];
     allTags.forEach(item => {
@@ -404,7 +416,6 @@ const loadWhitelist = async () => {
     whitelist.value.forEach(item => {
         whitelistCodeValueMap.set(item.code, item.value);
     });
-
 }
 
 const onSubmit = async () => {
@@ -434,6 +445,7 @@ const getFaviousSettingDTOFromForm = () => {
     result.descDislikeKeywordList = toRaw(form.descDislikeKeywordList).flatMap(item => item.value);
     result.dislikeCompanyTagList = toRaw(form.dislikeCompanyTagList).flatMap(item => item.code);
     result.publishDateOffset = toRaw(form.publishDateOffset);
+    result.bossPositionDislikeKeywordList = toRaw(form.bossPositionDislikeKeywordList).flatMap(item => item.value);
     return result;
 }
 
@@ -508,6 +520,7 @@ function getSearchParam() {
     searchParam.descDislikeKeywordList = toRaw(form.descDislikeKeywordList).flatMap(item => item.value);
     searchParam.dislikeCompanyTagList = toRaw(form.dislikeCompanyTagList).flatMap(item => item.code);
     searchParam.publishDateOffset = toRaw(form.publishDateOffset);
+    searchParam.bossPositionDislikeKeywordList = toRaw(form.bossPositionDislikeKeywordList).flatMap(item => item.value);
     searchParam.orderByColumn = jobSearchOrderByColumn.value;
     searchParam.orderBy = jobSearchOrderBy.value;
     return searchParam;
