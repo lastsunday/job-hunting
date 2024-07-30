@@ -397,3 +397,15 @@ export const DeveloperApi = {
   },
 
 }
+
+export const SystemApi = {
+  /**
+   * 
+   * @param {{url,active}}} param 
+   * @returns 
+   */
+  systemTabCreate: async function (param) {
+    let result = await invoke(this.systemTabCreate.name, param);
+    return result.data;
+  },
+}

@@ -4,6 +4,15 @@
             <div class="operation_menu">
                 <div class="operation_menu_left">
                     <el-switch v-model="mapMode" active-text="地图模式" inactive-text="列表模式" inline-prompt />
+                    <el-popconfirm :title="`确定打开当前所有职位详情页？（共${tableData.length ?? 0}条记录）`"
+                        @confirm="onOpenCurrentAllJobDetailPage" confirm-button-text="确定" cancel-button-text="取消"
+                        width="380">
+                        <template #reference>
+                            <el-button class="menuButton" type="warning" size="small" round>
+                                <Icon icon="ion:open-outline" />打开当前所有职位详情页
+                            </el-button>
+                        </template>
+                    </el-popconfirm>
                 </div>
             </div>
             <div v-if="!mapMode" class="content">
@@ -178,17 +187,17 @@
                                             <el-text line-clamp="1">职位名：
                                                 <el-link type="primary" :href="item.jobUrl" target="_blank">{{
                                                     item.jobName
-                                                    }}</el-link></el-text>
+                                                }}</el-link></el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">发布时间：{{
                                                 datetimeFormat(item.jobFirstPublishDatetime)
-                                                }}</el-text>
+                                            }}</el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">薪资：💵{{ item.jobSalaryMin }} - 💵{{
                                                 item.jobSalaryMax
-                                                }}</el-text>
+                                            }}</el-text>
                                         </el-row>
                                         <el-row>
                                             <el-text line-clamp="1">学历：{{ item.jobDegreeName }}</el-text>
@@ -221,7 +230,7 @@
                                             <el-row>
                                                 <el-text line-clamp="1">💵{{ item.jobSalaryMin }} - 💵{{
                                                     item.jobSalaryMax
-                                                    }}</el-text>
+                                                }}</el-text>
                                             </el-row>
                                             <el-row>
                                                 <el-text line-clamp="1">{{ item.jobCompanyName }}</el-text>
@@ -270,7 +279,7 @@
                     <el-radio-group v-model="form.publishDateOffset">
                         <el-radio v-for="(item) in publishDateOffsetOptions" :value="item.value" :key="item.value">{{
                             item.label
-                        }}</el-radio>
+                            }}</el-radio>
                     </el-radio-group>
                 </el-form-item>
                 <el-form-item>
@@ -292,7 +301,7 @@ import {
     toRaw,
 } from 'vue'
 import TagInput from "../../components/TagInput.vue";
-import { TagApi, AssistantApi } from "../../../common/api/index";
+import { TagApi, AssistantApi, SystemApi } from "../../../common/api/index";
 import dayjs from "dayjs";
 import { SearchFaviousJobBO } from "../../../common/data/bo/searchFaviousJobBO.js";
 import {
@@ -560,6 +569,12 @@ watch(mapMode, async (newValue, oldValue) => {
     }
 });
 
+const onOpenCurrentAllJobDetailPage = () => {
+    tableData.value.forEach(async item => {
+        await SystemApi.systemTabCreate({ url: item.jobUrl, active: false })
+    })
+}
+
 </script>
 <style lang="scss" scoped>
 .tabs {
@@ -622,6 +637,10 @@ watch(mapMode, async (newValue, oldValue) => {
     flex-direction: column;
     flex: 1;
     margin-right: 10px;
+}
+
+.menuButton {
+    margin-left: 5px;
 }
 </style>
 <style lang="scss">

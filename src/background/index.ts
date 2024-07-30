@@ -15,6 +15,7 @@ import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_URL_GET_ACCESS_T
 import { UserService } from "./service/userService";
 import { UserDTO } from "../common/data/dto/userDTO";
 import { setUser } from "./service/userService";
+import { SystemService } from "./service/systemService";
 
 debugLog("background ready");
 debugLog("keepAlive start");
@@ -131,6 +132,8 @@ function mergeServiceMethod(actionFunction, source) {
 
 mergeServiceMethod(ACTION_FUNCTION, AuthService)
 mergeServiceMethod(ACTION_FUNCTION, UserService);
+mergeServiceMethod(ACTION_FUNCTION, SystemService);
+
 
 let creating: any;
 async function setupOffscreenDocument(path: string) {
