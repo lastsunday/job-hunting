@@ -2,10 +2,11 @@
   <div class="content">
     <el-row justify="end">
       <div class="menu">
-        <el-tooltip content="帮助">
+        <el-switch v-model="devMode" active-text="开发者模式" inactive-text="普通模式" inline-prompt />
+        <el-tooltip v-if="!devMode" content="帮助">
           <Icon icon="ph:question" class="icon" @click="tourOpen = true" />
         </el-tooltip>
-        <el-tour v-model="tourOpen">
+        <el-tour v-if="!devMode" v-model="tourOpen">
           <el-tour-step :target="githubRef?.$el" title="GitHub登录">
             <el-row>
               <el-text>1.显示当前GitHub账号的登录状态</el-text>
@@ -57,161 +58,194 @@
         </el-tour>
       </div>
     </el-row>
-    <el-row ref="githubRef" class="setting_item">
-      <el-descriptions title="GitHub登录">
-        <el-descriptions-item>
-          <div class="loginStatus">
-            <div v-if="login">
-              <el-avatar :size="50" :src="avatar" />
-            </div>
-            <div>
-              <div>
-                <el-text v-if="login">{{ username }}</el-text>
+    <div v-if="devMode">
+      <el-form :model="form" label-width="auto" :inline="true">
+        <el-form-item label="开发者访问令牌">
+          <el-input type="password" show-password v-model="form.developerToken" />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="onSubmit">保存</el-button>
+          <el-button @click="onReset">恢复</el-button>
+        </el-form-item>
+      </el-form>
+      <el-row>
+        <el-col :span="24" class="trafficWrapper">
+          <TrafficChart v-model="trafficClone" title="Git clones" firstYAxisTitle="Clones" v-loading="cloneLoading"
+            secondYAxisTitle="Unique cloners"></TrafficChart>
+        </el-col>
+        <el-col :span="24" class="trafficWrapper">
+          <TrafficChart v-model="trafficViews" title="Visitors" firstYAxisTitle="Views" v-loading="viewLoading"
+            secondYAxisTitle="Unique visitors"></TrafficChart>
+        </el-col>
+        <el-col :sm="24" :md="12" class="trafficWrapper">
+          <TrafficTable v-model="trafficPopularReferrers" title="Referring sites" v-loading="popularReferrersLoading"
+            :columnTitleArray="popularReferrersColumnTitleArray"></TrafficTable>
+        </el-col>
+        <el-col :sm="24" :md="12" class="trafficWrapper">
+          <TrafficTable v-model="trafficPopularPaths" title="Popular content" v-loading="popularPathsLoading"
+            :columnTitleArray="popularPathsColumnTitleArray"></TrafficTable>
+        </el-col>
+      </el-row>
+    </div>
+    <div v-if="!devMode">
+      <el-row ref="githubRef" class="setting_item">
+        <el-descriptions title="GitHub登录">
+          <el-descriptions-item>
+            <div class="loginStatus">
+              <div v-if="login">
+                <el-avatar :size="50" :src="avatar" />
               </div>
               <div>
-                <el-text>登录状态：</el-text>
-                <el-text v-if="login" type="success">在线</el-text>
-                <el-text v-else type="warning">离线</el-text>
+                <div>
+                  <el-text v-if="login">{{ username }}</el-text>
+                </div>
+                <div>
+                  <el-text>登录状态：</el-text>
+                  <el-text v-if="login" type="success">在线</el-text>
+                  <el-text v-else type="warning">离线</el-text>
+                </div>
               </div>
             </div>
-          </div>
-          <el-button v-if="!login" @click="onClickLogin">
-            <el-icon class="el-icon--left">
-              <Icon icon="mdi:github" />
-            </el-icon>
-            登录</el-button>
-          <el-popconfirm v-else title="确定登出？" @confirm="onClickLogout" confirm-button-text="确定" cancel-button-text="取消">
-            <template #reference>
-              <el-button>
+            <el-button v-if="!login" @click="onClickLogin">
+              <el-icon class="el-icon--left">
+                <Icon icon="mdi:github" />
+              </el-icon>
+              登录</el-button>
+            <el-popconfirm v-else title="确定登出？" @confirm="onClickLogout" confirm-button-text="确定"
+              cancel-button-text="取消">
+              <template #reference>
+                <el-button>
+                  <el-icon class="el-icon--left">
+                    <Icon icon="mdi:github" />
+                  </el-icon>
+                  登出</el-button>
+              </template>
+            </el-popconfirm>
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-row>
+      <el-row ref="githubAppRef" class="setting_item">
+        <el-descriptions title="GitHub App">
+          <el-descriptions-item>
+            <el-tooltip v-if="login" content="安装GitHub App获得添加评论的能力" placement="top">
+              <el-button @click="onClickInstallAndLogin">
                 <el-icon class="el-icon--left">
                   <Icon icon="mdi:github" />
                 </el-icon>
-                登出</el-button>
-            </template>
-          </el-popconfirm>
-        </el-descriptions-item>
-      </el-descriptions>
-    </el-row>
-    <el-row ref="githubAppRef" class="setting_item">
-      <el-descriptions title="GitHub App">
-        <el-descriptions-item>
-          <el-tooltip v-if="login" content="安装GitHub App获得添加评论的能力" placement="top">
-            <el-button @click="onClickInstallAndLogin">
-              <el-icon class="el-icon--left">
-                <Icon icon="mdi:github" />
-              </el-icon>
-              安装GitHubApp获得评论能力<el-icon class="el-icon--left">
-                <Icon icon="ph:question" />
-              </el-icon></el-button>
-          </el-tooltip>
-          <el-tooltip v-if="!login" content="安装GitHub App获得添加评论的能力" placement="top">
-            <el-button @click="onClickInstallAndLogin">
-              <el-icon class="el-icon--left">
-                <Icon icon="mdi:github" />
-              </el-icon>
-              安装GitHubApp并登录<el-icon class="el-icon--left">
-                <Icon icon="ph:question" />
-              </el-icon></el-button>
-          </el-tooltip>
-        </el-descriptions-item>
-      </el-descriptions>
-    </el-row>
-    <el-row ref="databaseRef" class="setting_item">
-      <el-descriptions title="数据库">
-        <el-descriptions-item>
-          <el-popconfirm title="确认备份数据？" @confirm="onClickDbExport" confirm-button-text="确定" cancel-button-text="取消">
-            <template #reference>
-              <el-button :icon="DocumentCopy" :loading="exportLoading">数据库备份</el-button>
-            </template>
-          </el-popconfirm>
-          <el-button :icon="CopyDocument" @click="importDialogVisible = true">数据库恢复</el-button>
-        </el-descriptions-item>
-      </el-descriptions>
-    </el-row>
-    <el-row ref="jobRef" class="setting_item">
-      <el-descriptions title="职位数据">
-        <el-descriptions-item>
-          <el-popconfirm title="确认导出数据？" @confirm="onJobExport" confirm-button-text="确定" cancel-button-text="取消">
-            <template #reference>
-              <el-button :icon="DocumentCopy" :loading="jobExportLoading">全量职位数据导出</el-button>
-            </template>
-          </el-popconfirm>
-          <el-button :icon="CopyDocument" @click="importJobDialogVisible = true">公司职位导入</el-button>
-        </el-descriptions-item>
-      </el-descriptions>
-    </el-row>
-    <el-row ref="companyRef" class="setting_item">
-      <el-descriptions title="公司数据">
-        <el-descriptions-item>
-          <el-popconfirm title="确认导出数据？" @confirm="onCompanyExport" confirm-button-text="确定" cancel-button-text="取消">
-            <template #reference>
-              <el-button :icon="DocumentCopy" :loading="companyExportLoading">全量公司数据导出</el-button>
-            </template>
-          </el-popconfirm>
-          <el-button :icon="CopyDocument" @click="importCompanyDialogVisible = true">公司数据导入</el-button>
-        </el-descriptions-item>
-      </el-descriptions>
-    </el-row>
-    <el-row ref="companyTagRef" class="setting_item">
-      <el-descriptions title="公司标签数据">
-        <el-descriptions-item>
-          <el-popconfirm title="确认导出数据？" @confirm="onCompanyTagExport" confirm-button-text="确定" cancel-button-text="取消">
-            <template #reference>
-              <el-button :icon="DocumentCopy" :loading="companyTagExportLoading">全量公司标签数据导出</el-button>
-            </template>
-          </el-popconfirm>
-          <el-button :icon="CopyDocument" @click="importCompanyTagDialogVisible = true">公司标签数据导入</el-button>
-        </el-descriptions-item>
-      </el-descriptions>
-    </el-row>
-    <el-row ref="infoRef" class="setting_item">
-      <el-descriptions title="程序信息">
-        <el-descriptions-item>
-          <el-row>
-            <el-col>
-              <el-text type="primary" size="large">版本 {{ version }}</el-text>
-              <el-text v-if="!newVersion" class="checkingVersion" @click="onCheckVersion" type="info">({{
-                checkingVersionText }})</el-text>
-              <span v-if="!versionChecking">
-                <span v-if="newVersion">
-                  <el-text class="newVersion" type="warning">(发现新版本[{{
-                    latestVersion }}]({{ dayjs(latestVersionCreatedAt).format("YYYY-MM-DD") }}))</el-text>
-                  <el-button @click="latestChangelogDialogVisible = true" type="primary" plain>
-                    <el-icon class="el-icon--left">
-                      <Icon icon="mdi:note" />
-                    </el-icon>
-                    查看新版本详情
-                  </el-button>
-                  <el-button @click="onDownloadLatest" type="primary" plain>
-                    <el-icon class="el-icon--left">
-                      <Icon icon="mdi:download" />
-                    </el-icon>下载新版本
-                  </el-button>
-                  <el-text v-if="!newVersion" type="success">(已是最新版本)</el-text>
-                </span>
-              </span>
-            </el-col>
-            <el-col class="appInfoOperation">
-              <el-button @click="updateAppDialogVisible = true">
-                如何更新程序版本<el-icon class="el-icon--right">
+                安装GitHubApp获得评论能力<el-icon class="el-icon--left">
                   <Icon icon="ph:question" />
+                </el-icon></el-button>
+            </el-tooltip>
+            <el-tooltip v-if="!login" content="安装GitHub App获得添加评论的能力" placement="top">
+              <el-button @click="onClickInstallAndLogin">
+                <el-icon class="el-icon--left">
+                  <Icon icon="mdi:github" />
                 </el-icon>
-              </el-button>
-              <el-button @click="changelogDialogVisible = true">
-                版本说明
-              </el-button>
-              <el-button @click="licenseDialogVisible = true">
-                许可证
-              </el-button>
-              <el-button @click="onAccessHomePage">访问主页</el-button>
-              <el-button @click="onAccessIssuesPage">
-                问题反馈
-              </el-button>
-            </el-col>
-          </el-row>
-        </el-descriptions-item>
-      </el-descriptions>
-    </el-row>
+                安装GitHubApp并登录<el-icon class="el-icon--left">
+                  <Icon icon="ph:question" />
+                </el-icon></el-button>
+            </el-tooltip>
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-row>
+      <el-row ref="databaseRef" class="setting_item">
+        <el-descriptions title="数据库">
+          <el-descriptions-item>
+            <el-popconfirm title="确认备份数据？" @confirm="onClickDbExport" confirm-button-text="确定" cancel-button-text="取消">
+              <template #reference>
+                <el-button :icon="DocumentCopy" :loading="exportLoading">数据库备份</el-button>
+              </template>
+            </el-popconfirm>
+            <el-button :icon="CopyDocument" @click="importDialogVisible = true">数据库恢复</el-button>
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-row>
+      <el-row ref="jobRef" class="setting_item">
+        <el-descriptions title="职位数据">
+          <el-descriptions-item>
+            <el-popconfirm title="确认导出数据？" @confirm="onJobExport" confirm-button-text="确定" cancel-button-text="取消">
+              <template #reference>
+                <el-button :icon="DocumentCopy" :loading="jobExportLoading">全量职位数据导出</el-button>
+              </template>
+            </el-popconfirm>
+            <el-button :icon="CopyDocument" @click="importJobDialogVisible = true">公司职位导入</el-button>
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-row>
+      <el-row ref="companyRef" class="setting_item">
+        <el-descriptions title="公司数据">
+          <el-descriptions-item>
+            <el-popconfirm title="确认导出数据？" @confirm="onCompanyExport" confirm-button-text="确定" cancel-button-text="取消">
+              <template #reference>
+                <el-button :icon="DocumentCopy" :loading="companyExportLoading">全量公司数据导出</el-button>
+              </template>
+            </el-popconfirm>
+            <el-button :icon="CopyDocument" @click="importCompanyDialogVisible = true">公司数据导入</el-button>
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-row>
+      <el-row ref="companyTagRef" class="setting_item">
+        <el-descriptions title="公司标签数据">
+          <el-descriptions-item>
+            <el-popconfirm title="确认导出数据？" @confirm="onCompanyTagExport" confirm-button-text="确定"
+              cancel-button-text="取消">
+              <template #reference>
+                <el-button :icon="DocumentCopy" :loading="companyTagExportLoading">全量公司标签数据导出</el-button>
+              </template>
+            </el-popconfirm>
+            <el-button :icon="CopyDocument" @click="importCompanyTagDialogVisible = true">公司标签数据导入</el-button>
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-row>
+      <el-row ref="infoRef" class="setting_item">
+        <el-descriptions title="程序信息">
+          <el-descriptions-item>
+            <el-row>
+              <el-col>
+                <el-text type="primary" size="large">版本 {{ version }}</el-text>
+                <el-text v-if="!newVersion" class="checkingVersion" @click="onCheckVersion" type="info">({{
+                  checkingVersionText }})</el-text>
+                <span v-if="!versionChecking">
+                  <span v-if="newVersion">
+                    <el-text class="newVersion" type="warning">(发现新版本[{{
+                      latestVersion }}]({{ dayjs(latestVersionCreatedAt).format("YYYY-MM-DD") }}))</el-text>
+                    <el-button @click="latestChangelogDialogVisible = true" type="primary" plain>
+                      <el-icon class="el-icon--left">
+                        <Icon icon="mdi:note" />
+                      </el-icon>
+                      查看新版本详情
+                    </el-button>
+                    <el-button @click="onDownloadLatest" type="primary" plain>
+                      <el-icon class="el-icon--left">
+                        <Icon icon="mdi:download" />
+                      </el-icon>下载新版本
+                    </el-button>
+                    <el-text v-if="!newVersion" type="success">(已是最新版本)</el-text>
+                  </span>
+                </span>
+              </el-col>
+              <el-col class="appInfoOperation">
+                <el-button @click="updateAppDialogVisible = true">
+                  如何更新程序版本<el-icon class="el-icon--right">
+                    <Icon icon="ph:question" />
+                  </el-icon>
+                </el-button>
+                <el-button @click="changelogDialogVisible = true">
+                  版本说明
+                </el-button>
+                <el-button @click="licenseDialogVisible = true">
+                  许可证
+                </el-button>
+                <el-button @click="onAccessHomePage">访问主页</el-button>
+                <el-button @click="onAccessIssuesPage">
+                  问题反馈
+                </el-button>
+              </el-col>
+            </el-row>
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-row>
+    </div>
   </div>
   <el-dialog v-model="importDialogVisible" title="数据恢复" width="500">
     <div>
@@ -327,14 +361,14 @@
   </el-dialog>
 </template>
 <script lang="ts" setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch, reactive } from "vue";
 import dayjs from "dayjs";
 import { dbExport, dbImport } from "../../common/api/common";
 import { base64ToBytes, bytesToBase64 } from "../../common/utils/base64.js";
 import { ElMessage, ElLoading } from "element-plus";
 import { DocumentCopy, CopyDocument } from "@element-plus/icons-vue";
 import { utils, writeFileXLSX, read } from "xlsx";
-import { CompanyApi, AuthApi, UserApi, JobApi } from "../../common/api/index";
+import { CompanyApi, AuthApi, UserApi, JobApi, DeveloperApi } from "../../common/api/index";
 import { SearchCompanyTagBO } from "../../common/data/bo/searchCompanyTagBO";
 import { CompanyTagBO } from "../../common/data/bo/companyTagBO";
 import { SearchCompanyBO } from "../../common/data/bo/searchCompanyBO";
@@ -346,6 +380,10 @@ import { APP_URL_LATEST_VERSION, APP_ID } from "../../common/config";
 import semver from "semver";
 import { SearchJobBO } from "../../common/data/bo/searchJobBO.js";
 import { Job } from "../../common/data/domain/job";
+import { GithubApi, EXCEPTION } from "../../common/api/github";
+
+import TrafficChart from "./components/TrafficChart.vue";
+import TrafficTable from "./components/TrafficTable.vue";
 
 const activeName = ref("export");
 const exportLoading = ref(false);
@@ -971,7 +1009,7 @@ onMounted(async () => {
   await checkLoginStatus()
   let changelogUrl = chrome.runtime.getURL("CHANGELOG.md");
   let changelogContent = await (await fetch(changelogUrl)).text();
-  changelogContentHtml.value = marked.parse(changelogContent);
+  changelogContentHtml.value = marked.parse(changelogContent) as string;
   let packageUrl = chrome.runtime.getURL("package.json");
   let packageObject = await (await fetch(packageUrl)).json();
   homepage.value = packageObject.homepage;
@@ -980,6 +1018,8 @@ onMounted(async () => {
   let licenseContentFromFile = await (await fetch(licenseUrl)).text();
   licenseContent.value = marked.parse(licenseContentFromFile);
   onCheckVersion();
+  let developerToken = await DeveloperApi.developerGetToken();
+  setFormData(developerToken);
 })
 
 const onCheckVersion = async () => {
@@ -1035,6 +1075,94 @@ const onAccessIssuesPage = () => {
   window.open(bugs.value);
 }
 
+
+const devMode = ref(false);
+const trafficClone = ref();
+const trafficViews = ref();
+const trafficPopularPaths = ref();
+const trafficPopularReferrers = ref();
+
+watch(devMode, async (value, oldValue) => {
+  if (value) {
+    try {
+      cloneLoading.value = true;
+      trafficClone.value = await GithubApi.getTrafficClone();
+      cloneLoading.value = false;
+      viewLoading.value = true;
+      trafficViews.value = await GithubApi.getTrafficViews();
+      viewLoading.value = false;
+      popularPathsLoading.value = true;
+      trafficPopularPaths.value = await GithubApi.getTrafficPopularPaths();
+      popularPathsLoading.value = false;
+      popularReferrersLoading.value = true;
+      trafficPopularReferrers.value = await GithubApi.getTrafficPopularReferrers();
+      popularReferrersLoading.value = false;
+    } catch (e) {
+      if (e == EXCEPTION.NO_LOGIN) {
+        ElMessage({
+          message: "需要设置开发者令牌",
+          type: "warning",
+        });
+      } else {
+        ElMessage({
+          message: e,
+          type: "error",
+        });
+      }
+    }
+  }
+})
+
+const form = reactive({
+  developerToken: null,
+})
+
+const setFormData = (developerToken) => {
+  form.developerToken = developerToken;
+}
+
+const onSubmit = async () => {
+  try {
+    await DeveloperApi.developerSetToken(form.developerToken);
+    let developerToken = await DeveloperApi.developerGetToken();
+    setFormData(developerToken);
+    ElMessage({
+      message: "开发者令牌保存成功",
+      type: "success"
+    });
+  } catch (e) {
+    ElMessage({
+      message: "开发者令牌保存失败",
+      type: "error",
+    });
+  }
+}
+
+const onReset = async () => {
+  try {
+    let developerToken = await DeveloperApi.developerGetToken();
+    setFormData(developerToken);
+    ElMessage({
+      message: "开发者令牌恢复成功",
+      type: "success"
+    });
+  } catch (e) {
+    ElMessage({
+      message: "开发者令牌恢复失败",
+      type: "error",
+    });
+  }
+}
+
+
+const popularReferrersColumnTitleArray = ref(["Site", "Views", "Unique visitors"]);
+const popularPathsColumnTitleArray = ref(["Content", "Views", "Unique visitors"]);
+
+const cloneLoading = ref(true);
+const viewLoading = ref(true);
+const popularReferrersLoading = ref(true);
+const popularPathsLoading = ref(true);
+
 </script>
 <style lang="scss" scoped>
 .setting_item {
@@ -1055,6 +1183,8 @@ const onAccessIssuesPage = () => {
 }
 
 .menu {
+  display: flex;
+  align-items: center;
   padding: 5px;
 }
 
@@ -1079,5 +1209,9 @@ const onAccessIssuesPage = () => {
   flex-direction: column;
   flex: 1;
   overflow: auto;
+}
+
+.trafficWrapper {
+  padding-top: 20px;
 }
 </style>

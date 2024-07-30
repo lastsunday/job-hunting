@@ -357,7 +357,7 @@
       @current-change="handleCurrentChange" />
   </el-row>
   <el-dialog v-model="dialogAvgSalaryVisible" title="统计薪酬区间职位数" width="90%">
-    <v-chart :loading="avgSalaryEchartLoading" v-if="dialogAvgSalaryEchartVisible" class="dialog_avg_salary"
+    <v-chart :loading="avgSalaryEchartLoading" v-if="dialogAvgSalaryEchartVisible" class="dialog_avg_salary" autoresize
       :option="avgSalaryOption" />
   </el-dialog>
 </template>

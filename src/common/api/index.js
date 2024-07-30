@@ -376,3 +376,24 @@ export const AssistantApi = {
   },
 
 }
+
+export const DeveloperApi = {
+
+  /**
+   * 
+   * @param {string} param token
+   * @returns 
+   */
+  developerSetToken: async function (param) {
+    return await invoke(this.developerSetToken.name, param);
+  },
+  /**
+   * 
+   * @returns string
+   */
+  developerGetToken: async function () {
+    let result = await invoke(this.developerGetToken.name, {});
+    return result.data;
+  },
+
+}

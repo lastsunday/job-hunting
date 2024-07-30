@@ -9,6 +9,7 @@ import { TagService } from "./service/tagService";
 import { CompanyTagService } from "./service/companyTagService";
 import { ConfigService } from "./service/configService";
 import { AssistantService } from "./service/assistantService";
+import { DeveloperService } from "./service/developerService";
 
 debugLog("worker ready");
 const ACTION_FUNCTION = new Map();
@@ -28,6 +29,7 @@ mergeServiceMethod(ACTION_FUNCTION, TagService);
 mergeServiceMethod(ACTION_FUNCTION, CompanyTagService);
 mergeServiceMethod(ACTION_FUNCTION, ConfigService);
 mergeServiceMethod(ACTION_FUNCTION, AssistantService);
+mergeServiceMethod(ACTION_FUNCTION, DeveloperService);
 
 function mergeServiceMethod(actionFunction, source) {
   let keys = Object.keys(source);

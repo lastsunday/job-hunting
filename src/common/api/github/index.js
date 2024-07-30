@@ -1,5 +1,9 @@
-import { GITHUB_URL_GET_USER, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, URL_GRAPHQL, GITHUB_APP_REPO, URL_POST_ISSUES } from "../../config";
-import { AuthApi } from "../index"
+import {
+  GITHUB_URL_GET_USER, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_APP_CLIENT_ID,
+  GITHUB_APP_CLIENT_SECRET, URL_GRAPHQL, GITHUB_APP_REPO, URL_POST_ISSUES,
+  URL_TRAFFIC_CLONE, URL_TRAFFIC_POPULAR_PATHS, URL_TRAFFIC_POPULAR_REFERRERS, URL_TRAFFIC_VIEWS
+} from "../../config";
+import { AuthApi, DeveloperApi } from "../index"
 import { UserDTO } from "../../data/dto/userDTO";
 import { OauthDTO } from "../../data/dto/oauthDTO";
 import { infoLog, errorLog } from "../../log";
@@ -67,6 +71,46 @@ export const GithubApi = {
     await fetchJson(`${URL_POST_ISSUES}/${issueNumber}/comments`, { "body": data });
   },
 
+  async getTrafficClone() {
+    let token = await getDeveloperToken();
+    let result = await fetchJsonWithToken(`${URL_TRAFFIC_CLONE}`, null, { method: "GET", token })
+    result.items = result.clones;
+    delete result.clones;
+    return result;
+  },
+
+  async getTrafficPopularPaths() {
+    let token = await getDeveloperToken();
+    let result = await fetchJsonWithToken(`${URL_TRAFFIC_POPULAR_PATHS}`, null, { method: "GET", token })
+    result.forEach(item => {
+      item.url = `https://github.com/${item.path}`;
+      delete item.path;
+    });
+    return result;
+  },
+
+  async getTrafficPopularReferrers() {
+    let token = await getDeveloperToken();
+    let result = await fetchJsonWithToken(`${URL_TRAFFIC_POPULAR_REFERRERS}`, null, { method: "GET", token })
+    result.forEach(item => {
+      item.url = `http://${item.referrer}`;
+      item.title = `${item.referrer}`
+      delete item.referrer;
+    });
+    return result;
+  },
+
+  async getTrafficViews() {
+    let token = await getDeveloperToken();
+    let result = await fetchJsonWithToken(`${URL_TRAFFIC_VIEWS}`, null, { method: "GET", token })
+    result.items = result.views;
+    delete result.views;
+    return result;
+  },
+}
+
+async function getDeveloperToken() {
+  return await DeveloperApi.developerGetToken();
 }
 
 function getUrlAndPageNum(urls, keyword) {
@@ -182,15 +226,33 @@ async function fetchJson(url, data, { method, responseHeaderCallback } = { metho
   }
 }
 
-async function fetchJsonReturnResponse(url, data, { method } = { method: "POST" }) {
-  let oauthDTO = await AuthApi.authGetToken();
-  if (!oauthDTO) {
+async function fetchJsonWithToken(url, data, { method, token, responseHeaderCallback }) {
+  let response = await fetchJsonReturnResponse(url, data, { method, token });
+  let status = response.status;
+  if (isStatusNoError(response)) {
+    const jsonResult = await response.json();
+    if (responseHeaderCallback) {
+      return responseHeaderCallback(jsonResult, response.headers);
+    }
+    return jsonResult;
+  } else {
+    throw `unknown error,status code = ${status}`
+  }
+}
+
+async function fetchJsonReturnResponse(url, data, { method, token } = { method: "POST" }) {
+  let targetToken = token;
+  if (!targetToken) {
+    let oauthDTO = await AuthApi.authGetToken();
+    targetToken = oauthDTO.accessToken;
+  }
+  if (!targetToken) {
     throw EXCEPTION.NO_LOGIN;
   }
   let option = {
     method,
     headers: {
-      "Authorization": `Bearer ${oauthDTO.accessToken}`,
+      "Authorization": `Bearer ${targetToken}`,
       "Content-Type": "application/json",
     },
   };

@@ -8,6 +8,12 @@ export const GITHUB_APP_INSTALL_CALLBACK_URL = "https://github.com/lastsunday/jo
 export const URL_GRAPHQL = "https://api.github.com/graphql";
 export const GITHUB_APP_REPO = "lastsunday/job-hunting-github-app";
 export const URL_POST_ISSUES = "https://api.github.com/repos/lastsunday/job-hunting-github-app/issues";
+
+export const URL_TRAFFIC_CLONE = "https://api.github.com/repos/lastsunday/job-hunting/traffic/clones";
+export const URL_TRAFFIC_POPULAR_PATHS = "https://api.github.com/repos/lastsunday/job-hunting/traffic/popular/paths";
+export const URL_TRAFFIC_POPULAR_REFERRERS = "https://api.github.com/repos/lastsunday/job-hunting/traffic/popular/referrers";
+export const URL_TRAFFIC_VIEWS = "https://api.github.com/repos/lastsunday/job-hunting/traffic/views";
+
 export const COMMENT_PAGE_SIZE = 20;
 
 export const APP_URL_LATEST_VERSION = "https://api.github.com/repos/lastsunday/job-hunting/releases/latest";
