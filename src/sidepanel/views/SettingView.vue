@@ -60,7 +60,7 @@
     </el-row>
     <div v-if="devMode">
       <el-form :model="form" label-width="auto" :inline="true">
-        <el-form-item label="开发者访问令牌">
+        <el-form-item label="开发者令牌">
           <el-input type="password" show-password v-model="form.developerToken" />
         </el-form-item>
         <el-form-item>

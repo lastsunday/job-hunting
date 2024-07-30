@@ -244,7 +244,7 @@ async function fetchJsonReturnResponse(url, data, { method, token } = { method: 
   let targetToken = token;
   if (!targetToken) {
     let oauthDTO = await AuthApi.authGetToken();
-    targetToken = oauthDTO.accessToken;
+    targetToken = oauthDTO?.accessToken;
   }
   if (!targetToken) {
     throw EXCEPTION.NO_LOGIN;
