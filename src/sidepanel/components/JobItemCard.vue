@@ -75,9 +75,18 @@
                                 <el-text v-if="
                                     item.companyTagDTOList &&
                                     item.companyTagDTOList.length > 0
-                                " class="compang_tag">
+                                " class="tagItem">
                                     <el-tag v-for="(value, key, index) in item
-                                        .companyTagDTOList" type="primary">{{ value.tagName }}</el-tag>
+                                        .companyTagDTOList" type="warning">
+                                        <el-link v-if="value.sourceUrl" :href="value.sourceUrl" target="_blank">
+                                            <Icon icon="mdi:tag" />{{
+                                            value.tagName
+                                            }}
+                                        </el-link>
+                                        <div v-else>
+                                            <Icon icon="mdi:tag" />{{ value.tagName }}
+                                        </div>
+                                    </el-tag>
                                 </el-text>
                                 <el-text v-else>-</el-text>
                             </div>
@@ -90,11 +99,22 @@
         </div>
         <div class="middle" v-if="item.companyTagDTOList?.length > 0">
             <div class="tag">
-                <div class="tagItem" v-for="(item, index) in item.companyTagDTOList">
-                    <el-tag type="warning" size="small" effect="plain">
-                        <Icon icon="mdi:tag" />{{ item.tagName }}
+                <el-text v-if="
+                    item.companyTagDTOList &&
+                    item.companyTagDTOList.length > 0
+                " class="tagItem">
+                    <el-tag v-for="(value, key, index) in item
+                        .companyTagDTOList" type="warning" size="small" effect="plain">
+                        <el-link v-if="value.sourceUrl" :href="value.sourceUrl" target="_blank">
+                            <Icon icon="mdi:tag" />{{
+                            value.tagName
+                            }}
+                        </el-link>
+                        <div v-else>
+                            <Icon icon="mdi:tag" />{{ value.tagName }}
+                        </div>
                     </el-tag>
-                </div>
+                </el-text>
             </div>
         </div>
         <div class="bottom">
@@ -170,7 +190,7 @@
                             </template>
                             <el-link v-if="item.companyDTO.companyWebSite != '-'"
                                 :href="'http://' + item.companyDTO.companyWebSite" target="_blank">{{
-                                    item.companyDTO.companyWebSite }}</el-link>
+                                item.companyDTO.companyWebSite }}</el-link>
                             <el-text v-else>-</el-text>
                         </el-descriptions-item>
                         <el-descriptions-item>
@@ -245,7 +265,7 @@
                 <div class="timeTag" :style="getTimeTagStyle(item.jobFirstPublishDatetime)" size="small" effect="plain">
                     <div v-if="item.jobFirstPublishDatetime">
                         <Icon icon="fluent-mdl2:date-time-2" />{{
-                            convertTimeOffsetToHumanReadable(item.jobFirstPublishDatetime) }}发布
+                        convertTimeOffsetToHumanReadable(item.jobFirstPublishDatetime) }}发布
                     </div>
                     <div v-else>
                         <Icon icon="mdi:tag" />发布时间未知
@@ -265,6 +285,7 @@ import { Icon } from "@iconify/vue";
 import { convertTimeOffsetToHumanReadable } from "../../common/utils"
 import dayjs from "dayjs";
 import { useJob } from "../hook/job";
+import { getUrlByTagAndCompanyName } from "../../common"
 
 const { platformFormat } = useJob()
 
@@ -276,8 +297,16 @@ const item = ref({});
 item.value = props.item;
 
 onMounted(async () => {
-
+    if (item.value.companyTagDTOList && item.value.companyTagDTOList.length > 0) {
+        item.value.companyTagDTOList.forEach(item => {
+            item.sourceUrl = getSourceUrl(item.tagName, item.companyName);
+        });
+    }
 })
+
+const getSourceUrl = (tagName, companyName) => {
+    return getUrlByTagAndCompanyName(tagName, companyName);
+}
 
 const getTimeTagStyle = (datetime) => {
     return `background-color:${getTimeColorByOffsetTimeDay(datetime)};`
