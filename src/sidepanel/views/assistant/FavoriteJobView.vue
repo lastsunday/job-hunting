@@ -16,7 +16,7 @@
                 </div>
             </div>
             <div v-if="!mapMode" class="content">
-                <el-scrollbar ref="scrollbar" class="tableScrollbar">
+                <el-scrollbar ref="scrollbar" class="tableScrollbar" v-loading="searchLoading">
                     <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }" stripe
                         sortable="custom">
                         <el-table-column type="expand" width="30">
@@ -169,7 +169,7 @@
                 </el-scrollbar>
             </div>
             <div v-if="mapMode" class="mapContent">
-                <el-scrollbar ref="scrollbar" class="left">
+                <el-scrollbar ref="scrollbar" class="left" v-loading="searchLoading">
                     <JobItemCard v-for="(item, index) in tableData" :item="item" :key="item.jobId"
                         @map-locate="onJobMapLocate(item)"></JobItemCard>
                 </el-scrollbar>
@@ -502,11 +502,15 @@ const jobPlatformFormat = computed(() => {
 
 const scrollbar = ref();
 
+const searchLoading = ref(false);
+
 const search = async () => {
+    searchLoading.value = true;
     let searchResult = await AssistantApi.assistantSearchFaviousJob(getSearchParam());
     tableData.value = searchResult.items;
     total.value = parseInt(searchResult.total);
     scrollbar.value.setScrollTop(0);
+    searchLoading.value = false;
 };
 
 function getSearchParam() {

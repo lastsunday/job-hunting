@@ -42,7 +42,7 @@
     </el-collapse>
   </div>
   <div class="content">
-    <el-scrollbar ref="scrollbar" class="tableScrollbar">
+    <el-scrollbar ref="scrollbar" class="tableScrollbar" v-loading="searchLoading">
       <el-table ref="tableRef" :data="tableData" :default-sort="{ prop: 'updateDatetime', order: 'descending' }"
         style="width: 100%" stripe @sort-change="sortChange" sortable="custom">
         <el-table-column type="selection" width="55" />
@@ -249,11 +249,15 @@ const reset = async () => {
 
 const scrollbar = ref();
 
+const searchLoading = ref(false);
+
 const search = async () => {
+  searchLoading.value = true;
   let searchResult = await CompanyApi.searchCompanyTag(getSearchParam());
   tableData.value = searchResult.items;
   total.value = parseInt(searchResult.total);
   scrollbar.value.setScrollTop(0);
+  searchLoading.value = false;
 };
 
 function getSearchParam() {

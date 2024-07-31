@@ -48,10 +48,9 @@
   </el-divider>
   <div class="content">
     <div class="left">
+      <div>最近查看职位</div>
       <el-scrollbar ref="scrollbar">
-        <div class="leftSub">
-        <el-descriptions ref="latestJobRef" title="最近查看职位" direction="vertical" :column="1">
-          <el-descriptions-item label="" v-loading="loading">
+        <div class="leftSub" ref="latestJobRef" v-loading="searchLoading">
             <el-timeline v-if="tableData.length > 0">
               <el-timeline-item v-for="(item, index) in tableData" :key="index"
                 :timestamp="item.latestBrowseDetailDatetime" v-show="item.latestBrowseDetailDatetime">
@@ -59,8 +58,6 @@
               </el-timeline-item>
             </el-timeline>
             <el-text v-else>无</el-text>
-          </el-descriptions-item>
-        </el-descriptions>
       </div>
       </el-scrollbar>
     </div>
@@ -214,6 +211,7 @@ const datetimeFormat = computed(() => {
 
 onMounted(async () => {
   await refresh();
+  await search();
   refreshIntervalId = setInterval(refresh, 10000);
   //自动展开popup
   // popups.value.forEach(item => {
@@ -257,9 +255,6 @@ const refresh = async () => {
   totalCompanyCountSource.value = statisticCompany.totalCompany;
   const statisticCompanyTag = await CompanyApi.statisticCompanyTag();
   totalTagCompanyCountSource.value = statisticCompanyTag.totalTagCompany;
-
-  await search();
-
   loading.value = false;
 };
 
@@ -273,6 +268,8 @@ const disabled = ref(false);
 
 const scrollbar = ref();
 
+const searchLoading = ref(false);
+
 const handleSizeChange = (val: number) => {
   search();
 };
@@ -282,6 +279,7 @@ const handleCurrentChange = (val: number) => {
 };
 
 const search = async () => {
+  searchLoading.value = true;
   let searchResult = await JobApi.searchJob(getSearchParam());
   tableData.value = searchResult.items;
   total.value = parseInt(searchResult.total);
@@ -294,6 +292,7 @@ const search = async () => {
     }
   });
   scrollbar.value.setScrollTop(0);
+  searchLoading.value = false;
 };
 
 function getSearchParam() {
@@ -405,6 +404,7 @@ const tourOpen = ref(false);
 
 .left {
   display: flex;
+  flex-direction: column;
   overflow: auto;
   scrollbar-width: thin;
   min-width: 200px;
