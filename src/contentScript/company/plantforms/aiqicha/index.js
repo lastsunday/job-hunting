@@ -12,6 +12,7 @@ import {
     genCommentTextButton, clearAllChildNode
 } from "../../../commonRender";
 import { PLATFORM_AIQICHA } from "../../../../common";
+import { COMPANY_DATA_EXPRIE_DAY } from "../../../../common/config";
 
 let init = true;
 let functionPanelDivList = [];
@@ -74,11 +75,10 @@ function handleData(list, getListItem) {
                 if (
                     !forceSyncData &&
                     company &&
-                    now.isBefore(dayjs(company.updateDatetime).add(60, "day"))
+                    now.isBefore(dayjs(company.updateDatetime).add(COMPANY_DATA_EXPRIE_DAY, "day"))
                 ) {
                     //skip
                 } else {
-                    //数据过期时间设置为60天
                     //数据库没有数据或数据过期了，则进行网络查询，保存数据到数据库
                     let companyInfo = item;
                     company = await getCompanyFromCompanyInfo(companyInfo, convertedCompanyName);

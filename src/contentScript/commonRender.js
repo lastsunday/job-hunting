@@ -37,7 +37,7 @@ import { CompanyApi, TagApi, AuthApi, UserApi, JobApi } from "../common/api";
 import { GithubApi } from "../common/api/github";
 import { Company } from "../common/data/domain/company";
 import { errorLog, infoLog } from "../common/log";
-import { COMMENT_PAGE_SIZE } from "../common/config";
+import { COMMENT_PAGE_SIZE, COMPANY_DATA_EXPRIE_DAY } from "../common/config";
 
 const ACTIVE_TIME_MATCH = /(?<num>[0-9\.]*)/;
 
@@ -823,11 +823,10 @@ async function asyncRenderCompanyInfo(
     if (
       !forceSyncData &&
       company &&
-      now.isBefore(dayjs(company.updateDatetime).add(60, "day"))
+      now.isBefore(dayjs(company.updateDatetime).add(COMPANY_DATA_EXPRIE_DAY, "day"))
     ) {
       //skip
     } else {
-      //数据过期时间设置为60天
       //数据库没有数据或数据过期了，则进行网络查询，保存数据到数据库
       let companyInfo = await getCompanyInfoByAiqicha(keyword);
       company = await getCompanyFromCompanyInfo(companyInfo, convertedCompanyName);
