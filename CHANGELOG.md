@@ -10,6 +10,7 @@
 ### 🐛 Fixed
 
 1. (SidePanel)开发者模式无令牌访问时的错误提示。
+2. (ContentScript)修复获取公司全称时职位信息更新失败的问题。
 
 ### ✏️ Changed
 

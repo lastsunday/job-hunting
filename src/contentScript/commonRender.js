@@ -737,6 +737,8 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform } = {}) {
             infoLog(`old company name = ${item.jobCompanyName}`);
             item.jobCompanyName = companyNameConvert(companyName);
             infoLog(`new company name = ${item.jobCompanyName}`);
+            //将更新时间置空， 以新记录形式更新
+            item.updateDatetime = null;
             await JobApi.batchAddOrUpdateJob([item]);
             infoLog(`update job.id = ${item.jobId}`);
           }
