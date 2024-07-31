@@ -13,6 +13,8 @@ import {
   PLATFORM_BOSS,
   PLATFORM_JOBSDB,
   PLATFORM_LIEPIN,
+  TAG_IT_BLACK_LIST,
+  TAG_RUOBILIN_BLACK_LIST,
 } from "../common";
 import {
   JOB_STATUS_DESC_NEWEST
@@ -25,6 +27,7 @@ import {
   stopAndCleanAbortFunctionHandler,
   addAbortFunctionHandler,
   deleteAbortFunctionHandler,
+  addCompanyTagNotExists,
 } from "./commonDataHandler";
 import { httpFetchGetText } from "../common/api/common";
 
@@ -760,8 +763,15 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform } = {}) {
         mainChannelDiv.appendChild(quickSearchButton);
         mainChannelDiv.appendChild(fixValidHummanButton);
       } finally {
-        otherChannelDiv.appendChild(createCompanyReputation(companyName));
-        otherChannelDiv.appendChild(createCompanyTag(companyName));
+        let reputationWrapperDiv = document.createElement("div");
+        let companyTagWrapperDiv = document.createElement("div");
+        otherChannelDiv.appendChild(reputationWrapperDiv);
+        otherChannelDiv.appendChild(companyTagWrapperDiv);
+        companyTagWrapperDiv.append(createCompanyTag(companyName))
+        reputationWrapperDiv.append(createCompanyReputation(companyName, () => {
+          clearAllChildNode(companyTagWrapperDiv);
+          companyTagWrapperDiv.append(createCompanyTag(companyName));
+        }));
         otherChannelDiv.appendChild(createSearchCompanyLink(companyName));
         let companyIdSha256 = genIdFromText(companyName);
         let commentWrapperDiv = document.createElement("div");
@@ -1274,7 +1284,7 @@ function transformTag(tagData) {
   tagData.style = "--tag-bg:" + tagData.color;
 }
 
-export function createCompanyReputation(keyword) {
+export function createCompanyReputation(keyword, companyTagUpdateCallback) {
   const dom = document.createElement("div");
   dom.className = "__company_info_quick_search_item";
   let labelDiv = document.createElement("div");
@@ -1283,14 +1293,14 @@ export function createCompanyReputation(keyword) {
   dom.appendChild(labelDiv);
   const ruobilinDiv = document.createElement("div");
   dom.appendChild(ruobilinDiv);
-  asyncRenderRuobilin(ruobilinDiv, keyword);
+  asyncRenderRuobilin(ruobilinDiv, keyword, companyTagUpdateCallback);
   const itJobBlackListDiv = document.createElement("div");
   dom.appendChild(itJobBlackListDiv);
-  asyncRenderITJobBlackList(itJobBlackListDiv, keyword);
+  asyncRenderITJobBlackList(itJobBlackListDiv, keyword, companyTagUpdateCallback);
   return dom;
 }
 
-async function asyncRenderRuobilin(div, keyword) {
+async function asyncRenderRuobilin(div, keyword, companyTagUpdateCallback) {
   div.title = "信息来源:跨境小白网（若比邻网）https://kjxb.org/";
   const decode = encodeURIComponent(keyword);
   const url = `https://kjxb.org/?s=${decode}&post_type=question`;
@@ -1300,7 +1310,7 @@ async function asyncRenderRuobilin(div, keyword) {
     "若比邻黑名单(检测中⌛︎)",
     (event) => {
       clearAllChildNode(div);
-      asyncRenderRuobilin(div, keyword);
+      asyncRenderRuobilin(div, keyword, companyTagUpdateCallback);
     }
   );
   div.appendChild(loaddingTag);
@@ -1322,6 +1332,8 @@ async function asyncRenderRuobilin(div, keyword) {
       let tag = createATag("📡", url, `若比邻黑名单(疑似${count}条记录)`);
       div.appendChild(tag);
       renderCompanyReputationColor(tag, "red");
+      await addCompanyTagNotExists(keyword, [TAG_RUOBILIN_BLACK_LIST]);
+      companyTagUpdateCallback();
     } else {
       //不存在
       let tag = createATag("📡", url, "若比邻黑名单(无记录)");
@@ -1329,6 +1341,7 @@ async function asyncRenderRuobilin(div, keyword) {
       renderCompanyReputationColor(tag, "yellowgreen");
     }
   } catch (e) {
+    errorLog(e);
     clearAllChildNode(div);
     const errorDiv = createATag(
       "📡",
@@ -1336,7 +1349,7 @@ async function asyncRenderRuobilin(div, keyword) {
       "若比邻黑名单(检测失败，点击重新检测)",
       (event) => {
         clearAllChildNode(div);
-        asyncRenderRuobilin(div, keyword);
+        asyncRenderRuobilin(div, keyword, companyTagUpdateCallback);
       }
     );
     errorDiv.href = "javaScript:void(0);";
@@ -1346,7 +1359,7 @@ async function asyncRenderRuobilin(div, keyword) {
   }
 }
 
-async function asyncRenderITJobBlackList(div, keyword) {
+async function asyncRenderITJobBlackList(div, keyword, companyTagUpdateCallback) {
   div.title = "信息来源:互联网企业黑名单 https://job.me88.top/";
   const decode = encodeURIComponent(keyword);
   const url = `https://job.me88.top/index.php/search/=${decode}`;
@@ -1356,7 +1369,7 @@ async function asyncRenderITJobBlackList(div, keyword) {
     "互联网企业黑名单(检测中⌛︎)",
     (event) => {
       clearAllChildNode(div);
-      asyncRenderITJobBlackList(div, keyword);
+      asyncRenderITJobBlackList(div, keyword, companyTagUpdateCallback);
     }
   );
   div.appendChild(loaddingTag);
@@ -1378,6 +1391,8 @@ async function asyncRenderITJobBlackList(div, keyword) {
       let tag = createATag("📡", url, `互联网企业黑名单(疑似${count}条记录)`);
       div.appendChild(tag);
       renderCompanyReputationColor(tag, "red");
+      await addCompanyTagNotExists(keyword, [TAG_IT_BLACK_LIST]);
+      companyTagUpdateCallback();
     } else {
       //不存在
       let tag = createATag("📡", url, "互联网企业黑名单(无记录)");
@@ -1385,6 +1400,7 @@ async function asyncRenderITJobBlackList(div, keyword) {
       renderCompanyReputationColor(tag, "yellowgreen");
     }
   } catch (e) {
+    errorLog(e);
     clearAllChildNode(div);
     const errorDiv = createATag(
       "📡",
@@ -1392,7 +1408,7 @@ async function asyncRenderITJobBlackList(div, keyword) {
       "互联网企业黑名单(检测失败，点击重新检测)",
       (event) => {
         clearAllChildNode(div);
-        asyncRenderITJobBlackList(div, keyword);
+        asyncRenderITJobBlackList(div, keyword, companyTagUpdateCallback);
       }
     );
     errorDiv.href = "javaScript:void(0);";

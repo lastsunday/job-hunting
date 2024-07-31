@@ -629,14 +629,39 @@ export async function getCompanyInfoByAiqicha(keyword) {
   return null;
 }
 
-export async function saveOrUpdateCompanyTag(companyName, tags) {
+export async function addCompanyTagNotExists(companyName, tags) {
+  let addResult = false;
   let companyId = genSha256(companyNameConvert(companyName)) + "";
-  infoLog("save company tag");
-  let companyTagBO = new CompanyTagBO();
-  companyTagBO.id = companyId;
-  companyTagBO.tags = tags;
-  await CompanyApi.addOrUpdateCompanyTag(companyTagBO);
-  infoLog("save company tag success");
+  let currentCompanyTagList = await CompanyApi.getAllCompanyTagDTOByCompanyId(companyId);
+  let currentCompanyTagListCount = 0;
+  let targetTagsArray = [];
+  let currentTagsMap = new Map();
+  if (currentCompanyTagList && currentCompanyTagList.length > 0) {
+    currentCompanyTagListCount = currentCompanyTagList.length;
+    let tagArray = currentCompanyTagList.flatMap(item => item.tagName);
+    tagArray.forEach(item => {
+      currentTagsMap.set(item, null);
+    });
+    targetTagsArray.push(...tagArray);
+  }
+  tags.forEach(item => {
+    if (!currentTagsMap.has(item)) {
+      currentTagsMap.set(item, null);
+      targetTagsArray.push(item);
+    }
+  })
+  if (targetTagsArray.length > currentCompanyTagListCount) {
+    infoLog("addCompanyTagNotExists");
+    let companyTagBO = new CompanyTagBO();
+    companyTagBO.companyName = companyName;
+    companyTagBO.tags = targetTagsArray;
+    await CompanyApi.addOrUpdateCompanyTag(companyTagBO);
+    infoLog("addCompanyTagNotExists success");
+    addResult = true;
+  } else {
+    infoLog("skip addCompanyTagNotExists");
+  }
+  return addResult;
 }
 
 /**

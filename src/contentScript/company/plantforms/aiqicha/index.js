@@ -90,8 +90,15 @@ function handleData(list, getListItem) {
                 operationMenu.appendChild(createFixValidHummanButton(companyName));
                 quickSearchButtonLoading.textContent = `🔎查询【${companyName}】失败，点击重新查询`;
             } finally {
-                functionPanelDiv.appendChild(createCompanyReputation(companyName));
-                functionPanelDiv.appendChild(createCompanyTag(companyName));
+                let reputationWrapperDiv = document.createElement("div");
+                let companyTagWrapperDiv = document.createElement("div");
+                functionPanelDiv.appendChild(reputationWrapperDiv);
+                functionPanelDiv.appendChild(companyTagWrapperDiv);
+                companyTagWrapperDiv.append(createCompanyTag(companyName))
+                reputationWrapperDiv.append(createCompanyReputation(companyName, () => {
+                    clearAllChildNode(companyTagWrapperDiv);
+                    companyTagWrapperDiv.append(createCompanyTag(companyName));
+                }));
                 functionPanelDiv.appendChild(createSearchCompanyLink(companyName));
                 functionPanelDiv.appendChild(createCommentWrapper(companyName));
                 functionPanelDiv.appendChild(createLogo());

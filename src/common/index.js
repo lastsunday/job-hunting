@@ -8,3 +8,6 @@ export const PLATFORM_LIEPIN = "LIEPIN";
  * 爱企查
  */
 export const PLATFORM_AIQICHA = "AIQICHA";
+
+export const TAG_RUOBILIN_BLACK_LIST = "若比邻黑名单";
+export const TAG_IT_BLACK_LIST = "互联网企业黑名单";

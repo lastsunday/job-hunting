@@ -2,6 +2,10 @@
 
 ## WIP
 
+### ⭐ Added
+
+1. (ContentScript)自动添加若比邻黑名单，互联网企业黑名单标签。
+
 ### 🐛 Fixed
 
 1. (SidePanel)开发者模式无令牌访问时的错误提示。
