@@ -1,5 +1,10 @@
 <template>
     <div class="main">
+        <div v-if="item.isCreateByToday" class="newBadge">
+            <el-tooltip effect="customized" content="今日新发现" placement="top-start">
+                <Icon icon="foundation:burst-new" width="45" height="45" />
+            </el-tooltip>
+        </div>
         <div class="top">
             <div class="jobName">
                 <el-popover placement="right" :width="800" trigger="click">
@@ -80,7 +85,7 @@
                                         .companyTagDTOList" type="warning">
                                         <el-link v-if="value.sourceUrl" :href="value.sourceUrl" target="_blank">
                                             <Icon icon="mdi:tag" />{{
-                                            value.tagName
+                                                value.tagName
                                             }}
                                         </el-link>
                                         <div v-else>
@@ -107,7 +112,7 @@
                         .companyTagDTOList" type="warning" size="small" effect="plain">
                         <el-link v-if="value.sourceUrl" :href="value.sourceUrl" target="_blank">
                             <Icon icon="mdi:tag" />{{
-                            value.tagName
+                                value.tagName
                             }}
                         </el-link>
                         <div v-else>
@@ -190,7 +195,7 @@
                             </template>
                             <el-link v-if="item.companyDTO.companyWebSite != '-'"
                                 :href="'http://' + item.companyDTO.companyWebSite" target="_blank">{{
-                                item.companyDTO.companyWebSite }}</el-link>
+                                    item.companyDTO.companyWebSite }}</el-link>
                             <el-text v-else>-</el-text>
                         </el-descriptions-item>
                         <el-descriptions-item>
@@ -265,7 +270,7 @@
                 <div class="timeTag" :style="getTimeTagStyle(item.jobFirstPublishDatetime)" size="small" effect="plain">
                     <div v-if="item.jobFirstPublishDatetime">
                         <Icon icon="fluent-mdl2:date-time-2" />{{
-                        convertTimeOffsetToHumanReadable(item.jobFirstPublishDatetime) }}发布
+                            convertTimeOffsetToHumanReadable(item.jobFirstPublishDatetime) }}发布
                     </div>
                     <div v-else>
                         <Icon icon="mdi:tag" />发布时间未知
@@ -296,12 +301,17 @@ const emits = defineEmits(["mapLocate"]);
 const item = ref({});
 item.value = props.item;
 
+const isToday = (value: string | Date) => {
+    return dayjs().startOf("day").isSame(dayjs(value).startOf("day"));
+}
+
 onMounted(async () => {
     if (item.value.companyTagDTOList && item.value.companyTagDTOList.length > 0) {
         item.value.companyTagDTOList.forEach(item => {
             item.sourceUrl = getSourceUrl(item.tagName, item.companyName);
         });
     }
+    item.value.isCreateByToday = isToday(item.value.createDatetime);
 })
 
 const getSourceUrl = (tagName, companyName) => {
@@ -430,10 +440,30 @@ const datetimeFormat = computed(() => {
         max-width: 260px;
     }
 }
+
+.newBadge {
+    position: absolute;
+    right: -7px;
+    top: -17px;
+    color: darkcyan;
+}
 </style>
 
 <style lang="css">
 .el-textarea__inner {
     scrollbar-width: thin;
+}
+
+.el-popper.is-customized {
+    /* Set padding to ensure the height is 32px */
+    padding: 6px 12px;
+    background: darkcyan;
+    color: white;
+}
+
+.el-popper.is-customized .el-popper__arrow::before {
+    background: darkcyan;
+    right: 0;
+    color: white;
 }
 </style>
