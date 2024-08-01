@@ -506,7 +506,10 @@ export function setupSortJobItem(node) {
   }
 }
 
-export function renderSortJobItem(list, getListItem, { platform, orderStartIndex } = { orderStartIndex: 0 }) {
+export function renderSortJobItem(list, getListItem, { platform, orderStartIndex }) {
+  if (orderStartIndex == undefined) {
+    orderStartIndex = 0;
+  }
   const idAndSortIndexMap = new Map();
   //设置一个标识id,renderSortCustomId
   list.forEach((item, index) => {
