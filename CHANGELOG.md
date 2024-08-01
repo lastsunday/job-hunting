@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### 🐛 Fixed
+
+1. (ContentScript)修复职位排序错误的问题。
+
 ## 1.25.0(2024-08-01)
 
 ### ⭐ Added
