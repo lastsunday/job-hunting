@@ -359,12 +359,12 @@ const datetimeFormat = computed(() => {
     box-sizing: border-box;
     padding: 15px;
     padding-bottom: 10px;
-    border: 1px solid black;
     margin-top: 10px;
     border-radius: 5px;
     border: 1px solid yellowgreen;
     min-width: 330px;
     font-size: 12px;
+    overflow-x: clip;
 }
 
 .publish {
