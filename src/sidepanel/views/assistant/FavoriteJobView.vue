@@ -291,6 +291,13 @@
                         }}</el-radio>
                     </el-radio-group>
                 </el-form-item>
+                <el-form-item label="排序">
+                    <el-radio-group v-model="form.sortMode">
+                        <el-radio v-for="(item) in sortModeOptions" :value="item.value" :key="item.value">{{
+                            item.label
+                        }}</el-radio>
+                    </el-radio-group>
+                </el-form-item>
                 <el-form-item>
                     <el-button type="primary" @click="onSubmit">保存</el-button>
                     <el-button @click="onReset">恢复</el-button>
@@ -339,7 +346,7 @@ import { Icon } from "@iconify/vue";
 
 const form = reactive({
     nameKeywordList: [],
-    nameDislikeKeywordList:[],
+    nameDislikeKeywordList: [],
     salary: null,
     addressKeywordList: [],
     descKeywordList: [],
@@ -347,6 +354,7 @@ const form = reactive({
     dislikeCompanyTagList: [],
     publishDateOffset: -1,
     bossPositionDislikeKeywordList: [],
+    sortMode: 0,
 })
 
 const bossPositionDislikeWhitelist = ref([]);
@@ -369,6 +377,11 @@ const publishDateOffsetOptions = [
     { label: "三个月内", value: 7862400000 },
     { label: "半年内", value: 15724800000 },
     { label: "一年内", value: 31449600000 },
+]
+
+const sortModeOptions = [
+    { label: "最近发现在前面", value: 0 },
+    { label: "最近发布在前面", value: 1 },
 ]
 
 const whitelist = ref([]);
@@ -404,6 +417,12 @@ const setFormData = (jobFaviousSetting) => {
     form.dislikeCompanyTagList = jobFaviousSetting.dislikeCompanyTagList.flatMap(item => { return { "value": whitelistCodeValueMap.get(item), "code": item } });
     form.publishDateOffset = jobFaviousSetting.publishDateOffset;
     form.bossPositionDislikeKeywordList = jobFaviousSetting.bossPositionDislikeKeywordList.flatMap(item => { return { "value": item } });
+    form.sortMode = jobFaviousSetting.sortMode;
+    if (form.sortMode == 1) {
+        jobSearchOrderByColumn.value = "jobFirstPublishDatetime DESC, createDatetime DESC";
+    } else {
+        jobSearchOrderByColumn.value = "createDatetime DESC, jobFirstPublishDatetime DESC";
+    }
 }
 
 const whitelistCodeValueMap = new Map();
@@ -453,6 +472,7 @@ const getFaviousSettingDTOFromForm = () => {
     result.dislikeCompanyTagList = toRaw(form.dislikeCompanyTagList).flatMap(item => item.code);
     result.publishDateOffset = toRaw(form.publishDateOffset);
     result.bossPositionDislikeKeywordList = toRaw(form.bossPositionDislikeKeywordList).flatMap(item => item.value);
+    result.sortMode = toRaw(form.sortMode);
     return result;
 }
 
@@ -479,9 +499,8 @@ const total = ref(0);
 const small = ref(false);
 const background = ref(false);
 const disabled = ref(false);
-const jobSearchOrderByColumn = ref("createDatetime DESC, jobFirstPublishDatetime ");
-const jobSearchOrderBy = ref("DESC");
-
+const jobSearchOrderByColumn = ref("createDatetime DESC, jobFirstPublishDatetime DESC");
+const jobSearchOrderBy = ref("");
 const datetimeFormat = computed(() => {
     return function (value: string) {
         return dayjs(value).isValid() ? dayjs(value).format("YYYY-MM-DD") : "-";

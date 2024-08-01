@@ -4,8 +4,12 @@ export class JobFaviousSettingDTO {
     salary;
     addressKeywordList = [];
     descKeywordList = [];
-    descDislikeKeywordList =[]
+    descDislikeKeywordList = []
     dislikeCompanyTagList = [];
     publishDateOffset;
     bossPositionDislikeKeywordList = [];
+    /**
+     * 0: createDatetime desc,1: publishDatetime desc
+     */
+    sortMode = 0;
 }
