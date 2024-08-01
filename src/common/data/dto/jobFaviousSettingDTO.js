@@ -1,5 +1,6 @@
 export class JobFaviousSettingDTO {
     nameKeywordList = [];
+    nameDislikeKeywordList = [];
     salary;
     addressKeywordList = [];
     descKeywordList = [];

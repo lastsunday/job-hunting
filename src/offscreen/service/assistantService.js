@@ -1,17 +1,18 @@
 import { Message } from "../../common/api/message";
 import { postSuccessMessage, postErrorMessage } from "../util";
-import { getDb, getOne, getAll } from "../database";
+import { getDb } from "../database";
 import { SearchFaviousJobBO } from "../../common/data/bo/searchFaviousJobBO";
 import { SearchJobDTO } from "../../common/data/dto/searchJobDTO";
 import { JobFaviousSettingDTO } from "../../common/data/dto/jobFaviousSettingDTO";
 import { AssistantStatisticDTO } from "../../common/data/dto/assistantStatisticDTO";
 import { Config } from "../../common/data/domain/config";
-import { toHump, convertEmptyStringToNull, genIdFromText, isNotEmpty } from "../../common/utils";
+import { genIdFromText } from "../../common/utils";
 import { JobDTO } from "../../common/data/dto/jobDTO";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
 import { _addOrUpdateConfig, _getConfigByKey } from "./configService";
 import dayjs from "dayjs";
 import { _getCompanyDTOByIds } from "./companyService";
+import { genNotLikeSql, genLikeSql, handleAndReturnWhereSql, genDatetimeConditionSql, genValueConditionSql } from "./sqlUtil";
 
 const KEY_JOB_FAVIOUS_SETTING = "KEY_JOB_FAVIOUS_SETTING";
 
@@ -203,70 +204,18 @@ function genFaviousJobCountSQL(param, todayStart, todayEnd) {
  */
 function genJobSearchWhereConditionSql(param) {
     let whereCondition = "";
-    if (param.nameKeywordList && param.nameKeywordList.length > 0) {
-        whereCondition += " AND (";
-        param.nameKeywordList.forEach((item, index) => {
-            if (index > 0) {
-                whereCondition += " OR ";
-            }
-            whereCondition += " job_name LIKE '%" + item + "%' ";
-        });
-        whereCondition += " )";
-    }
-    if (param.salary) {
-        whereCondition += ` AND job_salary_max >= ${param.salary}`;
-    }
-    if (param.addressKeywordList && param.addressKeywordList.length > 0) {
-        whereCondition += " AND (";
-        param.addressKeywordList.forEach((item, index) => {
-            if (index > 0) {
-                whereCondition += " OR ";
-            }
-            whereCondition += " job_address LIKE '%" + item + "%' ";
-        });
-        whereCondition += " )";
-    }
-    if (param.descKeywordList && param.descKeywordList.length > 0) {
-        whereCondition += " AND (";
-        param.descKeywordList.forEach((item, index) => {
-            if (index > 0) {
-                whereCondition += " OR ";
-            }
-            whereCondition += " job_description LIKE '%" + item + "%' ";
-        });
-        whereCondition += " )";
-    }
-    if (param.descDislikeKeywordList && param.descDislikeKeywordList.length > 0) {
-        whereCondition += " AND (";
-        param.descDislikeKeywordList.forEach((item, index) => {
-            if (index > 0) {
-                whereCondition += " AND ";
-            }
-            whereCondition += " job_description NOT LIKE '%" + item + "%' ";
-        });
-        whereCondition += " )";
-    }
-    if (param.bossPositionDislikeKeywordList && param.bossPositionDislikeKeywordList.length > 0) {
-        whereCondition += " AND (";
-        param.bossPositionDislikeKeywordList.forEach((item, index) => {
-            if (index > 0) {
-                whereCondition += " AND ";
-            }
-            whereCondition += " boss_position NOT LIKE '%" + item + "%' ";
-        });
-        whereCondition += " )";
-    }
+    whereCondition += genLikeSql(param.nameKeywordList, "job_name");
+    whereCondition += genNotLikeSql(param.nameDislikeKeywordList, "job_name");
+    whereCondition += genValueConditionSql(param.salary, "job_salary_max", ">=")
+    whereCondition += genLikeSql(param.addressKeywordList, "job_address");
+    whereCondition += genLikeSql(param.descKeywordList, "job_description");
+    whereCondition += genNotLikeSql(param.descDislikeKeywordList, "job_description");
+    whereCondition += genNotLikeSql(param.bossPositionDislikeKeywordList, "boss_position");
     if (param.publishDateOffset && param.publishDateOffset > 0) {
         let offsetDatetime = dayjs().subtract(param.publishDateOffset, "millisecond");
-        whereCondition +=
-            " AND job_first_publish_datetime >= '" +
-            offsetDatetime.format("YYYY-MM-DD HH:mm:ss") +
-            "'";
+        whereCondition += genDatetimeConditionSql(offsetDatetime, "job_first_publish_datetime", ">=");
     }
-    if (whereCondition.startsWith(" AND")) {
-        whereCondition = whereCondition.replace("AND", "");
-        whereCondition = " WHERE " + whereCondition;
-    }
+    whereCondition = handleAndReturnWhereSql(whereCondition);
     whereCondition += ` GROUP BY t1.job_id `;
     return whereCondition;
 }

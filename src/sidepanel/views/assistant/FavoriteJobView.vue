@@ -256,6 +256,10 @@
                     <TagInput ref="jobNameTagRef" v-model="form.nameKeywordList" :settings="tagSettings"
                         placeholder="请输入职位名关键字"></TagInput>
                 </el-form-item>
+                <el-form-item label="职位名排除关键字">
+                    <TagInput ref="jobNameDislikeTagRef" v-model="form.nameDislikeKeywordList" :settings="tagSettings"
+                        placeholder="请输入职位名排除关键字"></TagInput>
+                </el-form-item>
                 <el-form-item label="预期工资/月">
                     <el-input type="number" v-model="form.salary" />
                 </el-form-item>
@@ -335,6 +339,7 @@ import { Icon } from "@iconify/vue";
 
 const form = reactive({
     nameKeywordList: [],
+    nameDislikeKeywordList:[],
     salary: null,
     addressKeywordList: [],
     descKeywordList: [],
@@ -391,6 +396,7 @@ onMounted(async () => {
 
 const setFormData = (jobFaviousSetting) => {
     form.nameKeywordList = jobFaviousSetting.nameKeywordList.flatMap(item => { return { "value": item } });
+    form.nameDislikeKeywordList = jobFaviousSetting.nameDislikeKeywordList.flatMap(item => { return { "value": item } });
     form.salary = jobFaviousSetting.salary;
     form.addressKeywordList = jobFaviousSetting.addressKeywordList.flatMap(item => { return { "value": item } });
     form.descKeywordList = jobFaviousSetting.descKeywordList.flatMap(item => { return { "value": item } });
@@ -439,6 +445,7 @@ const onSubmit = async () => {
 const getFaviousSettingDTOFromForm = () => {
     let result = new JobFaviousSettingDTO();
     result.nameKeywordList = toRaw(form.nameKeywordList).flatMap(item => item.value);
+    result.nameDislikeKeywordList = toRaw(form.nameDislikeKeywordList).flatMap(item => item.value);
     result.salary = Number.parseInt(toRaw(form.salary));
     result.addressKeywordList = toRaw(form.addressKeywordList).flatMap(item => item.value);
     result.descKeywordList = toRaw(form.descKeywordList).flatMap(item => item.value);
@@ -518,6 +525,7 @@ function getSearchParam() {
     searchParam.pageNum = currentPage.value;
     searchParam.pageSize = pageSize.value;
     searchParam.nameKeywordList = toRaw(form.nameKeywordList).flatMap(item => item.value);
+    searchParam.nameDislikeKeywordList = toRaw(form.nameDislikeKeywordList).flatMap(item => item.value);
     searchParam.salary = Number.parseInt(toRaw(form.salary));
     searchParam.addressKeywordList = toRaw(form.addressKeywordList).flatMap(item => item.value);
     searchParam.descKeywordList = toRaw(form.descKeywordList).flatMap(item => item.value);
