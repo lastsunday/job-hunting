@@ -4,6 +4,8 @@
 
 # Job Hunting - 一款协助找工作的浏览器插件
 
+[![build](https://github.com/lastsunday/job-hunting/actions/workflows/build.yml/badge.svg)](https://github.com/lastsunday/job-hunting/actions/workflows/build.yml)
+
 ## 招聘平台支持列表
 
 | 招聘平台  | 访问地址                            | 备注                   |
