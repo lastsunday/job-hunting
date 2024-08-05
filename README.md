@@ -50,6 +50,23 @@
 - [x] 讨论区
 - [x] 个人助理
   - [x] 职位偏好
+- [ ] 自动浏览职位搜索页（目标：实现自动更新数据）
+  - [ ] 技术调研
+    - [ ] <https://github.com/puppeteer/puppeteer>
+      - [ ] 需等待[Puppeteer v23](https://github.com/puppeteer/puppeteer/issues/12728)
+  - [ ] 招聘平台
+    - [ ] BOSS直聘
+    - [ ] 前程无忧
+    - [ ] 智联招聘
+    - [ ] 拉钩网
+    - [ ] 猎聘网
+- [ ] 数据共享计划
+  - [ ] 服务端
+    - [ ] <https://github.com/lastsunday/job-hunting-server>
+  - [ ] 数据
+    - [ ] 职位
+    - [ ] 公司
+    - [ ] 公司标签
 - [ ] 多语言
   - [ ] 英文
   - [ ] 简体中文
