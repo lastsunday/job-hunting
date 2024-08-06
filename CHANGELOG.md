@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### 🐛 Fixed
+
+1. (SidePanel)修复开发者模式的应用流量API缓存问题。
+
 ## 1.26.0(2024-08-06)
 
 ### ⭐ Added

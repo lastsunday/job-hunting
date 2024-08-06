@@ -74,7 +74,7 @@ export const GithubApi = {
 
   async getTrafficClone() {
     let token = await getDeveloperToken();
-    let result = await fetchJsonWithToken(`${URL_TRAFFIC_CLONE}`, null, { method: "GET", token })
+    let result = await fetchJsonWithToken(`${URL_TRAFFIC_CLONE}?t=${new Date().getTime()}`, null, { method: "GET", token })
     result.items = result.clones;
     delete result.clones;
     return result;
@@ -82,7 +82,7 @@ export const GithubApi = {
 
   async getTrafficPopularPaths() {
     let token = await getDeveloperToken();
-    let result = await fetchJsonWithToken(`${URL_TRAFFIC_POPULAR_PATHS}`, null, { method: "GET", token })
+    let result = await fetchJsonWithToken(`${URL_TRAFFIC_POPULAR_PATHS}?t=${new Date().getTime()}`, null, { method: "GET", token })
     result.forEach(item => {
       item.url = `https://github.com/${item.path}`;
       delete item.path;
@@ -92,7 +92,7 @@ export const GithubApi = {
 
   async getTrafficPopularReferrers() {
     let token = await getDeveloperToken();
-    let result = await fetchJsonWithToken(`${URL_TRAFFIC_POPULAR_REFERRERS}`, null, { method: "GET", token })
+    let result = await fetchJsonWithToken(`${URL_TRAFFIC_POPULAR_REFERRERS}?t=${new Date().getTime()}`, null, { method: "GET", token })
     result.forEach(item => {
       item.url = `http://${item.referrer}`;
       item.title = `${item.referrer}`
@@ -103,7 +103,7 @@ export const GithubApi = {
 
   async getTrafficViews() {
     let token = await getDeveloperToken();
-    let result = await fetchJsonWithToken(`${URL_TRAFFIC_VIEWS}`, null, { method: "GET", token })
+    let result = await fetchJsonWithToken(`${URL_TRAFFIC_VIEWS}?t=${new Date().getTime()}`, null, { method: "GET", token })
     result.items = result.views;
     delete result.views;
     return result;
