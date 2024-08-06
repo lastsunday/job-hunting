@@ -2,6 +2,10 @@
 
 ## WIP
 
+### ⭐ Added
+
+1. (ContentScript)自动检测公司风评，支持IT黑名单(www.blackdir.com)。
+
 ### 🐛 Fixed
 
 1. (SidePanel)优化职位卡片样式（避免拥有足够空间的情况下出现横向滚动条）。

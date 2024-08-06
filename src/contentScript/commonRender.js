@@ -15,6 +15,7 @@ import {
   PLATFORM_LIEPIN,
   TAG_IT_BLACK_LIST,
   TAG_RUOBILIN_BLACK_LIST,
+  TAG_IT_BLACK_LIST_2,
 } from "../common";
 import {
   JOB_STATUS_DESC_NEWEST
@@ -1295,52 +1296,102 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
   labelDiv.className = "__company_info_quick_search_item_label";
   labelDiv.textContent = "公司风评检测：";
   dom.appendChild(labelDiv);
-  const ruobilinDiv = document.createElement("div");
-  dom.appendChild(ruobilinDiv);
-  asyncRenderRuobilin(ruobilinDiv, keyword, companyTagUpdateCallback);
-  const itJobBlackListDiv = document.createElement("div");
-  dom.appendChild(itJobBlackListDiv);
-  asyncRenderITJobBlackList(itJobBlackListDiv, keyword, companyTagUpdateCallback);
+  dom.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
+    title: "若比邻黑名单",
+    sourceTitle: "信息来源:跨境小白网（若比邻网）https://kjxb.org/",
+    sourceUrl: `https://kjxb.org/?s=${encodeURIComponent(keyword)}&post_type=question`,
+    companyTag: TAG_RUOBILIN_BLACK_LIST,
+    searchFunction: async (keyword) => {
+      return await httpFetchGetTextWithAbort(`https://kjxb.org/?s=${encodeURIComponent(keyword)}&post_type=question`);
+    },
+    handleSearchCount: (result) => {
+      let hyperlinks = $(result).find(".ap-questions-hyperlink");
+      return hyperlinks ? hyperlinks.length : 0;
+    },
+  }));
+  dom.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
+    title: "互联网企业黑名单",
+    sourceTitle: "信息来源:互联网企业黑名单 https://job.me88.top/",
+    sourceUrl: `https://job.me88.top/index.php/search/${encodeURIComponent(keyword)}`,
+    companyTag: TAG_IT_BLACK_LIST,
+    searchFunction: async (keyword) => {
+      return await httpFetchGetTextWithAbort(`https://job.me88.top/index.php/search/${encodeURIComponent(keyword)}`);
+    },
+    handleSearchCount: (result) => {
+      let hyperlinks = $(result).find("div[class=\"post-box paddingall\"]");
+      return hyperlinks ? hyperlinks.length : 0;
+    },
+  }));
+  dom.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
+    title: "IT黑名单",
+    sourceTitle: "信息来源:IT黑名单 http://www.blackdir.com/",
+    sourceUrl: `http://www.blackdir.com/?search=${encodeURIComponent(keyword)}`,
+    companyTag: TAG_IT_BLACK_LIST_2,
+    searchFunction: async (keyword) => {
+      return await httpFetchGetTextWithAbort(`http://www.blackdir.com/?search=${encodeURIComponent(keyword)}`);
+    },
+    handleSearchCount: (result) => {
+      let hyperlinks = $(result).find("div[class=\"media\"]")
+      return hyperlinks ? hyperlinks.length : 0;
+    },
+  }));
   return dom;
 }
 
-async function asyncRenderRuobilin(div, keyword, companyTagUpdateCallback) {
-  div.title = "信息来源:跨境小白网（若比邻网）https://kjxb.org/";
-  const decode = encodeURIComponent(keyword);
-  const url = `https://kjxb.org/?s=${decode}&post_type=question`;
+function genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
+  title,
+  sourceTitle,
+  sourceUrl,
+  companyTag,
+  searchFunction,
+  handleSearchCount,
+}) {
+  const result = document.createElement("div");
+  asyncRenderCompanyChecking(result, keyword, companyTagUpdateCallback, {
+    title,
+    sourceTitle,
+    sourceUrl,
+    companyTag,
+    searchFunction,
+    handleSearchCount,
+  });
+  return result;
+}
+
+async function asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback, {
+  title,
+  sourceTitle,
+  sourceUrl,
+  companyTag,
+  searchFunction,
+  handleSearchCount,
+}) {
+  div.title = sourceTitle
   const loaddingTag = createATag(
     "📡",
-    url,
-    "若比邻黑名单(检测中⌛︎)",
+    sourceUrl,
+    `${title}(检测中⌛︎)`,
     (event) => {
       clearAllChildNode(div);
-      asyncRenderRuobilin(div, keyword, companyTagUpdateCallback);
+      asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback);
     }
   );
   div.appendChild(loaddingTag);
   renderCompanyReputationColor(loaddingTag, "black");
   try {
-    let abortFunctionHandler = null;
-    const result = await httpFetchGetText(url, (abortFunction) => {
-      abortFunctionHandler = abortFunction;
-      //加入请求手动中断列表
-      addAbortFunctionHandler(abortFunctionHandler);
-    });
-    //请求正常结束，从手动中断列表中移除
-    deleteAbortFunctionHandler(abortFunctionHandler);
-    let hyperlinks = $(result).find(".ap-questions-hyperlink");
+    const result = await searchFunction(keyword)
+    let count = handleSearchCount(result);
     clearAllChildNode(div);
-    if (hyperlinks && hyperlinks.length > 0) {
-      //存在于若比邻黑名单
-      const count = hyperlinks.length;
-      let tag = createATag("📡", url, `若比邻黑名单(疑似${count}条记录)`);
+    if (count > 0) {
+      //存在于黑名单
+      let tag = createATag("📡", sourceUrl, `${title}(疑似${count}条记录)`);
       div.appendChild(tag);
       renderCompanyReputationColor(tag, "red");
-      await addCompanyTagNotExists(keyword, [TAG_RUOBILIN_BLACK_LIST]);
+      await addCompanyTagNotExists(keyword, [companyTag]);
       companyTagUpdateCallback();
     } else {
       //不存在
-      let tag = createATag("📡", url, "若比邻黑名单(无记录)");
+      let tag = createATag("📡", sourceUrl, `${title}(无记录)`);
       div.appendChild(tag);
       renderCompanyReputationColor(tag, "yellowgreen");
     }
@@ -1349,11 +1400,11 @@ async function asyncRenderRuobilin(div, keyword, companyTagUpdateCallback) {
     clearAllChildNode(div);
     const errorDiv = createATag(
       "📡",
-      url,
-      "若比邻黑名单(检测失败，点击重新检测)",
+      sourceUrl,
+      `${title}(检测失败，点击重新检测)`,
       (event) => {
         clearAllChildNode(div);
-        asyncRenderRuobilin(div, keyword, companyTagUpdateCallback);
+        asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback);
       }
     );
     errorDiv.href = "javaScript:void(0);";
@@ -1363,63 +1414,16 @@ async function asyncRenderRuobilin(div, keyword, companyTagUpdateCallback) {
   }
 }
 
-async function asyncRenderITJobBlackList(div, keyword, companyTagUpdateCallback) {
-  div.title = "信息来源:互联网企业黑名单 https://job.me88.top/";
-  const decode = encodeURIComponent(keyword);
-  const url = `https://job.me88.top/index.php/search/=${decode}`;
-  const loaddingTag = createATag(
-    "📡",
-    url,
-    "互联网企业黑名单(检测中⌛︎)",
-    (event) => {
-      clearAllChildNode(div);
-      asyncRenderITJobBlackList(div, keyword, companyTagUpdateCallback);
-    }
-  );
-  div.appendChild(loaddingTag);
-  renderCompanyReputationColor(loaddingTag, "black");
-  try {
-    let abortFunctionHandler = null;
-    const result = await httpFetchGetText(url, (abortFunction) => {
-      abortFunctionHandler = abortFunction;
-      //加入请求手动中断列表
-      addAbortFunctionHandler(abortFunctionHandler);
-    });
-    //请求正常结束，从手动中断列表中移除
-    deleteAbortFunctionHandler(abortFunctionHandler);
-    let hyperlinks = $(result).find("div[class=\"post-box paddingall\"]");
-    clearAllChildNode(div);
-    if (hyperlinks && hyperlinks.length > 0) {
-      //存在于黑名单
-      const count = hyperlinks.length;
-      let tag = createATag("📡", url, `互联网企业黑名单(疑似${count}条记录)`);
-      div.appendChild(tag);
-      renderCompanyReputationColor(tag, "red");
-      await addCompanyTagNotExists(keyword, [TAG_IT_BLACK_LIST]);
-      companyTagUpdateCallback();
-    } else {
-      //不存在
-      let tag = createATag("📡", url, "互联网企业黑名单(无记录)");
-      div.appendChild(tag);
-      renderCompanyReputationColor(tag, "yellowgreen");
-    }
-  } catch (e) {
-    errorLog(e);
-    clearAllChildNode(div);
-    const errorDiv = createATag(
-      "📡",
-      url,
-      "互联网企业黑名单(检测失败，点击重新检测)",
-      (event) => {
-        clearAllChildNode(div);
-        asyncRenderITJobBlackList(div, keyword, companyTagUpdateCallback);
-      }
-    );
-    errorDiv.href = "javaScript:void(0);";
-    errorDiv.target = "";
-    div.appendChild(errorDiv);
-    renderCompanyReputationColor(errorDiv, "black");
-  }
+async function httpFetchGetTextWithAbort(url) {
+  let abortFunctionHandler = null;
+  const result = await httpFetchGetText(url, (abortFunction) => {
+    abortFunctionHandler = abortFunction;
+    //加入请求手动中断列表
+    addAbortFunctionHandler(abortFunctionHandler);
+  });
+  //请求正常结束，从手动中断列表中移除
+  deleteAbortFunctionHandler(abortFunctionHandler);
+  return result;
 }
 
 export function clearAllChildNode(div) {
