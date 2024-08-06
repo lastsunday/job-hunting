@@ -1298,7 +1298,10 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
   labelDiv.className = "__company_info_quick_search_item_label";
   labelDiv.textContent = "公司风评检测：";
   dom.appendChild(labelDiv);
-  dom.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
+  let contentDiv = document.createElement("div");
+  contentDiv.className ="__company_reputation_content";
+  dom.appendChild(contentDiv);
+  contentDiv.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
     title: "信用中国(北京)黑名单",
     sourceTitle: "信息来源:信用中国(北京) https://creditbj.jxj.beijing.gov.cn/credit-portal/",
     sourceUrl: `https://creditbj.jxj.beijing.gov.cn/credit-portal/credit_service/publicity/record/black`,
@@ -1318,7 +1321,7 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
       }
     },
   }));
-  dom.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
+  contentDiv.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
     title: "若比邻黑名单",
     sourceTitle: "信息来源:跨境小白网（若比邻网）https://kjxb.org/",
     sourceUrl: `https://kjxb.org/?s=${encodeURIComponent(keyword)}&post_type=question`,
@@ -1331,7 +1334,7 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
       return hyperlinks ? hyperlinks.length : 0;
     },
   }));
-  dom.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
+  contentDiv.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
     title: "互联网企业黑名单",
     sourceTitle: "信息来源:互联网企业黑名单 https://job.me88.top/",
     sourceUrl: `https://job.me88.top/index.php/search/${encodeURIComponent(keyword)}`,
@@ -1344,7 +1347,7 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
       return hyperlinks ? hyperlinks.length : 0;
     },
   }));
-  dom.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
+  contentDiv.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
     title: "IT黑名单",
     sourceTitle: "信息来源:IT黑名单 http://www.blackdir.com/",
     sourceUrl: `http://www.blackdir.com/?search=${encodeURIComponent(keyword)}`,

@@ -212,6 +212,15 @@ div[data-search-sol-meta] {
   justify-content: end;
 }
 
+.__company_reputation_content{
+  display: flex;
+  flex-wrap: wrap;
+
+  div{
+    padding:2px;
+  }
+}
+
 .__BOSS_function_panel {
   padding-left: 10px;
   margin-right: 5px;
