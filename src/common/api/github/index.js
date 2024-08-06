@@ -84,7 +84,7 @@ export const GithubApi = {
     let token = await getDeveloperToken();
     let result = await fetchJsonWithToken(`${URL_TRAFFIC_POPULAR_PATHS}?t=${new Date().getTime()}`, null, { method: "GET", token })
     result.forEach(item => {
-      item.url = `https://github.com/${item.path}`;
+      item.url = `https://github.com${item.path}`;
       delete item.path;
     });
     return result;
