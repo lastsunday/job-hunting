@@ -12,6 +12,7 @@ export const PLATFORM_AIQICHA = "AIQICHA";
 export const TAG_RUOBILIN_BLACK_LIST = "若比邻黑名单";
 export const TAG_IT_BLACK_LIST = "互联网企业黑名单";
 export const TAG_IT_BLACK_LIST_2 = "IT黑名单";
+export const TAG_CREDIT_BJ_BLACK_LIST = "信用中国(北京)黑名单";
 
 export function getUrlByTagAndCompanyName(tagName, companyName) {
     const decode = encodeURIComponent(companyName);
@@ -21,6 +22,8 @@ export function getUrlByTagAndCompanyName(tagName, companyName) {
         return `https://job.me88.top/index.php/search/=${decode}`;
     } else if (tagName == TAG_IT_BLACK_LIST_2) {
         return `http://www.blackdir.com/?search=${decode}`;
+    } else if (tagName == TAG_CREDIT_BJ_BLACK_LIST) {
+        return `https://creditbj.jxj.beijing.gov.cn/credit-portal/credit_service/publicity/record/black`;
     } else {
         return null;
     }

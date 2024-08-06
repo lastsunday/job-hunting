@@ -18,6 +18,31 @@ import { setUser } from "./service/userService";
 import { SystemService } from "./service/systemService";
 
 debugLog("background ready");
+chrome.runtime.onInstalled.addListener(async () => {
+  debugLog("updateDynamicRules ready");
+  //https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest
+  const rules: chrome.declarativeNetRequest.Rule[] = [{
+    id: 1,
+    action: {
+      type: chrome.declarativeNetRequest.RuleActionType.MODIFY_HEADERS,
+      requestHeaders: [{
+        header: 'Referer',
+        operation: chrome.declarativeNetRequest.HeaderOperation.SET,
+        value: 'https://creditbj.jxj.beijing.gov.cn/credit-portal/credit_service/publicity/record/black',
+      }],
+    },
+    condition: {
+      initiatorDomains: [chrome.runtime.id],
+      urlFilter: '|https://creditbj.jxj.beijing.gov.cn/credit-portal/api/publicity/record/BLACK/0',
+      resourceTypes: [chrome.declarativeNetRequest.ResourceType.XMLHTTPREQUEST],
+    },
+  }];
+  await chrome.declarativeNetRequest.updateDynamicRules({
+    removeRuleIds: rules.map(r => r.id),
+    addRules: rules,
+  });
+  debugLog("updateDynamicRules end");
+});
 debugLog("keepAlive start");
 //see https://stackoverflow.com/questions/66618136/persistent-service-worker-in-chrome-extension
 const keepAlive = () => setInterval(chrome.runtime.getPlatformInfo, 20e3);

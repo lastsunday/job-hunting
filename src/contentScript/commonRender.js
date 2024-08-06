@@ -16,6 +16,7 @@ import {
   TAG_IT_BLACK_LIST,
   TAG_RUOBILIN_BLACK_LIST,
   TAG_IT_BLACK_LIST_2,
+  TAG_CREDIT_BJ_BLACK_LIST,
 } from "../common";
 import {
   JOB_STATUS_DESC_NEWEST
@@ -30,7 +31,7 @@ import {
   deleteAbortFunctionHandler,
   addCompanyTagNotExists,
 } from "./commonDataHandler";
-import { httpFetchGetText } from "../common/api/common";
+import { httpFetchGetText, httpFetchJson } from "../common/api/common";
 
 import { logoBase64 } from "./assets/logo";
 import $ from "jquery";
@@ -45,6 +46,7 @@ const ACTIVE_TIME_MATCH = /(?<num>[0-9\.]*)/;
 import Tagify from '@yaireo/tagify';
 import DragSort from '@yaireo/dragsort';
 import { CompanyTagBO } from "../common/data/bo/companyTagBO";
+import { el } from "element-plus/es/locale/index.mjs";
 
 export function renderTimeTag(
   divElement,
@@ -1297,6 +1299,26 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
   labelDiv.textContent = "公司风评检测：";
   dom.appendChild(labelDiv);
   dom.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
+    title: "信用中国(北京)黑名单",
+    sourceTitle: "信息来源:信用中国(北京) https://creditbj.jxj.beijing.gov.cn/credit-portal/",
+    sourceUrl: `https://creditbj.jxj.beijing.gov.cn/credit-portal/credit_service/publicity/record/black`,
+    companyTag: TAG_CREDIT_BJ_BLACK_LIST,
+    searchFunction: async (keyword) => {
+      return await httpFetchJsonWithAbort({
+        url: `https://creditbj.jxj.beijing.gov.cn/credit-portal/api/publicity/record/BLACK/0`,
+        body: { "listSql": "", "linesPerPage": 10, "currentPage": 1, "condition": { "keyWord": keyword, "creditObjectType": "0" } }
+      });
+    },
+    handleSearchCount: (result) => {
+      if (result.status == "1200") {
+        let count = (result?.data?.page?.totalNum) ?? 0;
+        return count;
+      } else {
+        throw `${result.message}`
+      }
+    },
+  }));
+  dom.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
     title: "若比邻黑名单",
     sourceTitle: "信息来源:跨境小白网（若比邻网）https://kjxb.org/",
     sourceUrl: `https://kjxb.org/?s=${encodeURIComponent(keyword)}&post_type=question`,
@@ -1373,7 +1395,14 @@ async function asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback
     `${title}(检测中⌛︎)`,
     (event) => {
       clearAllChildNode(div);
-      asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback);
+      asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback, {
+        title,
+        sourceTitle,
+        sourceUrl,
+        companyTag,
+        searchFunction,
+        handleSearchCount,
+      });
     }
   );
   div.appendChild(loaddingTag);
@@ -1404,7 +1433,14 @@ async function asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback
       `${title}(检测失败，点击重新检测)`,
       (event) => {
         clearAllChildNode(div);
-        asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback);
+        asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback, {
+          title,
+          sourceTitle,
+          sourceUrl,
+          companyTag,
+          searchFunction,
+          handleSearchCount,
+        });
       }
     );
     errorDiv.href = "javaScript:void(0);";
@@ -1412,6 +1448,24 @@ async function asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback
     div.appendChild(errorDiv);
     renderCompanyReputationColor(errorDiv, "black");
   }
+}
+
+async function httpFetchJsonWithAbort({ url, body, method, headers, referrer, referrerPolicy }) {
+  let abortFunctionHandler = null;
+  if (!headers) {
+    headers = {
+      "Accept": "application/json",
+      "Content-Type": "application/json"
+    }
+  }
+  const result = await httpFetchJson({ url, body: JSON.stringify(body), method: method ?? "POST", headers, referrer, referrerPolicy }, (abortFunction) => {
+    abortFunctionHandler = abortFunction;
+    //加入请求手动中断列表
+    addAbortFunctionHandler(abortFunctionHandler);
+  });
+  //请求正常结束，从手动中断列表中移除
+  deleteAbortFunctionHandler(abortFunctionHandler);
+  return result;
 }
 
 async function httpFetchGetTextWithAbort(url) {
