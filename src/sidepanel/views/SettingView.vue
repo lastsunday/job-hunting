@@ -1022,6 +1022,10 @@ onMounted(async () => {
   setFormData(developerToken);
 })
 
+import { useSystem } from "../hook/system";
+const { queryVersion, checkNewVersion, getLatestAssets, downloadLatest } = useSystem();
+
+
 const onCheckVersion = async () => {
   versionChecking.value = true;
   checkingVersionText.value = "正检查新版本"
@@ -1036,9 +1040,9 @@ const onCheckVersion = async () => {
 
 const checkVersion = async () => {
   try {
-    versionObject.value = await (await fetch(APP_URL_LATEST_VERSION)).json();
+    versionObject.value = await queryVersion();
+    newVersion.value = checkNewVersion(versionObject.value);
     latestVersion.value = versionObject.value.tag_name;
-    newVersion.value = semver.gt(latestVersion.value, version);
     latestVersionCreatedAt.value = versionObject.value.created_at;
     latestChangelogContent.value = marked.parse(versionObject.value.body);
   } catch (e) {
@@ -1047,24 +1051,7 @@ const checkVersion = async () => {
 }
 
 const onDownloadLatest = async () => {
-  let assets = getLatestAssets();
-  let url = assets?.browser_download_url;
-  if (url) {
-    window.open(url);
-  } else {
-    ElMessage('未找到安装文件');
-  }
-}
-
-const getLatestAssets = () => {
-  let assets = versionObject.value.assets;
-  let targetUrl = null;
-  let chromeZipAssets = assets.filter(item => { return item.name.includes("chrome") && item.name.endsWith(".zip") });
-  if (chromeZipAssets && chromeZipAssets.length > 0) {
-    return chromeZipAssets[0];
-  } else {
-    return null;
-  }
+  downloadLatest(versionObject.value)
 }
 
 const onAccessHomePage = () => {
@@ -1153,7 +1140,6 @@ const onReset = async () => {
     });
   }
 }
-
 
 const popularReferrersColumnTitleArray = ref(["Site", "Views", "Unique visitors"]);
 const popularPathsColumnTitleArray = ref(["Content", "Views", "Unique visitors"]);

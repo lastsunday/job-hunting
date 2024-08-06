@@ -1,7 +1,8 @@
 import {
   GITHUB_URL_GET_USER, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_APP_CLIENT_ID,
   GITHUB_APP_CLIENT_SECRET, URL_GRAPHQL, GITHUB_APP_REPO, URL_POST_ISSUES,
-  URL_TRAFFIC_CLONE, URL_TRAFFIC_POPULAR_PATHS, URL_TRAFFIC_POPULAR_REFERRERS, URL_TRAFFIC_VIEWS
+  URL_TRAFFIC_CLONE, URL_TRAFFIC_POPULAR_PATHS, URL_TRAFFIC_POPULAR_REFERRERS, URL_TRAFFIC_VIEWS,
+  APP_URL_LATEST_VERSION
 } from "../../config";
 import { AuthApi, DeveloperApi } from "../index"
 import { UserDTO } from "../../data/dto/userDTO";
@@ -107,6 +108,10 @@ export const GithubApi = {
     delete result.views;
     return result;
   },
+
+  async queryVersion() {
+    return await fetchJson(APP_URL_LATEST_VERSION, null, { method: "GET", skipLogin: true });
+  }
 }
 
 async function getDeveloperToken() {
@@ -163,13 +168,13 @@ function genQueryCommentHQL({ first, after, last, before, id }) {
   };
 }
 
-async function fetchJson(url, data, { method, responseHeaderCallback } = { method: "POST" }) {
+async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin } = { method: "POST", skipLogin: false }) {
   try {
     let oauthDTO = await AuthApi.authGetToken();
-    if (!oauthDTO) {
+    if (!oauthDTO && !skipLogin) {
       throw EXCEPTION.NO_LOGIN;
     }
-    let response = await fetchJsonReturnResponse(url, data, { method });
+    let response = await fetchJsonReturnResponse(url, data, { method, skipLogin });
     let status = response.status;
     if (isStatusNoError(response)) {
       const jsonResult = await response.json();
@@ -240,21 +245,24 @@ async function fetchJsonWithToken(url, data, { method, token, responseHeaderCall
   }
 }
 
-async function fetchJsonReturnResponse(url, data, { method, token } = { method: "POST" }) {
+async function fetchJsonReturnResponse(url, data, { method, token, skipLogin } = { method: "POST", skipLogin: false }) {
   let targetToken = token;
   if (!targetToken) {
     let oauthDTO = await AuthApi.authGetToken();
     targetToken = oauthDTO?.accessToken;
   }
-  if (!targetToken) {
+  if (!targetToken && !skipLogin) {
     throw EXCEPTION.NO_LOGIN;
+  }
+  let headers = {
+    "Content-Type": "application/json",
+  };
+  if (targetToken) {
+    headers["Authorization"] = `Bearer ${targetToken}`;
   }
   let option = {
     method,
-    headers: {
-      "Authorization": `Bearer ${targetToken}`,
-      "Content-Type": "application/json",
-    },
+    headers,
   };
   if (data) {
     option.body = JSON.stringify(data);
