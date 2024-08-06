@@ -4,7 +4,7 @@
 
 ### ⭐ Added
 
-1. (ContentScript)自动检测公司风评，支持IT黑名单(www.blackdir.com)。
+1. (ContentScript)自动检测公司风评，支持IT黑名单(www.blackdir.com)，信用中国(北京)黑名单(creditbj.jxj.beijing.gov.cn)。
 
 ### 🐛 Fixed
 
