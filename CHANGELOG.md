@@ -6,6 +6,7 @@
 
 1. (ContentScript)自动检测公司风评，支持IT黑名单 [www.blackdir.com](www.blackdir.com)。
 2. (ContentScript)自动检测公司风评，支持信用中国(北京)黑名单 [creditbj.jxj.beijing.gov.cn](creditbj.jxj.beijing.gov.cn)。
+3. (SidePanel)新增新版本自动检测（主框架）。
 
 ### 🐛 Fixed
 
