@@ -729,6 +729,7 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform } = {}) {
       }
       mainChannelDiv.appendChild(quickSearchButtonLoading);
       let companyName = item.jobCompanyName;
+      companyName = companyNameConvert(companyName)
       fixValidHummanButton.textContent =
         "一直查询失败？点击该按钮去尝试解除人机验证吧！";
       if (getCompanyInfoFunction) {
@@ -736,7 +737,8 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform } = {}) {
           item.jobCompanyApiUrl
         );
         if (targetCompanyName) {
-          if (companyNameConvert(companyName) == companyNameConvert(targetCompanyName)) {
+          targetCompanyName = companyNameConvert(targetCompanyName);
+          if (companyName == targetCompanyName) {
             infoLog(`company name equal = ${companyName}`);
           } else {
             companyName = targetCompanyName;
@@ -1299,7 +1301,7 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
   labelDiv.textContent = "公司风评检测：";
   dom.appendChild(labelDiv);
   let contentDiv = document.createElement("div");
-  contentDiv.className ="__company_reputation_content";
+  contentDiv.className = "__company_reputation_content";
   dom.appendChild(contentDiv);
   contentDiv.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
     title: "信用中国(北京)黑名单",
@@ -1309,12 +1311,16 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
     searchFunction: async (keyword) => {
       return await httpFetchJsonWithAbort({
         url: `https://creditbj.jxj.beijing.gov.cn/credit-portal/api/publicity/record/BLACK/0`,
-        body: { "listSql": "", "linesPerPage": 10, "currentPage": 1, "condition": { "keyWord": keyword, "creditObjectType": "0" } }
+        body: { "listSql": "", "linesPerPage": 50, "currentPage": 1, "condition": { "keyWord": keyword, "creditObjectType": "0" } }
       });
     },
     handleSearchCount: (result) => {
       if (result.status == "1200") {
-        let count = (result?.data?.page?.totalNum) ?? 0;
+        let count = 0;
+        let totalNum = (result?.data?.page?.totalNum) ?? 0;
+        if (totalNum > 0) {
+          count = result?.data?.list?.filter(item => item.zzmc == keyword).length;
+        }
         return count;
       } else {
         throw `${result.message}`

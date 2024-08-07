@@ -59,6 +59,7 @@ function handleData(list, getListItem) {
 
         async function quickSearchHandle(forceSyncData) {
             let companyName = item.titleName;
+            companyName = companyNameConvert(companyName);
             clearAllChildNode(functionPanelDiv);
             clearAllChildNode(operationMenu);
             functionPanelDiv.appendChild(operationMenu);
