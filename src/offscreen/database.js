@@ -1,14 +1,16 @@
-import { infoLog, debugLog, errorLog } from "../common/log";
+import { infoLog, debugLog, errorLog, isDebug } from "../common/log";
 import sqlite3InitModule from "@sqlite.org/sqlite-wasm";
 import { ChangeLogV1 } from "./changeLog/changeLogV1";
 import { ChangeLogV2 } from "./changeLog/changeLogV2";
 import { ChangeLogV3 } from './changeLog/changeLogV3';
 import { ChangeLogV4 } from './changeLog/changeLogV4';
+import { ChangeLogV5 } from './changeLog/changeLogV5';
 import { initChangeLog, getChangeLogList } from "./changeLog";
 import { bytesToBase64, base64ToBytes } from "../common/utils/base64.js";
 import JSZip from "jszip";
 import { postSuccessMessage, postErrorMessage } from "./util";
-import { toHump } from "../common/utils";
+import { toHump, toLine, convertEmptyStringToNull } from "../common/utils";
+import dayjs from "dayjs";
 
 const JOB_DB_FILE_NAME = "job.sqlite3";
 const JOB_DB_PATH = "/" + JOB_DB_FILE_NAME;
@@ -67,6 +69,213 @@ export async function getAll(sql, bind, obj) {
   return result;
 }
 
+export function genFullSelectSQL(obj, tableName) {
+  let column = [];
+  let keys = Object.keys(obj);
+  for (let n = 0; n < keys.length; n++) {
+    let key = keys[n];
+    column.push(toLine(key));
+  }
+  return `SELECT ${column.join(",")} FROM ${tableName}`;
+}
+
+export function genFullSelectByIdSQL(obj, tableName, idColumnName, id) {
+  return `${genFullSelectSQL(obj, tableName)} WHERE ${idColumnName} = '${id}'`;
+}
+
+export function genFullInsertSQL(obj, tableName) {
+  let column = [];
+  let columnParam = [];
+  let keys = Object.keys(obj);
+  for (let n = 0; n < keys.length; n++) {
+    let key = keys[n];
+    column.push(toLine(key));
+    columnParam.push(`$${toLine(key)}`);
+  }
+  return `INSERT INTO ${tableName} (${column.join(",")}) VALUES (${columnParam.join(",")})`;
+}
+
+export async function insert(obj, tableName, param) {
+  const targetObj = Object.assign(obj, param)
+  const insertSQL = genFullInsertSQL(targetObj, tableName);
+  const bindObject = genFullBindObject(targetObj);
+  if (isDebug()) {
+    debugLog(`[database] [insert] insertSQL = ${insertSQL}`)
+    debugLog(`[database] [insert] bindObject = ${JSON.stringify(bindObject)}`)
+  }
+  return (await getDb()).exec({
+    sql: insertSQL,
+    bind: bindObject,
+  });
+}
+
+export async function update(obj, tableName, idColumn, param) {
+  const targetObj = Object.assign(obj, param)
+  const updateSQL = genFullUpdateSQL(targetObj, tableName, idColumn);
+  const bindObject = genFullBindObject(targetObj);
+  delete bindObject.$create_datetime;
+  if (isDebug()) {
+    debugLog(`[database] [update] updateSQL = ${updateSQL}`)
+    debugLog(`[database] [update] bindObject = ${JSON.stringify(bindObject)}`)
+  }
+  return (await getDb()).exec({
+    sql: updateSQL,
+    bind: bindObject,
+  });
+}
+
+export function genFullUpdateSQL(obj, tableName, idColumn) {
+  let column = [];
+  let keys = Object.keys(obj);
+  for (let n = 0; n < keys.length; n++) {
+    let key = keys[n];
+    if (key != "createDatetime" && key != idColumn) {
+      column.push(`${toLine(key)}=$${toLine(key)}`);
+    }
+  }
+  return `UPDATE ${tableName} SET ${column.join(",")} WHERE ${idColumn} = $${idColumn}`;
+}
+
+export function genFullBindObject(obj) {
+  let now = new Date();
+  const result = {};
+  let keys = Object.keys(obj);
+  for (let n = 0; n < keys.length; n++) {
+    let key = keys[n];
+    if (key == "createDatetime" || key == "updateDatetime") {
+      result[`$${toLine(key)}`] = dayjs(now).format("YYYY-MM-DD HH:mm:ss");
+    } else {
+      result[`$${toLine(key)}`] = convertEmptyStringToNull(obj[`${key}`])
+    }
+  }
+  return result;
+}
+
+export async function one(entity, tableName, idColumn, id) {
+  const selectOneSql = genFullSelectByIdSQL(entity, tableName, idColumn, id);
+  if (isDebug()) {
+    debugLog(`[database] [one] selectOneSql = ${selectOneSql}`)
+  }
+  return await getOne(selectOneSql, {}, entity);
+}
+
+export async function all(entity, tableName, orderBy) {
+  let selectAllSql = genFullSelectSQL(entity, tableName);
+  if (orderBy) {
+    selectAllSql += ` ORDER BY ${orderBy}`
+  }
+  if (isDebug()) {
+    debugLog(`[database] [all] selectAllSql = ${selectAllSql}`)
+  }
+  return getAll(selectAllSql, {}, entity)
+}
+
+export async function del(tableName, idColumn, id) {
+  const deleteSql = `DELETE FROM ${tableName} WHERE ${idColumn} = '${id}'`;
+  if (isDebug()) {
+    debugLog(`[database] [del] deleteSql = ${deleteSql}`)
+  }
+  return (await getDb()).exec({
+    sql: deleteSql,
+  });
+}
+
+export async function batchDel(tableName, idColumn, ids) {
+  let idsString = "'" + ids.join("','") + "'";
+  const deleteSql = `DELETE FROM ${tableName} WHERE ${idColumn} in (${idsString})`;
+  if (isDebug()) {
+    debugLog(`[database] [batchDel] deleteSql = ${deleteSql}`)
+  }
+  return (await getDb()).exec({
+    sql: deleteSql,
+  });
+}
+
+export async function search(entity, tableName, param, whereConditionFunction) {
+  let sqlQuery = "";
+  let whereCondition = "";
+  whereCondition += whereConditionFunction(param);
+  if (whereCondition.startsWith(" AND")) {
+    whereCondition = whereCondition.replace("AND", "");
+    whereCondition = " WHERE " + whereCondition;
+  }
+  let orderBy =
+    " ORDER BY " +
+    param.orderByColumn +
+    " " +
+    param.orderBy +
+    " NULLS LAST";
+  let limitStart = (param.pageNum - 1) * param.pageSize;
+  let limitEnd = param.pageSize;
+  let limit = " limit " + limitStart + "," + limitEnd;
+  const sqlSearchQuery = genFullSelectSQL(Object.assign({}, entity), tableName);
+  sqlQuery += sqlSearchQuery;
+  sqlQuery += whereCondition;
+  sqlQuery += orderBy;
+  sqlQuery += limit;
+  let items = [];
+  let queryRows = [];
+  (await getDb()).exec({
+    sql: sqlQuery,
+    rowMode: "object",
+    resultRows: queryRows,
+  });
+  for (let i = 0; i < queryRows.length; i++) {
+    let resultItem = Object.assign({}, entity);
+    let item = queryRows[i];
+    let keys = Object.keys(item);
+    for (let n = 0; n < keys.length; n++) {
+      let key = keys[n];
+      resultItem[toHump(key)] = item[key];
+    }
+    items.push(resultItem);
+  }
+  return items;
+}
+
+export async function searchCount(entity, tableName, param, whereConditionFunction) {
+  let sqlCountSubTable = "";
+  const sqlSearchQuery = genFullSelectSQL(Object.assign({}, entity), tableName);
+  let whereCondition = "";
+  whereCondition += whereConditionFunction(param);
+  if (whereCondition.startsWith(" AND")) {
+    whereCondition = whereCondition.replace("AND", "");
+    whereCondition = " WHERE " + whereCondition;
+  }
+  sqlCountSubTable += sqlSearchQuery;
+  sqlCountSubTable += whereCondition;
+  //count
+  let sqlCount = `SELECT COUNT(*) AS total FROM (${sqlCountSubTable}) AS t1`;
+  let queryCountRows = [];
+  (await getDb()).exec({
+    sql: sqlCount,
+    rowMode: "object",
+    resultRows: queryCountRows,
+  });
+  return queryCountRows[0].total;
+}
+
+/**
+ * 
+ * @param {string[]} param ids
+ */
+export async function sort(tableName, idColumnName, param) {
+  const now = new Date();
+  const nowDatetimeString = dayjs(now).format("YYYY-MM-DD HH:mm:ss");
+  if (param && param.length > 0) {
+    param.forEach(async (id, index) => {
+      (await getDb()).exec({
+        sql: `UPDATE ${tableName} SET seq=$seq,update_datetime=$update_datetime WHERE ${idColumnName} = $id`,
+        bind: {
+          $seq: index,
+          $id: id,
+          $update_datetime: nowDatetimeString,
+        },
+      });
+    });
+  }
+}
+
 export const Database = {
   /**
    *
@@ -94,6 +303,7 @@ export const Database = {
       changelogList.push(new ChangeLogV2());
       changelogList.push(new ChangeLogV3());
       changelogList.push(new ChangeLogV4());
+      changelogList.push(new ChangeLogV5());
       initChangeLog(changelogList);
       sqlite3InitModule({
         print: debugLog,
@@ -217,9 +427,9 @@ const initDb = async function (sqlite3) {
     });
     const SQL_CREATE_TABLE_VERSION = `
       CREATE TABLE IF NOT EXISTS version(
-        num INTEGER
-      )
-    `;
+      num INTEGER
+    )
+      `;
     db.exec(SQL_CREATE_TABLE_VERSION);
     const SQL_QUERY_VERSION = "SELECT num FROM version";
     let rows = [];

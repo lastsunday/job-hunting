@@ -63,7 +63,8 @@
     "offscreen",
     "unlimitedStorage",
     "declarativeNetRequestWithHostAccess",
-    "declarativeNetRequestFeedback"
+    "declarativeNetRequestFeedback",
+    "debugger"
   ],
   "{{firefox}}.permissions": [
     "https://www.zhipin.com/*",

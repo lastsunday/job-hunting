@@ -22,23 +22,36 @@
           <el-text>设置职位偏好，查看感兴趣的职位</el-text>
         </el-row>
       </el-tour-step>
+      <el-tour-step :target="automateMenuRef" title="自动化">
+        <el-row>
+          <el-text>运行自动化任务，如自动浏览职位搜索页</el-text>
+        </el-row>
+      </el-tour-step>
     </el-tour>
   </el-divider>
   <div class="content">
     <el-tabs tab-position="left" class="tabs">
       <el-tab-pane class="tab_panel">
         <template #label>
-          <div ref="favoriteMenuRef">
-            <Icon icon="fluent-emoji-flat:red-heart" />
+          <div class="menuItem" ref="favoriteMenuRef">
             <span>职位偏好</span>
+            <Icon icon="fluent-emoji-flat:red-heart" width="25" height="25" />
           </div>
         </template>
         <FavoriteJobView></FavoriteJobView>
       </el-tab-pane>
+      <el-tab-pane class="tab_panel">
+        <template #label>
+          <div class="menuItem" ref="automateMenuRef">
+            <span>自动化</span>
+            <Icon icon="tabler:robot" width="25" height="25" />
+          </div>
+        </template>
+        <AutomateView></AutomateView>
+      </el-tab-pane>
     </el-tabs>
   </div>
 </template>
-
 <script lang="ts" setup>
 import {
   onMounted,
@@ -46,6 +59,7 @@ import {
   onUnmounted,
 } from "vue";
 import FavoriteJobView from "./assistant/FavoriteJobView.vue";
+import AutomateView from "./assistant/AutomateView.vue";
 import { Icon } from "@iconify/vue";
 import { useTransition } from "@vueuse/core";
 import { AssistantApi } from "../../common/api/index";
@@ -55,6 +69,7 @@ const tourOpen = ref(false);
 
 const statisticRef = ref();
 const favoriteMenuRef = ref();
+const automateMenuRef = ref();
 
 const todayFaviousJobCountSource = ref(0);
 const todayFaviousJobCount = useTransition(todayFaviousJobCountSource, {
@@ -126,5 +141,10 @@ onUnmounted(() => {
 .tab_panel {
   height: 100%;
   width: 100%;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
 }
 </style>

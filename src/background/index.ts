@@ -16,6 +16,7 @@ import { UserService } from "./service/userService";
 import { UserDTO } from "../common/data/dto/userDTO";
 import { setUser } from "./service/userService";
 import { SystemService } from "./service/systemService";
+import { AutomateService } from "./service/automateService";
 
 debugLog("background ready");
 chrome.runtime.onInstalled.addListener(async () => {
@@ -158,6 +159,7 @@ function mergeServiceMethod(actionFunction, source) {
 mergeServiceMethod(ACTION_FUNCTION, AuthService)
 mergeServiceMethod(ACTION_FUNCTION, UserService);
 mergeServiceMethod(ACTION_FUNCTION, SystemService);
+mergeServiceMethod(ACTION_FUNCTION, AutomateService);
 
 
 let creating: any;

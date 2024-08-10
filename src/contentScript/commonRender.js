@@ -152,6 +152,9 @@ export function finalRender(jobDTOList, { platform }) {
       jobItemIdSha256
     );
     commentWrapperDiv.append(jobItemCommentButton);
+    if(i == jobDTOList.length-1){
+      commentWrapperDiv.appendChild($(`<div class="__status_job_render_finish"></div>`)[0]);
+    }
   }
 }
 
@@ -412,6 +415,7 @@ export function setErrorLoadingDOM(text) {
   let loadingTagList = document.querySelectorAll(".__loading_tag");
   if (loadingTagList) {
     loadingTagList.forEach((item) => {
+      item.classList.add("__status_job_render_error");
       item.textContent = text;
     });
   }

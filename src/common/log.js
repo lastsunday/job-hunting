@@ -30,3 +30,7 @@ export function errorLog(message) {
     console.error(message);
   }
 }
+
+export function isDebug(){
+  return logLevel <= LEVEL_DEBUG;
+}

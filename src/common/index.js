@@ -14,6 +14,9 @@ export const TAG_IT_BLACK_LIST = "互联网企业黑名单";
 export const TAG_IT_BLACK_LIST_2 = "IT黑名单";
 export const TAG_CREDIT_BJ_BLACK_LIST = "信用中国(北京)黑名单";
 
+export const AUTOMATE_ERROR_UNKNOW = "AUTOMATE_ERROR_UNKNOW";
+export const AUTOMATE_ERROR_HUMAN_VALID = "AUTOMATE_ERROR_HUMAN_VALID";
+
 export function getUrlByTagAndCompanyName(tagName, companyName) {
     const decode = encodeURIComponent(companyName);
     if (tagName == TAG_RUOBILIN_BLACK_LIST) {
@@ -28,3 +31,8 @@ export function getUrlByTagAndCompanyName(tagName, companyName) {
         return null;
     }
 }
+
+export const MISSION_AUTO_BROWSE_JOB_SEARCH_PAGE = "MISSION_AUTO_BROWSE_JOB_SEARCH_PAGE";
+
+export const MISSION_STATUS_SUCCESS = "MISSION_STATUS_SUCCESS";
+export const MISSION_STATUS_FAILURE = "MISSION_STATUS_FAILURE";

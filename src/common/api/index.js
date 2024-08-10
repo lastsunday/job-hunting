@@ -19,6 +19,10 @@ import { CompanyBO } from "../data/bo/companyBO";
 import { OauthDTO } from "../data/dto/oauthDTO";
 import { AssistantStatisticDTO } from "../data/dto/assistantStatisticDTO";
 import { CompanyDTO } from "../data/dto/companyDTO";
+import { Mission } from "../data/domain/mission";
+import { MissionLog } from "../data/domain/missionLog";
+import { SearchMissionLogBO } from "../data/bo/searchMissionLogBO";
+import { SearchMissionLogDTO } from "../data/dto/searchMissionLogDTO";
 
 export const JobApi = {
   /**
@@ -401,11 +405,111 @@ export const DeveloperApi = {
 export const SystemApi = {
   /**
    * 
-   * @param {{url,active}}} param 
+   * @param {{url,active}} param 
    * @returns 
    */
   systemTabCreate: async function (param) {
     let result = await invoke(this.systemTabCreate.name, param);
     return result.data;
   },
+}
+
+export const AutomateApi = {
+  /**
+   * 
+   * @param {{url,platform,delay,delayRandomRange}} param 
+   * @returns 
+   */
+  automateFetchJobItemData: async function (param) {
+    let result = await invoke(this.automateFetchJobItemData.name, param);
+    return result.data;
+  },
+}
+
+export const MissionApi = {
+
+  /**
+   * 
+   * @param {} param 
+   * @returns Mission[]
+   */
+  missionGetAll: async function (param) {
+    let result = await invoke(this.missionGetAll.name, param);
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {Mission} param 
+   * @returns 
+   */
+  missionAddOrUpdate: async function (param) {
+    let result = await invoke(this.missionAddOrUpdate.name, param);
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id
+   * @returns 
+   */
+  missionDeleteById: async function (param) {
+    let result = await invoke(this.missionDeleteById.name, param);
+    return result.data;
+  },
+
+}
+
+export const MissionLogApi = {
+
+  /**
+   * 
+   * @param {SearchMissionLogBO} param 
+   * @returns {SearchMissionLogDTO}
+   */
+  searchMissionLog: async function (param) {
+    let result = await invoke(this.searchMissionLog.name, param);
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {MissionLog} param 
+   * @returns 
+   */
+  missionLogAddOrUpdate: async function (param) {
+    let result = await invoke(this.missionLogAddOrUpdate.name, param);
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id
+   * @returns 
+   */
+  missionLogDeleteById: async function (param) {
+    let result = await invoke(this.missionLogDeleteById.name, param);
+    return result.data;
+  },
+
+  /**
+ * 
+ * @param {string[]} param ids
+ * @returns 
+ */
+  missionLogDeleteByIds: async function (param) {
+    let result = await invoke(this.missionLogDeleteByIds.name, param);
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string[]} param ids
+   * @returns 
+   */
+  missionSort: async function (param) {
+    let result = await invoke(this.missionSort.name, param);
+    return result.data;
+  },
+
 }

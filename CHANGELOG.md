@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (SidePanel)新增自动化任务，支持自动浏览职位搜索页（前程无忧，BOSS直聘，智联招聘，拉勾网，猎聘网）。
+
+### 🔨 Dependency
+
+1. Add puppeteer-core　^23.0.2
+2. Add vuedraggable　^4.1.0
+3. Add @rollup/plugin-node-resolve　^15.2.3
+
 ## 1.26.1(2024-08-07)
 
 ### 🐛 Fixed
