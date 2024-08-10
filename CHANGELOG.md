@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### ✏️ Changed
+
+1. (SidePanel)自动化任务日志显示职位翻页截图。
+
 ## 1.27.1(2024-08-10)
 
 ### 🐛 Fixed
