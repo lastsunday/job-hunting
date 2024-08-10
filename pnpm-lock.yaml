@@ -48,8 +48,8 @@ importers:
         specifier: ^5.5.1
         version: 5.5.1
       element-plus:
-        specifier: ^2.7.7
-        version: 2.7.7(vue@3.4.33(typescript@5.5.3))
+        specifier: ^2.8.0
+        version: 2.8.0(vue@3.4.33(typescript@5.5.3))
       jquery:
         specifier: ^3.7.1
         version: 3.7.1
@@ -1244,8 +1244,8 @@ packages:
   echarts@5.5.1:
     resolution: {integrity: sha512-Fce8upazaAXUVUVsjgV6mBnGuqgO+JNDlcgF79Dksy4+wgGpQB2lmYoO4TSweFg/mZITdpGHomw/cNBJZj1icA==}
 
-  element-plus@2.7.7:
-    resolution: {integrity: sha512-7ucUiDAxevyBE8JbXBTe9ofHhS047VmWMLoksE45zZ08XSnhnyG7WUuk3gmDbAklfVMHedb9sEV3OovPUWt+Sw==}
+  element-plus@2.8.0:
+    resolution: {integrity: sha512-7ngapVlVlQAjocVqD4MUKvKXlBneT9DSDk2mmBOSLRFWNm/HLDT15ozmsvUBfy18sajnyUeSIHTtINE8gfrGMg==}
     peerDependencies:
       vue: ^3.2.0
 
@@ -4113,7 +4113,7 @@ snapshots:
       tslib: 2.3.0
       zrender: 5.6.0
 
-  element-plus@2.7.7(vue@3.4.33(typescript@5.5.3)):
+  element-plus@2.8.0(vue@3.4.33(typescript@5.5.3)):
     dependencies:
       '@ctrl/tinycolor': 3.6.1
       '@element-plus/icons-vue': 2.3.1(vue@3.4.33(typescript@5.5.3))

@@ -623,9 +623,8 @@ const onOpenCurrentAllJobDetailPage = () => {
 <style lang="scss" scoped>
 .tabs {
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     height: 100%;
-
 }
 
 .tab_panel {

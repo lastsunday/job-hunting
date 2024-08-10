@@ -17,8 +17,8 @@
             </div>
             <el-scrollbar ref="scrollbar" v-loading="missionLoading">
                 <div class="cardMain">
-                    <draggable v-if="missionRules && missionRules.length>0" v-model="missionRules" item-key="id" class="el-row" :sort="sort" @end="sortEnd"
-                        :disabled="!sort">
+                    <draggable v-if="missionRules && missionRules.length > 0" v-model="missionRules" item-key="id"
+                        class="el-row" :sort="sort" @end="sortEnd" :disabled="!sort">
                         <template #item="{ element }">
                             <div>
                                 <el-card class="cardItem">
@@ -575,7 +575,7 @@ const onAccessUrl = (item) => {
 <style lang="scss" scoped>
 .tabs {
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     height: 100%;
 }
 
@@ -637,8 +637,9 @@ const onAccessUrl = (item) => {
 .headerIcon {
     display: flex;
 }
-.emptyMissionWrapper{
-    width:100%;
+
+.emptyMissionWrapper {
+    width: 100%;
 }
 </style>
 <style lang="scss">

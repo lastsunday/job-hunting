@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## WIP
+
+### 🐛 Fixed
+
+1. (SidePanel)职位偏好和自动化页面标签组件样式错位的问题。
+
+### 🔨 Dependency
+
+1. Update element-plus ^2.8.0
+
 ## 1.27.0(2024-08-10)
 
 ### ⭐ Added

@@ -29,7 +29,7 @@
     "crypto-js": "^4.2.0",
     "dayjs": "^1.11.12",
     "echarts": "^5.5.1",
-    "element-plus": "^2.7.7",
+    "element-plus": "^2.8.0",
     "jquery": "^3.7.1",
     "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
