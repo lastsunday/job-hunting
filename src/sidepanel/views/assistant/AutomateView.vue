@@ -143,7 +143,7 @@
             </div>
         </template>
     </el-dialog>
-    <el-dialog v-model="dialogLogDetailFormVisible" :title="formLogTitle" width="800px">
+    <el-dialog v-if="dialogLogDetailFormVisible" v-model="dialogLogDetailFormVisible" :title="formLogTitle" width="1024px">
         <div>任务时间：{{ currentMission.missionLogDetial ?
             datetimeFormat(currentMission.missionLogDetial.startDatetime) : "" }} - {{
                 currentMission.missionLogDetial ?
@@ -163,6 +163,14 @@
         <div>查看页数：{{ currentMission.missionLogDetial ? currentMission.missionLogDetial.count - 1 :
             ""
             }}页</div>
+        <div v-if="currentMission.screenshotList && currentMission.screenshotList.length > 0">
+            <el-carousel type="card" indicator-position="outside">
+                <el-carousel-item v-for="imageUrl in currentMission.screenshotList">
+                    <el-image :src="imageUrl" :preview-src-list="currentMission.screenshotList" fit="cover"
+                        :preview-teleported="true" />
+                </el-carousel-item>
+            </el-carousel>
+        </div>
         <div>日志({{ currentMission.missionLogDetial ?
             currentMission.missionLogDetial.logList.length :
             "" }})：</div>
@@ -292,6 +300,7 @@ const missionLoading = ref(false);
 const automateFetchJobItemData = async (item) => {
     item.loading = true;
     item.missionLogDetial = null;
+    item.screenshotList = [];
     try {
         let result = await AutomateApi.automateFetchJobItemData({
             url: item.missionConfig.url,
@@ -314,6 +323,9 @@ const automateFetchJobItemData = async (item) => {
         missionLogJobPageDetailDTO.startDatetime = result.startDatetime;
         missionLogJobPageDetailDTO.endDatetime = result.endDatetime;
         missionLog.missionLogDetial = JSON.stringify(missionLogJobPageDetailDTO);
+        result.screenshotList.forEach(element => {
+            item.screenshotList.push(`data:image/jpeg;base64,${element}`)
+        });
         await MissionLogApi.missionLogAddOrUpdate(missionLog);
         item.missionLogDetial = missionLogJobPageDetailDTO;
         item.missionLogDetial.missionStatus = missionLog.missionStatus;

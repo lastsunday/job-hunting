@@ -88,6 +88,7 @@ function _log(logList, message) {
 
 async function _51jobHandle(tab, page, platform, delay, delayRandomRange, maxPage) {
     const logList = [];
+    const screenshotList = [];
     let error = null;
     let count = 1;
     try {
@@ -95,13 +96,14 @@ async function _51jobHandle(tab, page, platform, delay, delayRandomRange, maxPag
         let jobItemLoaded = await page.waitForSelector(".btn-next", { timeout: 5000 });
         if (jobItemLoaded) {
             while (true) {
+                await page.waitForSelector(".__status_job_render_finish");
+                let nextButtonElementHandle = await page.waitForSelector(".btn-next");
+                screenshotList.push(await page.screenshot({ encoding: 'base64', fullPage: true }));
                 count++;
                 if (maxPage && maxPage > 0 && count > maxPage) {
                     _log(logList, `[puppeteer] [${platform}] page(${count}) over maxPage(${maxPage})`)
                     break;
                 }
-                await page.waitForSelector(".__status_job_render_finish");
-                let nextButtonElementHandle = await page.waitForSelector(".btn-next");
                 let isLastPage = await (await nextButtonElementHandle.getProperty("disabled")).jsonValue();
                 if (isLastPage) {
                     _log(logList, `[puppeteer] [${platform}] is last page`)
@@ -115,7 +117,7 @@ async function _51jobHandle(tab, page, platform, delay, delayRandomRange, maxPag
                     _log(logList, `[puppeteer] [${platform}] go to page no = ${count}`)
                 }
             }
-            return { logList, count, error };
+            return { logList, count, error, screenshotList };
         } else {
             await chrome.tabs.reload(tab.id);
         }
@@ -123,12 +125,14 @@ async function _51jobHandle(tab, page, platform, delay, delayRandomRange, maxPag
         errorLog(e);
         _log(logList, `[puppeteer] [${platform}] handle has error`);
         error = await _checkValidHuman(platform, page) ? AUTOMATE_ERROR_HUMAN_VALID : AUTOMATE_ERROR_UNKNOW;
-        return { logList, count, error };
+        screenshotList.push(await page.screenshot({ encoding: 'base64', fullPage: true }));
+        return { logList, count, error, screenshotList };
     }
 }
 
 async function _bossHandle(tab, page, platform, delay, delayRandomRange, maxPage) {
     const logList = [];
+    const screenshotList = [];
     let error = null;
     let count = 1;
     try {
@@ -145,16 +149,17 @@ async function _bossHandle(tab, page, platform, delay, delayRandomRange, maxPage
             await page.waitForSelector(".__status_job_render_finish");
         }
         while (true) {
+            await page.waitForSelector(".__status_job_render_finish");
+            let nextButtonElementHandle = await page.waitForSelector(".ui-icon-arrow-right");
+            screenshotList.push(await page.screenshot({ encoding: 'base64', fullPage: true }));
             count++;
             if (maxPage && maxPage > 0 && count > maxPage) {
                 _log(logList, `[puppeteer] [${platform}] page(${count}) over maxPage(${maxPage})`)
                 break;
             }
-            await page.waitForSelector(".__status_job_render_finish");
-            let nextButtonElementHandle = await page.waitForSelector(".ui-icon-arrow-right");
             const isLastPage = await page.evaluate(() => {
-                const targetNode = document.querySelector('.ui-icon-arrow-right').parentElement;
-                return targetNode.className == "disabled";
+                const targetNode = document.querySelector('.ui-icon-arrow-right')?.parentElement;
+                return targetNode?.className == "disabled";
             });
             if (isLastPage) {
                 _log(logList, `[puppeteer] [${platform}] is last page`)
@@ -170,17 +175,19 @@ async function _bossHandle(tab, page, platform, delay, delayRandomRange, maxPage
                 _log(logList, `[puppeteer] [${platform}] go to page no = ${count}`)
             }
         }
-        return { logList, count, error };
+        return { logList, count, error, screenshotList };
     } catch (e) {
         errorLog(e);
         _log(logList, `[puppeteer] [${platform}] handle has error`);
         error = await _checkValidHuman(platform, page) ? AUTOMATE_ERROR_HUMAN_VALID : AUTOMATE_ERROR_UNKNOW;
-        return { logList, count, error };
+        screenshotList.push(await page.screenshot({ encoding: 'base64', fullPage: true }));
+        return { logList, count, error, screenshotList };
     }
 }
 
 async function _liepinHandle(tab, page, platform, delay, delayRandomRange, maxPage) {
     const logList = [];
+    const screenshotList = [];
     let error = null;
     let count = 1;
     try {
@@ -192,13 +199,14 @@ async function _liepinHandle(tab, page, platform, delay, delayRandomRange, maxPa
         }
         await page.waitForSelector(".__status_job_render_finish");
         while (true) {
+            await page.waitForSelector(".__status_job_render_finish");
+            let nextButtonElementHandle = await page.waitForSelector(".anticon-right");
+            screenshotList.push(await page.screenshot({ encoding: 'base64', fullPage: true }));
             count++;
             if (maxPage && maxPage > 0 && count > maxPage) {
                 _log(logList, `[puppeteer] [${platform}] page(${count}) over maxPage(${maxPage})`)
                 break;
             }
-            await page.waitForSelector(".__status_job_render_finish");
-            let nextButtonElementHandle = await page.waitForSelector(".anticon-right");
             const isLastPage = await page.evaluate(() => {
                 const targetNode = document.querySelector('.anticon-right').parentElement;
                 return targetNode.disabled;
@@ -215,12 +223,13 @@ async function _liepinHandle(tab, page, platform, delay, delayRandomRange, maxPa
                 _log(logList, `[puppeteer] [${platform}] go to page no = ${count}`)
             }
         }
-        return { logList, count, error };
+        return { logList, count, error, screenshotList };
     } catch (e) {
         errorLog(e);
         _log(logList, `[puppeteer] [${platform}] handle has error`);
         error = await _checkValidHuman(platform, page) ? AUTOMATE_ERROR_HUMAN_VALID : AUTOMATE_ERROR_UNKNOW;
-        return { logList, count, error };
+        screenshotList.push(await page.screenshot({ encoding: 'base64', fullPage: true }));
+        return { logList, count, error, screenshotList };
     }
 }
 
@@ -242,6 +251,7 @@ async function _lagouHandle(tab, page, platform, delay, delayRandomRange, maxPag
 
 async function _handle(tab, page, platform, delay, delayRandomRange, maxPage, { nextButtonSelector, lastPageButtonSelector }) {
     const logList = [];
+    const screenshotList = [];
     let error = null;
     let count = 1;
     try {
@@ -252,13 +262,14 @@ async function _handle(tab, page, platform, delay, delayRandomRange, maxPage, { 
             _log(logList, `[puppeteer] [${platform}] waitForNavigation error`)
         }
         while (true) {
+            await page.waitForSelector(".__status_job_render_finish");
+            let nextButtonElementHandle = await page.waitForSelector(`${nextButtonSelector}`);
+            screenshotList.push(await page.screenshot({ encoding: 'base64', fullPage: true }));
             count++;
             if (maxPage && maxPage > 0 && count > maxPage) {
                 _log(logList, `[puppeteer] [${platform}] page(${count}) over maxPage(${maxPage})`)
                 break;
             }
-            await page.waitForSelector(".__status_job_render_finish");
-            let nextButtonElementHandle = await page.waitForSelector(`${nextButtonSelector}`);
             let isLastPage = nextButtonElementHandle.remoteObject().description == `${lastPageButtonSelector}`;
             if (isLastPage) {
                 _log(logList, `[puppeteer] [${platform}] is last page`)
@@ -273,12 +284,13 @@ async function _handle(tab, page, platform, delay, delayRandomRange, maxPage, { 
                 _log(logList, `[puppeteer] [${platform}] go to page no = ${count}`)
             }
         }
-        return { logList, count, error };
+        return { logList, count, error, screenshotList };
     } catch (e) {
         errorLog(e);
         _log(logList, `[puppeteer] [${platform}] handle has error`);
         error = await _checkValidHuman(platform, page) ? AUTOMATE_ERROR_HUMAN_VALID : AUTOMATE_ERROR_UNKNOW;
-        return { logList, count, error };
+        screenshotList.push(await page.screenshot({ encoding: 'base64', fullPage: true }));
+        return { logList, count, error, screenshotList };
     }
 }
 
