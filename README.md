@@ -124,6 +124,12 @@
     <img src="docs\introduction\sidepanel_admin_assistant_favious_setting.jpg" alt="sidepanel_admin_favious_setting" width="1000px"/>
 </div>
 
+#### 自动化
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\gif\sidepanel_admin_auto_mission.gif" alt="sidepanel_admin_auto_mission" width="1000px"/>
+</div>
+
 #### 讨论区
 
 <div style="margin-top:30px">
