@@ -29,7 +29,7 @@
       ],
       "matches": [
         "https://www.zhipin.com/*",
-        "https://sou.zhaopin.com/*",
+        "https://www.zhaopin.com/*",
         "https://we.51job.com/*",
         "https://www.lagou.com/*",
         "https://hk.jobsdb.com/*",
@@ -49,7 +49,7 @@
       ],
       "matches": [
         "https://www.zhipin.com/*",
-        "https://sou.zhaopin.com/*",
+        "https://www.zhaopin.com/*",
         "https://we.51job.com/*",
         "https://www.lagou.com/*",
         "https://hk.jobsdb.com/*",
@@ -68,7 +68,7 @@
   ],
   "{{firefox}}.permissions": [
     "https://www.zhipin.com/*",
-    "https://sou.zhaopin.com/*",
+    "https://www.zhaopin.com/*",
     "https://jobs.zhaopin.com/*",
     "https://we.51job.com/*",
     "https://jobs.51job.com/*",
@@ -83,7 +83,7 @@
   ],
   "{{chrome}}.host_permissions": [
     "https://www.zhipin.com/*",
-    "https://sou.zhaopin.com/*",
+    "https://www.zhaopin.com/*",
     "https://jobs.zhaopin.com/*",
     "https://we.51job.com/*",
     "https://jobs.51job.com/*",
