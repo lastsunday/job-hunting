@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### 🐛 Fixed
+
+1. (ContentScript)修复智联招聘失效的问题。
+
 ## 1.27.2(2024-08-10)
 
 ### ✏️ Changed
