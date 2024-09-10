@@ -1,5 +1,35 @@
 # CHANGELOG
 
+## 1.27.4(2024-09-10)
+
+### 🐛 Fixed
+
+1. (ContentScript)修复职位公司名识别错误的问题。
+
+### ✏️ Changed
+
+1. (SidePanel)调整自动化任务添加与修改页面排版和样式。
+
+### 🔨 Dependency
+
+1. Update @vueuse/core ^11.0.3
+2. Update @yaireo/tagify ^4.31.3
+3. Update core-js ^3.38.1
+4. Update dayjs ^1.11.13
+5. Update element-plus ^2.8.2
+6. Update marked ^14.1.2
+7. Update puppeteer-core ^23.3.0
+8. Update vue ^3.5.3
+9. Update vue-echarts ^7.0.3
+10. Update vue-router ^4.4.3
+11. Update @types/chrome ^0.0.270
+12. Update @types/webextension-polyfill ^0.12.1
+13. Update @vitejs/plugin-vue ^5.1.3
+14. Update sass ^1.78.0
+15. Update typescript ^5.6.2
+16. Update vite ^5.4.3
+17. Update vue-tsc ^2.1.6
+
 ## 1.27.3(2024-08-22)
 
 ### 🐛 Fixed
