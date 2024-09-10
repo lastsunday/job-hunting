@@ -108,18 +108,19 @@
     </el-tabs>
     <el-dialog v-model="dialogFormVisible" :title="formTitle" width="800px">
         <el-form ref="formRef" :model="form" label-width="auto" :rules="rules">
-            <el-form-item label="标题" prop="name">
-                <el-input v-model="form.name" placeholder="请输入任务标题" />
-            </el-form-item>
             <el-form-item label="类型" prop="type">
                 <el-select v-model="form.type" placeholder="请选择任务类型">
                     <el-option v-for="item in missionTypes" :label="item.label" :value="item.value" />
                 </el-select>
             </el-form-item>
             <el-form-item label="运行平台" prop="platform">
-                <el-select v-model="form.platform" placeholder="请选择运行平台">
-                    <el-option v-for="item in missionPlatforms[form.type]" :label="item.label" :value="item.value" />
-                </el-select>
+                <el-radio-group v-model="form.platform">
+                    <el-radio-button v-for="item in missionPlatforms[form.type]" :label="item.label"
+                        :value="item.value" />
+                </el-radio-group>
+            </el-form-item>
+            <el-form-item label="标题" prop="name">
+                <el-input v-model="form.name" placeholder="请输入任务标题" />
             </el-form-item>
             <el-form-item label="访问地址" prop="url">
                 <el-input v-model="form.url" placeholder="请输入任务访问地址" />
@@ -143,7 +144,8 @@
             </div>
         </template>
     </el-dialog>
-    <el-dialog v-if="dialogLogDetailFormVisible" v-model="dialogLogDetailFormVisible" :title="formLogTitle" width="1024px">
+    <el-dialog v-if="dialogLogDetailFormVisible" v-model="dialogLogDetailFormVisible" :title="formLogTitle"
+        width="1024px">
         <div>任务时间：{{ currentMission.missionLogDetial ?
             datetimeFormat(currentMission.missionLogDetial.startDatetime) : "" }} - {{
                 currentMission.missionLogDetial ?
@@ -366,7 +368,7 @@ const formAddMode = ref(true);
 const form = reactive({
     id: "",
     name: "",
-    type: "",
+    type: MISSION_AUTO_BROWSE_JOB_SEARCH_PAGE,
     platform: "",
     url: "",
     delay: 0,
@@ -419,28 +421,7 @@ const rules = reactive<FormRules<typeof form>>({
             trigger: "blur",
             message: "请输入访问页面地址",
         },
-    ],
-    delay: [
-        {
-            required: true,
-            trigger: "blur",
-            message: "请选择延迟时间",
-        },
-    ],
-    delayRange: [
-        {
-            required: true,
-            trigger: "blur",
-            message: "请选择额外随机时间范围",
-        },
-    ],
-    maxPage: [
-        {
-            required: true,
-            trigger: "blur",
-            message: "请选择最大翻页数",
-        },
-    ],
+    ]
 });
 
 const onAddHandle = async () => {
@@ -534,7 +515,7 @@ const reset = async () => {
 const resetFormValue = () => {
     form.id = "";
     form.name = "";
-    form.type = "";
+    form.type = MISSION_AUTO_BROWSE_JOB_SEARCH_PAGE;
     form.platform = "";
     form.url = "";
     form.delay = 0;

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### ✏️ Changed
+
+1. (SidePanel)调整自动化任务添加与修改页面排版和样式。
+
 ## 1.27.3(2024-08-22)
 
 ### 🐛 Fixed
