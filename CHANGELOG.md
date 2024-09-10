@@ -2,6 +2,10 @@
 
 ## WIP
 
+### 🐛 Fixed
+
+1. (ContentScript)修复职位公司名识别错误的问题。
+
 ### ✏️ Changed
 
 1. (SidePanel)调整自动化任务添加与修改页面排版和样式。

@@ -73,6 +73,13 @@ export async function saveBrowseJob(list, platform) {
   } else {
     //skip
   }
+  //convert company name
+  if (jobs) {
+    for (let i = 0; i < jobs.length; i++) {
+      const job = jobs[i];
+      job.jobCompanyName = companyNameConvert(job.jobCompanyName);
+    }
+  }
   await JobApi.batchAddOrUpdateJobBrowse(jobs);
   infoLog("saveBrowseJob success,record size = " + list.length);
 }
