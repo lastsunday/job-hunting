@@ -2,7 +2,7 @@ import {
   GITHUB_URL_GET_USER, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_APP_CLIENT_ID,
   GITHUB_APP_CLIENT_SECRET, URL_GRAPHQL, GITHUB_APP_REPO, URL_POST_ISSUES,
   URL_TRAFFIC_CLONE, URL_TRAFFIC_POPULAR_PATHS, URL_TRAFFIC_POPULAR_REFERRERS, URL_TRAFFIC_VIEWS,
-  APP_URL_LATEST_VERSION
+  APP_URL_LATEST_VERSION, GITHUB_URL_API
 } from "../../config";
 import { AuthApi, DeveloperApi } from "../index"
 import { UserDTO } from "../../data/dto/userDTO";
@@ -12,7 +12,10 @@ import { httpFetchJson } from "../../api/common";
 import { parseToLineObjectToToHumpObject } from "../../../common/utils";
 
 export const EXCEPTION = {
-  NO_LOGIN: "NO_LOGIN"
+  NO_LOGIN: "NO_LOGIN",
+  NOT_FOUND: "NOT_FOUND",
+  NO_PERMISSION: "NO_PERMISSION",
+  CREATION_FAILED: "CREATION_FAILED",
 }
 
 export const GithubApi = {
@@ -111,6 +114,24 @@ export const GithubApi = {
 
   async queryVersion() {
     return await fetchJson(APP_URL_LATEST_VERSION, null, { method: "GET", skipLogin: true });
+  },
+  async getRepo(owner, repo, { getTokenFunction, setTokenFunction }) {
+    return await fetchJson(`${GITHUB_URL_API}/repos/${owner}/${repo}`, null, { method: "GET", getTokenFunction, setTokenFunction });
+  },
+  /**
+   * 新建仓库
+   * @param {*} repo 仓库名
+   * @param {*} param
+   * @returns 
+   */
+  async newRepo(repo, { getTokenFunction, setTokenFunction }) {
+    return await fetchJson(`${GITHUB_URL_API}/user/repos`, { "name": repo }, { method: "POST", getTokenFunction, setTokenFunction });
+  },
+  async createFileContent(owner, repo, path, base64Data,msg, { getTokenFunction, setTokenFunction }) {
+    return await fetchJson(`${GITHUB_URL_API}/repos/${owner}/${repo}/contents${path}`, { "message": msg, "content": base64Data }, { method: "PUT", getTokenFunction, setTokenFunction });
+  },
+  async listRepoContents(owner, repo, path, { getTokenFunction, setTokenFunction }) {
+    return await fetchJson(`${GITHUB_URL_API}/repos/${owner}/${repo}/contents${path}`, null, { method: "GET", getTokenFunction, setTokenFunction });
   }
 }
 
@@ -168,13 +189,18 @@ function genQueryCommentHQL({ first, after, last, before, id }) {
   };
 }
 
-async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin } = { method: "POST", skipLogin: false }) {
+async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin, getTokenFunction, setTokenFunction } = { method: "POST", skipLogin: false }) {
   try {
-    let oauthDTO = await AuthApi.authGetToken();
+    let oauthDTO = null;
+    if (getTokenFunction) {
+      oauthDTO = await getTokenFunction();
+    } else {
+      oauthDTO = await AuthApi.authGetToken();
+    }
     if (!oauthDTO && !skipLogin) {
       throw EXCEPTION.NO_LOGIN;
     }
-    let response = await fetchJsonReturnResponse(url, data, { method, skipLogin });
+    let response = await fetchJsonReturnResponse(url, data, { method, skipLogin, getTokenFunction });
     let status = response.status;
     if (isStatusNoError(response)) {
       const jsonResult = await response.json();
@@ -182,7 +208,7 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin 
         return responseHeaderCallback(jsonResult, response.headers);
       }
       return jsonResult;
-    } else if (status = 401 && oauthDTO?.refreshToken) {
+    } else if (status == 401 && oauthDTO?.refreshToken) {
       infoLog("start refresh token");
       //遇到401和拥有refresh token时，进行refresh token
       let refreshTokenUrl = `${GITHUB_URL_GET_ACCESS_TOKEN}?client_id=${GITHUB_APP_CLIENT_ID}&client_secret=${GITHUB_APP_CLIENT_SECRET}&grant_type=refresh_token&refresh_token=${oauthDTO.refreshToken}`;
@@ -192,7 +218,7 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin 
           refreshTokenJson = await httpFetchJson({
             url: refreshTokenUrl, headers: {
               "Accept": "application/json"
-            }
+            },
           });
         } catch (e) {
           infoLog("get refresh token error")
@@ -203,12 +229,20 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin 
         if (refreshTokenJson.error) {
           infoLog("refresh token error");
           //refresh token也过期，那么需要将token清除，重新登录
-          AuthApi.authSetToken(null);
+          if (setTokenFunction) {
+            await setTokenFunction(null);
+          } else {
+            await AuthApi.authSetToken(null);
+          }
           throw `${refreshTokenJson.error_description}`
         } else {
           infoLog("refresh token success");
           let afterRefreshOauthDTO = parseToLineObjectToToHumpObject(new OauthDTO(), refreshTokenJson);
-          await AuthApi.authSetToken(afterRefreshOauthDTO);
+          if (setTokenFunction) {
+            await setTokenFunction(afterRefreshOauthDTO);
+          } else {
+            await AuthApi.authSetToken(afterRefreshOauthDTO);
+          }
           infoLog("continue request");
           //再次发出请求
           response = await fetchJsonReturnResponse(url, data, { method });
@@ -222,6 +256,12 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin 
       } catch (e) {
         throw e;
       }
+    } else if (status == 403) {
+      throw EXCEPTION.NO_PERMISSION;
+    } else if (status == 404) {
+      throw EXCEPTION.NOT_FOUND;
+    } else if (status == 422) {
+      throw EXCEPTION.CREATION_FAILED;
     } else {
       throw `unknown error,status code = ${status}`
     }
@@ -245,10 +285,15 @@ async function fetchJsonWithToken(url, data, { method, token, responseHeaderCall
   }
 }
 
-async function fetchJsonReturnResponse(url, data, { method, token, skipLogin } = { method: "POST", skipLogin: false }) {
+async function fetchJsonReturnResponse(url, data, { method, token, skipLogin, getTokenFunction } = { method: "POST", skipLogin: false }) {
   let targetToken = token;
   if (!targetToken) {
-    let oauthDTO = await AuthApi.authGetToken();
+    let oauthDTO = null;
+    if (getTokenFunction) {
+      oauthDTO = await getTokenFunction();
+    } else {
+      oauthDTO = await AuthApi.authGetToken();
+    }
     targetToken = oauthDTO?.accessToken;
   }
   if (!targetToken && !skipLogin) {

@@ -442,6 +442,18 @@ function genJobSearchWhereConditionSql(param) {
       dayjs(param.endDatetime).format("YYYY-MM-DD HH:mm:ss") +
       "'";
   }
+  if (param.startDatetimeForUpdate) {
+    whereCondition +=
+      " AND update_datetime >= '" +
+      dayjs(param.startDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+      "'";
+  }
+  if (param.endDatetimeForUpdate) {
+    whereCondition +=
+      " AND update_datetime < '" +
+      dayjs(param.endDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+      "'";
+  }
   if (param.firstPublishStartDatetime) {
     whereCondition +=
       " AND job_first_publish_datetime >= '" +

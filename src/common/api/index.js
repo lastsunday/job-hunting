@@ -55,8 +55,10 @@ export const JobApi = {
    *
    * @returns SearchJobDTO[]
    */
-  searchJob: async function (param) {
-    let result = await invoke(this.searchJob.name, param);
+  searchJob: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.searchJob.name, param, {
+      invokeEnv: invokeEnv,
+    });
     return result.data;
   },
 
@@ -157,8 +159,8 @@ export const CompanyApi = {
    * @param {SearchCompanyBO} param 
    * @returns SearchCompanyDTO
    */
-  searchCompany: async function (param) {
-    let result = await invoke(this.searchCompany.name, param);
+  searchCompany: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.searchCompany.name, param, { invokeEnv });
     return result.data;
   },
 
@@ -209,8 +211,8 @@ export const CompanyApi = {
    * @param {SearchCompanyTagBO} param 
    * @returns SearchCompanyTagDTO
    */
-  searchCompanyTag: async function (param) {
-    let result = await invoke(this.searchCompanyTag.name, param);
+  searchCompanyTag: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.searchCompanyTag.name, param, { invokeEnv: invokeEnv });
     return result.data;
   },
 
@@ -270,7 +272,7 @@ export const AuthApi = {
  * @returns OauthDTO
  */
   authGetToken: async function () {
-    let result = await invoke(this.authGetToken.name, {});
+    let result = await invoke(this.authGetToken.name, null);
     return result.data;
   },
 

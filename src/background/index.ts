@@ -1,10 +1,10 @@
-import { infoLog, debugLog, errorLog } from "../common/log";
+import { infoLog, debugLog, errorLog, isDebug } from "../common/log";
 import {
   BACKGROUND,
   CONTENT_SCRIPT,
   OFFSCREEN,
 } from "../common/api/bridgeCommon";
-import { convertPureJobDetailUrl, paramsToObject, parseToLineObjectToToHumpObject } from "../common/utils";
+import { convertPureJobDetailUrl, paramsToObject, parseToLineObjectToToHumpObject,randomDelay } from "../common/utils";
 import { JobApi } from "../common/api";
 import { httpFetchGetText, httpFetchJson } from "../common/api/common";
 import { getAndRemovePromiseHook } from "../common/api/bridge";
@@ -14,9 +14,11 @@ import { OauthDTO } from "../common/data/dto/oauthDTO";
 import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_URL_GET_USER, GITHUB_APP_INSTALL_CALLBACK_URL } from "../common/config";
 import { UserService } from "./service/userService";
 import { UserDTO } from "../common/data/dto/userDTO";
-import { setUser } from "./service/userService";
+import { setUser, getUser } from "./service/userService";
 import { SystemService } from "./service/systemService";
 import { AutomateService } from "./service/automateService";
+import { runDataUploadTask, calculateTaskInfo } from "./service/taskService";
+import { DEFAULT_DATA_REPO } from "../common/config";
 
 debugLog("background ready");
 chrome.runtime.onInstalled.addListener(async () => {
@@ -181,6 +183,38 @@ async function setupOffscreenDocument(path: string) {
     });
     await creating;
     creating = null;
+    //
+    let taskRunCount = 0;
+    let taskRun = false;
+    const backgroundTaskRunning = async () => {
+      if (!taskRun) {
+        taskRun = true;
+        try {
+          taskRunCount += 1;
+          if (isDebug()) {
+            debugLog(`[Task] task run count seq = ${taskRunCount}`)
+          }
+          let userDTO = await getUser();
+          if (userDTO) {
+            let userName = userDTO.login;
+            let repoName = DEFAULT_DATA_REPO;
+            infoLog(`[Task] has login info userName = ${userName}`)
+            infoLog(`[Task] data upload starting`)
+            let taskInfo = await calculateTaskInfo({ userName: userName, repoName: repoName });
+            await runDataUploadTask({ userName: userName, repoName: repoName, startDatetime: taskInfo.startDatetime, endDatetime: taskInfo.endDatetime });
+          } else {
+            infoLog(`[Task] no login info`)
+            infoLog(`[Task] skip data upload`)
+          }
+        } catch (e) {
+          errorLog(e);
+        }
+        taskRun = false;
+        await randomDelay(30000, 0);
+        backgroundTaskRunning();
+      }
+    };
+    backgroundTaskRunning();
   }
 
   chrome.runtime.onMessage.addListener(async function (

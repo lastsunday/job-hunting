@@ -393,6 +393,18 @@ function genSearchWhereConditionSql(param) {
       dayjs(param.startDateEndDatetime).format("YYYY-MM-DD HH:mm:ss") +
       "'";
   }
+  if (param.startDatetimeForUpdate) {
+    whereCondition +=
+      " AND update_datetime >= '" +
+      dayjs(param.startDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+      "'";
+  }
+  if (param.endDatetimeForUpdate) {
+    whereCondition +=
+      " AND update_datetime < '" +
+      dayjs(param.endDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+      "'";
+  }
   if (isNotEmpty(param.minLat) && isNotEmpty(param.maxLat)) {
     whereCondition += ` AND company_latitude >= ${param.minLat} AND company_latitude <= ${param.maxLat}`;
   }

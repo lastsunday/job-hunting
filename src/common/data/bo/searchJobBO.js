@@ -5,6 +5,8 @@ export class SearchJobBO extends PageBO {
   jobCompanyName;
   startDatetime;
   endDatetime;
+  startDatetimeForUpdate;
+  endDatetimeForUpdate;
   firstPublishStartDatetime;
   firstPublishEndDatetime;
   jobLocationName;

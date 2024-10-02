@@ -328,6 +328,18 @@ function genCompanyTagSearchWhereConditionSql(param) {
         whereCondition +=
             ` AND COUNT(DISTINCT t1.tag_id) = ${param.tagIds.length}`;
     }
+    if (param.startDatetimeForUpdate) {
+        whereCondition +=
+            " AND updateDatetime >= '" +
+            dayjs(param.startDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+            "'";
+    }
+    if (param.endDatetimeForUpdate) {
+        whereCondition +=
+            " AND updateDatetime < '" +
+            dayjs(param.endDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+            "'";
+    }
     if (whereCondition.startsWith(" AND")) {
         whereCondition = whereCondition.replace("AND", "");
         whereCondition = " HAVING " + whereCondition;
