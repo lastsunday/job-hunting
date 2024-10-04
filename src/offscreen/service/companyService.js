@@ -65,6 +65,9 @@ export const CompanyService = {
       });
       postSuccessMessage(message, {});
     } catch (e) {
+      await db.exec({
+        sql: "ROLLBACK TRANSACTION",
+      });
       postErrorMessage(
         message,
         "[worker] batchAddOrUpdateCompany error : " + e.message

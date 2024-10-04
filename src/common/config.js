@@ -27,3 +27,5 @@ export const UI_DEFAULT_PAGE_SIZE = 20;
 
 //公司数据有效时间
 export const COMPANY_DATA_EXPRIE_DAY = 90;
+
+export const TASK_STATUS_ERROR_MAX_RETRY_COUNT = 3;

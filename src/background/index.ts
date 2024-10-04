@@ -4,7 +4,7 @@ import {
   CONTENT_SCRIPT,
   OFFSCREEN,
 } from "../common/api/bridgeCommon";
-import { convertPureJobDetailUrl, paramsToObject, parseToLineObjectToToHumpObject,randomDelay } from "../common/utils";
+import { convertPureJobDetailUrl, paramsToObject, parseToLineObjectToToHumpObject, randomDelay } from "../common/utils";
 import { JobApi } from "../common/api";
 import { httpFetchGetText, httpFetchJson } from "../common/api/common";
 import { getAndRemovePromiseHook } from "../common/api/bridge";
@@ -17,7 +17,7 @@ import { UserDTO } from "../common/data/dto/userDTO";
 import { setUser, getUser } from "./service/userService";
 import { SystemService } from "./service/systemService";
 import { AutomateService } from "./service/automateService";
-import { runDataUploadTask, calculateTaskInfo } from "./service/taskService";
+import { calculateTask, runTask } from "./service/taskService";
 import { DEFAULT_DATA_REPO } from "../common/config";
 
 debugLog("background ready");
@@ -199,9 +199,10 @@ async function setupOffscreenDocument(path: string) {
             let userName = userDTO.login;
             let repoName = DEFAULT_DATA_REPO;
             infoLog(`[Task] has login info userName = ${userName}`)
-            infoLog(`[Task] data upload starting`)
-            let taskInfo = await calculateTaskInfo({ userName: userName, repoName: repoName });
-            await runDataUploadTask({ userName: userName, repoName: repoName, startDatetime: taskInfo.startDatetime, endDatetime: taskInfo.endDatetime });
+            infoLog(`[Task] calculateTask`)
+            await calculateTask({ userName: userName, repoName: repoName });
+            infoLog(`[Task] runTask`)
+            await runTask();
           } else {
             infoLog(`[Task] no login info`)
             infoLog(`[Task] skip data upload`)

@@ -100,6 +100,9 @@ export const CompanyTagService = {
             });
             postSuccessMessage(message, {});
         } catch (e) {
+            (await getDb()).exec({
+                sql: "ROLLBACK TRANSACTION",
+            });
             postErrorMessage(
                 message,
                 "[worker] addOrUpdateCompanyTag error : " + e.message
@@ -124,6 +127,9 @@ export const CompanyTagService = {
             });
             postSuccessMessage(message, {});
         } catch (e) {
+            (await getDb()).exec({
+                sql: "ROLLBACK TRANSACTION",
+            });
             postErrorMessage(
                 message,
                 "[worker] batchAddOrUpdateCompanyTag error : " + e.message

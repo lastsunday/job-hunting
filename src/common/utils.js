@@ -189,6 +189,10 @@ export function convertDateStringToDateObject(text) {
   return dayjs(text).isValid() ? dayjs(text).toDate() : null;
 }
 
+export function dateToStr(date) {
+  return date ? dayjs(date).format("YYYY-MM-DD HH:mm:ss") : null;
+}
+
 export function convertPureJobDetailUrl(link) {
   let url = new URL(link);
   return url.origin + url.pathname;

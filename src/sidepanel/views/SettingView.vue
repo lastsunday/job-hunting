@@ -382,9 +382,9 @@ import { SearchJobBO } from "../../common/data/bo/searchJobBO.js";
 import { Job } from "../../common/data/domain/job";
 import { GithubApi, EXCEPTION } from "../../common/api/github";
 import {
-  jobDataToJobExcelJSONArray, JOB_FILE_HEADER, jobExcelDataToObjectArray,
-  COMPANY_FILE_HEADER, companyDataToJobExcelJSONArray, companyExcelDataToObjectArray,
-  COMPANY_TAG_FILE_HEADER, companyTagDataToJobExcelJSONArray,companyTagExcelDataToObjectArray
+  jobDataToExcelJSONArray, JOB_FILE_HEADER, jobExcelDataToObjectArray,
+  COMPANY_FILE_HEADER, companyDataToExcelJSONArray, companyExcelDataToObjectArray,
+  COMPANY_TAG_FILE_HEADER, companyTagDataToExcelJSONArray,companyTagExcelDataToObjectArray
 } from "../../common/excel";
 
 import TrafficChart from "./components/TrafficChart.vue";
@@ -505,7 +505,7 @@ const onJobExport = async () => {
     searchParam.orderBy = "DESC";
     let data = await JobApi.searchJob(searchParam);
     let list = data.items;
-    let result = jobDataToJobExcelJSONArray(list);
+    let result = jobDataToExcelJSONArray(list);
     const ws = utils.json_to_sheet(result);
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "Data");
@@ -593,7 +593,7 @@ const onCompanyExport = async () => {
     searchParam.orderBy = "DESC";
     let data = await CompanyApi.searchCompany(searchParam);
     let list = data.items;
-    let result = companyDataToJobExcelJSONArray(list);
+    let result = companyDataToExcelJSONArray(list);
     const ws = utils.json_to_sheet(result);
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "Data");
@@ -702,7 +702,7 @@ const onCompanyTagExport = async () => {
     searchParam.orderBy = "DESC";
     let data = await CompanyApi.searchCompanyTag(searchParam);
     let list = data.items;
-    let result = companyTagDataToJobExcelJSONArray(list);
+    let result = companyTagDataToExcelJSONArray(list);
     const ws = utils.json_to_sheet(result);
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "Data");

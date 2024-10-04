@@ -5,6 +5,7 @@ import { ChangeLogV2 } from "./changeLog/changeLogV2";
 import { ChangeLogV3 } from './changeLog/changeLogV3';
 import { ChangeLogV4 } from './changeLog/changeLogV4';
 import { ChangeLogV5 } from './changeLog/changeLogV5';
+import { ChangeLogV6 } from './changeLog/changeLogV6';
 import { initChangeLog, getChangeLogList } from "./changeLog";
 import { bytesToBase64, base64ToBytes } from "../common/utils/base64.js";
 import JSZip from "jszip";
@@ -194,14 +195,16 @@ export async function batchDel(tableName, idColumn, ids) {
 export async function search(entity, tableName, param, whereConditionFunction) {
   let sqlQuery = "";
   let whereCondition = "";
-  whereCondition += whereConditionFunction(param);
+  if (whereConditionFunction) {
+    whereCondition += whereConditionFunction(param);
+  }
   if (whereCondition.startsWith(" AND")) {
     whereCondition = whereCondition.replace("AND", "");
     whereCondition = " WHERE " + whereCondition;
   }
   let orderBy =
     " ORDER BY " +
-    param.orderByColumn +
+    toLine(param.orderByColumn) +
     " " +
     param.orderBy +
     " NULLS LAST";
@@ -237,7 +240,9 @@ export async function searchCount(entity, tableName, param, whereConditionFuncti
   let sqlCountSubTable = "";
   const sqlSearchQuery = genFullSelectSQL(Object.assign({}, entity), tableName);
   let whereCondition = "";
-  whereCondition += whereConditionFunction(param);
+  if (whereConditionFunction) {
+    whereCondition += whereConditionFunction(param);
+  }
   if (whereCondition.startsWith(" AND")) {
     whereCondition = whereCondition.replace("AND", "");
     whereCondition = " WHERE " + whereCondition;
@@ -304,6 +309,7 @@ export const Database = {
       changelogList.push(new ChangeLogV3());
       changelogList.push(new ChangeLogV4());
       changelogList.push(new ChangeLogV5());
+      changelogList.push(new ChangeLogV6());
       initChangeLog(changelogList);
       sqlite3InitModule({
         print: debugLog,
@@ -368,6 +374,60 @@ export const Database = {
       postSuccessMessage(message, bytesToWrite);
     } catch (e) {
       postErrorMessage(message, "[worker] dbExport error : " + e.message);
+    }
+  },
+  /**
+    *
+    * @param {Message} message
+    * @param {} param
+    */
+  dbBeginTransaction: async function (message, param) {
+    try {
+      (await getDb()).exec({
+        sql: "BEGIN TRANSACTION",
+      });
+      postSuccessMessage(message, {});
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[worker] dbBeginTransaction error : " + e.message
+      );
+    }
+  },
+  /**
+  *
+  * @param {Message} message
+  * @param {} param
+  */
+  dbCommitTransaction: async function (message, param) {
+    try {
+      (await getDb()).exec({
+        sql: "COMMIT",
+      });
+      postSuccessMessage(message, {});
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[worker] dbCommitTransaction error : " + e.message
+      );
+    }
+  },
+  /**
+  *
+  * @param {Message} message
+  * @param {} param
+  */
+  dbRollbackTransaction: async function (message, param) {
+    try {
+      (await getDb()).exec({
+        sql: "ROLLBACK TRANSACTION",
+      });
+      postSuccessMessage(message, {});
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[worker] dbRollbackTransaction error : " + e.message
+      );
     }
   },
 };

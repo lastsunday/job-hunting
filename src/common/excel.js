@@ -26,7 +26,7 @@ export const JOB_FILE_HEADER = [
     "记录更新日期",
 ];
 
-export const jobDataToJobExcelJSONArray = (list) => {
+export const jobDataToExcelJSONArray = (list) => {
     let result = [];
     for (let i = 0; i < list.length; i++) {
         let item = list[i];
@@ -112,7 +112,7 @@ export const COMPANY_FILE_HEADER = [
     "数据来源更新时间",
 ];
 
-export const companyDataToJobExcelJSONArray = (list) => {
+export const companyDataToExcelJSONArray = (list) => {
     let result = [];
     for (let i = 0; i < list.length; i++) {
         let item = list[i];
@@ -180,7 +180,7 @@ export const COMPANY_TAG_FILE_HEADER = [
     "标签",
 ];
 
-export const companyTagDataToJobExcelJSONArray = (list) => {
+export const companyTagDataToExcelJSONArray = (list) => {
     let result = [];
     for (let i = 0; i < list.length; i++) {
         let item = list[i];

@@ -23,6 +23,11 @@ import { Mission } from "../data/domain/mission";
 import { MissionLog } from "../data/domain/missionLog";
 import { SearchMissionLogBO } from "../data/bo/searchMissionLogBO";
 import { SearchMissionLogDTO } from "../data/dto/searchMissionLogDTO";
+import { SearchTaskBO } from "../data/bo/searchTaskBO";
+import { SearchTaskDTO } from "../data/dto/searchTaskDTO";
+import { SearchTaskDataUploadBO } from "../data/bo/searchTaskDataUploadBO";
+import { SearchTaskDataUploadDTO } from "../data/dto/searchTaskDataUploadDTO";
+import { TaskDataUpload } from "../data/domain/taskDataUpload";
 
 export const JobApi = {
   /**
@@ -511,6 +516,147 @@ export const MissionLogApi = {
    */
   missionSort: async function (param) {
     let result = await invoke(this.missionSort.name, param);
+    return result.data;
+  },
+
+}
+
+export const TaskApi = {
+
+  /**
+   * 
+   * @param {SearchTaskBO} param 
+   * @returns {SearchTaskDTO}
+   */
+  searchTask: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.searchTask.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {Task} param 
+   * @returns Task
+   */
+  taskAddOrUpdate: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskAddOrUpdate.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id
+   * @returns 
+   */
+  taskDeleteById: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDeleteById.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+ * 
+ * @param {string[]} param ids
+ * @returns 
+ */
+  taskDeleteByIds: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDeleteByIds.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+}
+
+export const TaskDataUploadApi = {
+
+  /**
+   * 
+   * @param {SearchTaskDataUploadBO} param 
+   * @returns {SearchTaskDataUploadDTO}
+   */
+  searchTaskDataUpload: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.searchTaskDataUpload.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id 
+   * @returns {SearchTaskDataUploadDTO}
+   */
+  taskDataUploadGetById: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDataUploadGetById.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {TaskDataUpload} param 
+   * @returns TaskDataUpload
+   */
+  taskDataUploadAddOrUpdate: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDataUploadAddOrUpdate.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id
+   * @returns 
+   */
+  taskDataUploadDeleteById: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDataUploadDeleteById.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+ * 
+ * @param {string[]} param ids
+ * @returns 
+ */
+  taskDataUploadDeleteByIds: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDataUploadDeleteByIds.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+  * 
+  * @param {} param 
+  * @returns string
+  */
+  taskDataUploadGetMaxEndDatetime: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDataUploadGetMaxEndDatetime.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+}
+
+export const DBApi = {
+
+  /**
+   * 
+   * @param {} param 
+   * @returns {}
+   */
+  dbBeginTransaction: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.dbBeginTransaction.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {} param 
+   * @returns 
+   */
+  dbCommitTransaction: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.dbCommitTransaction.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+  /**
+   * 
+   * @param {} param 
+   * @returns 
+   */
+  dbRollbackTransaction: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.dbRollbackTransaction.name, param, { invokeEnv: invokeEnv });
     return result.data;
   },
 

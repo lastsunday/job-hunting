@@ -35,6 +35,9 @@ export const JobService = {
       });
       postSuccessMessage(message, {});
     } catch (e) {
+      (await getDb()).exec({
+        sql: "ROLLBACK TRANSACTION",
+      });
       postErrorMessage(
         message,
         "[worker] addOrUpdateJobBrowse error : " + e.message
@@ -61,6 +64,9 @@ export const JobService = {
       });
       postSuccessMessage(message, {});
     } catch (e) {
+      (await getDb()).exec({
+        sql: "ROLLBACK TRANSACTION",
+      });
       postErrorMessage(
         message,
         "[worker] batchAddOrUpdateJob error : " + e.message
@@ -85,6 +91,9 @@ export const JobService = {
       });
       postSuccessMessage(message, {});
     } catch (e) {
+      (await getDb()).exec({
+        sql: "ROLLBACK TRANSACTION",
+      });
       postErrorMessage(
         message,
         "[worker] addOrUpdateJobBrowse error : " + e.message
