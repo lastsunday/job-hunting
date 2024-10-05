@@ -127,7 +127,7 @@ export const GithubApi = {
   async newRepo(repo, { getTokenFunction, setTokenFunction }) {
     return await fetchJson(`${GITHUB_URL_API}/user/repos`, { "name": repo }, { method: "POST", getTokenFunction, setTokenFunction });
   },
-  async createFileContent(owner, repo, path, base64Data,msg, { getTokenFunction, setTokenFunction }) {
+  async createFileContent(owner, repo, path, base64Data, msg, { getTokenFunction, setTokenFunction }) {
     return await fetchJson(`${GITHUB_URL_API}/repos/${owner}/${repo}/contents${path}`, { "message": msg, "content": base64Data }, { method: "PUT", getTokenFunction, setTokenFunction });
   },
   async listRepoContents(owner, repo, path, { getTokenFunction, setTokenFunction }) {
@@ -215,11 +215,18 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
       try {
         let refreshTokenJson = null;
         try {
-          refreshTokenJson = await httpFetchJson({
-            url: refreshTokenUrl, headers: {
+          let response = (await fetch(
+            refreshTokenUrl, {
+            headers: {
               "Accept": "application/json"
-            },
-          });
+            }
+          },
+          ));
+          if (response.status == 200) {
+            refreshTokenJson = await response.json();
+          } else {
+            throw `unknown status = ${response.status}`;
+          }
         } catch (e) {
           infoLog("get refresh token error")
           throw e;
@@ -245,7 +252,7 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
           }
           infoLog("continue request");
           //再次发出请求
-          response = await fetchJsonReturnResponse(url, data, { method });
+          response = await fetchJsonReturnResponse(url, data, { method, getTokenFunction });
           if (isStatusNoError(response)) {
             return await response.json();
           } else {

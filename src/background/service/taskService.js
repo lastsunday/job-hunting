@@ -97,15 +97,15 @@ export async function calculateTask({ userName, repoName }) {
                 await DBApi.dbBeginTransaction({}, { invokeEnv: BACKGROUND });
                 await addDataUploadTask({
                     type: TASK_TYPE_JOB_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName,
-                    total: (await getJobData(dataSyncStartDatetime, today)).total
+                    total: (await getJobData({ startDatetime: dataSyncStartDatetime, endDatetime: today })).total
                 });
                 await addDataUploadTask({
                     type: TASK_TYPE_COMPANY_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName,
-                    total: (await getCompanyData(dataSyncStartDatetime, today)).total
+                    total: (await getCompanyData({ startDatetime: dataSyncStartDatetime, endDatetime: today })).total
                 });
                 await addDataUploadTask({
                     type: TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName,
-                    total: (await getCompanyTagData(dataSyncStartDatetime, today)).total
+                    total: (await getCompanyTagData({ startDatetime: dataSyncStartDatetime, endDatetime: today })).total
                 });
                 await DBApi.dbCommitTransaction({}, { invokeEnv: BACKGROUND });
             } catch (e) {
@@ -131,6 +131,10 @@ TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, async (dataId) => {
     return uploadDataByDataId(dataId, "company_tag", getCompanyTagData, companyTagDataToExcelJSONArray);
 })
 
+async function isLogin() {
+    return (await getToken()) ? true : false;
+}
+
 export async function runTask() {
     debugLog(`[TASK RUN] starting`)
     //获取按创建时间升序需要执行的任务
@@ -138,7 +142,7 @@ export async function runTask() {
     searchParam.pageNum = 1;
     searchParam.pageSize = MAX_RECORD_COUNT;
     searchParam.statusList = [TASK_STATUS_READY, TASK_STATUS_ERROR];
-    searchParam.endRetryCount = TASK_STATUS_ERROR_MAX_RETRY_COUNT;
+    // searchParam.endRetryCount = TASK_STATUS_ERROR_MAX_RETRY_COUNT;
     searchParam.orderByColumn = "createDatetime";
     searchParam.orderBy = "ASC";
     let taskResult = await TaskApi.searchTask(searchParam, { invokeEnv: BACKGROUND });
@@ -279,6 +283,10 @@ export async function createRepoIfNotExists({ userName, repoName }) {
 }
 
 async function uploadDataByDataId(dataId, dataTypeName, getDataFunction, jsonObjectToExcelJsonArrayFunction) {
+    if (!(await isLogin())) {
+        debugLog(`[TASK HANDLE] No login info,skip run task dataId = ${dataId},dataTypeName = ${dataTypeName}`)
+        throw EXCEPTION.NO_LOGIN;
+    }
     let taskDataUpload = await TaskDataUploadApi.taskDataUploadGetById(dataId, { invokeEnv: BACKGROUND });
     let userName = taskDataUpload.username;
     let repoName = taskDataUpload.reponame;
