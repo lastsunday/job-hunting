@@ -26,9 +26,53 @@ const SQL_CREATE_TABLE_TASK_DATA_UPLOAD = `
     )
     `;
 
+const SQL_CREATE_TABLE_TASK_DATA_DOWNLOAD = `
+    CREATE TABLE task_data_download (
+          id TEXT PRIMARY KEY,
+          type TEXT,
+          username TEXT,
+          reponame TEXT,
+          datetime DATETIME,
+          create_datetime DATETIME,
+          update_datetime DATETIME
+      )
+      `;
+
+const SQL_CREATE_TABLE_FILE = `
+    CREATE TABLE file (
+        id TEXT PRIMARY KEY,
+        name TEXT,
+        sha TEXT,
+        encoding TEXT,
+        content TEXT,
+        size NUMERIC,
+        type TEXT,
+        create_datetime DATETIME,
+        update_datetime DATETIME
+    )
+    `;
+
+const SQL_CREATE_TABLE_MERGE = `
+    CREATE TABLE task_data_merge (
+        id TEXT PRIMARY KEY,
+        type TEXT,
+        username TEXT,
+        reponame TEXT,
+        datetime DATETIME,
+        data_id TEXT,
+        create_datetime DATETIME,
+        update_datetime DATETIME
+    )
+    `;
+
 export class ChangeLogV6 extends ChangeLog {
     getSqlList() {
-        let sqlList = [SQL_CREATE_TABLE_TASK_LIST, SQL_CREATE_TABLE_TASK_DATA_UPLOAD];
+        let sqlList = [
+            SQL_CREATE_TABLE_TASK_LIST,
+            SQL_CREATE_TABLE_TASK_DATA_UPLOAD,
+            SQL_CREATE_TABLE_TASK_DATA_DOWNLOAD,
+            SQL_CREATE_TABLE_FILE,
+            SQL_CREATE_TABLE_MERGE];
         return sqlList;
     }
 }

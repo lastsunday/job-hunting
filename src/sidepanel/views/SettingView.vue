@@ -384,7 +384,8 @@ import { GithubApi, EXCEPTION } from "../../common/api/github";
 import {
   jobDataToExcelJSONArray, JOB_FILE_HEADER, jobExcelDataToObjectArray,
   COMPANY_FILE_HEADER, companyDataToExcelJSONArray, companyExcelDataToObjectArray,
-  COMPANY_TAG_FILE_HEADER, companyTagDataToExcelJSONArray,companyTagExcelDataToObjectArray
+  COMPANY_TAG_FILE_HEADER, companyTagDataToExcelJSONArray,companyTagExcelDataToObjectArray,
+  validImportData
 } from "../../common/excel";
 
 import TrafficChart from "./components/TrafficChart.vue";
@@ -668,27 +669,6 @@ const confirmCompanyFileImport = async () => {
     ElMessage("请选择有效的公司文件");
   }
 };
-
-
-
-function validImportData(data, validArray) {
-  let colCount = 0;
-  let lackColumnMap = new Map();
-  for (let i = 0; i < validArray.length; i++) {
-    lackColumnMap.set(validArray[i], null);
-  }
-  if (data.length > 0) {
-    let headerRowArray = data[0];
-    for (let i = 0; i < headerRowArray.length; i++) {
-      let header = headerRowArray[i];
-      if (lackColumnMap.has(header)) {
-        colCount++;
-        lackColumnMap.delete(header);
-      }
-    }
-  }
-  return { validResult: colCount == validArray.length, lackColumn: lackColumnMap.keys().toArray() };
-}
 
 const companyTagExportLoading = ref(false);
 

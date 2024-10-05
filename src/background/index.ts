@@ -17,8 +17,8 @@ import { UserDTO } from "../common/data/dto/userDTO";
 import { setUser, getUser } from "./service/userService";
 import { SystemService } from "./service/systemService";
 import { AutomateService } from "./service/automateService";
-import { calculateTask, runTask } from "./service/taskService";
-import { DEFAULT_DATA_REPO } from "../common/config";
+import { calculateUploadTask, calculateDownloadTask, runTask } from "./service/taskService";
+import { DEFAULT_DATA_REPO, TASK_LOOP_DELAY } from "../common/config";
 
 debugLog("background ready");
 chrome.runtime.onInstalled.addListener(async () => {
@@ -199,8 +199,14 @@ async function setupOffscreenDocument(path: string) {
             let userName = userDTO.login;
             let repoName = DEFAULT_DATA_REPO;
             infoLog(`[Task] has login info userName = ${userName}`)
-            infoLog(`[Task] calculateTask`)
-            await calculateTask({ userName: userName, repoName: repoName });
+            infoLog(`[Task] calculateUploadTask`)
+            await calculateUploadTask({ userName: userName, repoName: repoName });
+            //TODO 从数据库中获取参加数据共享计划的GitHub用户及其仓库
+            let shareDataPlanList = [{ username: "Brick-Technology", reponame: "job-hunting-data" }];
+            for (let i = 0; i < shareDataPlanList.length; i++) {
+              let shareItem = shareDataPlanList[i];
+              await calculateDownloadTask({ userName: shareItem.username, repoName: shareItem.reponame });
+            }
             infoLog(`[Task] runTask`)
             await runTask();
           } else {
@@ -211,7 +217,7 @@ async function setupOffscreenDocument(path: string) {
           errorLog(e);
         }
         taskRun = false;
-        await randomDelay(30000, 0);
+        await randomDelay(TASK_LOOP_DELAY, 0);
         backgroundTaskRunning();
       }
     };

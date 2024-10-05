@@ -14,6 +14,9 @@ import { MissionService } from "./service/missionService";
 import { MissionLogService } from "./service/missionLogService";
 import { TaskService } from "./service/taskService";
 import { TaskDataUploadService } from "./service/taskDataUploadService";
+import { TaskDataDownloadService } from "./service/taskDataDownloadService";
+import { FileService } from "./service/fileService";
+import { TaskDataMergeService } from "./service/taskDataMergeService";
 
 debugLog("worker ready");
 const ACTION_FUNCTION = new Map();
@@ -38,6 +41,9 @@ mergeServiceMethod(ACTION_FUNCTION, MissionService);
 mergeServiceMethod(ACTION_FUNCTION, MissionLogService);
 mergeServiceMethod(ACTION_FUNCTION, TaskService);
 mergeServiceMethod(ACTION_FUNCTION, TaskDataUploadService);
+mergeServiceMethod(ACTION_FUNCTION, TaskDataDownloadService);
+mergeServiceMethod(ACTION_FUNCTION, FileService);
+mergeServiceMethod(ACTION_FUNCTION, TaskDataMergeService);
 
 function mergeServiceMethod(actionFunction, source) {
   let keys = Object.keys(source);

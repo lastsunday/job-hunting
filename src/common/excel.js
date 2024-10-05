@@ -3,6 +3,25 @@ import { CompanyBO } from "../common/data/bo/companyBO";
 import { CompanyTagBO } from "../common/data/bo/companyTagBO";
 import { genIdFromText, convertDateStringToDateObject } from "../common/utils"
 
+export const validImportData = (data, validArray) => {
+    let colCount = 0;
+    let lackColumnMap = new Map();
+    for (let i = 0; i < validArray.length; i++) {
+        lackColumnMap.set(validArray[i], null);
+    }
+    if (data.length > 0) {
+        let headerRowArray = data[0];
+        for (let i = 0; i < headerRowArray.length; i++) {
+            let header = headerRowArray[i];
+            if (lackColumnMap.has(header)) {
+                colCount++;
+                lackColumnMap.delete(header);
+            }
+        }
+    }
+    return { validResult: colCount == validArray.length, lackColumn: lackColumnMap.keys().toArray() };
+}
+
 export const JOB_FILE_HEADER = [
     "职位自编号",
     "发布平台",

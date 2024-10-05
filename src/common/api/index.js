@@ -28,6 +28,13 @@ import { SearchTaskDTO } from "../data/dto/searchTaskDTO";
 import { SearchTaskDataUploadBO } from "../data/bo/searchTaskDataUploadBO";
 import { SearchTaskDataUploadDTO } from "../data/dto/searchTaskDataUploadDTO";
 import { TaskDataUpload } from "../data/domain/taskDataUpload";
+import { File } from "../data/domain/file";
+import { SearchTaskDataDownloadBO } from "../data/bo/searchTaskDataDownloadBO";
+import { SearchTaskDataDownloadDTO } from "../data/dto/searchTaskDataDownloadDTO";
+import { SearchTaskDataMergeBO } from "../data/bo/searchTaskDataMergeBO";
+import { SearchTaskDataMergeDTO } from "../data/dto/searchTaskDataMergeDTO";
+import { TaskDataDownload } from "../data/domain/taskDataDownload";
+import { TaskDataMerge } from "../data/domain/taskDataMerge";
 
 export const JobApi = {
   /**
@@ -42,8 +49,10 @@ export const JobApi = {
    *
    * @param {Job[]} jobs
    */
-  batchAddOrUpdateJob: async function (jobs) {
-    return await invoke(this.batchAddOrUpdateJob.name, jobs);
+  batchAddOrUpdateJob: async function (jobs, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    return await invoke(this.batchAddOrUpdateJob.name, jobs, {
+      invokeEnv: invokeEnv,
+    });
   },
 
   /**
@@ -181,8 +190,8 @@ export const CompanyApi = {
    *
    * @param {CompanyBO} param
    */
-  batchAddOrUpdateCompany: async function (param) {
-    return await invoke(this.batchAddOrUpdateCompany.name, param);
+  batchAddOrUpdateCompany: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    return await invoke(this.batchAddOrUpdateCompany.name, param, { invokeEnv: invokeEnv });
   },
 
   /**
@@ -197,8 +206,8 @@ export const CompanyApi = {
   *
   * @param {CompanyTagBO[]} param
   */
-  batchAddOrUpdateCompanyTag: async function (param) {
-    return await invoke(this.batchAddOrUpdateCompanyTag.name, param);
+  batchAddOrUpdateCompanyTag: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    return await invoke(this.batchAddOrUpdateCompanyTag.name, param, { invokeEnv: invokeEnv });
   },
 
   /**
@@ -580,7 +589,7 @@ export const TaskDataUploadApi = {
   /**
    * 
    * @param {string} param id 
-   * @returns {SearchTaskDataUploadDTO}
+   * @returns {TaskDataUpload}
    */
   taskDataUploadGetById: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
     let result = await invoke(this.taskDataUploadGetById.name, param, { invokeEnv: invokeEnv });
@@ -629,6 +638,60 @@ export const TaskDataUploadApi = {
 
 }
 
+export const TaskDataDownloadApi = {
+
+  /**
+   * 
+   * @param {SearchTaskDataDownloadBO} param 
+   * @returns {SearchTaskDataDownloadDTO}
+   */
+  searchTaskDataDownload: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.searchTaskDataDownload.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id 
+   * @returns {TaskDataDownload}
+   */
+  taskDataDownloadGetById: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDataDownloadGetById.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {TaskDataDownload} param 
+   * @returns TaskDataDownload
+   */
+  taskDataDownloadAddOrUpdate: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDataDownloadAddOrUpdate.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id
+   * @returns 
+   */
+  taskDataDownloadDeleteById: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDataDownloadDeleteById.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+ * 
+ * @param {string[]} param ids
+ * @returns 
+ */
+  taskDataDownloadDeleteByIds: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDataDownloadDeleteByIds.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+}
+
 export const DBApi = {
 
   /**
@@ -657,6 +720,114 @@ export const DBApi = {
    */
   dbRollbackTransaction: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
     let result = await invoke(this.dbRollbackTransaction.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+}
+
+export const FileApi = {
+
+  /**
+   * 
+   * @param {SearchFileBO} param 
+   * @returns {SearchFileDTO}
+   */
+  searchFile: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.searchFile.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id 
+   * @returns {File}
+   */
+  fileGetById: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.fileGetById.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {File} param 
+   * @returns File
+   */
+  fileAddOrUpdate: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.fileAddOrUpdate.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id
+   * @returns 
+   */
+  fileDeleteById: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.fileDeleteById.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string[]} param ids
+   * @returns 
+   */
+  fileDeleteByIds: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.fileDeleteByIds.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+}
+
+export const TaskDataMergeApi = {
+
+  /**
+   * 
+   * @param {SearchTaskDataMergeBO} param 
+   * @returns {SearchTaskDataMergeDTO}
+   */
+  searchTaskDataMerge: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.searchTaskDataMerge.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id 
+   * @returns {TaskDataMerge}
+   */
+  taskDataMergeGetById: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDataMergeGetById.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {TaskDataMerge} param 
+   * @returns TaskDataMerge
+   */
+  taskDataMergeAddOrUpdate: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDataMergeAddOrUpdate.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id
+   * @returns 
+   */
+  taskDataMergeDeleteById: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDataMergeDeleteById.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+ * 
+ * @param {string[]} param ids
+ * @returns 
+ */
+  taskDataMergeDeleteByIds: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.taskDataMergeDeleteByIds.name, param, { invokeEnv: invokeEnv });
     return result.data;
   },
 
