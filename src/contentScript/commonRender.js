@@ -751,6 +751,8 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform } = {}) {
             infoLog(`new company name = ${item.jobCompanyName}`);
             //将更新时间置空， 以新记录形式更新
             item.updateDatetime = null;
+            //补全公司名后，调整公司全称标记
+            item.isFullCompanyName = true;
             await JobApi.batchAddOrUpdateJob([item]);
             infoLog(`update job.id = ${item.jobId}`);
           }

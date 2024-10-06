@@ -28,6 +28,7 @@ export const JOB_FILE_HEADER = [
     "职位访问地址",
     "职位",
     "公司",
+    "公司是否为全称",
     "地区",
     "地址",
     "经度",
@@ -55,6 +56,7 @@ export const jobDataToExcelJSONArray = (list) => {
             职位访问地址: item.jobUrl,
             职位: item.jobName,
             公司: item.jobCompanyName,
+            公司是否为全称: item.isFullCompanyName,
             地区: item.jobLocationName,
             地址: item.jobAddress,
             经度: item.jobLongitude,
@@ -86,6 +88,7 @@ export const jobExcelDataToObjectArray = (data) => {
         item.jobUrl = dataItem['职位访问地址'];
         item.jobName = dataItem['职位'];
         item.jobCompanyName = dataItem['公司'];
+        item.isFullCompanyName = dataItem['公司是否为全称'];
         item.jobLocationName = dataItem['地区'];
         item.jobAddress = dataItem['地址'];
         item.jobLongitude = dataItem['经度'];

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (ContentScript)新增职位字段（公司名是否为全称）。
+
 ## 1.27.4(2024-09-10)
 
 ### 🐛 Fixed

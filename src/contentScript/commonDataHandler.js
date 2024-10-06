@@ -197,6 +197,7 @@ function handleLiepin(list) {
     job.bossName = recruiterName;
     job.bossCompanyName = compName;
     job.bossPosition = recruiterTitle;
+    job.isFullCompanyName = false;
     jobs.push(job);
   }
   return jobs;
@@ -258,6 +259,7 @@ function handleJobsdb(list) {
     job.bossName = "";
     job.bossCompanyName = companyFullName;
     job.bossPosition = null;
+    job.isFullCompanyName = true;
     jobs.push(job);
   }
   return jobs;
@@ -320,6 +322,7 @@ function handleLagouData(list) {
     job.bossName = publisherId;
     job.bossCompanyName = companyFullName;
     job.bossPosition = null;
+    job.isFullCompanyName = true;
     jobs.push(job);
   }
   return jobs;
@@ -390,6 +393,7 @@ function handleZhilianData(list) {
     job.bossName = staffName;
     job.bossCompanyName = companyName;
     job.bossPosition = hrJob;
+    job.isFullCompanyName = true;
     jobs.push(job);
   }
   return jobs;
@@ -467,6 +471,7 @@ function handleBossData(list) {
     job.bossName = name;
     job.bossCompanyName = bossBranchName;
     job.bossPosition = title;
+    job.isFullCompanyName = false;
     jobs.push(job);
   }
   return jobs;
@@ -531,6 +536,7 @@ function handle51JobData(list) {
     job.bossName = hrName;
     job.bossCompanyName = fullCompanyName;
     job.bossPosition = hrPosition;
+    job.isFullCompanyName = true;
     jobs.push(job);
   }
   return jobs;
