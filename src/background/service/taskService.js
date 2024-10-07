@@ -35,6 +35,7 @@ import { dateToStr } from "../../common/utils";
 import { File } from "../../common/data/domain/file";
 import { TaskDataMerge } from "../../common/data/domain/taskDataMerge";
 import { getMergeDataListForCompany, getMergeDataListForJob, getMergeDataListForCompanyTag } from "../../common/service/dataSyncService";
+import JSZip from "jszip";
 
 dayjs.extend(minMax);
 export const TaskService = {
@@ -245,7 +246,7 @@ TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD, async (dataId) => {
     return downloadDataByDataId(dataId, DATA_TYPE_NAME_COMPANY_TAG, TASK_TYPE_COMPANY_TAG_DATA_MERGE);
 })
 TASK_HANDLE_MAP.set(TASK_TYPE_JOB_DATA_MERGE, async (dataId) => {
-    return mergeDataByDataId(dataId, TASK_TYPE_JOB_DATA_MERGE, JOB_FILE_HEADER, jobExcelDataToObjectArray, async (items) => {
+    return mergeDataByDataId(dataId, TASK_TYPE_JOB_DATA_MERGE, DATA_TYPE_NAME_JOB, JOB_FILE_HEADER, jobExcelDataToObjectArray, async (items) => {
         //处理数据冲突问题，根据创建时间来判断
         //处理公司名全称问题
         let targetList = await getMergeDataListForJob(items, "jobId", async (ids) => {
@@ -255,7 +256,7 @@ TASK_HANDLE_MAP.set(TASK_TYPE_JOB_DATA_MERGE, async (dataId) => {
     });
 })
 TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_DATA_MERGE, async (dataId) => {
-    return mergeDataByDataId(dataId, TASK_TYPE_COMPANY_DATA_MERGE, COMPANY_FILE_HEADER, companyExcelDataToObjectArray, async (items) => {
+    return mergeDataByDataId(dataId, TASK_TYPE_COMPANY_DATA_MERGE, DATA_TYPE_NAME_COMPANY, COMPANY_FILE_HEADER, companyExcelDataToObjectArray, async (items) => {
         //处理数据冲突问题，根据数据来源更新时间来判断
         let targetList = await getMergeDataListForCompany(companyBOList, "companyId", async (ids) => {
             return CompanyApi.companyGetByIds(ids, { invokeEnv: BACKGROUND });
@@ -264,7 +265,7 @@ TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_DATA_MERGE, async (dataId) => {
     });
 })
 TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_TAG_DATA_MERGE, async (dataId) => {
-    return mergeDataByDataId(dataId, TASK_TYPE_COMPANY_TAG_DATA_MERGE, COMPANY_TAG_FILE_HEADER, companyTagExcelDataToObjectArray, async (items) => {
+    return mergeDataByDataId(dataId, TASK_TYPE_COMPANY_TAG_DATA_MERGE, DATA_TYPE_NAME_COMPANY_TAG, COMPANY_TAG_FILE_HEADER, companyTagExcelDataToObjectArray, async (items) => {
         //处理数据冲突问题，合并标签
         let targetList = await getMergeDataListForCompanyTag(items, async (ids) => {
             return await CompanyApi.getAllCompanyTagDTOByCompanyIds(ids, { invokeEnv: BACKGROUND });
@@ -361,11 +362,11 @@ async function addDataUploadTask({ type, startDatetime, endDatetime, userName, r
     await TaskApi.taskAddOrUpdate(task, { invokeEnv: BACKGROUND })
 }
 
-async function convertJsonObjectToExcelBase64Data(result) {
+async function convertJsonObjectToExcelData(result) {
     const ws = utils.json_to_sheet(result);
     const wb = utils.book_new();
     utils.book_append_sheet(wb, ws, "Data");
-    return writeXLSX(wb, { type: "base64" });
+    return writeXLSX(wb, { type: "buffer" });
 }
 
 async function getJobData({ startDatetime, endDatetime }) {
@@ -411,10 +412,11 @@ async function uploadData({ userName, repoName, dirPath, dataTypeName, dataList,
     if (dataList.length > 0) {
         infoLog(`[Task Data Upload ${dataTypeName}] data length = ${dataList.length}`);
         let result = jsonObjectToExcelJsonArrayFunction(dataList);
-        let excelData = await convertJsonObjectToExcelBase64Data(result);
-        let filePath = `${dirPath}/${dataTypeName}.xlsx`;
+        let excelData = await convertJsonObjectToExcelData(result);
+        let zipData = await zipFileToBase64(dataTypeName, excelData);
+        let filePath = `${dirPath}/${dataTypeName}.zip`;
         try {
-            let result = await GithubApi.createFileContent(userName, repoName, filePath, excelData, "upload job data", { getTokenFunction: getToken, setTokenFunction: setToken, });
+            let result = await GithubApi.createFileContent(userName, repoName, filePath, zipData, "upload job data", { getTokenFunction: getToken, setTokenFunction: setToken, });
             infoLog(`[Task Data Upload ${dataTypeName}] create file ${filePath} success`);
             return result;
         } catch (e) {
@@ -427,6 +429,25 @@ async function uploadData({ userName, repoName, dirPath, dataTypeName, dataList,
     } else {
         infoLog(`[Task Data Upload ${dataTypeName}] no data`);
     }
+}
+
+async function zipFileToBase64(dataTypeName, excelData) {
+    let promise = new Promise((resolve, reject) => {
+        const zip = new JSZip();
+        zip.file(`${dataTypeName}.xlsx`, excelData);
+        zip
+            .generateAsync({
+                compression: "DEFLATE",
+                compressionOptions: { level: 9 },
+                type: "base64",
+            })
+            .then(function (content) {
+                resolve(content);
+            }).catch((e) => {
+                reject(e);
+            });
+    });
+    return promise;
 }
 
 export async function createRepoIfNotExists({ userName, repoName }) {
@@ -445,14 +466,15 @@ export async function createRepoIfNotExists({ userName, repoName }) {
     }
 }
 
-async function mergeDataByDataId(dataId, taskType, fileHeader, excelDataToObjectArrayFunction, dataInsertFunction) {
+async function mergeDataByDataId(dataId, taskType, dataTypeName, fileHeader, excelDataToObjectArrayFunction, dataInsertFunction) {
     debugLog(`[TASK DATA MERGE] Task dataId = ${dataId},taskType = ${taskType}`);
     const taskDataMerge = await TaskDataMergeApi.taskDataMergeGetById(dataId, { invokeEnv: BACKGROUND });
     debugLog(`[TASK DATA MERGE] taskDataMerge dataId = ${taskDataMerge.dataId}`);
     const file = await FileApi.fileGetById(taskDataMerge.dataId, { invokeEnv: BACKGROUND });
     debugLog(`[TASK DATA MERGE] file id = ${file.id},name = ${file.name}`);
     let base64Content = file.content;
-    let wb = read(base64Content, { type: "base64" });
+    let excelFileBufferData = await getExcelDataFromZipFile(base64Content, dataTypeName);
+    let wb = read(excelFileBufferData, { type: "buffer" });
     let validResultObject = validImportData(utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }), fileHeader);
     if (!validResultObject.validResult) {
         debugLog(`[TASK DATA MERGE] valid file name = ${file.name}, id = ${file.id} failure`);
@@ -465,6 +487,18 @@ async function mergeDataByDataId(dataId, taskType, fileHeader, excelDataToObject
     //TODO 如果删除文件，则注意添加事务
 }
 
+async function getExcelDataFromZipFile(base64Content, dataTypeName) {
+    let promise = new Promise((resolve, reject) => {
+        JSZip.loadAsync(base64Content, { base64: true }).then(async zip => {
+            let zipFile = zip.file(`${dataTypeName}.xlsx`);
+            resolve(await zipFile.async("arraybuffer"));
+        }).catch(e => {
+            reject(e);
+        })
+    });
+    return promise;
+}
+
 async function downloadDataByDataId(dataId, dataTypeName, taskType) {
     if (!(await isLogin())) {
         debugLog(`[TASK HANDLE]No login info, skip run task dataId = ${dataId}, dataTypeName = ${dataTypeName}`)
@@ -474,7 +508,7 @@ async function downloadDataByDataId(dataId, dataTypeName, taskType) {
     let userName = taskData.username;
     let repoName = taskData.reponame;
     let datetime = taskData.datetime;
-    const path = getPathByDatetime({ datetime }) + `/${dataTypeName}.xlsx`;
+    const path = getPathByDatetime({ datetime }) + `/${dataTypeName}.zip`;
     let content = null;
     try {
         content = await GithubApi.listRepoContents(userName, repoName, path, { getTokenFunction: getToken, setTokenFunction: setToken, });
