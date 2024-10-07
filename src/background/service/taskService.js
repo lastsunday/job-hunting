@@ -125,8 +125,8 @@ export async function calculateUploadTask({ userName, repoName }) {
                 });
                 //上传所有的公司标签记录，以便全量更新
                 await addDataUploadTask({
-                    type: TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, startDatetime: null, endDatetime: today, userName, repoName,
-                    total: (await getCompanyTagData({ startDatetime: null, endDatetime: today })).total
+                    type: TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, startDatetime: null, endDatetime: null, userName, repoName,
+                    total: (await getCompanyTagData({ startDatetime: null, endDatetime: null })).total
                 });
                 await DBApi.dbCommitTransaction({}, { invokeEnv: BACKGROUND });
             } catch (e) {
