@@ -1,6 +1,6 @@
 import { Message } from "../../common/api/message";
 import { postSuccessMessage, postErrorMessage } from "../util";
-import { insert, update, one, del, search, searchCount, batchDel } from "../database";
+import { insert, update, one, del, search, searchCount, batchDel, batchGet } from "../database";
 import { genUniqueId } from "../../common/utils";
 
 export class BaseService {
@@ -35,6 +35,22 @@ export class BaseService {
             postErrorMessage(
                 message,
                 "[worker] getById error : " + e.message
+            );
+        }
+    }
+
+    /**
+     * 
+     * @param {Message} message 
+     * @param {string[]} param ids
+     */
+    async getByIds(message, param) {
+        try {
+            postSuccessMessage(message, (await batchGet(this.entityClassCreateFunction(), this.tableName, this.tableIdColumn, param)));
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] getByIds error : " + e.message
             );
         }
     }

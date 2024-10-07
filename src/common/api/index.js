@@ -137,6 +137,22 @@ export const JobApi = {
       invokeEnv: invokeEnv,
     });
   },
+  /**
+   *
+   * @param {string[]} param ids
+   *
+   * @returns Job[]
+   */
+  jobGetByIds: async function (
+    param,
+    { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }
+  ) {
+    let result = await invoke(this.jobGetByIds.name, param, {
+      invokeEnv: invokeEnv,
+    });
+    return result.data;
+  },
+
 };
 
 export const CompanyApi = {
@@ -156,6 +172,22 @@ export const CompanyApi = {
  */
   getCompanyDTOByIds: async function (ids) {
     let result = await invoke(this.getCompanyDTOByIds.name, ids);
+    return result.data;
+  },
+
+  /**
+   *
+   * @param {string[]} param ids
+   *
+   * @returns Company[]
+   */
+  companyGetByIds: async function (
+    param,
+    { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }
+  ) {
+    let result = await invoke(this.companyGetByIds.name, param, {
+      invokeEnv: invokeEnv,
+    });
     return result.data;
   },
 
@@ -217,6 +249,16 @@ export const CompanyApi = {
    */
   getAllCompanyTagDTOByCompanyId: async function (id) {
     let result = await invoke(this.getAllCompanyTagDTOByCompanyId.name, id);
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string[]} ids 
+   * @returns CompanyTagDTO[]
+   */
+  getAllCompanyTagDTOByCompanyIds: async function (ids, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.getAllCompanyTagDTOByCompanyIds.name, ids, { invokeEnv: invokeEnv });
     return result.data;
   },
 

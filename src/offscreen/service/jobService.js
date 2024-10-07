@@ -11,9 +11,20 @@ import { postSuccessMessage, postErrorMessage } from "../util";
 import { getDb, getOne } from "../database";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
 import { _getCompanyDTOByIds } from "./companyService";
+import { BaseService } from "./baseService";
 
 const JOB_VISIT_TYPE_SEARCH = "SEARCH";
 const JOB_VISIT_TYPE_DETAIL = "DETAIL";
+
+const SERVICE_INSTANCE = new BaseService("job", "job_id",
+  () => {
+    return new Job();
+  },
+  () => {
+    return new SearchJobDTO();
+  },
+  null
+);
 
 export const JobService = {
   /**
@@ -397,6 +408,14 @@ export const JobService = {
       );
     }
   },
+  /**
+   *
+   * @param {Message} message
+   * @param {string[]} param id
+   */
+  jobGetByIds: async function (message, param) {
+    SERVICE_INSTANCE.getByIds(message, param);
+  },
 };
 
 async function getJobBrowseHistoryCountMap(ids, type) {
@@ -540,7 +559,7 @@ async function _insertOrUpdateJob(param, now, { update = true } = {}) {
             $boss_company_name: convertEmptyStringToNull(param.bossCompanyName),
             $boss_position: convertEmptyStringToNull(param.bossPosition),
             $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-            $is_full_company_name:param.isFullCompanyName,
+            $is_full_company_name: param.isFullCompanyName,
           },
         });
       } else {
@@ -581,7 +600,7 @@ async function _insertOrUpdateJob(param, now, { update = true } = {}) {
               $boss_company_name: convertEmptyStringToNull(param.bossCompanyName),
               $boss_position: convertEmptyStringToNull(param.bossPosition),
               $update_datetime: currentRowUpdateDatetime.format("YYYY-MM-DD HH:mm:ss"),
-              $is_full_company_name:param.isFullCompanyName,
+              $is_full_company_name: param.isFullCompanyName,
             },
           });
         }
@@ -634,7 +653,7 @@ async function _insertOrUpdateJob(param, now, { update = true } = {}) {
         $boss_position: convertEmptyStringToNull(param.bossPosition),
         $create_datetime: dayjs(param.createDatetime ?? now).format("YYYY-MM-DD HH:mm:ss"),
         $update_datetime: dayjs(param.updateDatetime ?? now).format("YYYY-MM-DD HH:mm:ss"),
-        $is_full_company_name:param.isFullCompanyName,
+        $is_full_company_name: param.isFullCompanyName,
       },
     });
   }

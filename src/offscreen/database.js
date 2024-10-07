@@ -171,6 +171,41 @@ export async function all(entity, tableName, orderBy) {
   return getAll(selectAllSql, {}, entity)
 }
 
+export async function batchGet(obj, tableName, idColumnName, ids) {
+  if(ids.length == 0){
+    return [];
+  }
+  const batchGetSql = genFullSelectByIdsSQL(obj, tableName, idColumnName, ids);
+  if (isDebug()) {
+    debugLog(`[database] [batchGet] batchGetSql = ${batchGetSql}`)
+  }
+  let rows = [];
+  (await getDb()).exec({
+    sql: batchGetSql,
+    rowMode: "object",
+    resultRows: rows,
+  });
+  let result = [];
+  if (rows.length > 0) {
+    for (let i = 0; i < rows.length; i++) {
+      let item = rows[i];
+      let resultItem = Object.assign({}, obj);
+      let keys = Object.keys(item);
+      for (let n = 0; n < keys.length; n++) {
+        let key = keys[n];
+        resultItem[toHump(key)] = item[key];
+      }
+      result.push(resultItem);
+    }
+  }
+  return result;
+}
+
+export function genFullSelectByIdsSQL(obj, tableName, idColumnName, ids) {
+  let idsString = "'" + ids.join("','") + "'";
+  return `${genFullSelectSQL(obj, tableName)} WHERE ${idColumnName} in (${idsString})`;
+}
+
 export async function del(tableName, idColumn, id) {
   const deleteSql = `DELETE FROM ${tableName} WHERE ${idColumn} = '${id}'`;
   if (isDebug()) {

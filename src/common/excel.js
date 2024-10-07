@@ -223,6 +223,5 @@ export const companyTagExcelDataToObjectArray = (data) => {
         item.tags = dataItem['标签'].split(",");
         companyTagBOList.push(item);
     }
-
     return companyTagBOList;
 }

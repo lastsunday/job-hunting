@@ -11,6 +11,17 @@ import { StatisticCompanyDTO } from "../../common/data/dto/statisticCompanyDTO";
 import { toHump, toLine } from "../../common/utils";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
 import { CompanyBO } from "../../common/data/bo/companyBO";
+import { BaseService } from "./baseService";
+
+const SERVICE_INSTANCE = new BaseService("company", "company_id",
+  () => {
+    return new Company();
+  },
+  () => {
+    return new SearchCompanyDTO();
+  },
+  null
+);
 
 export const CompanyService = {
   /**
@@ -208,6 +219,14 @@ export const CompanyService = {
         "[worker] statisticCompany error : " + e.message
       );
     }
+  },
+  /**
+   *
+   * @param {Message} message
+   * @param {string[]} param id
+   */
+  companyGetByIds: async function (message, param) {
+    SERVICE_INSTANCE.getByIds(message, param);
   },
 };
 

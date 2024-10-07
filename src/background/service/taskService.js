@@ -34,6 +34,7 @@ import { TASK_DATA_DOWNLOAD_MAX_DAY } from "../../common/config";
 import { dateToStr } from "../../common/utils";
 import { File } from "../../common/data/domain/file";
 import { TaskDataMerge } from "../../common/data/domain/taskDataMerge";
+import { getMergeDataListForCompany, getMergeDataListForJob, getMergeDataListForCompanyTag } from "../../common/service/dataSyncService";
 
 dayjs.extend(minMax);
 export const TaskService = {
@@ -122,9 +123,10 @@ export async function calculateUploadTask({ userName, repoName }) {
                     type: TASK_TYPE_COMPANY_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName,
                     total: (await getCompanyData({ startDatetime: dataSyncStartDatetime, endDatetime: today })).total
                 });
+                //上传所有的公司标签记录，以便全量更新
                 await addDataUploadTask({
-                    type: TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName,
-                    total: (await getCompanyTagData({ startDatetime: dataSyncStartDatetime, endDatetime: today })).total
+                    type: TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, startDatetime: null, endDatetime: today, userName, repoName,
+                    total: (await getCompanyTagData({ startDatetime: null, endDatetime: today })).total
                 });
                 await DBApi.dbCommitTransaction({}, { invokeEnv: BACKGROUND });
             } catch (e) {
@@ -244,21 +246,30 @@ TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD, async (dataId) => {
 })
 TASK_HANDLE_MAP.set(TASK_TYPE_JOB_DATA_MERGE, async (dataId) => {
     return mergeDataByDataId(dataId, TASK_TYPE_JOB_DATA_MERGE, JOB_FILE_HEADER, jobExcelDataToObjectArray, async (items) => {
-        //TODO 需要处理数据冲突问题，根据创建时间来判断
-        //TODO 公司名全称问题
-        return JobApi.batchAddOrUpdateJob(items, { invokeEnv: BACKGROUND });
+        //处理数据冲突问题，根据创建时间来判断
+        //处理公司名全称问题
+        let targetList = await getMergeDataListForJob(items, "jobId", async (ids) => {
+            return JobApi.jobGetByIds(ids, { invokeEnv: BACKGROUND });
+        });
+        return JobApi.batchAddOrUpdateJob(targetList, { invokeEnv: BACKGROUND });
     });
 })
 TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_DATA_MERGE, async (dataId) => {
     return mergeDataByDataId(dataId, TASK_TYPE_COMPANY_DATA_MERGE, COMPANY_FILE_HEADER, companyExcelDataToObjectArray, async (items) => {
-        //TODO 需要处理数据冲突问题，根据创建时间来判断
-        return CompanyApi.batchAddOrUpdateCompany(items, { invokeEnv: BACKGROUND });
+        //处理数据冲突问题，根据数据来源更新时间来判断
+        let targetList = await getMergeDataListForCompany(companyBOList, "companyId", async (ids) => {
+            return CompanyApi.companyGetByIds(ids, { invokeEnv: BACKGROUND });
+        });
+        return await CompanyApi.batchAddOrUpdateCompany(targetList, { invokeEnv: BACKGROUND });
     });
 })
 TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_TAG_DATA_MERGE, async (dataId) => {
     return mergeDataByDataId(dataId, TASK_TYPE_COMPANY_TAG_DATA_MERGE, COMPANY_TAG_FILE_HEADER, companyTagExcelDataToObjectArray, async (items) => {
-        //TODO 需要处理数据冲突问题，合并标签
-        return CompanyApi.batchAddOrUpdateCompanyTag(items, { invokeEnv: BACKGROUND });
+        //处理数据冲突问题，合并标签
+        let targetList = await getMergeDataListForCompanyTag(items, async (ids) => {
+            return await CompanyApi.getAllCompanyTagDTOByCompanyIds(ids, { invokeEnv: BACKGROUND });
+        })
+        return CompanyApi.batchAddOrUpdateCompanyTag(targetList, { invokeEnv: BACKGROUND });
     });
 })
 

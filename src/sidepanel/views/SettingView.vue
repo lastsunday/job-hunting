@@ -384,9 +384,10 @@ import { GithubApi, EXCEPTION } from "../../common/api/github";
 import {
   jobDataToExcelJSONArray, JOB_FILE_HEADER, jobExcelDataToObjectArray,
   COMPANY_FILE_HEADER, companyDataToExcelJSONArray, companyExcelDataToObjectArray,
-  COMPANY_TAG_FILE_HEADER, companyTagDataToExcelJSONArray,companyTagExcelDataToObjectArray,
+  COMPANY_TAG_FILE_HEADER, companyTagDataToExcelJSONArray, companyTagExcelDataToObjectArray,
   validImportData
 } from "../../common/excel";
+import { getMergeDataListForJob, getMergeDataListForCompany, getMergeDataListForCompanyTag } from "../../common/service/dataSyncService";
 
 import TrafficChart from "./components/TrafficChart.vue";
 import TrafficTable from "./components/TrafficTable.vue";
@@ -552,10 +553,13 @@ const confirmJobFileImport = async () => {
           }
           const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2 });
           let jobList = jobExcelDataToObjectArray(data);
-          await JobApi.batchAddOrUpdateJob(jobList);
+          let targetList = await getMergeDataListForJob(jobList, "jobId", async (ids) => {
+            return JobApi.jobGetByIds(ids);
+          });
+          await JobApi.batchAddOrUpdateJob(targetList);
           importJobDialogVisible.value = false;
           ElMessage({
-            message: `导入职位数据成功，共${jobList.length}条`,
+            message: `导入职位数据成功，共${targetList.length}条`,
             type: "success",
           });
         } catch (e) {
@@ -640,10 +644,13 @@ const confirmCompanyFileImport = async () => {
           }
           const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2 });
           let companyBOList = companyExcelDataToObjectArray(data);
-          await CompanyApi.batchAddOrUpdateCompany(companyBOList);
+          let targetList = await getMergeDataListForCompany(companyBOList, "companyId", async (ids) => {
+            return CompanyApi.companyGetByIds(ids);
+          });
+          await CompanyApi.batchAddOrUpdateCompany(targetList);
           importCompanyDialogVisible.value = false;
           ElMessage({
-            message: `导入公司数据成功，共${companyBOList.length}条`,
+            message: `导入公司数据成功，共${targetList.length}条`,
             type: "success",
           });
         } catch (e) {
@@ -729,10 +736,13 @@ const confirmCompanyTagFileImport = async () => {
           }
           const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2 });
           let companyTagBOList = companyTagExcelDataToObjectArray(data);
-          await CompanyApi.batchAddOrUpdateCompanyTag(companyTagBOList);
+          let targetList = await getMergeDataListForCompanyTag(companyTagBOList, async (ids) => {
+            return await CompanyApi.getAllCompanyTagDTOByCompanyIds(ids);
+          })
+          await CompanyApi.batchAddOrUpdateCompanyTag(targetList);
           importCompanyTagDialogVisible.value = false;
           ElMessage({
-            message: `导入公司标签数据成功，共${companyTagBOList.length}条`,
+            message: `导入公司标签数据成功，共${targetList.length}条`,
             type: "success",
           });
         } catch (e) {
