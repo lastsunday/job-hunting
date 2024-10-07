@@ -483,6 +483,7 @@ async function mergeDataByDataId(dataId, taskType, dataTypeName, fileHeader, exc
     debugLog(`[TASK DATA MERGE] valid file name = ${file.name}, id = ${file.id} success`);
     const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2 });
     await dataInsertFunction(excelDataToObjectArrayFunction(data));
+    debugLog(`[TASK DATA MERGE] merge file name = ${file.name}, id = ${file.id} success`);
     //TODO 考虑自动删除文件内容，以便节省存储空间
     //TODO 如果删除文件，则注意添加事务
 }
