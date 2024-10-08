@@ -44,7 +44,7 @@
                 </swiper-slide>
                 <swiper-slide>
                     <div class="introductionThird">
-                        <vue-particles id="tsparticles3" :options="secondPageOption" pagination="true" />
+                        <vue-particles id="tsparticles3" :options="thirdPageOption" pagination="true" />
                         <div class="desc">
                             <div class="title">
                                 <button @click="enableDataSharePlan = true">
@@ -73,6 +73,7 @@ const enableDataSharePlan = ref(false);
 const tourOpen = ref(false);
 const firstPageOption = Option.linkStyle;
 const secondPageOption = Option.popStyle;
+const thirdPageOption = Option.pop2Style;
 
 watch(enableDataSharePlan, async (newValue, oldValue) => {
     infoLog(`enableDataSharePlan is enable = ${newValue}`);
