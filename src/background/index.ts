@@ -19,6 +19,9 @@ import { SystemService } from "./service/systemService";
 import { AutomateService } from "./service/automateService";
 import { calculateUploadTask, calculateDownloadTask, runTask } from "./service/taskService";
 import { DEFAULT_DATA_REPO, TASK_LOOP_DELAY } from "../common/config";
+import { ConfigApi } from "../common/api";
+import { DataSharePlanConfigDTO } from "../common/data/dto/dataSharePlanConfigDTO";
+import { CONFIG_KEY_DATA_SHARE_PLAN } from "../common/config";
 
 debugLog("background ready");
 chrome.runtime.onInstalled.addListener(async () => {
@@ -191,28 +194,38 @@ async function setupOffscreenDocument(path: string) {
         taskRun = true;
         try {
           taskRunCount += 1;
-          if (isDebug()) {
-            debugLog(`[Task] task run count seq = ${taskRunCount}`)
+          infoLog(`[Task] Task run seq = < ${taskRunCount} >`)
+          let dataSharePlanConfig = new DataSharePlanConfigDTO();
+          let configValue = await ConfigApi.getConfigByKey(CONFIG_KEY_DATA_SHARE_PLAN, { invokeEnv: BACKGROUND });
+          if (configValue && configValue.value) {
+            dataSharePlanConfig = JSON.parse(configValue.value);
           }
-          let userDTO = await getUser();
-          if (userDTO) {
-            let userName = userDTO.login;
-            let repoName = DEFAULT_DATA_REPO;
-            infoLog(`[Task] has login info userName = ${userName}`)
-            infoLog(`[Task] calculateUploadTask`)
-            await calculateUploadTask({ userName: userName, repoName: repoName });
-            //获取自身的数据共享计划仓库
-            let shareDataPlanList = [{ username: userName, reponame: DEFAULT_DATA_REPO }];
-            //TODO 从数据库中获取参加数据共享计划的GitHub用户及其仓库
-            for (let i = 0; i < shareDataPlanList.length; i++) {
-              let shareItem = shareDataPlanList[i];
-              await calculateDownloadTask({ userName: shareItem.username, repoName: shareItem.reponame });
+          if (dataSharePlanConfig.enable) {
+            infoLog(`[TASK] Data share plan enable`);
+            infoLog(`[TASK] Data share plan task running`);
+            let userDTO = await getUser();
+            if (userDTO) {
+              let userName = userDTO.login;
+              let repoName = DEFAULT_DATA_REPO;
+              infoLog(`[Task] has login info userName = ${userName}`)
+              infoLog(`[Task] calculateUploadTask`)
+              await calculateUploadTask({ userName: userName, repoName: repoName });
+              //获取自身的数据共享计划仓库
+              let shareDataPlanList = [{ username: userName, reponame: DEFAULT_DATA_REPO }];
+              //TODO 从数据库中获取参加数据共享计划的GitHub用户及其仓库
+              for (let i = 0; i < shareDataPlanList.length; i++) {
+                let shareItem = shareDataPlanList[i];
+                await calculateDownloadTask({ userName: shareItem.username, repoName: shareItem.reponame });
+              }
+              infoLog(`[TASK] runTask`)
+              await runTask();
+            } else {
+              infoLog(`[TASK] no login info`)
+              infoLog(`[TASK] skip data share plan`)
             }
-            infoLog(`[Task] runTask`)
-            await runTask();
           } else {
-            infoLog(`[Task] no login info`)
-            infoLog(`[Task] skip data share plan`)
+            infoLog(`[TASK] Data share plan disable`);
+            infoLog(`[TASK] Data share plan task skip`);
           }
         } catch (e) {
           errorLog(e);

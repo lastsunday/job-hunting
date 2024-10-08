@@ -31,3 +31,5 @@ export const COMPANY_DATA_EXPRIE_DAY = 90;//day
 export const TASK_STATUS_ERROR_MAX_RETRY_COUNT = 3;
 export const TASK_DATA_DOWNLOAD_MAX_DAY = 60;//day
 export const TASK_LOOP_DELAY = 30000;//ms
+
+export const CONFIG_KEY_DATA_SHARE_PLAN = "CONFIG_KEY_DATA_SHARE_PLAN";

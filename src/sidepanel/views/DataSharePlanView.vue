@@ -61,22 +61,61 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { Icon } from '@iconify/vue';
 import { infoLog } from "../../common/log";
 import { register } from 'swiper/element/bundle';
 register();
 
 import { Option } from "./data/tsparticlesOption";
+import { ConfigApi } from "../../common/api"
+import { CONFIG_KEY_DATA_SHARE_PLAN } from "../../common/config";
+import { DataSharePlanConfigDTO } from "../../common/data/dto/dataSharePlanConfigDTO";
+import { Config } from "../../common/data/domain/config";
+import { errorLog } from "../../common/log";
 
 const enableDataSharePlan = ref(false);
 const tourOpen = ref(false);
 const firstPageOption = Option.linkStyle;
 const secondPageOption = Option.popStyle;
 const thirdPageOption = Option.pop2Style;
+const config = ref(<DataSharePlanConfigDTO>{});
+
+onMounted(async () => {
+    try {
+        let configValue = await ConfigApi.getConfigByKey(CONFIG_KEY_DATA_SHARE_PLAN);
+        if (configValue && configValue.value) {
+            config.value = JSON.parse(configValue.value);
+            enableDataSharePlan.value = config.value.enable;
+        }
+    } catch (e) {
+        errorLog(e);
+    }
+})
+
+const handleChange = async (value) => {
+    let configFromStorage = await ConfigApi.getConfigByKey(CONFIG_KEY_DATA_SHARE_PLAN);
+    let configDTO = new DataSharePlanConfigDTO();
+    let configObject = configFromStorage;
+    if (!configObject) {
+        configObject = new Config();
+        configObject.key = CONFIG_KEY_DATA_SHARE_PLAN;
+    } else {
+        if (configObject.value) {
+            try {
+                configDTO = JSON.parse(configObject.value);
+            } catch (e) {
+                errorLog(e);
+            }
+        }
+    }
+    configDTO.enable = value;
+    configObject.value = JSON.stringify(configDTO);
+    await ConfigApi.addOrUpdateConfig(configObject);
+}
 
 watch(enableDataSharePlan, async (newValue, oldValue) => {
-    infoLog(`enableDataSharePlan is enable = ${newValue}`);
+    handleChange(newValue);
 }
 )
 
