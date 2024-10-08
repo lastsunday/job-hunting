@@ -6,6 +6,7 @@ import CompanyView from '../views/CompanyView.vue'
 import JobView from '../views/JobView.vue'
 import BBSView from '../views/BBSView.vue'
 import AssistantView from '../views/AssistantView.vue'
+import DataSharePlanView from "../views/DataSharePlanView.vue";
 
 const routes = [
   {
@@ -42,6 +43,11 @@ const routes = [
     path: '/setting',
     name: 'setting',
     component: SettingView
+  },
+  {
+    path: '/dataSharePlan',
+    name: 'dataSharePlan',
+    component: DataSharePlanView
   },
 ]
 

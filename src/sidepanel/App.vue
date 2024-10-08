@@ -22,7 +22,8 @@
           <el-menu-item index="4-2" route="/company">公司</el-menu-item>
           <el-menu-item index="4-3" route="/companyTag">公司标签</el-menu-item>
         </el-sub-menu>
-        <el-menu-item index="5" route="/setting">设置</el-menu-item>
+        <el-menu-item index="5" route="/dataSharePlan">数据共享计划</el-menu-item>
+        <el-menu-item index="6" route="/setting">设置</el-menu-item>
       </el-menu>
       <router-view />
       <el-backtop />
