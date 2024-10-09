@@ -66,6 +66,17 @@ const SQL_CREATE_TABLE_MERGE = `
     )
     `;
 
+const SQL_CREATE_TABLE_PARTNER = `
+    CREATE TABLE data_share_partner (
+        id TEXT PRIMARY KEY,
+        username TEXT,
+        reponame TEXT,
+        repo_type TEXT,
+        create_datetime DATETIME,
+        update_datetime DATETIME
+    )
+    `;
+
 const SQL_ALTER_TABLE_JOB_ADD_COLUMN_IS_FULL_COMPANY_NAME = `
     ALTER TABLE job ADD COLUMN is_full_company_name BOOLEAN
     `;
@@ -78,7 +89,8 @@ export class ChangeLogV6 extends ChangeLog {
             SQL_CREATE_TABLE_TASK_DATA_DOWNLOAD,
             SQL_CREATE_TABLE_FILE,
             SQL_CREATE_TABLE_MERGE,
-            SQL_ALTER_TABLE_JOB_ADD_COLUMN_IS_FULL_COMPANY_NAME];
+            SQL_ALTER_TABLE_JOB_ADD_COLUMN_IS_FULL_COMPANY_NAME,
+            SQL_CREATE_TABLE_PARTNER];
         return sqlList;
     }
 }

@@ -17,7 +17,7 @@ import { UserDTO } from "../common/data/dto/userDTO";
 import { setUser, getUser } from "./service/userService";
 import { SystemService } from "./service/systemService";
 import { AutomateService } from "./service/automateService";
-import { calculateUploadTask, calculateDownloadTask, runTask } from "./service/taskService";
+import { calculateUploadTask, calculateDownloadTask, runTask, calculateDataSharePartnerList } from "./service/taskService";
 import { DEFAULT_DATA_REPO, TASK_LOOP_DELAY } from "../common/config";
 import { ConfigApi } from "../common/api";
 import { DataSharePlanConfigDTO } from "../common/data/dto/dataSharePlanConfigDTO";
@@ -212,7 +212,10 @@ async function setupOffscreenDocument(path: string) {
               await calculateUploadTask({ userName: userName, repoName: repoName });
               //获取自身的数据共享计划仓库
               let shareDataPlanList = [{ username: userName, reponame: DEFAULT_DATA_REPO }];
-              //TODO 从数据库中获取参加数据共享计划的GitHub用户及其仓库
+              //从数据库中获取数据共享伙伴列表
+              let dataSharePartnerList = await calculateDataSharePartnerList();
+              shareDataPlanList.push(...dataSharePartnerList);
+              infoLog(`[TASK] Share data plan list length = ${shareDataPlanList.length}`);
               for (let i = 0; i < shareDataPlanList.length; i++) {
                 let shareItem = shareDataPlanList[i];
                 await calculateDownloadTask({ userName: shareItem.username, repoName: shareItem.reponame });

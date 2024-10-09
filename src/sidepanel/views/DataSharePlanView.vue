@@ -37,7 +37,7 @@
                                 <Icon icon="carbon:partnership" width="25" height="25" />
                             </div>
                         </template>
-                        <ShareList></ShareList>
+                        <PartnerList></PartnerList>
                     </el-tab-pane>
                 </el-tabs>
             
@@ -100,7 +100,7 @@ import { GITHUB_URL, CONFIG_KEY_DATA_SHARE_PLAN, DEFAULT_DATA_REPO } from "../..
 import { DataSharePlanConfigDTO } from "../../common/data/dto/dataSharePlanConfigDTO";
 import { Config } from "../../common/data/domain/config";
 import { errorLog } from "../../common/log";
-import ShareList from "./dataSharePlan/ShareList.vue";
+import PartnerList from "./dataSharePlan/PartnerList.vue";
 import TaskList from "./dataSharePlan/TaskList.vue";
 
 const enableDataSharePlan = ref(false);

@@ -2,7 +2,7 @@ import { debugLog, errorLog, infoLog, isDebug } from "../../common/log"
 import { SearchJobBO } from "../../common/data/bo/searchJobBO";
 import { SearchCompanyBO } from "../../common/data/bo/searchCompanyBO";
 import { SearchCompanyTagBO } from "../../common/data/bo/searchCompanyTagBO";
-import { JobApi, CompanyApi, TaskDataUploadApi, DBApi, TaskApi, TaskDataDownloadApi, FileApi, TaskDataMergeApi } from "../../common/api";
+import { JobApi, CompanyApi, TaskDataUploadApi, DBApi, TaskApi, TaskDataDownloadApi, FileApi, TaskDataMergeApi, DataSharePartnerApi } from "../../common/api";
 import { BACKGROUND } from "../../common/api/bridgeCommon";
 import {
     MAX_RECORD_COUNT, TASK_STATUS_READY, TASK_TYPE_JOB_DATA_UPLOAD,
@@ -36,6 +36,7 @@ import { File } from "../../common/data/domain/file";
 import { TaskDataMerge } from "../../common/data/domain/taskDataMerge";
 import { getMergeDataListForCompany, getMergeDataListForJob, getMergeDataListForCompanyTag } from "../../common/service/dataSyncService";
 import JSZip from "jszip";
+import { SearchDataSharePartnerBO } from "../../common/data/bo/searchDataSharePartnerBO";
 
 dayjs.extend(minMax);
 export const TaskService = {
@@ -90,6 +91,15 @@ export async function calculateRepoMaxUploadDate({ userName, repoName }) {
         }
     }
     return result;
+}
+
+export async function calculateDataSharePartnerList() {
+    let searchParam = new SearchDataSharePartnerBO();
+    searchParam.pageNum = 1;
+    searchParam.pageSize = MAX_RECORD_COUNT;
+    searchParam.orderByColumn = "updateDatetime";
+    searchParam.orderBy = "DESC";
+    return (await DataSharePartnerApi.searchDataSharePartner(searchParam, { invokeEnv: BACKGROUND })).items;
 }
 
 export async function calculateUploadTask({ userName, repoName }) {
@@ -514,7 +524,7 @@ async function getExcelDataFromZipFile(base64Content, dataTypeName) {
 
 async function downloadDataByDataId(dataId, dataTypeName, taskType) {
     if (!(await isLogin())) {
-        debugLog(`[TASK HANDLE]No login info, skip run task dataId = ${dataId}, dataTypeName = ${dataTypeName}`)
+        infoLog(`[TASK HANDLE]No login info, skip run task dataId = ${dataId}, dataTypeName = ${dataTypeName}`)
         throw EXCEPTION.NO_LOGIN;
     }
     let taskData = await TaskDataDownloadApi.taskDataDownloadGetById(dataId, { invokeEnv: BACKGROUND });
@@ -536,7 +546,7 @@ async function downloadDataByDataId(dataId, dataTypeName, taskType) {
                 file.size = content.size;
                 file.type = content.type;
                 const savedFile = await FileApi.fileAddOrUpdate(file, { invokeEnv: BACKGROUND });
-                debugLog(`[TASK DOWNLOAD DATA] save file to database from ${userName}.${repoName}.${path}, id = ${savedFile.id}`);
+                infoLog(`[TASK DOWNLOAD DATA] save file to database from ${userName}.${repoName}.${path}, id = ${savedFile.id}`);
                 //添加数据合并任务
                 const taskDataMerge = new TaskDataMerge();
                 taskDataMerge.type = taskType;
@@ -545,7 +555,7 @@ async function downloadDataByDataId(dataId, dataTypeName, taskType) {
                 taskDataMerge.datetime = datetime;
                 taskDataMerge.dataId = savedFile.id;
                 const savedTaskDataMerge = await TaskDataMergeApi.taskDataMergeAddOrUpdate(taskDataMerge, { invokeEnv: BACKGROUND })
-                debugLog(`[TASK DOWNLOAD DATA] merge task to database from ${userName}.${repoName}.${path}, id = ${savedTaskDataMerge.id}, dataId = ${dataId}`);
+                infoLog(`[TASK DOWNLOAD DATA] merge task to database from ${userName}.${repoName}.${path}, id = ${savedTaskDataMerge.id}, dataId = ${dataId}`);
                 let task = new Task();
                 task.type = taskType;
                 task.dataId = savedTaskDataMerge.id;
@@ -553,7 +563,7 @@ async function downloadDataByDataId(dataId, dataTypeName, taskType) {
                 task.costTime = 0;
                 task.status = TASK_STATUS_READY;
                 const savedTask = await TaskApi.taskAddOrUpdate(task, { invokeEnv: BACKGROUND })
-                debugLog(`[TASK DOWNLOAD DATA] add task to database from task type = ${taskType}, dataId = ${task.dataId}, id = ${savedTask.id}`);
+                infoLog(`[TASK DOWNLOAD DATA] add task to database from task type = ${taskType}, dataId = ${task.dataId}, id = ${savedTask.id}`);
                 await DBApi.dbCommitTransaction({}, { invokeEnv: BACKGROUND });
             } catch (e) {
                 await DBApi.dbRollbackTransaction({}, { invokeEnv: BACKGROUND });
@@ -574,9 +584,10 @@ async function downloadDataByDataId(dataId, dataTypeName, taskType) {
                 //skip
                 debugLog(`[TASK DOWNLOAD DATA] file ${userName}.${repoName}.${path} datetime = ${datetime} before now = ${dateToStr(now)} more than 1 day`)
                 debugLog(`[TASK DOWNLOAD DATA] file ${userName}.${repoName}.${path} never upload`)
+                return `file ${userName}.${repoName}.${path} never upload`;
             } else {
                 debugLog(`[TASK DOWNLOAD DATA] file ${userName}.${repoName}.${path} continue download in next time`)
-                throw e;
+                throw `File not found,file ${userName}.${repoName}.${path} continue download in next time`;
             }
         } else {
             throw e;

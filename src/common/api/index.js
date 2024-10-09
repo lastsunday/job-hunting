@@ -35,6 +35,9 @@ import { SearchTaskDataMergeBO } from "../data/bo/searchTaskDataMergeBO";
 import { SearchTaskDataMergeDTO } from "../data/dto/searchTaskDataMergeDTO";
 import { TaskDataDownload } from "../data/domain/taskDataDownload";
 import { TaskDataMerge } from "../data/domain/taskDataMerge";
+import { DataSharePartner } from "../data/domain/dataSharePartner";
+import { SearchDataSharePartnerBO } from "../data/bo/searchDataSharePartnerBO";
+import { SearchDataSharePartnerDTO } from "../data/dto/searchDataSharePartnerDTO";
 
 export const JobApi = {
   /**
@@ -903,6 +906,60 @@ export const TaskDataMergeApi = {
  */
   taskDataMergeDeleteByIds: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
     let result = await invoke(this.taskDataMergeDeleteByIds.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+}
+
+export const DataSharePartnerApi = {
+
+  /**
+   * 
+   * @param {SearchDataSharePartnerBO} param 
+   * @returns {SearchDataSharePartnerDTO}
+   */
+  searchDataSharePartner: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.searchDataSharePartner.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id 
+   * @returns {DataSharePartner}
+   */
+  dataSharePartnerGetById: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.dataSharePartnerGetById.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {DataSharePartner} param 
+   * @returns DataSharePartner
+   */
+  dataSharePartnerAddOrUpdate: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.dataSharePartnerAddOrUpdate.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id
+   * @returns 
+   */
+  dataSharePartnerDeleteById: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.dataSharePartnerDeleteById.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+ * 
+ * @param {string[]} param ids
+ * @returns 
+ */
+  dataSharePartnerDeleteByIds: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.dataSharePartnerDeleteByIds.name, param, { invokeEnv: invokeEnv });
     return result.data;
   },
 

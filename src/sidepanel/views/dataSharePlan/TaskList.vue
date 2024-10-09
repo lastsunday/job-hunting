@@ -19,18 +19,6 @@
                         <div class="operation_menu_left">
                             <el-switch v-model="showAdvanceSearch" active-text="高级搜索" inactive-text="普通搜索"
                                 inline-prompt />
-                            <el-collapse :hidden="!showAdvanceSearch" v-model="activeNames">
-                                <el-collapse-item title="高级搜索条件" name="advanceCondition">
-                                    <div class="flex gap-4 mb-4">
-                                        <el-date-picker type="daterange" range-separator="到" start-placeholder="创建开始时间"
-                                            end-placeholder="创建结束时间" v-model="form.datetimeForCreateRange" clearable
-                                            @change="onClickSearch" />
-                                        <el-date-picker type="daterange" range-separator="到" start-placeholder="更新开始时间"
-                                            end-placeholder="更新结束时间" v-model="form.datetimeForUpdateRange" clearable
-                                            @change="onClickSearch" />
-                                    </div>
-                                </el-collapse-item>
-                            </el-collapse>
                         </div>
                         <div>
                             <el-button @click="reset">重置</el-button>
@@ -39,6 +27,18 @@
                                 </el-icon></el-button>
                         </div>
                     </div>
+                    <el-collapse :hidden="!showAdvanceSearch" v-model="activeNames">
+                        <el-collapse-item title="高级搜索条件" name="advanceCondition">
+                            <div class="flex gap-4 mb-4">
+                                <el-date-picker type="daterange" range-separator="到" start-placeholder="创建开始时间"
+                                    end-placeholder="创建结束时间" v-model="form.datetimeForCreateRange" clearable
+                                    @change="onClickSearch" />
+                                <el-date-picker type="daterange" range-separator="到" start-placeholder="更新开始时间"
+                                    end-placeholder="更新结束时间" v-model="form.datetimeForUpdateRange" clearable
+                                    @change="onClickSearch" />
+                            </div>
+                        </el-collapse-item>
+                    </el-collapse>
                 </div>
             </div>
             <div class="content">
