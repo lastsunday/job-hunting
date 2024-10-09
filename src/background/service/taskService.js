@@ -327,7 +327,7 @@ export async function runTask() {
                     throw `[TASK RUN] not supported task type = ${taskItem.type}`
                 }
             } catch (e) {
-                errorLog(e);
+                debugLog(e);
                 //执行异常，补充异常信息
                 taskItem.status = TASK_STATUS_ERROR;
                 taskItem.errorReason = JSON.stringify(e);

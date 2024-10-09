@@ -273,7 +273,6 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
       throw `unknown error,status code = ${status}`
     }
   } catch (e) {
-    errorLog(e);
     throw e;
   }
 }
