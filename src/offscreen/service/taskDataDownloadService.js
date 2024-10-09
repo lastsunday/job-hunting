@@ -5,7 +5,7 @@ import { TaskDataDownload } from "../../common/data/domain/taskDataDownload";
 import { BaseService } from "./baseService";
 import { dateToStr } from "../../common/utils";
 
-const SERVICE_INSTANCE = new BaseService("task_data_download", "id",
+export const SERVICE_INSTANCE = new BaseService("task_data_download", "id",
     () => {
         return new TaskDataDownload();
     },

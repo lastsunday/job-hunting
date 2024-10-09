@@ -60,6 +60,7 @@ const SQL_CREATE_TABLE_MERGE = `
         reponame TEXT,
         datetime DATETIME,
         data_id TEXT,
+        data_count NUMERIC,
         create_datetime DATETIME,
         update_datetime DATETIME
     )

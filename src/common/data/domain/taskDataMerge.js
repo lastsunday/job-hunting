@@ -5,6 +5,7 @@ export class TaskDataMerge {
     reponame;
     datetime;
     dataId;
+    dataCount;
     createDatetime;
     updateDatetime;
 }

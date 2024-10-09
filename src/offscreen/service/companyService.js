@@ -65,6 +65,24 @@ export const CompanyService = {
      */
   batchAddOrUpdateCompany: async function (message, param) {
     try {
+      for (let i = 0; i < param.length; i++) {
+        await _addOrUpdateCompany(param[i]);
+      }
+      postSuccessMessage(message, {});
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[worker] batchAddOrUpdateCompany error : " + e.message
+      );
+    }
+  },
+  /**
+     * 
+     * @param {Message} message 
+     * @param {CompanyBO[]} param 
+     */
+  batchAddOrUpdateCompanyWithTransaction: async function (message, param) {
+    try {
       (await getDb()).exec({
         sql: "BEGIN TRANSACTION",
       });
@@ -81,7 +99,7 @@ export const CompanyService = {
       });
       postErrorMessage(
         message,
-        "[worker] batchAddOrUpdateCompany error : " + e.message
+        "[worker] batchAddOrUpdateCompanyWithTransaction error : " + e.message
       );
     }
   },

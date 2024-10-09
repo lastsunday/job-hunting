@@ -116,6 +116,24 @@ export const CompanyTagService = {
      */
     batchAddOrUpdateCompanyTag: async function (message, param) {
         try {
+            for (let i = 0; i < param.length; i++) {
+                await _addOrUpdateCompanyTag(param[i]);
+            }
+            postSuccessMessage(message, {});
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] batchAddOrUpdateCompanyTag error : " + e.message
+            );
+        }
+    },
+    /**
+     * 
+     * @param {Message} message 
+     * @param {CompanyTagBO[]} param 
+     */
+    batchAddOrUpdateCompanyTagWithTransaction: async function (message, param) {
+        try {
             (await getDb()).exec({
                 sql: "BEGIN TRANSACTION",
             });
@@ -132,7 +150,7 @@ export const CompanyTagService = {
             });
             postErrorMessage(
                 message,
-                "[worker] batchAddOrUpdateCompanyTag error : " + e.message
+                "[worker] batchAddOrUpdateCompanyTagWithTransaction error : " + e.message
             );
         }
     },

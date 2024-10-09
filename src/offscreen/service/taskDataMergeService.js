@@ -5,7 +5,7 @@ import { TaskDataMerge } from "../../common/data/domain/taskDataMerge";
 import { BaseService } from "./baseService";
 import { dateToStr } from "../../common/utils";
 
-const SERVICE_INSTANCE = new BaseService("task_data_merge", "id",
+export const SERVICE_INSTANCE = new BaseService("task_data_merge", "id",
     () => {
         return new TaskDataMerge();
     },

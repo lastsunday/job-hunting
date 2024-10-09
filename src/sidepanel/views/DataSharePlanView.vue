@@ -2,6 +2,15 @@
     <div class="content">
         <el-row justify="end">
             <div class="menu">
+                <div class="statusWrapper" v-if="enableDataSharePlan">
+                    <div class="statusWrapperItem">登录状态:
+                        <el-text type="success" v-if="login">在线</el-text>
+                        <el-text type="warning" v-else>离线</el-text>
+                    </div>
+                    <div v-if="login" class="statusWrapperItem">数据上传仓库: <a
+                            :href="`${GITHUB_URL}/${username}/${DEFAULT_DATA_REPO}`" target="_blank">{{ username
+                            }}/{{ DEFAULT_DATA_REPO }}</a></div>
+                </div>
                 <el-switch v-model="enableDataSharePlan" active-text="开启数据共享计划" inactive-text="关闭数据共享计划"
                     inline-prompt />
                 <el-tooltip content="帮助">
@@ -9,12 +18,31 @@
                 </el-tooltip>
             </div>
         </el-row>
-        <div class="main" v-if="enableDataSharePlan">
-            <div>共享计划名单管理</div>
-            <div>任务可视化页面</div>
-            <div>任务执行列表</div>
+        <div class="content" v-if="enableDataSharePlan">
+            
+                <el-tabs tab-position="left" class="tabs">
+                    <el-tab-pane class="tab_panel">
+                        <template #label>
+                            <div class="menuItem" ref="favoriteMenuRef">
+                                <span>任务</span>
+                                <Icon icon="fluent-mdl2:taskboard" width="25" height="25" />
+                            </div>
+                        </template>
+                        <TaskList></TaskList>
+                    </el-tab-pane>
+                    <el-tab-pane class="tab_panel">
+                        <template #label>
+                            <div class="menuItem" ref="automateMenuRef">
+                                <span>伙伴</span>
+                                <Icon icon="carbon:partnership" width="25" height="25" />
+                            </div>
+                        </template>
+                        <ShareList></ShareList>
+                    </el-tab-pane>
+                </el-tabs>
+            
         </div>
-        <div class="main" v-else>
+        <div class="content" v-else>
             <swiper-container navigation="true" centered-slides="true" :autoplay-delay="5000"
                 :autoplay-disable-on-interaction="true" :pagination="true" :pagination-dynamic-bullets="true">
                 <swiper-slide>
@@ -63,16 +91,17 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch } from "vue";
 import { Icon } from '@iconify/vue';
-import { infoLog } from "../../common/log";
 import { register } from 'swiper/element/bundle';
 register();
 
 import { Option } from "./data/tsparticlesOption";
-import { ConfigApi } from "../../common/api"
-import { CONFIG_KEY_DATA_SHARE_PLAN } from "../../common/config";
+import { ConfigApi, AuthApi, UserApi } from "../../common/api"
+import { GITHUB_URL, CONFIG_KEY_DATA_SHARE_PLAN, DEFAULT_DATA_REPO } from "../../common/config";
 import { DataSharePlanConfigDTO } from "../../common/data/dto/dataSharePlanConfigDTO";
 import { Config } from "../../common/data/domain/config";
 import { errorLog } from "../../common/log";
+import ShareList from "./dataSharePlan/ShareList.vue";
+import TaskList from "./dataSharePlan/TaskList.vue";
 
 const enableDataSharePlan = ref(false);
 const tourOpen = ref(false);
@@ -80,6 +109,9 @@ const firstPageOption = Option.linkStyle;
 const secondPageOption = Option.popStyle;
 const thirdPageOption = Option.pop2Style;
 const config = ref(<DataSharePlanConfigDTO>{});
+
+const login = ref(false);
+const username = ref("");
 
 onMounted(async () => {
     try {
@@ -91,7 +123,21 @@ onMounted(async () => {
     } catch (e) {
         errorLog(e);
     }
+    checkLoginStatus();
 })
+
+const checkLoginStatus = async () => {
+    let oauthDTO = await AuthApi.authGetToken();
+    if (oauthDTO) {
+        login.value = true;
+    } else {
+        login.value = false;
+    }
+    let userDTO = await UserApi.userGet();
+    if (userDTO) {
+        username.value = userDTO.login;
+    }
+}
 
 const handleChange = async (value) => {
     let configFromStorage = await ConfigApi.getConfigByKey(CONFIG_KEY_DATA_SHARE_PLAN);
@@ -122,10 +168,27 @@ watch(enableDataSharePlan, async (newValue, oldValue) => {
 </script>
 
 <style scoped>
+
 .menu {
     display: flex;
     align-items: center;
     padding: 5px;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+}
+
+.tabs {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.tab_panel {
+  height: 100%;
+  width: 100%;
 }
 
 .icon {
@@ -139,10 +202,6 @@ watch(enableDataSharePlan, async (newValue, oldValue) => {
     flex-direction: column;
     flex: 1;
     overflow: auto;
-}
-
-.main {
-    flex: 1;
 
     .desc {
         z-index: 9999;
@@ -246,5 +305,15 @@ watch(enableDataSharePlan, async (newValue, oldValue) => {
         width: 100%;
         height: 100%;
     }
+}
+
+
+
+.statusWrapper {
+    display: flex;
+}
+
+.statusWrapperItem {
+    padding-right: 10px;
 }
 </style>

@@ -12,11 +12,14 @@ export class BaseService {
         this.whereConditionFunction = whereConditionFunction;
     }
 
-    async search(message, param) {
+    async search(message, param, { detailInjectAsyncCallback } = { detailInjectAsyncCallback: null }) {
         try {
             let result = this.searchDTOCreateFunction();
             result.items = await search(this.entityClassCreateFunction(), this.tableName, param, this.whereConditionFunction);
             result.total = await searchCount(this.entityClassCreateFunction(), this.tableName, param, this.whereConditionFunction);
+            if (detailInjectAsyncCallback) {
+                result = await detailInjectAsyncCallback(result);
+            }
             postSuccessMessage(message, result);
         } catch (e) {
             postErrorMessage(message, `[worker] search error : ` + e.message);
@@ -46,13 +49,22 @@ export class BaseService {
      */
     async getByIds(message, param) {
         try {
-            postSuccessMessage(message, (await batchGet(this.entityClassCreateFunction(), this.tableName, this.tableIdColumn, param)));
+            postSuccessMessage(message, (await _getByIds(param)));
         } catch (e) {
             postErrorMessage(
                 message,
                 "[worker] getByIds error : " + e.message
             );
         }
+    }
+
+    /**
+     * 
+     * @param {Message} message 
+     * @param {string[]} param ids
+     */
+    async _getByIds(param) {
+        return batchGet(this.entityClassCreateFunction(), this.tableName, this.tableIdColumn, param);
     }
 
     async addOrUpdate(message, param) {

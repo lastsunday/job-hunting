@@ -1,3 +1,4 @@
+export const GITHUB_URL = "https://github.com";
 export const GITHUB_APP_CLIENT_ID = "Iv23liutsRB7F1OJkVIL";
 export const GITHUB_APP_CLIENT_SECRET = "762e843b1d346533626fe2e9362834c30ad1408c";
 export const GITHUB_URL_APP_INSTALL_AUTHORIZE = "https://github.com/apps/job-hunting-github-app/installations/new";

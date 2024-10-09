@@ -556,7 +556,7 @@ const confirmJobFileImport = async () => {
           let targetList = await getMergeDataListForJob(jobList, "jobId", async (ids) => {
             return JobApi.jobGetByIds(ids);
           });
-          await JobApi.batchAddOrUpdateJob(targetList);
+          await JobApi.batchAddOrUpdateJobWithTransaction(targetList);
           importJobDialogVisible.value = false;
           ElMessage({
             message: `导入职位数据成功，共${targetList.length}条`,
@@ -647,7 +647,7 @@ const confirmCompanyFileImport = async () => {
           let targetList = await getMergeDataListForCompany(companyBOList, "companyId", async (ids) => {
             return CompanyApi.companyGetByIds(ids);
           });
-          await CompanyApi.batchAddOrUpdateCompany(targetList);
+          await CompanyApi.batchAddOrUpdateCompanyWithTransaction(targetList);
           importCompanyDialogVisible.value = false;
           ElMessage({
             message: `导入公司数据成功，共${targetList.length}条`,
@@ -739,7 +739,7 @@ const confirmCompanyTagFileImport = async () => {
           let targetList = await getMergeDataListForCompanyTag(companyTagBOList, async (ids) => {
             return await CompanyApi.getAllCompanyTagDTOByCompanyIds(ids);
           })
-          await CompanyApi.batchAddOrUpdateCompanyTag(targetList);
+          await CompanyApi.batchAddOrUpdateCompanyTagWithTransaction(targetList);
           importCompanyTagDialogVisible.value = false;
           ElMessage({
             message: `导入公司标签数据成功，共${targetList.length}条`,

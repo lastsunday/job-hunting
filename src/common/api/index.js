@@ -54,7 +54,15 @@ export const JobApi = {
       invokeEnv: invokeEnv,
     });
   },
-
+  /**
+     *
+     * @param {Job[]} jobs
+     */
+  batchAddOrUpdateJobWithTransaction: async function (jobs, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    return await invoke(this.batchAddOrUpdateJobWithTransaction.name, jobs, {
+      invokeEnv: invokeEnv,
+    });
+  },
   /**
    *
    * @param {Job} job
@@ -227,6 +235,14 @@ export const CompanyApi = {
   },
 
   /**
+ *
+ * @param {CompanyBO} param
+ */
+  batchAddOrUpdateCompanyWithTransaction: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    return await invoke(this.batchAddOrUpdateCompanyWithTransaction.name, param, { invokeEnv: invokeEnv });
+  },
+
+  /**
   *
   * @param {CompanyTagBO} param
   */
@@ -242,6 +258,13 @@ export const CompanyApi = {
     return await invoke(this.batchAddOrUpdateCompanyTag.name, param, { invokeEnv: invokeEnv });
   },
 
+  /**
+  *
+  * @param {CompanyTagBO[]} param
+  */
+  batchAddOrUpdateCompanyTagWithTransaction: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    return await invoke(this.batchAddOrUpdateCompanyTagWithTransaction.name, param, { invokeEnv: invokeEnv });
+  },
   /**
    * 
    * @param {string} id companyId 
@@ -581,6 +604,16 @@ export const TaskApi = {
    */
   searchTask: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
     let result = await invoke(this.searchTask.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {SearchTaskBO} param 
+   * @returns {SearchTaskDTO}
+   */
+  searchTaskWithDetail: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.searchTaskWithDetail.name, param, { invokeEnv: invokeEnv });
     return result.data;
   },
 

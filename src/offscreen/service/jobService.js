@@ -64,6 +64,25 @@ export const JobService = {
   batchAddOrUpdateJob: async function (message, param) {
     try {
       const now = new Date();
+      for (let i = 0; i < param.length; i++) {
+        await _insertOrUpdateJob(param[i], now);
+      }
+      postSuccessMessage(message, {});
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[worker] batchAddOrUpdateJob error : " + e.message
+      );
+    }
+  },
+  /**
+     *
+     * @param {Message} message
+     * @param {Job[]} param
+     */
+  batchAddOrUpdateJobWithTransaction: async function (message, param) {
+    try {
+      const now = new Date();
       (await getDb()).exec({
         sql: "BEGIN TRANSACTION",
       });
@@ -80,11 +99,10 @@ export const JobService = {
       });
       postErrorMessage(
         message,
-        "[worker] batchAddOrUpdateJob error : " + e.message
+        "[worker] batchAddOrUpdateJobWithTransaction error : " + e.message
       );
     }
   },
-
   /**
    *
    * @param {Message} message

@@ -252,7 +252,8 @@ TASK_HANDLE_MAP.set(TASK_TYPE_JOB_DATA_MERGE, async (dataId) => {
         let targetList = await getMergeDataListForJob(items, "jobId", async (ids) => {
             return JobApi.jobGetByIds(ids, { invokeEnv: BACKGROUND });
         });
-        return JobApi.batchAddOrUpdateJob(targetList, { invokeEnv: BACKGROUND });
+        await JobApi.batchAddOrUpdateJob(targetList, { invokeEnv: BACKGROUND });
+        return targetList.length;
     });
 })
 TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_DATA_MERGE, async (dataId) => {
@@ -261,7 +262,8 @@ TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_DATA_MERGE, async (dataId) => {
         let targetList = await getMergeDataListForCompany(companyBOList, "companyId", async (ids) => {
             return CompanyApi.companyGetByIds(ids, { invokeEnv: BACKGROUND });
         });
-        return await CompanyApi.batchAddOrUpdateCompany(targetList, { invokeEnv: BACKGROUND });
+        await CompanyApi.batchAddOrUpdateCompany(targetList, { invokeEnv: BACKGROUND });
+        return targetList.length;
     });
 })
 TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_TAG_DATA_MERGE, async (dataId) => {
@@ -270,7 +272,8 @@ TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_TAG_DATA_MERGE, async (dataId) => {
         let targetList = await getMergeDataListForCompanyTag(items, async (ids) => {
             return await CompanyApi.getAllCompanyTagDTOByCompanyIds(ids, { invokeEnv: BACKGROUND });
         })
-        return CompanyApi.batchAddOrUpdateCompanyTag(targetList, { invokeEnv: BACKGROUND });
+        await CompanyApi.batchAddOrUpdateCompanyTag(targetList, { invokeEnv: BACKGROUND });
+        return targetList.length;
     });
 })
 
@@ -314,7 +317,7 @@ export async function runTask() {
                     throw `[TASK RUN] not supported task type = ${taskItem.type}`
                 }
             } catch (e) {
-                debugLog(e);
+                errorLog(e);
                 //执行异常，补充异常信息
                 taskItem.status = TASK_STATUS_ERROR;
                 taskItem.errorReason = JSON.stringify(e);
@@ -482,8 +485,17 @@ async function mergeDataByDataId(dataId, taskType, dataTypeName, fileHeader, exc
     }
     debugLog(`[TASK DATA MERGE] valid file name = ${file.name}, id = ${file.id} success`);
     const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2 });
-    await dataInsertFunction(excelDataToObjectArrayFunction(data));
-    debugLog(`[TASK DATA MERGE] merge file name = ${file.name}, id = ${file.id} success`);
+    try {
+        await DBApi.dbBeginTransaction({}, { invokeEnv: BACKGROUND });
+        let count = await dataInsertFunction(excelDataToObjectArrayFunction(data));
+        taskDataMerge.dataCount = count;
+        await TaskDataMergeApi.taskDataMergeAddOrUpdate(taskDataMerge, { invokeEnv: BACKGROUND });
+        await DBApi.dbCommitTransaction({}, { invokeEnv: BACKGROUND });
+        debugLog(`[TASK DATA MERGE] merge file name = ${file.name}, id = ${file.id} success,data count = ${count}`);
+    } catch (e) {
+        await DBApi.dbRollbackTransaction({}, { invokeEnv: BACKGROUND });
+        throw e;
+    }
     //TODO 考虑自动删除文件内容，以便节省存储空间
     //TODO 如果删除文件，则注意添加事务
 }
@@ -545,7 +557,7 @@ async function downloadDataByDataId(dataId, dataTypeName, taskType) {
                 await DBApi.dbCommitTransaction({}, { invokeEnv: BACKGROUND });
             } catch (e) {
                 await DBApi.dbRollbackTransaction({}, { invokeEnv: BACKGROUND });
-                errorLog(e);
+                throw e;
             }
         } else {
             throw `unknown content type = ${content.type}`;

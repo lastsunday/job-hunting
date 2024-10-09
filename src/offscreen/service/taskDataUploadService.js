@@ -7,7 +7,7 @@ import { getDb } from "../database";
 import { postSuccessMessage, postErrorMessage } from "../util";
 import { dateToStr } from "../../common/utils";
 
-const SERVICE_INSTANCE = new BaseService("task_data_upload", "id",
+export const SERVICE_INSTANCE = new BaseService("task_data_upload", "id",
     () => {
         return new TaskDataUpload();
     },
