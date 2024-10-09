@@ -34,3 +34,4 @@ export const TASK_DATA_DOWNLOAD_MAX_DAY = 60;//day
 export const TASK_LOOP_DELAY = 30000;//ms
 
 export const CONFIG_KEY_DATA_SHARE_PLAN = "CONFIG_KEY_DATA_SHARE_PLAN";
+export const DEFAULT_REPO_TYPE = "GITHUB";

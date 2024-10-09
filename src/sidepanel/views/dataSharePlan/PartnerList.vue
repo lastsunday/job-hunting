@@ -136,7 +136,7 @@ import {
     reactive,
     toRaw,
 } from 'vue'
-import { UI_DEFAULT_PAGE_SIZE, DEFAULT_DATA_REPO } from "../../../common/config";
+import { UI_DEFAULT_PAGE_SIZE, DEFAULT_DATA_REPO, DEFAULT_REPO_TYPE } from "../../../common/config";
 import { SearchDataSharePartnerBO } from "../../../common/data/bo/searchDataSharePartnerBO";
 import { DataSharePartnerApi } from "../../../common/api";
 import { DataSharePartner } from "../../../common/data/domain/dataSharePartner";
@@ -225,13 +225,11 @@ const dialogFormVisible = ref(false);
 const formTitle = ref("");
 const formAddMode = ref(true);
 
-const REPO_TYPE_GITHUB = "GITHUB";
-
 const form = reactive({
     id: null,
     username: null,
     reponame: DEFAULT_DATA_REPO,
-    repoType: REPO_TYPE_GITHUB,
+    repoType: DEFAULT_REPO_TYPE,
 })
 
 const onAddHandle = async () => {
@@ -256,9 +254,9 @@ const onUpdateHandle = async (row: any) => {
 
 const resetFormValue = () => {
     form.id = null;
-    form.username =  null;
+    form.username = null;
     form.reponame = DEFAULT_DATA_REPO;
-    form.repoType = REPO_TYPE_GITHUB;
+    form.repoType = DEFAULT_REPO_TYPE;
 }
 
 const resetForm = () => {

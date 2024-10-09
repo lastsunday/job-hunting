@@ -18,6 +18,11 @@ export const SERVICE_INSTANCE = new BaseService("data_share_partner", "id",
             whereCondition +=
                 ` AND username LIKE '%${param.username}%'`;
         }
+        if (param.usernameList && param.usernameList.length > 0) {
+            let arraySplitString = "'" + param.usernameList.join("','") + "'";
+            whereCondition +=
+                ` AND username IN (${arraySplitString})`;
+        }
         if (param.startDatetimeForCreate) {
             whereCondition +=
                 " AND create_datetime >= '" +

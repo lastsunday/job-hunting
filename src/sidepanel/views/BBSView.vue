@@ -21,7 +21,23 @@
       </div>
       <div class="commentHeaderWrapper">
         <div class="commentHeader">
-          <div class="username">{{ item.author.login }}</div>
+          <div class="username">{{ item.author.login }}
+            <span v-if="!isMe(item.author.login)">
+              <span class="partnerExists" v-if="isDataSharePlanPartner(item.author.login)">
+                <el-tooltip :content="`${item.author.login}已加入你的数据共享计划伙伴名单`">
+                  <Icon icon="carbon:partnership" width="20" height="20" />
+                </el-tooltip>
+              </span>
+              <span v-else class="partnerAdd">
+                <el-popconfirm width="300" :title="`确认将${item.author.login}加入你的数据共享计划伙伴名单？`"
+                  @confirm="handleAddPartner(item.author.login)" confirm-button-text="确定" cancel-button-text="取消">
+                  <template #reference>
+                    <Icon icon="basil:add-outline" width="20" height="20" />
+                  </template>
+                </el-popconfirm>
+              </span>
+            </span>
+          </div>
           <div class="createTime"><el-tooltip :content="datetimeFormatHHMMSS(item.createdAt)">{{
             convertTimeOffsetToHumanReadable(item.createdAt) }} </el-tooltip></div>
           <el-link :href="item.bodyUrl" target="_blank" class="source">来源</el-link>
@@ -62,10 +78,10 @@
 import { ref, onMounted, reactive, toRaw, computed } from 'vue'
 import pcaCodeData from "../assets/data/pca-code.json";
 import hkMoTw from "../assets/data/HK-MO-TW.json";
-import { COMMENT_PAGE_SIZE } from "../../common/config";
+import { COMMENT_PAGE_SIZE, DEFAULT_DATA_REPO, DEFAULT_REPO_TYPE } from "../../common/config";
 import { genIdFromText } from "../../common/utils";
 import { GithubApi, EXCEPTION } from "../../common/api/github";
-import { ConfigApi } from "../../common/api";
+import { ConfigApi, UserApi } from "../../common/api";
 import { ElMessage } from "element-plus";
 import { Icon } from '@iconify/vue';
 import dayjs from "dayjs";
@@ -74,6 +90,10 @@ import { errorLog } from "../../common/log";
 import { Config } from "../../common/data/domain/config";
 import { BBSViewDTO } from "../dto/bbsViewDTO";
 import { convertTimeOffsetToHumanReadable } from "../../common/utils";
+import { MAX_RECORD_COUNT } from "../../common";
+import { DataSharePartner } from "../../common/data/domain/dataSharePartner";
+import { SearchDataSharePartnerBO } from "../../common/data/bo/searchDataSharePartnerBO";
+import { DataSharePartnerApi } from "../../common/api";
 
 const location = ref(["北京市"])
 const options = ref([]);
@@ -147,6 +167,23 @@ const nextPageButtonClass = reactive({
   "paging_icon_disable": true
 })
 
+const dataSharePartnerMap = ref(new Map());
+const isDataSharePlanPartner = computed(() => {
+  return function (value: string) {
+    return dataSharePartnerMap.value.has(value);
+  };
+})
+
+const isMe = computed(() => {
+  return function (value: string) {
+    if (myInfo.value) {
+      return myInfo.value.login == value;
+    } else {
+      return false;
+    }
+  }
+})
+
 const search = async () => {
   loading.value = true;
   let param = getSearchParam();
@@ -161,6 +198,22 @@ const search = async () => {
     pageInfo.hasPreviousPage = hasPreviousPage;
     previousPageButtonClass["paging_icon_disable"] = !pageInfo.hasPreviousPage;
     nextPageButtonClass["paging_icon_disable"] = !pageInfo.hasNextPage;
+    if (tableData.value.length > 0) {
+      //获取数据共享计划伙伴
+      let searchParam = new SearchDataSharePartnerBO();
+      searchParam.pageNum = 1;
+      searchParam.pageSize = MAX_RECORD_COUNT;
+      searchParam.usernameList = tableData.value.flatMap(item => item.author.login);
+      searchParam.orderByColumn = "updateDatetime";
+      searchParam.orderBy = "DESC";
+      let partnerResult = await DataSharePartnerApi.searchDataSharePartner(searchParam);
+      let partnerResultItems = partnerResult.items;
+      dataSharePartnerMap.value.clear();
+      for (let i = 0; i < partnerResultItems.length; i++) {
+        let item = partnerResultItems[i];
+        dataSharePartnerMap.value.set(item.username, null);
+      }
+    }
   } catch (e) {
     if (e == EXCEPTION.NO_LOGIN) {
       ElMessage({
@@ -236,6 +289,8 @@ const reset = () => {
 
 const CONFIG_KEY_VIEW_BBS = "CONFIG_KEY_VIEW_BBS";
 const config = ref(<BBSViewDTO>{});
+const myInfo = ref();
+
 onMounted(async () => {
   try {
     let configValue = await ConfigApi.getConfigByKey(CONFIG_KEY_VIEW_BBS);
@@ -247,6 +302,7 @@ onMounted(async () => {
     errorLog(e);
   }
   options.value.push(...pcaCodeData, ...genHK_MO_TW_CodeName(hkMoTw));
+  myInfo.value = await UserApi.userGet();
   search();
 });
 
@@ -351,6 +407,27 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
   })
 }
 
+const handleAddPartner = async (username) => {
+  try {
+    let entity = new DataSharePartner();
+    entity.username = username;
+    entity.reponame = DEFAULT_DATA_REPO;
+    entity.repoType = DEFAULT_REPO_TYPE;
+    await DataSharePartnerApi.dataSharePartnerAddOrUpdate(entity);
+    ElMessage({
+      message: `添加数据合作计划伙伴${username}成功`,
+      type: 'success',
+    })
+    search();
+  } catch (e) {
+    errorLog(e);
+    ElMessage({
+      message: `添加数据合作计划伙伴${username}失败`,
+      type: 'error',
+    })
+  }
+}
+
 </script>
 <style lang="scss" scoped>
 .locationInput {
@@ -408,6 +485,7 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
 }
 
 .username {
+  display: flex;
   padding-left: 5px;
   padding-right: 5px;
 }
@@ -439,5 +517,13 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
   flex-direction: column;
   flex: 1;
   overflow: auto;
+}
+
+.partnerExists {
+  color: var(--el-color-success);
+}
+
+.partnerAdd {
+  color: var(--el-color-primary);
 }
 </style>
