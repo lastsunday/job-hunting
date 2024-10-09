@@ -49,7 +49,7 @@ export class BaseService {
      */
     async getByIds(message, param) {
         try {
-            postSuccessMessage(message, (await _getByIds(param)));
+            postSuccessMessage(message, (await this._getByIds(param)));
         } catch (e) {
             postErrorMessage(
                 message,

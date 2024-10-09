@@ -269,7 +269,7 @@ TASK_HANDLE_MAP.set(TASK_TYPE_JOB_DATA_MERGE, async (dataId) => {
 TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_DATA_MERGE, async (dataId) => {
     return mergeDataByDataId(dataId, TASK_TYPE_COMPANY_DATA_MERGE, DATA_TYPE_NAME_COMPANY, COMPANY_FILE_HEADER, companyExcelDataToObjectArray, async (items) => {
         //处理数据冲突问题，根据数据来源更新时间来判断
-        let targetList = await getMergeDataListForCompany(companyBOList, "companyId", async (ids) => {
+        let targetList = await getMergeDataListForCompany(items, "companyId", async (ids) => {
             return CompanyApi.companyGetByIds(ids, { invokeEnv: BACKGROUND });
         });
         await CompanyApi.batchAddOrUpdateCompany(targetList, { invokeEnv: BACKGROUND });
