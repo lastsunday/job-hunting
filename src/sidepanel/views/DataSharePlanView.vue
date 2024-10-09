@@ -5,7 +5,7 @@
                 <div class="statusWrapper" v-if="enableDataSharePlan">
                     <div class="statusWrapperItem">登录状态:
                         <el-text type="success" v-if="login">在线</el-text>
-                        <el-text type="warning" v-else>离线</el-text>
+                        <el-text class="offlineButton" type="warning" v-else @click="onClickLogin">离线</el-text>
                     </div>
                     <div v-if="login" class="statusWrapperItem">数据上传仓库: <a
                             :href="`${GITHUB_URL}/${username}/${DEFAULT_DATA_REPO}`" target="_blank">{{ username
@@ -19,28 +19,28 @@
             </div>
         </el-row>
         <div class="content" v-if="enableDataSharePlan">
-            
-                <el-tabs tab-position="left" class="tabs">
-                    <el-tab-pane class="tab_panel">
-                        <template #label>
-                            <div class="menuItem" ref="favoriteMenuRef">
-                                <span>任务</span>
-                                <Icon icon="fluent-mdl2:taskboard" width="25" height="25" />
-                            </div>
-                        </template>
-                        <TaskList></TaskList>
-                    </el-tab-pane>
-                    <el-tab-pane class="tab_panel">
-                        <template #label>
-                            <div class="menuItem" ref="automateMenuRef">
-                                <span>伙伴</span>
-                                <Icon icon="carbon:partnership" width="25" height="25" />
-                            </div>
-                        </template>
-                        <PartnerList></PartnerList>
-                    </el-tab-pane>
-                </el-tabs>
-            
+
+            <el-tabs tab-position="left" class="tabs">
+                <el-tab-pane class="tab_panel">
+                    <template #label>
+                        <div class="menuItem" ref="favoriteMenuRef">
+                            <span>任务</span>
+                            <Icon icon="fluent-mdl2:taskboard" width="25" height="25" />
+                        </div>
+                    </template>
+                    <TaskList></TaskList>
+                </el-tab-pane>
+                <el-tab-pane class="tab_panel">
+                    <template #label>
+                        <div class="menuItem" ref="automateMenuRef">
+                            <span>伙伴</span>
+                            <Icon icon="carbon:partnership" width="25" height="25" />
+                        </div>
+                    </template>
+                    <PartnerList></PartnerList>
+                </el-tab-pane>
+            </el-tabs>
+
         </div>
         <div class="content" v-else>
             <swiper-container navigation="true" centered-slides="true" :autoplay-delay="5000"
@@ -165,10 +165,14 @@ watch(enableDataSharePlan, async (newValue, oldValue) => {
 }
 )
 
+const onClickLogin = async () => {
+    await AuthApi.authOauth2Login();
+    await checkLoginStatus();
+}
+
 </script>
 
 <style scoped>
-
 .menu {
     display: flex;
     align-items: center;
@@ -176,19 +180,19 @@ watch(enableDataSharePlan, async (newValue, oldValue) => {
 }
 
 .menuItem {
-  display: flex;
-  align-items: center;
+    display: flex;
+    align-items: center;
 }
 
 .tabs {
-  display: flex;
-  height: 100%;
-  width: 100%;
+    display: flex;
+    height: 100%;
+    width: 100%;
 }
 
 .tab_panel {
-  height: 100%;
-  width: 100%;
+    height: 100%;
+    width: 100%;
 }
 
 .icon {
@@ -315,5 +319,9 @@ watch(enableDataSharePlan, async (newValue, oldValue) => {
 
 .statusWrapperItem {
     padding-right: 10px;
+}
+
+.offlineButton {
+    cursor: pointer;
 }
 </style>
