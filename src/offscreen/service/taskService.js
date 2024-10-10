@@ -13,6 +13,11 @@ import {
 import { SERVICE_INSTANCE as taskDataDownloadService } from "./taskDataDownloadService";
 import { SERVICE_INSTANCE as taskDataUploadService } from "./taskDataUploadService";
 import { SERVICE_INSTANCE as taskDataMergeService } from "./taskDataMergeService";
+import { StatisticTaskBO } from "../../common/data/bo/statisticTaskBO";
+import { StatisticTaskDTO } from "../../common/data/dto/statisticTaskDTO";
+import { postSuccessMessage, postErrorMessage } from "../util";
+import { getDb } from "../database";
+import { dateToStr } from "../../common/utils";
 
 const SERVICE_INSTANCE = new BaseService("task", "id",
     () => {
@@ -175,4 +180,77 @@ export const TaskService = {
     taskDeleteByIds: async function (message, param) {
         SERVICE_INSTANCE.deleteByIds(message, param);
     },
+    /**
+     *
+     * @param {Message} message
+     * @param {StatisticTaskBO} param
+     */
+    statisticTask: async function (message, param) {
+        try {
+            let result = new StatisticTaskDTO();
+            let startDatetime = dateToStr(param.startDatetime);
+            let endDatetime = dateToStr(param.endDatetime);
+
+            //upload total
+            const uploadTotalSql = `SELECT SUM(data_count) AS count FROM task_data_upload ${genUpdatetimeCondition(startDatetime, endDatetime)}`;
+            let uploadRecordTotalCount = [];
+            (await getDb()).exec({
+                sql: uploadTotalSql,
+                rowMode: "object",
+                resultRows: uploadRecordTotalCount,
+            });
+            result.uploadRecordTotalCount = uploadRecordTotalCount[0].count;
+            
+            //download total
+            const downloadTotalSql = `SELECT COUNT(*) AS count FROM task ${genUpdatetimeCondition(startDatetime, endDatetime, ` AND status = 'FINISHED' AND type IN ('JOB_DATA_DOWNLOAD','COMPANY_DATA_DOWNLOAD','COMPANY_TAG_DATA_DOWNLOAD')`)} `;
+            let downloadFileTotalCount = [];
+            (await getDb()).exec({
+                sql: downloadTotalSql,
+                rowMode: "object",
+                resultRows: downloadFileTotalCount,
+            });
+            result.downloadFileTotalCount = downloadFileTotalCount[0].count;
+
+            //merge total
+            const mergeTotalSql = `SELECT SUM(data_count) AS count FROM task_data_merge ${genUpdatetimeCondition(startDatetime, endDatetime)}`;
+            let mergeRecordTotalCount = [];
+            (await getDb()).exec({
+                sql: mergeTotalSql,
+                rowMode: "object",
+                resultRows: mergeRecordTotalCount,
+            });
+            result.mergeRecordTotalCount = mergeRecordTotalCount[0].count;
+
+            postSuccessMessage(message, result);
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] statisticTask error : " + e.message
+            );
+        }
+    },
 };
+
+function genUpdatetimeCondition(startDatetime, endDatetime, otherConditionSql) {
+    let whereCondition = "";
+    if (startDatetime) {
+        whereCondition +=
+            " AND update_datetime >= '" +
+            dayjs(startDatetime).format("YYYY-MM-DD HH:mm:ss") +
+            "'";
+    }
+    if (endDatetime) {
+        whereCondition +=
+            " AND update_datetime < '" +
+            dayjs(endDatetime).format("YYYY-MM-DD HH:mm:ss") +
+            "'";
+    }
+    if (otherConditionSql) {
+        whereCondition += otherConditionSql;
+    }
+    if (whereCondition.startsWith(" AND")) {
+        whereCondition = whereCondition.replace("AND", "");
+        whereCondition = " WHERE " + whereCondition;
+    }
+    return whereCondition;
+}

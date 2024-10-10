@@ -1,8 +1,11 @@
 import { Message } from "../../common/api/message";
+import { postSuccessMessage, postErrorMessage } from "../util";
 import { SearchDataSharePartnerBO } from "../../common/data/bo/searchDataSharePartnerBO";
 import { SearchDataSharePartnerDTO } from "../../common/data/dto/searchDataSharePartnerDTO";
+import { StatisticDataSharePartnerDTO } from "../../common/data/dto/statisticDataSharePartnerDTO";
 import { BaseService } from "./baseService";
 import { DataSharePartner } from "../../common/data/domain/dataSharePartner";
+import { getDb } from "../database";
 import dayjs from "dayjs";
 
 export const SERVICE_INSTANCE = new BaseService("data_share_partner", "id",
@@ -93,6 +96,23 @@ export const DataSharePartnerService = {
      */
     dataSharePartnerDeleteByIds: async function (message, param) {
         SERVICE_INSTANCE.deleteByIds(message, param);
+    },
+    statisticDataSharePartner: async function (message, param) {
+        try {
+            let result = new StatisticDataSharePartnerDTO();
+            let totalCount = [];
+            (await getDb()).exec({
+                sql: "SELECT COUNT(*) AS count FROM data_share_partner",
+                rowMode: "object",
+                resultRows: totalCount,
+            });
+            result.totalCount = totalCount[0].count;
+            postSuccessMessage(message, result);
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] statisticDataSharePartner error : " + e.message
+            );
+        }
     }
-
 };

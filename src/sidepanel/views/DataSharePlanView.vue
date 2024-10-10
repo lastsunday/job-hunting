@@ -3,23 +3,52 @@
         <el-row justify="end">
             <div class="menu">
                 <div class="statusWrapper" v-if="enableDataSharePlan">
-                    <div class="statusWrapperItem">登录状态:
-                        <el-text type="success" v-if="login">在线</el-text>
-                        <el-text class="offlineButton" type="warning" v-else @click="onClickLogin">离线</el-text>
+                    <div class="statusWrapperItem">
+                        <div class="info">登录状态:
+                            <el-text type="success" v-if="login">在线</el-text>
+                            <el-text class="offlineButton" type="warning" v-else @click="onClickLogin">离线</el-text>
+                        </div>
+                        <div v-if="login" class="info">数据上传仓库: <a
+                                :href="`${GITHUB_URL}/${username}/${DEFAULT_DATA_REPO}`" target="_blank">{{ username
+                                }}/{{ DEFAULT_DATA_REPO }}</a></div>
                     </div>
-                    <div v-if="login" class="statusWrapperItem">数据上传仓库: <a
-                            :href="`${GITHUB_URL}/${username}/${DEFAULT_DATA_REPO}`" target="_blank">{{ username
-                            }}/{{ DEFAULT_DATA_REPO }}</a></div>
+                    <div class="statusWrapperItem">
+                        <span class="group">今天<el-tooltip content="上传记录数"><span>
+                                    <Icon icon="material-symbols:cloud-upload" /><span class="number">{{
+                                        uploadRecordTotalCountToday }}</span>
+                                </span></el-tooltip>
+                            <el-tooltip content="下载文件数"><span>
+                                    <Icon icon="material-symbols:cloud-download" /><span class="number">{{
+                                        downloadFileTotalCountToday }}</span>
+                                </span></el-tooltip>
+                            <el-tooltip content="合并记录数"><span>
+                                    <Icon icon="material-symbols:merge" /><span class="number">{{
+                                        mergeRecordTotalCountToday }}</span>
+                                </span></el-tooltip>
+                        </span>
+                        <span class="group">历史<el-tooltip content="上传记录数"><span>
+                                    <Icon icon="material-symbols:cloud-upload" /><span class="number">{{
+                                        uploadRecordTotalCountAll }}</span>
+                                </span></el-tooltip>
+                            <el-tooltip content="下载文件数"><span>
+                                    <Icon icon="material-symbols:cloud-download" /><span class="number">{{
+                                        downloadFileTotalCountAll }}</span>
+                                </span></el-tooltip>
+                            <el-tooltip content="合并记录数"><span>
+                                    <Icon icon="material-symbols:merge" /><span class="number">{{
+                                        mergeRecordTotalCountAll }}</span>
+                                </span></el-tooltip>
+                        </span>
+                        <span class="group">伙伴数：
+                            <Icon icon="carbon:partnership" /><span class="number">{{ dataSharePartnerCount }}</span>
+                        </span>
+                    </div>
                 </div>
-                <el-switch v-model="enableDataSharePlan" active-text="开启数据共享计划" inactive-text="关闭数据共享计划"
-                    inline-prompt />
-                <el-tooltip content="帮助">
-                    <Icon icon="ph:question" class="icon" @click="tourOpen = true" />
-                </el-tooltip>
+                <el-switch v-model="enableDataSharePlan" active-text="开启数据共享计划" inactive-text="关闭数据共享计划" inline-prompt
+                    size="large" />
             </div>
         </el-row>
         <div class="content" v-if="enableDataSharePlan">
-
             <el-tabs tab-position="left" class="tabs">
                 <el-tab-pane class="tab_panel">
                     <template #label>
@@ -89,19 +118,22 @@
     </div>
 </template>
 <script lang="ts" setup>
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, onUnmounted } from "vue";
 import { Icon } from '@iconify/vue';
 import { register } from 'swiper/element/bundle';
 register();
 
 import { Option } from "./data/tsparticlesOption";
-import { ConfigApi, AuthApi, UserApi } from "../../common/api"
+import { ConfigApi, AuthApi, UserApi, DataSharePartnerApi, TaskApi } from "../../common/api"
 import { GITHUB_URL, CONFIG_KEY_DATA_SHARE_PLAN, DEFAULT_DATA_REPO } from "../../common/config";
 import { DataSharePlanConfigDTO } from "../../common/data/dto/dataSharePlanConfigDTO";
 import { Config } from "../../common/data/domain/config";
 import { errorLog } from "../../common/log";
 import PartnerList from "./dataSharePlan/PartnerList.vue";
 import TaskList from "./dataSharePlan/TaskList.vue";
+import { StatisticDataSharePartnerDTO } from "../../common/data/dto/statisticDataSharePartnerDTO";
+import dayjs from "dayjs";
+import { StatisticTaskBO } from "../../common/data/bo/statisticTaskBO";
 
 const enableDataSharePlan = ref(false);
 const tourOpen = ref(false);
@@ -112,6 +144,16 @@ const config = ref(<DataSharePlanConfigDTO>{});
 
 const login = ref(false);
 const username = ref("");
+let refreshIntervalId = null;
+
+const dataSharePartnerCount = ref(0);
+
+const uploadRecordTotalCountToday = ref(0);
+const downloadFileTotalCountToday = ref(0);
+const mergeRecordTotalCountToday = ref(0);
+const uploadRecordTotalCountAll = ref(0);
+const downloadFileTotalCountAll = ref(0);
+const mergeRecordTotalCountAll = ref(0);
 
 onMounted(async () => {
     try {
@@ -123,8 +165,46 @@ onMounted(async () => {
     } catch (e) {
         errorLog(e);
     }
-    checkLoginStatus();
+    await checkLoginStatus();
+    await refresh();
+    refreshIntervalId = setInterval(refresh, 10000);
 })
+
+onUnmounted(() => {
+    if (refreshIntervalId) {
+        clearInterval(refreshIntervalId);
+        refreshIntervalId = null;
+    }
+});
+
+const refresh = async () => {
+    try {
+        if (login.value) {
+            let statisticDataSharePartnerDTO = await DataSharePartnerApi.statisticDataSharePartner({});
+            dataSharePartnerCount.value = statisticDataSharePartnerDTO.totalCount;
+            let now = dayjs();
+            let todayStart = now.startOf("day").format("YYYY-MM-DD HH:mm:ss");
+            let todayEnd = now
+                .startOf("day")
+                .add(1, "day")
+                .format("YYYY-MM-DD HH:mm:ss");
+            let todayParam = new StatisticTaskBO();
+            todayParam.startDatetime = todayStart;
+            todayParam.endDatetime = todayEnd;
+            let statisticTaskToday = await TaskApi.statisticTask(todayParam);
+            uploadRecordTotalCountToday.value = statisticTaskToday.uploadRecordTotalCount;
+            downloadFileTotalCountToday.value = statisticTaskToday.downloadFileTotalCount;
+            mergeRecordTotalCountToday.value = statisticTaskToday.mergeRecordTotalCount;
+            let allParam = new StatisticTaskBO();
+            let statisticTaskAll = await TaskApi.statisticTask(allParam);
+            uploadRecordTotalCountAll.value = statisticTaskAll.uploadRecordTotalCount;
+            downloadFileTotalCountAll.value = statisticTaskAll.downloadFileTotalCount;
+            mergeRecordTotalCountAll.value = statisticTaskAll.mergeRecordTotalCount;
+        }
+    } catch (e) {
+        errorLog(e);
+    }
+};
 
 const checkLoginStatus = async () => {
     let oauthDTO = await AuthApi.authGetToken();
@@ -315,13 +395,39 @@ const onClickLogin = async () => {
 
 .statusWrapper {
     display: flex;
+    flex-direction: column;
+    font-size: 15px;
 }
 
 .statusWrapperItem {
+    display: flex;
+    justify-content: end;
+
+    span {
+        display: flex;
+    }
+
+}
+
+.info {
     padding-right: 10px;
 }
 
 .offlineButton {
     cursor: pointer;
+}
+
+.group {
+    margin-right: 5px;
+    margin-top: 2px;
+    padding: 1px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+}
+
+.number {
+    font-weight: bold;
+    color: var(--el-color-primary);
+    padding-left: 4px;
 }
 </style>

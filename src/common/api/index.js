@@ -38,6 +38,9 @@ import { TaskDataMerge } from "../data/domain/taskDataMerge";
 import { DataSharePartner } from "../data/domain/dataSharePartner";
 import { SearchDataSharePartnerBO } from "../data/bo/searchDataSharePartnerBO";
 import { SearchDataSharePartnerDTO } from "../data/dto/searchDataSharePartnerDTO";
+import { StatisticDataSharePartnerDTO } from "../data/dto/statisticDataSharePartnerDTO";
+import { StatisticTaskBO } from "../data/bo/statisticTaskBO";
+import { StatisticTaskDTO } from "../data/dto/statisticTaskDTO";
 
 export const JobApi = {
   /**
@@ -649,6 +652,15 @@ export const TaskApi = {
     let result = await invoke(this.taskDeleteByIds.name, param, { invokeEnv: invokeEnv });
     return result.data;
   },
+  /**
+ * 
+ * @param StatisticTaskBO param 
+ * @returns StatisticTaskDTO
+ */
+  statisticTask: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.statisticTask.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
 
 }
 
@@ -962,5 +974,16 @@ export const DataSharePartnerApi = {
     let result = await invoke(this.dataSharePartnerDeleteByIds.name, param, { invokeEnv: invokeEnv });
     return result.data;
   },
+
+  /**
+   * 
+   * @param {} param 
+   * @returns StatisticDataSharePartnerDTO
+   */
+  statisticDataSharePartner: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.statisticDataSharePartner.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
 
 }
