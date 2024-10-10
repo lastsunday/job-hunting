@@ -20,7 +20,7 @@
           </el-tour-step>
           <el-tour-step :target="githubAppRef?.$el" title="GitHub App">
             <el-row>
-              <el-text>1.安装GitHub App，跳转到GitHub App安装页面，授权后获得添加评论的能力</el-text>
+              <el-text>1.安装GitHub App，跳转到GitHub App安装页面，授权后获得评论、数据共享计划能力</el-text>
             </el-row>
             <el-row>
               <el-text>2.如果已安装，则会跳转到GitHub App配置页面</el-text>
@@ -127,16 +127,16 @@
       <el-row ref="githubAppRef" class="setting_item">
         <el-descriptions title="GitHub App">
           <el-descriptions-item>
-            <el-tooltip v-if="login" content="安装GitHub App获得添加评论的能力" placement="top">
+            <el-tooltip v-if="login" content="安装GitHubApp获得评论、数据共享计划能力" placement="top">
               <el-button @click="onClickInstallAndLogin">
                 <el-icon class="el-icon--left">
                   <Icon icon="mdi:github" />
                 </el-icon>
-                安装GitHubApp获得评论能力<el-icon class="el-icon--left">
+                安装GitHubApp获得评论、数据共享计划能力<el-icon class="el-icon--left">
                   <Icon icon="ph:question" />
                 </el-icon></el-button>
             </el-tooltip>
-            <el-tooltip v-if="!login" content="安装GitHub App获得添加评论的能力" placement="top">
+            <el-tooltip v-if="!login" content="安装GitHubApp获得评论、数据共享计划能力" placement="top">
               <el-button @click="onClickInstallAndLogin">
                 <el-icon class="el-icon--left">
                   <Icon icon="mdi:github" />
@@ -145,6 +145,14 @@
                   <Icon icon="ph:question" />
                 </el-icon></el-button>
             </el-tooltip>
+            <el-row>
+              <el-text type="warning">注意：Github App要求的授权：</el-text>
+              <el-link type="primary" target="_blank" href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-administration">Administration<Icon icon="mingcute:warning-line" /></el-link>
+              <el-link type="primary" target="_blank" href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-issues">Issues<Icon icon="mingcute:warning-line" /></el-link>
+              <el-link type="primary" target="_blank" href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-contents">Contents<Icon icon="mingcute:warning-line" /></el-link>
+              <el-link type="primary" target="_blank" href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-metadata">Metadata<Icon icon="mingcute:warning-line" /></el-link>
+            </el-row>
+            
           </el-descriptions-item>
         </el-descriptions>
       </el-row>
@@ -1026,5 +1034,8 @@ const popularPathsLoading = ref(true);
 
 .trafficWrapper {
   padding-top: 20px;
+}
+.el-link {
+  margin-right: 8px;
 }
 </style>
