@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (ContentScript)新增职位字段（公司名是否为全称）。
+2. (SidePanel)新增数据共享计划（介绍页，任务列表，数据共享计划伙伴列表，后台任务特性）。
+3. (SidePanel)新增讨论区可快速添加数据共享计划伙伴。
+
+### 🔨 Dependency
+
+1. @tsparticles/vue3 ^3.0.1
+2. swiper ^11.1.14
+3. tsparticles ^3.5.0
+
 ## 1.27.4(2024-09-10)
 
 ### 🐛 Fixed
