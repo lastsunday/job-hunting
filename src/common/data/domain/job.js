@@ -19,5 +19,6 @@ export class Job{
     bossCompanyName;
     bossPosition;
     createDatetime;
-    updateDatetime
+    updateDatetime;
+    isFullCompanyName;
 }

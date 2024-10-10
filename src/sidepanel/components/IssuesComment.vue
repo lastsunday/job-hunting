@@ -15,7 +15,24 @@
                 </div>
                 <div class="commentHeaderWrapper">
                     <div class="commentHeader">
-                        <div class="username">{{ item.user.login }}</div>
+                        <div class="username">{{ item.user.login }}
+                            <span v-if="!isMe(item.user.login)">
+                                <span class="partnerExists" v-if="isDataSharePlanPartner(item.user.login)">
+                                    <el-tooltip :content="`${item.user.login}已加入你的数据共享计划伙伴名单`">
+                                        <Icon icon="carbon:partnership" width="20" height="20" />
+                                    </el-tooltip>
+                                </span>
+                                <span v-else class="partnerAdd">
+                                    <el-popconfirm width="300" :title="`确认将${item.user.login}加入你的数据共享计划伙伴名单？`"
+                                        @confirm="handleAddPartner(item.user.login)" confirm-button-text="确定"
+                                        cancel-button-text="取消">
+                                        <template #reference>
+                                            <Icon icon="basil:add-outline" width="20" height="20" />
+                                        </template>
+                                    </el-popconfirm>
+                                </span>
+                            </span>
+                        </div>
                         <div class="createTime"><el-tooltip :content="datetimeFormatHHMMSS(item.created_at)">{{
                             convertTimeOffsetToHumanReadable(item.created_at) }} </el-tooltip></div>
                         <el-link :href="item.html_url" target="_blank" class="source">来源</el-link>
@@ -59,8 +76,13 @@ import { GithubApi } from "../../common/api/github"
 import { UserApi } from "../../common/api";
 import { Icon } from '@iconify/vue';
 import { ElMessage } from "element-plus";
-import { COMMENT_PAGE_SIZE } from "../../common/config";
+import { COMMENT_PAGE_SIZE, DEFAULT_DATA_REPO, DEFAULT_REPO_TYPE } from "../../common/config";
 import { convertTimeOffsetToHumanReadable } from "../../common/utils";
+import { MAX_RECORD_COUNT } from "../../common";
+import { DataSharePartner } from "../../common/data/domain/dataSharePartner";
+import { SearchDataSharePartnerBO } from "../../common/data/bo/searchDataSharePartnerBO";
+import { DataSharePartnerApi } from "../../common/api";
+import { errorLog } from "../../common/log";
 
 const props = defineProps(["issues"]);
 const item = ref({});
@@ -122,6 +144,23 @@ watch(show, async (newValue, oldValue) => {
     }
 });
 
+const dataSharePartnerMap = ref(new Map());
+const isDataSharePlanPartner = computed(() => {
+    return function (value: string) {
+        return dataSharePartnerMap.value.has(value);
+    };
+})
+
+const isMe = computed(() => {
+    return function (value: string) {
+        if (myInfo.value) {
+            return myInfo.value.login == value;
+        } else {
+            return false;
+        }
+    }
+})
+
 const search = async () => {
     await queryComment();
 }
@@ -143,6 +182,22 @@ const queryComment = async () => {
         nextPageButtonClass["paging_icon_disable"] = !nextPageNum.value;
         firstPageButtonClass["paging_icon_disable"] = !firstPageNum.value;
         lastPageButtonClass["paging_icon_disable"] = !lastPageNum.value;
+        if (dataList.value.length > 0) {
+            //获取数据共享计划伙伴
+            let searchParam = new SearchDataSharePartnerBO();
+            searchParam.pageNum = 1;
+            searchParam.pageSize = MAX_RECORD_COUNT;
+            searchParam.usernameList = dataList.value.flatMap(item => item.user.login);
+            searchParam.orderByColumn = "updateDatetime";
+            searchParam.orderBy = "DESC";
+            let partnerResult = await DataSharePartnerApi.searchDataSharePartner(searchParam);
+            let partnerResultItems = partnerResult.items;
+            dataSharePartnerMap.value.clear();
+            for (let i = 0; i < partnerResultItems.length; i++) {
+                let item = partnerResultItems[i];
+                dataSharePartnerMap.value.set(item.username, null);
+            }
+        }
     } catch (e) {
         ElMessage({
             message: '查询失败',
@@ -205,6 +260,27 @@ const onCommit = async () => {
 
 }
 
+const handleAddPartner = async (username) => {
+    try {
+        let entity = new DataSharePartner();
+        entity.username = username;
+        entity.reponame = DEFAULT_DATA_REPO;
+        entity.repoType = DEFAULT_REPO_TYPE;
+        await DataSharePartnerApi.dataSharePartnerAddOrUpdate(entity);
+        ElMessage({
+            message: `添加数据合作计划伙伴${username}成功`,
+            type: 'success',
+        })
+        search();
+    } catch (e) {
+        errorLog(e);
+        ElMessage({
+            message: `添加数据合作计划伙伴${username}失败`,
+            type: 'error',
+        })
+    }
+}
+
 </script>
 <style lang="css" scoped>
 .wrapper {
@@ -243,6 +319,7 @@ const onCommit = async () => {
 }
 
 .username {
+    display: flex;
     padding-right: 5px;
 }
 
@@ -298,5 +375,13 @@ const onCommit = async () => {
 
 .commentContent {
     font-size: 14px;
+}
+
+.partnerExists {
+    color: var(--el-color-success);
+}
+
+.partnerAdd {
+    color: var(--el-color-primary);
 }
 </style>

@@ -44,7 +44,10 @@
 15. 首页展示最近查看职位以及在地图上显示，招聘网站和企业搜索网站的快捷入口。
 16. 讨论区板块，根据省市区区分。
 17. 个人助理，设置职位偏好，快速找到感兴趣的职位。
-18. 自动化任务，支持自动浏览职位搜索页（前程无忧，BOSS直聘，智联招聘，拉勾网，猎聘网）
+18. 自动化任务，支持自动浏览职位搜索页。（前程无忧，BOSS直聘，智联招聘，拉勾网，猎聘网）
+19. 数据共享计划
+    1. 支持本地数据同步到GitHub仓库。
+    2. 从其他GitHub仓库同步数据到本地。 
 
 ## Road Map
 
@@ -59,12 +62,14 @@
     - [x] 拉钩网
     - [x] 猎聘网
 - [ ] 数据共享计划
-  - [ ] 服务端
+  - [ ] 支持的服务端
     - [ ] <https://github.com/lastsunday/job-hunting-server>
-  - [ ] 数据
-    - [ ] 职位
-    - [ ] 公司
-    - [ ] 公司标签
+    - [x] GitHub
+  - [x] 数据
+    - [x] 职位
+    - [x] 公司
+    - [x] 公司标签
+  - [x] 数据共享计划伙伴列表
 - [ ] 多语言
   - [ ] 英文
   - [ ] 简体中文
@@ -101,6 +106,20 @@
 
 <div style="margin-top:30px">
     <img src="docs\introduction\company-aiqicha.jpg" alt="aiqicha" width="1000px"/>
+</div>
+
+### 数据共享计划
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\chrome_extension_data_share_introduction.png" alt="chrome_extension_data_share_introduction" width="600px"/>
+</div>
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\chrome_extension_data_share_task.png" alt="chrome_extension_data_share_task" width="600px"/>
+</div>
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\chrome_extension_data_share_partner.png" alt="chrome_extension_data_share_partner" width="600px"/>
 </div>
 
 ### 管理页面

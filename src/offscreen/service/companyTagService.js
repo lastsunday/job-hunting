@@ -100,6 +100,9 @@ export const CompanyTagService = {
             });
             postSuccessMessage(message, {});
         } catch (e) {
+            (await getDb()).exec({
+                sql: "ROLLBACK TRANSACTION",
+            });
             postErrorMessage(
                 message,
                 "[worker] addOrUpdateCompanyTag error : " + e.message
@@ -113,6 +116,24 @@ export const CompanyTagService = {
      */
     batchAddOrUpdateCompanyTag: async function (message, param) {
         try {
+            for (let i = 0; i < param.length; i++) {
+                await _addOrUpdateCompanyTag(param[i]);
+            }
+            postSuccessMessage(message, {});
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] batchAddOrUpdateCompanyTag error : " + e.message
+            );
+        }
+    },
+    /**
+     * 
+     * @param {Message} message 
+     * @param {CompanyTagBO[]} param 
+     */
+    batchAddOrUpdateCompanyTagWithTransaction: async function (message, param) {
+        try {
             (await getDb()).exec({
                 sql: "BEGIN TRANSACTION",
             });
@@ -124,9 +145,12 @@ export const CompanyTagService = {
             });
             postSuccessMessage(message, {});
         } catch (e) {
+            (await getDb()).exec({
+                sql: "ROLLBACK TRANSACTION",
+            });
             postErrorMessage(
                 message,
-                "[worker] batchAddOrUpdateCompanyTag error : " + e.message
+                "[worker] batchAddOrUpdateCompanyTagWithTransaction error : " + e.message
             );
         }
     },
@@ -327,6 +351,18 @@ function genCompanyTagSearchWhereConditionSql(param) {
     if (param.tagIds && param.tagIds.length > 0) {
         whereCondition +=
             ` AND COUNT(DISTINCT t1.tag_id) = ${param.tagIds.length}`;
+    }
+    if (param.startDatetimeForUpdate) {
+        whereCondition +=
+            " AND updateDatetime >= '" +
+            dayjs(param.startDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+            "'";
+    }
+    if (param.endDatetimeForUpdate) {
+        whereCondition +=
+            " AND updateDatetime < '" +
+            dayjs(param.endDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+            "'";
     }
     if (whereCondition.startsWith(" AND")) {
         whereCondition = whereCondition.replace("AND", "");

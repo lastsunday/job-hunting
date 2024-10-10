@@ -1,0 +1,3 @@
+export class StatisticDataSharePartnerDTO{
+    totalCount;
+}

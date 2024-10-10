@@ -4,6 +4,8 @@ export class SearchCompanyBO extends PageBO {
   companyName;
   startDateStartDatetime;
   startDateEndDatetime;
+  startDatetimeForUpdate;
+  endDatetimeForUpdate;
   orderByColumn;
   /**
    * ASC,DESC

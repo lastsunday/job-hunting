@@ -11,6 +11,17 @@ import { StatisticCompanyDTO } from "../../common/data/dto/statisticCompanyDTO";
 import { toHump, toLine } from "../../common/utils";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
 import { CompanyBO } from "../../common/data/bo/companyBO";
+import { BaseService } from "./baseService";
+
+const SERVICE_INSTANCE = new BaseService("company", "company_id",
+  () => {
+    return new Company();
+  },
+  () => {
+    return new SearchCompanyDTO();
+  },
+  null
+);
 
 export const CompanyService = {
   /**
@@ -54,6 +65,24 @@ export const CompanyService = {
      */
   batchAddOrUpdateCompany: async function (message, param) {
     try {
+      for (let i = 0; i < param.length; i++) {
+        await _addOrUpdateCompany(param[i]);
+      }
+      postSuccessMessage(message, {});
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[worker] batchAddOrUpdateCompany error : " + e.message
+      );
+    }
+  },
+  /**
+     * 
+     * @param {Message} message 
+     * @param {CompanyBO[]} param 
+     */
+  batchAddOrUpdateCompanyWithTransaction: async function (message, param) {
+    try {
       (await getDb()).exec({
         sql: "BEGIN TRANSACTION",
       });
@@ -65,9 +94,12 @@ export const CompanyService = {
       });
       postSuccessMessage(message, {});
     } catch (e) {
+      await db.exec({
+        sql: "ROLLBACK TRANSACTION",
+      });
       postErrorMessage(
         message,
-        "[worker] batchAddOrUpdateCompany error : " + e.message
+        "[worker] batchAddOrUpdateCompanyWithTransaction error : " + e.message
       );
     }
   },
@@ -205,6 +237,14 @@ export const CompanyService = {
         "[worker] statisticCompany error : " + e.message
       );
     }
+  },
+  /**
+   *
+   * @param {Message} message
+   * @param {string[]} param id
+   */
+  companyGetByIds: async function (message, param) {
+    SERVICE_INSTANCE.getByIds(message, param);
   },
 };
 
@@ -391,6 +431,18 @@ function genSearchWhereConditionSql(param) {
     whereCondition +=
       " AND company_start_date < '" +
       dayjs(param.startDateEndDatetime).format("YYYY-MM-DD HH:mm:ss") +
+      "'";
+  }
+  if (param.startDatetimeForUpdate) {
+    whereCondition +=
+      " AND update_datetime >= '" +
+      dayjs(param.startDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+      "'";
+  }
+  if (param.endDatetimeForUpdate) {
+    whereCondition +=
+      " AND update_datetime < '" +
+      dayjs(param.endDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
       "'";
   }
   if (isNotEmpty(param.minLat) && isNotEmpty(param.maxLat)) {

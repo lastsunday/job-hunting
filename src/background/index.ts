@@ -1,10 +1,10 @@
-import { infoLog, debugLog, errorLog } from "../common/log";
+import { infoLog, debugLog, errorLog, isDebug } from "../common/log";
 import {
   BACKGROUND,
   CONTENT_SCRIPT,
   OFFSCREEN,
 } from "../common/api/bridgeCommon";
-import { convertPureJobDetailUrl, paramsToObject, parseToLineObjectToToHumpObject } from "../common/utils";
+import { convertPureJobDetailUrl, paramsToObject, parseToLineObjectToToHumpObject, randomDelay } from "../common/utils";
 import { JobApi } from "../common/api";
 import { httpFetchGetText, httpFetchJson } from "../common/api/common";
 import { getAndRemovePromiseHook } from "../common/api/bridge";
@@ -14,9 +14,14 @@ import { OauthDTO } from "../common/data/dto/oauthDTO";
 import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_URL_GET_USER, GITHUB_APP_INSTALL_CALLBACK_URL } from "../common/config";
 import { UserService } from "./service/userService";
 import { UserDTO } from "../common/data/dto/userDTO";
-import { setUser } from "./service/userService";
+import { setUser, getUser } from "./service/userService";
 import { SystemService } from "./service/systemService";
 import { AutomateService } from "./service/automateService";
+import { calculateUploadTask, calculateDownloadTask, runTask, calculateDataSharePartnerList } from "./service/taskService";
+import { DEFAULT_DATA_REPO, TASK_LOOP_DELAY } from "../common/config";
+import { ConfigApi } from "../common/api";
+import { DataSharePlanConfigDTO } from "../common/data/dto/dataSharePlanConfigDTO";
+import { CONFIG_KEY_DATA_SHARE_PLAN } from "../common/config";
 
 debugLog("background ready");
 chrome.runtime.onInstalled.addListener(async () => {
@@ -181,6 +186,59 @@ async function setupOffscreenDocument(path: string) {
     });
     await creating;
     creating = null;
+    //
+    let taskRunCount = 0;
+    let taskRun = false;
+    const backgroundTaskRunning = async () => {
+      if (!taskRun) {
+        taskRun = true;
+        try {
+          taskRunCount += 1;
+          infoLog(`[Task] Task run seq = < ${taskRunCount} >`)
+          let dataSharePlanConfig = new DataSharePlanConfigDTO();
+          let configValue = await ConfigApi.getConfigByKey(CONFIG_KEY_DATA_SHARE_PLAN, { invokeEnv: BACKGROUND });
+          if (configValue && configValue.value) {
+            dataSharePlanConfig = JSON.parse(configValue.value);
+          }
+          if (dataSharePlanConfig.enable) {
+            infoLog(`[TASK] Data share plan enable`);
+            infoLog(`[TASK] Data share plan task running`);
+            let userDTO = await getUser();
+            if (userDTO) {
+              let userName = userDTO.login;
+              let repoName = DEFAULT_DATA_REPO;
+              infoLog(`[Task] has login info userName = ${userName}`)
+              infoLog(`[Task] calculateUploadTask`)
+              await calculateUploadTask({ userName: userName, repoName: repoName });
+              //获取自身的数据共享计划仓库
+              let shareDataPlanList = [{ username: userName, reponame: DEFAULT_DATA_REPO }];
+              //从数据库中获取数据共享伙伴列表
+              let dataSharePartnerList = await calculateDataSharePartnerList();
+              shareDataPlanList.push(...dataSharePartnerList);
+              infoLog(`[TASK] Share data plan list length = ${shareDataPlanList.length}`);
+              for (let i = 0; i < shareDataPlanList.length; i++) {
+                let shareItem = shareDataPlanList[i];
+                await calculateDownloadTask({ userName: shareItem.username, repoName: shareItem.reponame });
+              }
+              infoLog(`[TASK] runTask`)
+              await runTask();
+            } else {
+              infoLog(`[TASK] no login info`)
+              infoLog(`[TASK] skip data share plan`)
+            }
+          } else {
+            infoLog(`[TASK] Data share plan disable`);
+            infoLog(`[TASK] Data share plan task skip`);
+          }
+        } catch (e) {
+          errorLog(e);
+        }
+        taskRun = false;
+        await randomDelay(TASK_LOOP_DELAY, 0);
+        backgroundTaskRunning();
+      }
+    };
+    backgroundTaskRunning();
   }
 
   chrome.runtime.onMessage.addListener(async function (

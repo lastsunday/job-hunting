@@ -53,7 +53,7 @@ export const MissionLogService = {
     /**
      *
      * @param {Message} message
-     * @param {striong} param id
+     * @param {string} param id
      */
     missionLogDeleteById: async function (message, param) {
         try {
