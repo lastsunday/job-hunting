@@ -53,16 +53,17 @@
                         </el-table-column>
                         <el-table-column label="用户名" width="180" show-overflow-tooltip>
                             <template #default="scope">
-                                <el-text line-clamp="1">
-                                    {{ scope.row.username }}
-                                </el-text>
+                                <el-link :href="`${GITHUB_URL}/${scope.row.username}`" type="primary" target="_blank">{{
+                                    scope.row.username }}
+                                </el-link>
                             </template>
                         </el-table-column>
                         <el-table-column label="仓库名" show-overflow-tooltip>
                             <template #default="scope">
-                                <el-text line-clamp="1">
-                                    {{ scope.row.reponame }}
-                                </el-text>
+                                <el-link :href="`${GITHUB_URL}/${scope.row.username}/${scope.row.reponame}`"
+                                    type="primary" target="_blank">{{
+                                        scope.row.reponame }}
+                                </el-link>
                             </template>
                         </el-table-column>
                         <el-table-column label="仓库类型" width="180" show-overflow-tooltip>
@@ -141,7 +142,7 @@ import {
     reactive,
     toRaw,
 } from 'vue'
-import { UI_DEFAULT_PAGE_SIZE, DEFAULT_DATA_REPO, DEFAULT_REPO_TYPE } from "../../../common/config";
+import { UI_DEFAULT_PAGE_SIZE, DEFAULT_DATA_REPO, DEFAULT_REPO_TYPE, GITHUB_URL } from "../../../common/config";
 import { SearchDataSharePartnerBO } from "../../../common/data/bo/searchDataSharePartnerBO";
 import { DataSharePartnerApi } from "../../../common/api";
 import { DataSharePartner } from "../../../common/data/domain/dataSharePartner";

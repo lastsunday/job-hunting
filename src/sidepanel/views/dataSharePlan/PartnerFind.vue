@@ -38,16 +38,17 @@
             </el-table-column>
             <el-table-column label="用户名" width="120" show-overflow-tooltip>
                 <template #default="scope">
-                    <el-text line-clamp="1">
-                        {{ scope.row.owner.login }}
-                    </el-text>
+                    <el-link :href="`${GITHUB_URL}/${scope.row.owner.login}`" type="primary" target="_blank">{{
+                        scope.row.owner.login }}
+                    </el-link>
                 </template>
             </el-table-column>
             <el-table-column label="仓库名" show-overflow-tooltip>
                 <template #default="scope">
-                    <el-text line-clamp="1">
-                        {{ scope.row.name }}
-                    </el-text>
+                    <el-link :href="`${GITHUB_URL}/${scope.row.owner.login}/${scope.row.name}`" type="primary"
+                        target="_blank">{{
+                            scope.row.name }}
+                    </el-link>
                 </template>
             </el-table-column>
             <el-table-column label="星数" width="60" show-overflow-tooltip>
@@ -81,7 +82,7 @@
 <script lang="ts" setup>
 import { ref, onMounted, reactive, toRaw, computed } from 'vue'
 import { MAX_RECORD_COUNT } from "../../../common";
-import { DEFAULT_DATA_REPO, COMMENT_PAGE_SIZE, DEFAULT_REPO_TYPE } from "../../../common/config"
+import { DEFAULT_DATA_REPO, COMMENT_PAGE_SIZE, DEFAULT_REPO_TYPE, GITHUB_URL } from "../../../common/config"
 import { UserApi } from "../../../common/api";
 import { GithubApi, EXCEPTION } from "../../../common/api/github";
 import dayjs from "dayjs";
