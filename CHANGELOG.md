@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (SidePanel)新增数据共享计划伙伴查找功能。
+
 ## 1.28.0(2024-10-10)
 
 ### ⭐ Added
