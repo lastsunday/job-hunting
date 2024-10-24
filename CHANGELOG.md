@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### 🐛 Fixed
+
+1. (ContentScript)修复爱企查公司列表样式错乱的问题。
+
 ## 1.29.0(2024-10-25)
 
 ### ⭐ Added
