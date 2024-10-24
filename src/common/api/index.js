@@ -957,6 +957,16 @@ export const DataSharePartnerApi = {
 
   /**
    * 
+   * @param {DataSharePartner[]} param 
+   * @returns DataSharePartner[]
+   */
+  dataSharePartnerBatchAddOrUpdate: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.dataSharePartnerBatchAddOrUpdate.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
+
+  /**
+   * 
    * @param {string} param id
    * @returns 
    */

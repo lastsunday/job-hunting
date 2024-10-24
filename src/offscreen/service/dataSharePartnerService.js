@@ -81,6 +81,35 @@ export const DataSharePartnerService = {
     dataSharePartnerAddOrUpdate: async function (message, param) {
         SERVICE_INSTANCE.addOrUpdate(message, param);
     },
+
+    /**
+     *
+     * @param {Message} message
+     * @param {DataSharePartner[]} param
+     */
+    dataSharePartnerBatchAddOrUpdate: async function (message, param) {
+        try {
+            (await getDb()).exec({
+                sql: "BEGIN TRANSACTION",
+            });
+            for (let i = 0; i < param.length; i++) {
+                const item = param[i];
+                await SERVICE_INSTANCE._addOrUpdate(item);
+            }
+            (await getDb()).exec({
+                sql: "COMMIT",
+            });
+            postSuccessMessage(message, param);
+        } catch (e) {
+            (await getDb()).exec({
+                sql: "ROLLBACK TRANSACTION",
+            });
+            postErrorMessage(
+                message,
+                "[worker] dataSharePartnerBatchAddOrUpdate error : " + e.message
+            );
+        }
+    },
     /**
      *
      * @param {Message} message

@@ -12,6 +12,7 @@
                                 inline-prompt />
                         </div>
                         <div>
+                            <el-button type="primary" @click="onFindHandle">寻找伙伴</el-button>
                             <el-button type="primary" @click="onAddHandle">新增</el-button>
                             <el-popconfirm title="确认删除选中的数据？" @confirm="onBatchDelete" confirm-button-text="确定"
                                 cancel-button-text="取消">
@@ -127,6 +128,10 @@
             </div>
         </template>
     </el-dialog>
+    <el-dialog v-if="dialogFindPartnerVisible" v-model="dialogFindPartnerVisible" :title="findPartnerTitle"
+        width="800px">
+        <PartnerFind @batch-add-success="onBatchAddSuccess"></PartnerFind>
+    </el-dialog>
 </template>
 <script lang="ts" setup>
 import {
@@ -142,6 +147,8 @@ import { DataSharePartnerApi } from "../../../common/api";
 import { DataSharePartner } from "../../../common/data/domain/dataSharePartner";
 import dayjs from "dayjs";
 import { ElTable, ElMessage } from "element-plus";
+import { GithubApi } from "../../../common/github"
+import PartnerFind from "./PartnerFind.vue";
 
 const scrollbar = ref();
 const tableRef = ref<InstanceType<typeof ElTable>>()
@@ -232,6 +239,13 @@ const form = reactive({
     repoType: DEFAULT_REPO_TYPE,
 })
 
+const dialogFindPartnerVisible = ref(false);
+const findPartnerTitle = ref("寻找伙伴");
+
+const onFindHandle = async () => {
+    dialogFindPartnerVisible.value = true;
+}
+
 const onAddHandle = async () => {
     formAddMode.value = true;
     formTitle.value = "新增伙伴信息";
@@ -315,6 +329,11 @@ const confirmAdd = async (formEl: FormInstance | undefined) => {
             reset();
         }
     })
+}
+
+const onBatchAddSuccess = () => {
+    dialogFindPartnerVisible.value = false;
+    search();
 }
 
 </script>

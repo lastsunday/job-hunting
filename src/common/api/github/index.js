@@ -30,6 +30,17 @@ export const GithubApi = {
     }
   },
 
+  async queryRepository({ first, after, last, before, repo } = {}) {
+    let data = genQueryRepositoryHQL({ first, after, last, before, repo });
+    let result = await fetchJson(`${URL_GRAPHQL}?t=${new Date().getTime()}`, data);
+    if (result.errors?.length > 0) {
+      throw result.errors;
+    } else {
+      return result?.data;
+    }
+  },
+
+
   async addComment(title, body) {
     await fetchJson(URL_POST_ISSUES, {
       title, body
@@ -132,7 +143,7 @@ export const GithubApi = {
   },
   async listRepoContents(owner, repo, path, { getTokenFunction, setTokenFunction }) {
     return await fetchJson(`${GITHUB_URL_API}/repos/${owner}/${repo}/contents${path}`, null, { method: "GET", getTokenFunction, setTokenFunction });
-  }
+  },
 }
 
 async function getDeveloperToken() {
@@ -152,6 +163,37 @@ function getUrlAndPageNum(urls, keyword) {
     pageNum = Number.parseInt(new URL(url).searchParams.get("page"));
   }
   return { url, pageNum }
+}
+
+function genQueryRepositoryHQL({ first, after, last, before,repo }) {
+  return {
+    query: `
+    {
+      search(query:"${repo} in:name sort:updated-desc",type:REPOSITORY,first: ${first ?? null}, after: ${after ? "\"" + after + "\"" : null},last:${last ?? null},before:${before ? "\"" + before + "\"" : null}) {
+        nodes{
+          ... on Repository{
+            id
+            owner{
+              login
+              avatarUrl
+            }
+            name
+            createdAt
+            updatedAt
+            stargazerCount
+          }
+        }
+        pageInfo {
+            endCursor
+            startCursor
+            hasNextPage
+            hasPreviousPage
+          }
+        repositoryCount
+      }
+    }
+    `
+  };
 }
 
 function genQueryCommentHQL({ first, after, last, before, id }) {
