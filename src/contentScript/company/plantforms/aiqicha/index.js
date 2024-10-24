@@ -31,7 +31,7 @@ function handleData(list, getListItem) {
         list.forEach((item, index) => {
             const itemDom = getListItem(index);
             //fix comment dialog display
-            itemDom.style = "overflow: visible;";
+            itemDom.style = "overflow: visible;display:ruby;";
             const wrapperDiv = document.createElement("div");
             wrapperDiv.className = `__company_info_quick_search __${PLATFORM_AIQICHA}_function_panel`;
             wrapperDiv.addEventListener("click", event => {
