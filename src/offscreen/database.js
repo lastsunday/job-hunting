@@ -6,6 +6,7 @@ import { ChangeLogV3 } from './changeLog/changeLogV3';
 import { ChangeLogV4 } from './changeLog/changeLogV4';
 import { ChangeLogV5 } from './changeLog/changeLogV5';
 import { ChangeLogV6 } from './changeLog/changeLogV6';
+import { ChangeLogV7 } from './changeLog/changeLogV7';
 import { initChangeLog, getChangeLogList } from "./changeLog";
 import { bytesToBase64, base64ToBytes } from "../common/utils/base64.js";
 import JSZip from "jszip";
@@ -172,7 +173,7 @@ export async function all(entity, tableName, orderBy) {
 }
 
 export async function batchGet(obj, tableName, idColumnName, ids) {
-  if(ids.length == 0){
+  if (ids.length == 0) {
     return [];
   }
   const batchGetSql = genFullSelectByIdsSQL(obj, tableName, idColumnName, ids);
@@ -316,6 +317,24 @@ export async function sort(tableName, idColumnName, param) {
   }
 }
 
+export async function beginTransaction() {
+  return (await getDb()).exec({
+    sql: "BEGIN TRANSACTION",
+  });
+};
+
+export async function commitTransaction() {
+  return (await getDb()).exec({
+    sql: "COMMIT",
+  });
+};
+
+export async function rollbackTransaction() {
+  return (await getDb()).exec({
+    sql: "ROLLBACK TRANSACTION",
+  });
+};
+
 export const Database = {
   /**
    *
@@ -345,6 +364,7 @@ export const Database = {
       changelogList.push(new ChangeLogV4());
       changelogList.push(new ChangeLogV5());
       changelogList.push(new ChangeLogV6());
+      changelogList.push(new ChangeLogV7());
       initChangeLog(changelogList);
       sqlite3InitModule({
         print: debugLog,

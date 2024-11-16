@@ -167,6 +167,41 @@ export const JobApi = {
     return result.data;
   },
 
+
+  /**
+    * 
+    * @param {JobTagBO} param
+    */
+  jobTagAddOrUpdate: async function (param,
+    { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    return invoke(this.jobTagAddOrUpdate.name, param, {
+      invokeEnv: invokeEnv,
+    });
+  },
+
+  /**
+   * 
+   * @param {JobTagBO[]} param
+   */
+  jobTagBatchAddOrUpdateWithTransaction: async function (param,
+    { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    return invoke(this.jobTagBatchAddOrUpdateWithTransaction.name, param, {
+      invokeEnv: invokeEnv,
+    });
+  },
+
+  /**
+  * 
+  * @param {string} param jobId
+  */
+  jobTagGetAllDTOByJobId: async function (param,
+    { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.jobTagGetAllDTOByJobId.name, param, {
+      invokeEnv: invokeEnv,
+    });
+    return result.data;
+  }
+
 };
 
 export const CompanyApi = {

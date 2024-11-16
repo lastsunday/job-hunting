@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## WIP
+
+### ⭐ Added
+
+1. (ContentScript)新增职位标签显示与编辑。
+
 ## 1.29.2(2024-11-13)
 
 ### ✏️ Changed

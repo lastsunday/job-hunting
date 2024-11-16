@@ -48,6 +48,8 @@ import DragSort from '@yaireo/dragsort';
 import { CompanyTagBO } from "../common/data/bo/companyTagBO";
 import { el } from "element-plus/es/locale/index.mjs";
 
+import { JobTagBO } from "../common/data/bo/jobTagBO";
+
 export function renderTimeTag(
   divElement,
   jobDTO,
@@ -152,7 +154,7 @@ export function finalRender(jobDTOList, { platform }) {
       jobItemIdSha256
     );
     commentWrapperDiv.append(jobItemCommentButton);
-    if(i == jobDTOList.length-1){
+    if (i == jobDTOList.length - 1) {
       commentWrapperDiv.appendChild($(`<div class="__status_job_render_finish"></div>`)[0]);
     }
   }
@@ -666,8 +668,30 @@ export function renderFunctionPanel(
         platform
       })
     );
+    functionPanelDiv.appendChild(createJobTag(item));
     functionPanelDiv.appendChild(createCommentWrapper(item));
   });
+}
+
+function createJobTag(item) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "__job_tag_wrapper";
+  let labelDiv = document.createElement("div");
+  labelDiv.className = "__job_tag_label";
+  labelDiv.textContent = "职位标签：";
+  wrapper.appendChild(labelDiv);
+  const jobTagDiv = document.createElement("div");
+  jobTagDiv.className = "__job_tag";
+  wrapper.appendChild(jobTagDiv);
+  asyncRenderTag(jobTagDiv, "职位", async () => {
+    return JobApi.jobTagGetAllDTOByJobId(item.jobId)
+  }, async (tags) => {
+    let param = new JobTagBO();
+    param.jobId = item.jobId;
+    param.tags = tags;
+    return JobApi.jobTagAddOrUpdate(param);
+  });
+  return wrapper;
 }
 
 export function createLogo() {
@@ -1204,11 +1228,19 @@ export function createCompanyTag(companyName) {
   const tagDiv = document.createElement("div");
   tagDiv.className = "__company_tag";
   dom.appendChild(tagDiv);
-  asyncRenderTag(tagDiv, companyName);
+  asyncRenderTag(tagDiv, "公司", async () => {
+    let companyId = genIdFromText(companyName);
+    return CompanyApi.getAllCompanyTagDTOByCompanyId(companyId);
+  }, async (tags) => {
+    let param = new CompanyTagBO();
+    param.companyName = companyName;
+    param.tags = tags;
+    return CompanyApi.addOrUpdateCompanyTag(param)
+  });
   return dom;
 }
 
-async function asyncRenderTag(div, companyName) {
+async function asyncRenderTag(div, title, getAllDTOFunction, saveTagFunction) {
   let inputReadOnly = true;
   let input = document.createElement("input");
   div.appendChild(input);
@@ -1221,10 +1253,9 @@ async function asyncRenderTag(div, companyName) {
       closeOnSelect: false    // <- do not hide the suggestions dropdown once an item has been selected
     }
   });
-  //get company tag
-  let companyId = genIdFromText(companyName);
-  let companyTagArray = await CompanyApi.getAllCompanyTagDTOByCompanyId(companyId);
-  companyTagArray.forEach(item => {
+  //get tag
+  let tagArray = await getAllDTOFunction();
+  tagArray.forEach(item => {
     tagify.addTags(item.tagName);
   });
   let dragsort = new DragSort(tagify.DOM.scope, {
@@ -1238,7 +1269,7 @@ async function asyncRenderTag(div, companyName) {
   tagify.setReadonly(true);
   //add tag to tagify
   let operationButton = document.createElement("div");
-  operationButton.className = "__company_info_quick_search_button";
+  operationButton.className = "__tag_operation_button";
   operationButton.textContent = "📝编辑"
   div.append(operationButton);
   let saving = false;
@@ -1248,9 +1279,9 @@ async function asyncRenderTag(div, companyName) {
     if (inputReadOnly) {
       //禁用 operationButton 的点击事件
       saving = true;
-      operationButton.textContent = "公司标签保存中⌛︎";
+      operationButton.textContent = `${title}标签保存中⌛︎`;
       tagify.setReadonly(true);
-      //save company tag
+      //save tag
       let value = tagify.getInputValue();
       let result = [];
       if (value) {
@@ -1260,10 +1291,7 @@ async function asyncRenderTag(div, companyName) {
       result.forEach((item) => {
         tags.push(item.value);
       })
-      let param = new CompanyTagBO();
-      param.companyName = companyName;
-      param.tags = tags;
-      await CompanyApi.addOrUpdateCompanyTag(param)
+      await saveTagFunction(tags);
       operationButton.textContent = "📝编辑";
       tagify.setReadonly(true);
       saving = false;

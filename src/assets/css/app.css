@@ -21,6 +21,39 @@
   }
 }
 
+.__job_tag{
+  display:contents;
+  flex: 1;
+
+  .tagify {
+    flex: 1;
+  }
+}
+
+.__tag_operation_button {
+  background-color: mediumblue;
+  color: white;
+  padding-left:8px;
+  padding-right:8px;
+  border-radius: 5px;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-block;
+  margin: 0px;
+  text-wrap: nowrap;
+}
+
+.__job_tag_wrapper{
+  display: flex;
+  align-items: baseline;
+  padding: 5px;
+}
+
+.__job_tag_label {
+  font-weight: 600;
+  align-self: baseline;
+}
+
 .tags-look .tagify__dropdown__item {
   display: inline-block;
   vertical-align: middle;

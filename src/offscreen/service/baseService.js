@@ -82,11 +82,12 @@ export class BaseService {
     /**
      *
      * @param {Message} message
-     * @param {string} param id
+     * @param {string} id
+     * @param {string} column 
      */
-    async deleteById(message, param) {
+    async deleteById(message, id, column) {
         try {
-            await del(this.tableName, this.tableIdColumn, param);
+            await _deleteById(this.tableName, column, id);
             postSuccessMessage(message, {});
         } catch (e) {
             postErrorMessage(
@@ -97,20 +98,44 @@ export class BaseService {
     }
 
     /**
+    * @param {string} id
+    * @param {string} column 
+    */
+    async _deleteById(id, column) {
+        return del(this.tableName, column ?? this.tableIdColumn, id);
+    }
+
+    /**
      *
      * @param {Message} message
-     * @param {string[]} param ids
+     * @param {string[]} ids
+     * @param {string} column 
      */
-    async deleteByIds(message, param) {
+    async deleteByIds(message, ids, column) {
         try {
-            await batchDel(this.tableName, this.tableIdColumn, param);
-            postSuccessMessage(message, {});
+            if (param && param.length > 0) {
+                await _deleteByIds(ids, column);
+                postSuccessMessage(message, {});
+            } else {
+                postErrorMessage(
+                    message,
+                    "[worker] deleteByIds error : ids is empty"
+                );
+            }
         } catch (e) {
             postErrorMessage(
                 message,
                 "[worker] deleteByIds error : " + e.message
             );
         }
+    }
+
+    /**
+     * @param {string[]} ids
+     * @param {string} column 
+     */
+    async _deleteByIds(ids, column) {
+        return batchDel(this.tableName, column ?? this.tableIdColumn, ids);
     }
 
     /**
