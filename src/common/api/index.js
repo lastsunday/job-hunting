@@ -229,6 +229,26 @@ export const JobApi = {
     });
     return result.data;
   },
+
+  /**
+   * 
+   * @param {string[]} param ids
+   */
+  jobTagDeleteByJobIds: async function (param,
+    { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    return invoke(this.jobTagDeleteByJobIds.name, param, {
+      invokeEnv: invokeEnv,
+    });
+  },
+
+  /**
+   * 
+   * @returns JobTagStatisticDTO
+   */
+  jobTagStatistic: async function () {
+    let result = await invoke(this.jobTagStatistic.name, {});
+    return result.data;
+  },
 };
 
 export const CompanyApi = {

@@ -113,8 +113,8 @@ export class BaseService {
      */
     async deleteByIds(message, ids, column) {
         try {
-            if (param && param.length > 0) {
-                await _deleteByIds(ids, column);
+            if (ids && ids.length > 0) {
+                await this._deleteByIds(ids, column);
                 postSuccessMessage(message, {});
             } else {
                 postErrorMessage(

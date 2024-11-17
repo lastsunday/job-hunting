@@ -403,6 +403,10 @@ export const JobService = {
   },
 };
 
+export async function _getByIds(ids){
+  return SERVICE_INSTANCE._getByIds(ids);
+}
+
 async function getJobBrowseHistoryCountMap(ids, type) {
   let countMap = new Map();
   const SQL_QUERY_JOB_BOWSE_HISTORY_GROUP_COUNT = `SELECT job_id AS jobId ,count(*) AS total FROM job_browse_history WHERE job_id IN (

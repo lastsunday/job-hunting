@@ -10,6 +10,8 @@ import { JobTag } from "../../common/data/domain/jobTag";
 import { JobTagBO } from "../../common/data/bo/jobTagBO";
 import { JobTagSearchDTO } from "../../common/data/dto/jobTagSearchDTO";
 import { JobTagSearchBO } from "../../common/data/bo/jobTagSearchBO";
+import { JobTagStatisticDTO } from "../../common/data/dto/jobTagStatisticDTO";
+import { _getByIds as _jobGetByIds } from "./jobService";
 
 const JOB_ID_COLUMN = "job_id";
 
@@ -27,16 +29,6 @@ const SERVICE_INSTANCE = new BaseService("job_tag", "id",
 );
 
 export const JobTagService = {
-    /**
-     *
-     * @param {Message} message
-     * @param {string} param id
-     *
-     * @returns JobTag
-     */
-    getJobTagById: async function (message, param) {
-        SERVICE_INSTANCE.getById(message, param);
-    },
     /**
      * 
      * @param {*} message 
@@ -96,6 +88,23 @@ export const JobTagService = {
                     return _getAllJobTagDTOByJobIds(ids);
                 }
             });
+            let items = result.items;
+            if (items && items.length > 0) {
+                let jobIds = [];
+                let jobIdAndItemMap = new Map();
+                items.forEach(item => {
+                    jobIds.push(item.jobId);
+                    jobIdAndItemMap.set(item.jobId, item);
+                });
+                let jobs = await _jobGetByIds(jobIds);
+                if (jobs && jobs.length > 0) {
+                    jobs.forEach(item => {
+                        if (jobIdAndItemMap.has(item.jobId)) {
+                            jobIdAndItemMap.get(item.jobId).job = item;
+                        }
+                    });
+                }
+            }
             postSuccessMessage(message, result);
         } catch (e) {
             postErrorMessage(message, "[worker] jobTagSearch error : " + e.message);
@@ -104,17 +113,9 @@ export const JobTagService = {
     /**
      *
      * @param {Message} message
-     * @param {string} param jobId
-     */
-    deleteJobTagByJobId: async function (message, param) {
-        SERVICE_INSTANCE.deleteById(message, param, JOB_ID_COLUMN);
-    },
-    /**
-     *
-     * @param {Message} message
      * @param {string[]} param jobIds
      */
-    deleteJobTagByJobIds: async function (message, param) {
+    jobTagDeleteByJobIds: async function (message, param) {
         SERVICE_INSTANCE.deleteByIds(message, param, JOB_ID_COLUMN);
     },
     /**
@@ -133,24 +134,6 @@ export const JobTagService = {
             postErrorMessage(
                 message,
                 "[worker] jobTagAddOrUpdate error : " + e.message
-            );
-        }
-    },
-    /**
-     * 
-     * @param {Message} message 
-     * @param {JobTagBO[]} param 
-     */
-    batchAddOrUpdateJobTag: async function (message, param) {
-        try {
-            for (let i = 0; i < param.length; i++) {
-                await _addOrUpdateJobTag(param[i]);
-            }
-            postSuccessMessage(message, {});
-        } catch (e) {
-            postErrorMessage(
-                message,
-                "[worker] batchAddOrUpdateJobTag error : " + e.message
             );
         }
     },
@@ -207,6 +190,46 @@ export const JobTagService = {
             );
         } catch (e) {
             postErrorMessage(message, "[worker] jobTagGetAllDTOByJobIds error : " + e.message);
+        }
+    },
+
+    /**
+   *
+   * @param {Message} message
+   * @param {*} param
+   *
+   * @returns {JobTagStatisticDTO}
+   */
+    jobTagStatistic: async function (message, param) {
+        try {
+            let result = new JobTagStatisticDTO();
+            let totalTagQueryResult = [];
+            (await getDb()).exec({
+                sql: `SELECT COUNT(*) AS count FROM tag`,
+                rowMode: "object",
+                resultRows: totalTagQueryResult,
+            });
+            let totalJobTagRecordQueryResult = [];
+            (await getDb()).exec({
+                sql: `SELECT COUNT(*) AS count FROM job_tag`,
+                rowMode: "object",
+                resultRows: totalJobTagRecordQueryResult,
+            });
+            let totalTagJobQueryResult = [];
+            (await getDb()).exec({
+                sql: `SELECT COUNT(DISTINCT job_id) AS count FROM job_tag`,
+                rowMode: "object",
+                resultRows: totalTagJobQueryResult,
+            });
+            result.totalTag = totalTagQueryResult[0].count;
+            result.totalJobTagRecord = totalJobTagRecordQueryResult[0].count;
+            result.totalTagJob = totalTagJobQueryResult[0].count;
+            postSuccessMessage(message, result);
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] jobTagStatistic error : " + e.message
+            );
         }
     },
 };

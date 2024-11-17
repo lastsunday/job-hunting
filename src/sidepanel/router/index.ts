@@ -7,6 +7,7 @@ import JobView from '../views/JobView.vue'
 import BBSView from '../views/BBSView.vue'
 import AssistantView from '../views/AssistantView.vue'
 import DataSharePlanView from "../views/DataSharePlanView.vue";
+import JobTagView from '../views/JobTagView.vue'
 
 const routes = [
   {
@@ -28,6 +29,11 @@ const routes = [
     path: '/companyTag',
     name: 'companyTag',
     component: CompanyTagView
+  },
+  {
+    path: '/jobTag',
+    name: 'jobTag',
+    component: JobTagView
   },
   {
     path: '/bbs',
