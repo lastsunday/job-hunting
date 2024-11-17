@@ -6,14 +6,12 @@ import { SearchJobDTO } from "../../common/data/dto/searchJobDTO";
 import { JobFaviousSettingDTO } from "../../common/data/dto/jobFaviousSettingDTO";
 import { AssistantStatisticDTO } from "../../common/data/dto/assistantStatisticDTO";
 import { Config } from "../../common/data/domain/config";
-import { genIdFromText } from "../../common/utils";
-import { JobDTO } from "../../common/data/dto/jobDTO";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
 import { _addOrUpdateConfig, _getConfigByKey } from "./configService";
 import dayjs from "dayjs";
 import { _getCompanyDTOByIds } from "./companyService";
 import { genNotLikeSql, genLikeSql, handleAndReturnWhereSql, genDatetimeConditionSql, genValueConditionSql } from "./sqlUtil";
-import { _getAllJobTagDTOByJobIds } from "./jobTagService";
+import { _fillSearchResultExtraInfo } from "./jobService";
 
 const KEY_JOB_FAVIOUS_SETTING = "KEY_JOB_FAVIOUS_SETTING";
 
@@ -54,55 +52,7 @@ export const AssistantService = {
                 rowMode: "object",
                 resultRows: queryRows,
             });
-            let companyIds = [];
-            let companyIdMap = new Map();
-            let jobIds = [];
-            let jobIdMap = new Map();
-            for (let i = 0; i < queryRows.length; i++) {
-                let item = queryRows[i];
-                let resultItem = new JobDTO();
-                let keys = Object.keys(item);
-                for (let n = 0; n < keys.length; n++) {
-                    let key = keys[n];
-                    resultItem[key] = item[key];
-                }
-                items.push(item);
-                companyIdMap.set(genIdFromText(item.jobCompanyName))
-                jobIdMap.set(item.jobId);
-            }
-            companyIds.push(...Array.from(companyIdMap.keys()));
-            jobIds.push(...Array.from(jobIdMap.keys()));
-            let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(companyIds);
-            let companyIdAndCompanyTagListMap = new Map();
-            companyTagDTOList.forEach(item => {
-                let companyId = item.companyId;
-                if (!companyIdAndCompanyTagListMap.has(companyId)) {
-                    companyIdAndCompanyTagListMap.set(companyId, []);
-                }
-                companyIdAndCompanyTagListMap.get(companyId).push(item);
-            });
-            let jobTagDTOList = await _getAllJobTagDTOByJobIds(jobIds);
-            let jobIdAndJobTagListMap = new Map();
-            jobTagDTOList.forEach(item => {
-                let id = item.jobId;
-                if (!jobIdAndJobTagListMap.has(id)) {
-                    jobIdAndJobTagListMap.set(id, []);
-                }
-                jobIdAndJobTagListMap.get(id).push(item);
-            });
-            let companyDTOList = await _getCompanyDTOByIds(companyIds);
-            let companyIdAndCompanyDTOListMap = new Map();
-            companyDTOList.forEach(item => {
-                let companyId = item.companyId;
-                if (!companyIdAndCompanyDTOListMap.has(companyId)) {
-                    companyIdAndCompanyDTOListMap.set(companyId, item);
-                }
-            });
-            items.forEach(item => {
-                item.companyTagDTOList = companyIdAndCompanyTagListMap.get(genIdFromText(item.jobCompanyName));
-                item.jobTagDTOList = jobIdAndJobTagListMap.get(item.jobId);
-                item.companyDTO = companyIdAndCompanyDTOListMap.get(genIdFromText(item.jobCompanyName));
-            });
+            await _fillSearchResultExtraInfo(items, queryRows);
             //count
             let sqlCount = `SELECT COUNT(*) AS total from (${sqlQueryCountSubSql}) AS t1`;
             let queryCountRows = [];
@@ -236,14 +186,9 @@ function genJobSearchWhereConditionSql(param) {
 }
 
 function genSqlJobSearchQuery(param) {
-    let joinSql = null;
-    if (param.hasBrowseTime) {
-        joinSql = `RIGHT JOIN (SELECT job_id AS _jobId,COUNT(job_id) AS browseDetailCount,MAX(job_visit_datetime) AS latestBrowseDetailDatetime FROM JOB_BROWSE_HISTORY WHERE job_visit_type = 'DETAIL' GROUP BY job_id) AS t2 ON t1.job_id = t2._jobId AND t2.browseDetailCount > 0`
-    } else {
-        joinSql = `LEFT JOIN (SELECT job_id AS _jobId,COUNT(job_id) AS browseDetailCount,MAX(job_visit_datetime) AS latestBrowseDetailDatetime FROM JOB_BROWSE_HISTORY WHERE job_visit_type = 'DETAIL' GROUP BY job_id) AS t2 ON t1.job_id = t2._jobId`;
-        joinSql += ` LEFT JOIN company_tag AS t3 ON t1.job_company_name = t3.company_name`;
-        joinSql += ` LEFT JOIN job_tag AS t4 ON t1.job_id = t4.job_id`;
-    }
+    let joinSql = `LEFT JOIN (SELECT job_id AS _jobId,COUNT(job_id) AS browseDetailCount,MAX(job_visit_datetime) AS latestBrowseDetailDatetime FROM JOB_BROWSE_HISTORY WHERE job_visit_type = 'DETAIL' GROUP BY job_id) AS t2 ON t1.job_id = t2._jobId`;
+    joinSql += ` LEFT JOIN company_tag AS t3 ON t1.job_company_name = t3.company_name`;
+    joinSql += ` LEFT JOIN job_tag AS t4 ON t1.job_id = t4.job_id`;
     return `SELECT t1.job_id AS jobId,job_platform AS jobPlatform,job_url AS jobUrl,job_name AS jobName,job_company_name AS jobCompanyName,job_location_name AS jobLocationName,job_address AS jobAddress,job_longitude AS jobLongitude,job_latitude AS jobLatitude,job_description AS jobDescription,job_degree_name AS jobDegreeName,job_year AS jobYear,job_salary_min AS jobSalaryMin,job_salary_max AS jobSalaryMax,job_salary_total_month AS jobSalaryTotalMonth,job_first_publish_datetime AS jobFirstPublishDatetime,boss_name AS bossName,boss_company_name AS bossCompanyName,boss_position AS bossPosition,t1.create_datetime AS createDatetime,t1.update_datetime AS updateDatetime,IFNULL(t2.browseDetailCount,0) AS browseDetailCount,t2.latestBrowseDetailDatetime AS latestBrowseDetailDatetime,GROUP_CONCAT(t3.tag_id) AS companyTagIdArray,GROUP_CONCAT(t4.tag_id) AS jobTagIdArray FROM job AS t1 ${joinSql}`;
 }
 
@@ -279,7 +224,7 @@ function genFilterSQL(sql, param, createDateStartDate, createDateEndDate) {
             whereCondition += " t1.jobTagIdArray NOT LIKE '%" + item + "%' ";
         });
         whereCondition += " )";
-        if(!(param.likeJobTagList && param.likeJobTagList.length > 0)){
+        if (!(param.likeJobTagList && param.likeJobTagList.length > 0)) {
             whereCondition += ` OR t1.jobTagIdArray IS NULL`;
         }
     }

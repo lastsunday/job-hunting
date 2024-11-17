@@ -12,6 +12,7 @@ import { getDb, getOne } from "../database";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
 import { _getCompanyDTOByIds } from "./companyService";
 import { BaseService } from "./baseService";
+import { _getAllJobTagDTOByJobIds } from "./jobTagService";
 
 const JOB_VISIT_TYPE_SEARCH = "SEARCH";
 const JOB_VISIT_TYPE_DETAIL = "DETAIL";
@@ -240,41 +241,7 @@ export const JobService = {
         rowMode: "object",
         resultRows: queryRows,
       });
-      let companyIds = [];
-      let companyIdMap = new Map();
-      for (let i = 0; i < queryRows.length; i++) {
-        let item = queryRows[i];
-        let resultItem = new JobDTO();
-        let keys = Object.keys(item);
-        for (let n = 0; n < keys.length; n++) {
-          let key = keys[n];
-          resultItem[key] = item[key];
-        }
-        items.push(item);
-        companyIdMap.set(genIdFromText(item.jobCompanyName))
-      }
-      companyIds.push(...Array.from(companyIdMap.keys()));
-      let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(companyIds);
-      let companyIdAndCompanyTagListMap = new Map();
-      companyTagDTOList.forEach(item => {
-        let companyId = item.companyId;
-        if (!companyIdAndCompanyTagListMap.has(companyId)) {
-          companyIdAndCompanyTagListMap.set(companyId, []);
-        }
-        companyIdAndCompanyTagListMap.get(companyId).push(item);
-      });
-      let companyDTOList = await _getCompanyDTOByIds(companyIds);
-      let companyIdAndCompanyDTOListMap = new Map();
-      companyDTOList.forEach(item => {
-        let companyId = item.companyId;
-        if (!companyIdAndCompanyDTOListMap.has(companyId)) {
-          companyIdAndCompanyDTOListMap.set(companyId, item);
-        }
-      });
-      items.forEach(item => {
-        item.companyTagDTOList = companyIdAndCompanyTagListMap.get(genIdFromText(item.jobCompanyName));
-        item.companyDTO = companyIdAndCompanyDTOListMap.get(genIdFromText(item.jobCompanyName));
-      });
+      await _fillSearchResultExtraInfo(items, queryRows);
       //count
       let sqlCount = `SELECT COUNT(*) AS total from (${sqlQueryCountSubSql}) AS t1`;
       let queryCountRows = [];
@@ -739,3 +706,56 @@ GROUP BY
 	t2.levels;
 `;
 const SQL_JOB_BY_JOB_URL = `SELECT job_id,job_platform,job_url,job_name,job_company_name,job_location_name,job_address,job_longitude,job_latitude,job_description,job_degree_name,job_year,job_salary_min,job_salary_max,job_salary_total_month,job_first_publish_datetime,boss_name,boss_company_name,boss_position,create_datetime,update_datetime,is_full_company_name FROM job WHERE job_url = ?`;
+
+
+export async function _fillSearchResultExtraInfo(items, queryRows) {
+  let companyIds = [];
+  let companyIdMap = new Map();
+  let jobIds = [];
+  let jobIdMap = new Map();
+  for (let i = 0; i < queryRows.length; i++) {
+    let item = queryRows[i];
+    let resultItem = new JobDTO();
+    let keys = Object.keys(item);
+    for (let n = 0; n < keys.length; n++) {
+      let key = keys[n];
+      resultItem[key] = item[key];
+    }
+    items.push(item);
+    companyIdMap.set(genIdFromText(item.jobCompanyName))
+    jobIdMap.set(item.jobId);
+  }
+  companyIds.push(...Array.from(companyIdMap.keys()));
+  jobIds.push(...Array.from(jobIdMap.keys()));
+  let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(companyIds);
+  let companyIdAndCompanyTagListMap = new Map();
+  companyTagDTOList.forEach(item => {
+    let companyId = item.companyId;
+    if (!companyIdAndCompanyTagListMap.has(companyId)) {
+      companyIdAndCompanyTagListMap.set(companyId, []);
+    }
+    companyIdAndCompanyTagListMap.get(companyId).push(item);
+  });
+  let jobTagDTOList = await _getAllJobTagDTOByJobIds(jobIds);
+  let jobIdAndJobTagListMap = new Map();
+  jobTagDTOList.forEach(item => {
+    let id = item.jobId;
+    if (!jobIdAndJobTagListMap.has(id)) {
+      jobIdAndJobTagListMap.set(id, []);
+    }
+    jobIdAndJobTagListMap.get(id).push(item);
+  });
+  let companyDTOList = await _getCompanyDTOByIds(companyIds);
+  let companyIdAndCompanyDTOListMap = new Map();
+  companyDTOList.forEach(item => {
+    let companyId = item.companyId;
+    if (!companyIdAndCompanyDTOListMap.has(companyId)) {
+      companyIdAndCompanyDTOListMap.set(companyId, item);
+    }
+  });
+  items.forEach(item => {
+    item.companyTagDTOList = companyIdAndCompanyTagListMap.get(genIdFromText(item.jobCompanyName));
+    item.jobTagDTOList = jobIdAndJobTagListMap.get(item.jobId);
+    item.companyDTO = companyIdAndCompanyDTOListMap.get(genIdFromText(item.jobCompanyName));
+  });
+}

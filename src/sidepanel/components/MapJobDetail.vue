@@ -8,12 +8,12 @@
         <el-row>
             <el-text line-clamp="1">发布时间：{{
                 datetimeFormat(item.jobFirstPublishDatetime)
-                }}</el-text>
+            }}</el-text>
         </el-row>
         <el-row>
             <el-text line-clamp="1">薪资：💵{{ item.jobSalaryMin }} - 💵{{
                 item.jobSalaryMax
-                }}</el-text>
+            }}</el-text>
         </el-row>
         <el-row>
             <el-text line-clamp="1">学历：{{ item.jobDegreeName }}</el-text>
@@ -21,7 +21,7 @@
         <el-row>
             <el-text line-clamp="1">招聘平台：{{
                 platformFormat(item.jobPlatform)
-                }}</el-text>
+            }}</el-text>
         </el-row>
         <el-row>
             <el-text line-clamp="1">地址：{{ item.jobAddress }}</el-text>
@@ -30,11 +30,21 @@
             <el-text line-clamp="1">公司名：{{ item.jobCompanyName }}</el-text>
         </el-row>
         <el-row v-if="
+            item.jobTagDTOList && item.jobTagDTOList.length > 0
+        ">
+            <el-text line-clamp="1">职位标签({{ item.jobTagDTOList.length }})：</el-text>
+            <el-text class="tagItem" v-for="(item, index) in item.jobTagDTOList">
+                <el-tag type="primary">
+                    <Icon icon="mdi:tag" />{{ item.tagName }}
+                </el-tag>
+            </el-text>
+        </el-row>
+        <el-row v-if="
             item.companyTagDTOList && item.companyTagDTOList.length > 0
         ">
             <el-text line-clamp="1">公司标签({{ item.companyTagDTOList.length }})：</el-text>
             <el-text class="tagItem" v-for="(item, index) in item.companyTagDTOList">
-                <el-tag type="primary">
+                <el-tag type="warning">
                     <Icon icon="mdi:tag" />{{ item.tagName }}
                 </el-tag>
             </el-text>

@@ -74,6 +74,32 @@
                     <el-descriptions class="margin-top" :column="1" size="small" border direction="vertical">
                         <el-descriptions-item>
                             <template #label>
+                                <div class="cell-item">职位标签</div>
+                            </template>
+                            <div>
+                                <el-text v-if="
+                                    item.jobTagDTOList &&
+                                    item.jobTagDTOList.length > 0
+                                " class="tagItem">
+                                    <el-tag v-for="(value, key, index) in item
+                                        .jobTagDTOList" type="primary">
+                                        <el-link v-if="value.sourceUrl" :href="value.sourceUrl" target="_blank">
+                                            <Icon icon="mdi:tag" />{{
+                                                value.tagName
+                                            }}
+                                        </el-link>
+                                        <div v-else>
+                                            <Icon icon="mdi:tag" />{{ value.tagName }}
+                                        </div>
+                                    </el-tag>
+                                </el-text>
+                                <el-text v-else>-</el-text>
+                            </div>
+                        </el-descriptions-item>
+                    </el-descriptions>
+                    <el-descriptions class="margin-top" :column="1" size="small" border direction="vertical">
+                        <el-descriptions-item>
+                            <template #label>
                                 <div class="cell-item">公司标签</div>
                             </template>
                             <div>
@@ -102,14 +128,14 @@
             </div>
             <div class="salary">{{ item.jobSalaryMin }}-{{ item.jobSalaryMax }}</div>
         </div>
-        <div class="middle" v-if="item.companyTagDTOList?.length > 0">
-            <div class="tag">
+        <div class="middle">
+            <div class="tag" v-if="item.jobTagDTOList?.length > 0">
                 <el-text v-if="
-                    item.companyTagDTOList &&
-                    item.companyTagDTOList.length > 0
+                    item.jobTagDTOList &&
+                    item.jobTagDTOList.length > 0
                 " class="tagItem">
                     <el-tag v-for="(value, key, index) in item
-                        .companyTagDTOList" type="warning" size="small" effect="plain">
+                        .jobTagDTOList" type="primary" size="small" effect="plain">
                         <el-link v-if="value.sourceUrl" :href="value.sourceUrl" target="_blank">
                             <Icon icon="mdi:tag" />{{
                                 value.tagName
@@ -132,7 +158,7 @@
                         <Icon icon="mdi:company" /> {{ item.jobCompanyName }}
                     </el-link>
                 </div>
-                <el-popover v-else placement="right" :width="800" trigger="click">
+                <el-popover v-else placement="right" :width="1024" trigger="click">
                     <template #reference>
                         <el-link type="warning">
                             <Icon icon="mdi:company" /> {{ item.jobCompanyName }}
@@ -259,6 +285,24 @@
                         </el-descriptions-item>
                     </el-descriptions>
                 </el-popover>
+            </div>
+            <div class="tag" v-if="item.companyTagDTOList?.length > 0">
+                <el-text v-if="
+                    item.companyTagDTOList &&
+                    item.companyTagDTOList.length > 0
+                " class="tagItem">
+                    <el-tag v-for="(value, key, index) in item
+                        .companyTagDTOList" type="warning" size="small" effect="plain">
+                        <el-link v-if="value.sourceUrl" :href="value.sourceUrl" target="_blank">
+                            <Icon icon="mdi:tag" />{{
+                                value.tagName
+                            }}
+                        </el-link>
+                        <div v-else>
+                            <Icon icon="mdi:tag" />{{ value.tagName }}
+                        </div>
+                    </el-tag>
+                </el-text>
             </div>
             <div class="address">
                 <div class="label">{{ item.jobAddress }}</div>
@@ -435,7 +479,6 @@ const datetimeFormat = computed(() => {
     flex-direction: row;
     flex-wrap: wrap;
     max-width: 320px;
-    padding-top: 10px;
 }
 
 .tagItem {

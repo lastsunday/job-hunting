@@ -123,6 +123,32 @@
               <el-descriptions class="margin-top" :column="1" size="small" border direction="vertical">
                 <el-descriptions-item>
                   <template #label>
+                    <div class="cell-item">职位标签</div>
+                  </template>
+                  <div>
+                    <el-text v-if="
+                      props.row.jobTagDTOList &&
+                      props.row.jobTagDTOList.length > 0
+                    " class="tagItem">
+                      <el-tag v-for="(value, key, index) in props.row
+                        .jobTagDTOList" type="primary">
+                        <el-link v-if="value.sourceUrl" :href="value.sourceUrl" target="_blank">
+                          <Icon icon="mdi:tag" />{{
+                            value.tagName
+                          }}
+                        </el-link>
+                        <div v-else>
+                          <Icon icon="mdi:tag" />{{ value.tagName }}
+                        </div>
+                      </el-tag>
+                    </el-text>
+                    <el-text v-else>-</el-text>
+                  </div>
+                </el-descriptions-item>
+              </el-descriptions>
+              <el-descriptions class="margin-top" :column="1" size="small" border direction="vertical">
+                <el-descriptions-item>
+                  <template #label>
                     <div class="cell-item">公司标签</div>
                   </template>
                   <div>
@@ -131,7 +157,7 @@
                       props.row.companyTagDTOList.length > 0
                     " class="compang_tag">
                       <el-tag v-for="(value, key, index) in props.row
-                        .companyTagDTOList" type="primary">{{ value.tagName }}</el-tag>
+                        .companyTagDTOList" type="warning">{{ value.tagName }}</el-tag>
                     </el-text>
                     <el-text v-else>-</el-text>
                   </div>
@@ -186,7 +212,18 @@
             </el-text>
           </template>
         </el-table-column>
-        <el-table-column prop="companyTagDTOList" label="标签数" show-overflow-tooltip width="70">
+        <el-table-column prop="jobTagDTOList" label="职位标签数" show-overflow-tooltip width="100">
+          <template #default="scope">
+            <el-text line-clamp="1">
+              {{
+                scope.row.jobTagDTOList
+                  ? scope.row.jobTagDTOList.length
+                  : 0
+              }}
+            </el-text>
+          </template>
+        </el-table-column>
+        <el-table-column prop="companyTagDTOList" label="公司标签数" show-overflow-tooltip width="100">
           <template #default="scope">
             <el-text line-clamp="1">
               {{
@@ -246,7 +283,7 @@
     <el-scrollbar ref="scrollbarForMapMode" class="left" v-loading="searchLoading">
       <el-table :data="tableData" :default-sort="{ prop: 'createDatetime', order: 'descending' }" style="width: 100%"
         stripe @sort-change="sortChange" sortable="custom">
-        <el-table-column label="名称" show-overflow-tooltip width="100">
+        <el-table-column label="名称" show-overflow-tooltip width="200">
           <template #default="scope">
             <a :href="scope.row.jobUrl" target="_blank" :title="scope.row.jobUrl">
               <el-text line-clamp="1">
@@ -259,17 +296,6 @@
           <template #default="scope">
             <el-text line-clamp="1" :title="scope.row.jobCompanyName">
               {{ scope.row.jobCompanyName }}
-            </el-text>
-          </template>
-        </el-table-column>
-        <el-table-column prop="companyTagDTOList" label="标签数" show-overflow-tooltip width="70">
-          <template #default="scope">
-            <el-text line-clamp="1">
-              {{
-                scope.row.companyTagDTOList
-                  ? scope.row.companyTagDTOList.length
-                  : 0
-              }}
             </el-text>
           </template>
         </el-table-column>
