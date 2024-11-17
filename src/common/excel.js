@@ -2,6 +2,7 @@ import { Job } from "../common/data/domain/job";
 import { CompanyBO } from "../common/data/bo/companyBO";
 import { CompanyTagBO } from "../common/data/bo/companyTagBO";
 import { genIdFromText, convertDateStringToDateObject } from "../common/utils"
+import { JobTagBO } from "../common/data/bo/jobTagBO";
 
 export const validImportData = (data, validArray) => {
     let colCount = 0;
@@ -224,4 +225,33 @@ export const companyTagExcelDataToObjectArray = (data) => {
         companyTagBOList.push(item);
     }
     return companyTagBOList;
+}
+
+export const JOB_TAG_FILE_HEADER = [
+    "职位编号",
+    "标签",
+];
+
+export const jobTagDataToExcelJSONArray = (list) => {
+    let result = [];
+    for (let i = 0; i < list.length; i++) {
+        let item = list[i];
+        result.push({
+            职位编号: item.jobId,
+            标签: item.tagNameArray.join(","),
+        });
+    }
+    return result;
+}
+
+export const jobTagExcelDataToObjectArray = (data) => {
+    let result = [];
+    for (let i = 0; i < data.length; i++) {
+        let dataItem = data[i];
+        let item = new JobTagBO();
+        item.jobId = dataItem['职位编号'];
+        item.tags = dataItem['标签'].split(",");
+        result.push(item);
+    }
+    return result;
 }

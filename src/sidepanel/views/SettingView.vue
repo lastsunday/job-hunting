@@ -34,6 +34,14 @@
               <el-text>2.数据库恢复，接受程序备份的数据库(sqlite)文件，执行恢复后程序的数据将被覆盖</el-text>
             </el-row>
           </el-tour-step>
+          <el-tour-step :target="jobRef?.$el" title="职位数据">
+            <el-row>
+              <el-text>1.全量职位数据导出，将全部职位数据导出成excel文件，以下载文件的方式呈现</el-text>
+            </el-row>
+            <el-row>
+              <el-text>2.职位数据导入，接受程序导出的职位数据excel文件或符合格式的excel文件，执行导入后，相同职位的数据会被覆盖</el-text>
+            </el-row>
+          </el-tour-step>
           <el-tour-step :target="companyRef?.$el" title="公司数据">
             <el-row>
               <el-text>1.全量公司数据导出，将全部公司数据导出成excel文件，以下载文件的方式呈现</el-text>
@@ -147,12 +155,24 @@
             </el-tooltip>
             <el-row>
               <el-text type="warning">注意：Github App要求的授权：</el-text>
-              <el-link type="primary" target="_blank" href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-administration">Administration<Icon icon="mingcute:warning-line" /></el-link>
-              <el-link type="primary" target="_blank" href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-issues">Issues<Icon icon="mingcute:warning-line" /></el-link>
-              <el-link type="primary" target="_blank" href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-contents">Contents<Icon icon="mingcute:warning-line" /></el-link>
-              <el-link type="primary" target="_blank" href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-metadata">Metadata<Icon icon="mingcute:warning-line" /></el-link>
+              <el-link type="primary" target="_blank"
+                href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-administration">Administration
+                <Icon icon="mingcute:warning-line" />
+              </el-link>
+              <el-link type="primary" target="_blank"
+                href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-issues">Issues
+                <Icon icon="mingcute:warning-line" />
+              </el-link>
+              <el-link type="primary" target="_blank"
+                href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-contents">Contents
+                <Icon icon="mingcute:warning-line" />
+              </el-link>
+              <el-link type="primary" target="_blank"
+                href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-metadata">Metadata
+                <Icon icon="mingcute:warning-line" />
+              </el-link>
             </el-row>
-            
+
           </el-descriptions-item>
         </el-descriptions>
       </el-row>
@@ -168,43 +188,15 @@
           </el-descriptions-item>
         </el-descriptions>
       </el-row>
-      <el-row ref="jobRef" class="setting_item">
-        <el-descriptions title="职位数据">
-          <el-descriptions-item>
-            <el-popconfirm title="确认导出数据？" @confirm="onJobExport" confirm-button-text="确定" cancel-button-text="取消">
-              <template #reference>
-                <el-button :icon="DocumentCopy" :loading="jobExportLoading">全量职位数据导出</el-button>
-              </template>
-            </el-popconfirm>
-            <el-button :icon="CopyDocument" @click="importJobDialogVisible = true">公司职位导入</el-button>
-          </el-descriptions-item>
-        </el-descriptions>
-      </el-row>
-      <el-row ref="companyRef" class="setting_item">
-        <el-descriptions title="公司数据">
-          <el-descriptions-item>
-            <el-popconfirm title="确认导出数据？" @confirm="onCompanyExport" confirm-button-text="确定" cancel-button-text="取消">
-              <template #reference>
-                <el-button :icon="DocumentCopy" :loading="companyExportLoading">全量公司数据导出</el-button>
-              </template>
-            </el-popconfirm>
-            <el-button :icon="CopyDocument" @click="importCompanyDialogVisible = true">公司数据导入</el-button>
-          </el-descriptions-item>
-        </el-descriptions>
-      </el-row>
-      <el-row ref="companyTagRef" class="setting_item">
-        <el-descriptions title="公司标签数据">
-          <el-descriptions-item>
-            <el-popconfirm title="确认导出数据？" @confirm="onCompanyTagExport" confirm-button-text="确定"
-              cancel-button-text="取消">
-              <template #reference>
-                <el-button :icon="DocumentCopy" :loading="companyTagExportLoading">全量公司标签数据导出</el-button>
-              </template>
-            </el-popconfirm>
-            <el-button :icon="CopyDocument" @click="importCompanyTagDialogVisible = true">公司标签数据导入</el-button>
-          </el-descriptions-item>
-        </el-descriptions>
-      </el-row>
+      <DataBackupRestore ref="jobRef" title="职位" :get-excel-json-array-function="getJobDataToExcelJsonArray"
+        :file-header="JOB_FILE_HEADER" :save-data-function="saveJobData" />
+      <DataBackupRestore ref="companyRef" title="公司" :get-excel-json-array-function="getCompanyDataToExcelJsonArray"
+        :file-header="COMPANY_FILE_HEADER" :save-data-function="saveCompanyData" />
+      <DataBackupRestore ref="jobTagRef" title="职位标签" :get-excel-json-array-function="getJobTagDataToExcelJsonArray"
+        :file-header="JOB_TAG_FILE_HEADER" :save-data-function="saveJobTagData" />
+      <DataBackupRestore ref="companyTagRef" title="公司标签"
+        :get-excel-json-array-function="getCompanyTagDataToExcelJsonArray" :file-header="COMPANY_TAG_FILE_HEADER"
+        :save-data-function="saveCompanyTagData" />
       <el-row ref="infoRef" class="setting_item">
         <el-descriptions title="程序信息">
           <el-descriptions-item>
@@ -284,66 +276,6 @@
       </el-row>
     </template>
   </el-dialog>
-  <el-dialog v-model="importJobDialogVisible" title="职位数据导入" width="500">
-    <div>
-      <el-text class="mx-1" type="danger">注意：相同职位的数据会被替换!!!</el-text>
-    </div>
-    <div>
-      <el-text class="mx-1" type="info">请选择职位备份文件</el-text>
-    </div>
-    <template #footer>
-      <div class="dialog-footer">
-        <el-row>
-          <input type="file" accept=".xlsx" ref="importJobFileInput" @change="handleJobFileImport" />
-        </el-row>
-        <el-row class="dialog_menu">
-          <el-button type="primary" @click="confirmJobFileImport" :loading="jobImportLoading">
-            确定
-          </el-button>
-        </el-row>
-      </div>
-    </template>
-  </el-dialog>
-  <el-dialog v-model="importCompanyDialogVisible" title="公司数据导入" width="500">
-    <div>
-      <el-text class="mx-1" type="danger">注意：相同公司的数据会被替换!!!</el-text>
-    </div>
-    <div>
-      <el-text class="mx-1" type="info">请选择公司备份文件</el-text>
-    </div>
-    <template #footer>
-      <div class="dialog-footer">
-        <el-row>
-          <input type="file" accept=".xlsx" ref="importCompanyFileInput" @change="handleCompanyFileImport" />
-        </el-row>
-        <el-row class="dialog_menu">
-          <el-button type="primary" @click="confirmCompanyFileImport" :loading="companyImportLoading">
-            确定
-          </el-button>
-        </el-row>
-      </div>
-    </template>
-  </el-dialog>
-  <el-dialog v-model="importCompanyTagDialogVisible" title="公司标签数据导入" width="500">
-    <div>
-      <el-text class="mx-1" type="danger">注意：相同公司的数据会被替换!!!</el-text>
-    </div>
-    <div>
-      <el-text class="mx-1" type="info">请选择公司标签备份文件</el-text>
-    </div>
-    <template #footer>
-      <div class="dialog-footer">
-        <el-row>
-          <input type="file" accept=".xlsx" ref="importCompanyTagFileInput" @change="handleCompanyTagFileImport" />
-        </el-row>
-        <el-row class="dialog_menu">
-          <el-button type="primary" @click="confirmCompanyTagFileImport" :loading="companyTagImportLoading">
-            确定
-          </el-button>
-        </el-row>
-      </div>
-    </template>
-  </el-dialog>
   <el-dialog v-model="updateAppDialogVisible" title="如何更新程序版本" width="800">
     <div>
       <el-text>1.下载新版本程序安装文件（zip格式文件）</el-text>
@@ -375,32 +307,27 @@ import { dbExport, dbImport } from "../../common/api/common";
 import { base64ToBytes, bytesToBase64 } from "../../common/utils/base64.js";
 import { ElMessage, ElLoading } from "element-plus";
 import { DocumentCopy, CopyDocument } from "@element-plus/icons-vue";
-import { utils, writeFileXLSX, read } from "xlsx";
 import { CompanyApi, AuthApi, UserApi, JobApi, DeveloperApi } from "../../common/api/index";
 import { SearchCompanyTagBO } from "../../common/data/bo/searchCompanyTagBO";
-import { CompanyTagBO } from "../../common/data/bo/companyTagBO";
 import { SearchCompanyBO } from "../../common/data/bo/searchCompanyBO";
-import { CompanyBO } from "../../common/data/bo/companyBO";
-import { genIdFromText, convertDateStringToDateObject } from "../../common/utils";
 import { Icon } from '@iconify/vue';
 import { marked } from "marked";
-import { APP_URL_LATEST_VERSION, APP_ID } from "../../common/config";
-import semver from "semver";
+import { APP_ID } from "../../common/config";
 import { SearchJobBO } from "../../common/data/bo/searchJobBO.js";
-import { Job } from "../../common/data/domain/job";
 import { GithubApi, EXCEPTION } from "../../common/api/github";
 import {
   jobDataToExcelJSONArray, JOB_FILE_HEADER, jobExcelDataToObjectArray,
   COMPANY_FILE_HEADER, companyDataToExcelJSONArray, companyExcelDataToObjectArray,
   COMPANY_TAG_FILE_HEADER, companyTagDataToExcelJSONArray, companyTagExcelDataToObjectArray,
-  validImportData
+  JOB_TAG_FILE_HEADER, jobTagDataToExcelJSONArray, jobTagExcelDataToObjectArray,
 } from "../../common/excel";
-import { getMergeDataListForJob, getMergeDataListForCompany, getMergeDataListForCompanyTag } from "../../common/service/dataSyncService";
+import { getMergeDataListForJob, getMergeDataListForCompany, getMergeDataListForCompanyTag, getMergeDataListForJobTag } from "../../common/service/dataSyncService";
 
 import TrafficChart from "./components/TrafficChart.vue";
 import TrafficTable from "./components/TrafficTable.vue";
+import DataBackupRestore from "./components/DataBackupRestore.vue";
+import { JobTagSearchBO } from "../../common/data/bo/jobTagSearchBO";
 
-const activeName = ref("export");
 const exportLoading = ref(false);
 const importDialogVisible = ref(false);
 const importFileInput = ref<HTMLInputElement | null>(null);
@@ -503,279 +430,90 @@ const downloadURL = function (data, fileName) {
 //10 million
 const MAX_RECORD_COUNT = 10000000;
 
-const jobExportLoading = ref(false);
-
-const onJobExport = async () => {
-  jobExportLoading.value = true;
-  try {
-    let searchParam = new SearchJobBO();
-    searchParam.pageNum = 1;
-    searchParam.pageSize = MAX_RECORD_COUNT;
-    searchParam.orderByColumn = "updateDatetime";
-    searchParam.orderBy = "DESC";
-    let data = await JobApi.searchJob(searchParam);
-    let list = data.items;
-    let result = jobDataToExcelJSONArray(list);
-    const ws = utils.json_to_sheet(result);
-    const wb = utils.book_new();
-    utils.book_append_sheet(wb, ws, "Data");
-    writeFileXLSX(wb, dayjs(new Date()).format("职位-YYYYMMDDHHmmss") + ".xlsx");
-  } finally {
-    jobExportLoading.value = false;
-  }
+const getJobDataToExcelJsonArray = async () => {
+  let searchParam = new SearchJobBO();
+  searchParam.pageNum = 1;
+  searchParam.pageSize = MAX_RECORD_COUNT;
+  searchParam.orderByColumn = "updateDatetime";
+  searchParam.orderBy = "DESC";
+  let data = await JobApi.searchJob(searchParam);
+  let list = data.items;
+  let result = jobDataToExcelJSONArray(list);
+  return result;
 }
 
-const importJobDialogVisible = ref(false);
-const importJobFileInput = ref<HTMLInputElement | null>(null);
-const jobFiles = ref();
-
-const handleJobFileImport = async () => {
-  jobFiles.value = importJobFileInput.value?.files;
-};
-
-const jobImportLoading = ref(false);
-
-const confirmJobFileImport = async () => {
-  let loading;
-  if (jobFiles.value && jobFiles.value.length > 0) {
-    jobImportLoading.value = true;
-    loading = ElLoading.service({
-      lock: true,
-      text: "职位数据导入中...",
-      background: "rgba(0, 0, 0, 0.7)",
-    });
-    setTimeout(() => {
-      const reader = new FileReader();
-      reader.readAsArrayBuffer(jobFiles.value[0]);
-      reader.onload = async function (event) {
-        let arrayBuffer = event.target.result;
-        try {
-          let wb = read(arrayBuffer);
-          let validResultObject = validImportData(utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }), JOB_FILE_HEADER);
-          if (!validResultObject.validResult) {
-            ElMessage({
-              message: `职位文件校验失败，缺少数据列(${validResultObject.lackColumn.length}):${validResultObject.lackColumn.join(",")}`,
-              type: "error",
-            });
-            return;
-          }
-          const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2 });
-          let jobList = jobExcelDataToObjectArray(data);
-          let targetList = await getMergeDataListForJob(jobList, "jobId", async (ids) => {
-            return JobApi.jobGetByIds(ids);
-          });
-          await JobApi.batchAddOrUpdateJobWithTransaction(targetList);
-          importJobDialogVisible.value = false;
-          ElMessage({
-            message: `导入职位数据成功，共${targetList.length}条`,
-            type: "success",
-          });
-        } catch (e) {
-          ElMessage({
-            message: "导入职位数据失败[" + e.message + "]",
-            type: "error",
-          });
-        } finally {
-          if (loading) {
-            loading.close();
-          }
-          jobImportLoading.value = false;
-        }
-      };
-      reader.onerror = function (event) {
-        ElMessage({
-          message: "读取职位文件失败",
-          type: "error",
-        });
-      };
-    }, 0);
-  } else {
-    ElMessage("请选择有效的职位文件");
-  }
-};
-
-const companyExportLoading = ref(false);
-
-const onCompanyExport = async () => {
-  companyExportLoading.value = true;
-  try {
-    let searchParam = new SearchCompanyBO();
-    searchParam.pageNum = 1;
-    searchParam.pageSize = MAX_RECORD_COUNT;
-    searchParam.orderByColumn = "updateDatetime";
-    searchParam.orderBy = "DESC";
-    let data = await CompanyApi.searchCompany(searchParam);
-    let list = data.items;
-    let result = companyDataToExcelJSONArray(list);
-    const ws = utils.json_to_sheet(result);
-    const wb = utils.book_new();
-    utils.book_append_sheet(wb, ws, "Data");
-    writeFileXLSX(wb, dayjs(new Date()).format("公司-YYYYMMDDHHmmss") + ".xlsx");
-  } finally {
-    companyExportLoading.value = false;
-  }
+const saveJobData = async (data) => {
+  let jobList = jobExcelDataToObjectArray(data);
+  let targetList = await getMergeDataListForJob(jobList, "jobId", async (ids) => {
+    return JobApi.jobGetByIds(ids);
+  });
+  await JobApi.batchAddOrUpdateJobWithTransaction(targetList);
+  return targetList;
 }
 
-const importCompanyDialogVisible = ref(false);
-const importCompanyFileInput = ref<HTMLInputElement | null>(null);
-const companyFiles = ref();
-
-const handleCompanyFileImport = async () => {
-  companyFiles.value = importCompanyFileInput.value?.files;
-};
-
-const companyImportLoading = ref(false);
-
-const confirmCompanyFileImport = async () => {
-  let loading;
-  if (companyFiles.value && companyFiles.value.length > 0) {
-    companyImportLoading.value = true;
-    loading = ElLoading.service({
-      lock: true,
-      text: "公司数据导入中...",
-      background: "rgba(0, 0, 0, 0.7)",
-    });
-    setTimeout(() => {
-      const reader = new FileReader();
-      reader.readAsArrayBuffer(companyFiles.value[0]);
-      reader.onload = async function (event) {
-        let arrayBuffer = event.target.result;
-        try {
-          let wb = read(arrayBuffer);
-          let validResultObject = validImportData(utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }), COMPANY_FILE_HEADER);
-          if (!validResultObject.validResult) {
-            ElMessage({
-              message: `公司文件校验失败，缺少数据列(${validResultObject.lackColumn.length}):${validResultObject.lackColumn.join(",")}`,
-              type: "error",
-            });
-            return;
-          }
-          const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2 });
-          let companyBOList = companyExcelDataToObjectArray(data);
-          let targetList = await getMergeDataListForCompany(companyBOList, "companyId", async (ids) => {
-            return CompanyApi.companyGetByIds(ids);
-          });
-          await CompanyApi.batchAddOrUpdateCompanyWithTransaction(targetList);
-          importCompanyDialogVisible.value = false;
-          ElMessage({
-            message: `导入公司数据成功，共${targetList.length}条`,
-            type: "success",
-          });
-        } catch (e) {
-          ElMessage({
-            message: "导入公司数据失败[" + e.message + "]",
-            type: "error",
-          });
-        } finally {
-          if (loading) {
-            loading.close();
-          }
-          companyImportLoading.value = false;
-        }
-      };
-      reader.onerror = function (event) {
-        ElMessage({
-          message: "读取公司文件失败",
-          type: "error",
-        });
-      };
-    }, 0);
-  } else {
-    ElMessage("请选择有效的公司文件");
-  }
-};
-
-const companyTagExportLoading = ref(false);
-
-const onCompanyTagExport = async () => {
-  companyTagExportLoading.value = true;
-  try {
-    let searchParam = new SearchCompanyTagBO();
-    searchParam.pageNum = 1;
-    searchParam.pageSize = MAX_RECORD_COUNT;
-    searchParam.orderByColumn = "updateDatetime";
-    searchParam.orderBy = "DESC";
-    let data = await CompanyApi.searchCompanyTag(searchParam);
-    let list = data.items;
-    let result = companyTagDataToExcelJSONArray(list);
-    const ws = utils.json_to_sheet(result);
-    const wb = utils.book_new();
-    utils.book_append_sheet(wb, ws, "Data");
-    writeFileXLSX(wb, dayjs(new Date()).format("公司标签-YYYYMMDDHHmmss") + ".xlsx");
-  } finally {
-    companyTagExportLoading.value = false;
-  }
+const getCompanyDataToExcelJsonArray = async () => {
+  let searchParam = new SearchCompanyBO();
+  searchParam.pageNum = 1;
+  searchParam.pageSize = MAX_RECORD_COUNT;
+  searchParam.orderByColumn = "updateDatetime";
+  searchParam.orderBy = "DESC";
+  let data = await CompanyApi.searchCompany(searchParam);
+  let list = data.items;
+  let result = companyDataToExcelJSONArray(list);
+  return result;
 }
 
-const importCompanyTagDialogVisible = ref(false);
-const importCompanyTagFileInput = ref<HTMLInputElement | null>(null);
-const companyTagFiles = ref();
+const saveCompanyData = async (data) => {
+  let companyBOList = companyExcelDataToObjectArray(data);
+  let targetList = await getMergeDataListForCompany(companyBOList, "companyId", async (ids) => {
+    return CompanyApi.companyGetByIds(ids);
+  });
+  await CompanyApi.batchAddOrUpdateCompanyWithTransaction(targetList);
+  return targetList;
+}
 
-const handleCompanyTagFileImport = async () => {
-  companyTagFiles.value = importCompanyTagFileInput.value?.files;
-};
+const getCompanyTagDataToExcelJsonArray = async () => {
+  let searchParam = new SearchCompanyTagBO();
+  searchParam.pageNum = 1;
+  searchParam.pageSize = MAX_RECORD_COUNT;
+  searchParam.orderByColumn = "updateDatetime";
+  searchParam.orderBy = "DESC";
+  let data = await CompanyApi.searchCompanyTag(searchParam);
+  let list = data.items;
+  let result = companyTagDataToExcelJSONArray(list);
+  return result;
+}
 
+const saveCompanyTagData = async (data) => {
+  let companyTagBOList = companyTagExcelDataToObjectArray(data);
+  let targetList = await getMergeDataListForCompanyTag(companyTagBOList, async (ids) => {
+    return await CompanyApi.getAllCompanyTagDTOByCompanyIds(ids);
+  })
+  await CompanyApi.batchAddOrUpdateCompanyTagWithTransaction(targetList);
+  return targetList;
+}
 
-const companyTagImportLoading = ref(false);
+const getJobTagDataToExcelJsonArray = async () => {
+  let searchParam = new JobTagSearchBO();
+  searchParam.pageNum = 1;
+  searchParam.pageSize = MAX_RECORD_COUNT;
+  searchParam.orderByColumn = "updateDatetime";
+  searchParam.orderBy = "DESC";
+  let data = await JobApi.jobTagSearch(searchParam);
+  let list = data.items;
+  let result = jobTagDataToExcelJSONArray(list);
+  return result;
+}
 
-const confirmCompanyTagFileImport = async () => {
-  let loading;
-  if (companyTagFiles.value && companyTagFiles.value.length > 0) {
-    companyTagImportLoading.value = true;
-    loading = ElLoading.service({
-      lock: true,
-      text: "公司标签数据导入中...",
-      background: "rgba(0, 0, 0, 0.7)",
-    });
-    setTimeout(() => {
-      const reader = new FileReader();
-      reader.readAsArrayBuffer(companyTagFiles.value[0]);
-      reader.onload = async function (event) {
-        let arrayBuffer = event.target.result;
-        try {
-          let wb = read(arrayBuffer);
-          let validResultObject = validImportData(utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }), COMPANY_TAG_FILE_HEADER);
-          if (!validResultObject.validResult) {
-            ElMessage({
-              message: `公司标签文件校验失败，缺少数据列(${validResultObject.lackColumn.length}):${validResultObject.lackColumn.join(",")}`,
-              type: "error",
-            });
-            return;
-          }
-          const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2 });
-          let companyTagBOList = companyTagExcelDataToObjectArray(data);
-          let targetList = await getMergeDataListForCompanyTag(companyTagBOList, async (ids) => {
-            return await CompanyApi.getAllCompanyTagDTOByCompanyIds(ids);
-          })
-          await CompanyApi.batchAddOrUpdateCompanyTagWithTransaction(targetList);
-          importCompanyTagDialogVisible.value = false;
-          ElMessage({
-            message: `导入公司标签数据成功，共${targetList.length}条`,
-            type: "success",
-          });
-        } catch (e) {
-          ElMessage({
-            message: "导入公司标签数据失败[" + e.message + "]",
-            type: "error",
-          });
-        } finally {
-          if (loading) {
-            loading.close();
-          }
-          companyTagImportLoading.value = false;
-        }
-      };
-      reader.onerror = function (event) {
-        ElMessage({
-          message: "读取公司标签文件失败",
-          type: "error",
-        });
-      };
-    }, 0);
-  } else {
-    ElMessage("请选择有效的公司标签文件");
-  }
-};
+const saveJobTagData = async (data) => {
+  let result = jobTagExcelDataToObjectArray(data);
+  let targetList = await getMergeDataListForJobTag(result, async (ids) => {
+    return await JobApi.jobTagGetAllDTOByJobIds(ids);
+  })
+  console.log(targetList)
+  await JobApi.jobTagBatchAddOrUpdateWithTransaction(targetList);
+  return targetList;
+}
 
 const login = ref(false);
 const username = ref("");
@@ -814,6 +552,7 @@ const checkLoginStatus = async () => {
 const githubRef = ref();
 const githubAppRef = ref();
 const databaseRef = ref();
+const jobRef = ref();
 const companyRef = ref();
 const companyTagRef = ref();
 const infoRef = ref();
@@ -983,7 +722,6 @@ const cloneLoading = ref(true);
 const viewLoading = ref(true);
 const popularReferrersLoading = ref(true);
 const popularPathsLoading = ref(true);
-
 </script>
 <style lang="scss" scoped>
 .setting_item {
@@ -1035,6 +773,7 @@ const popularPathsLoading = ref(true);
 .trafficWrapper {
   padding-top: 20px;
 }
+
 .el-link {
   margin-right: 8px;
 }

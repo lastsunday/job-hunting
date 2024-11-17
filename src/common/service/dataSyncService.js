@@ -100,3 +100,41 @@ export async function getMergeDataListForCompanyTag(items, getByIdsCallback) {
     }
     return targetList;
 }
+
+export async function getMergeDataListForJobTag(items, getByIdsCallback) {
+    let ids = items.flatMap(item => item.jobId);
+    let targetList = [];
+    let existsRecordList = await getByIdsCallback(ids);
+    let idAndTagArrayMap = new Map();
+    for (let i = 0; i < existsRecordList.length; i++) {
+        let existsRecord = existsRecordList[i];
+        let id = existsRecord.jobId;
+        if (!idAndTagArrayMap.has(id)) {
+            idAndTagArrayMap.set(id, []);
+        }
+        idAndTagArrayMap.get(id).push(existsRecord.tagName);
+    }
+    for (let i = 0; i < items.length; i++) {
+        let item = items[i]
+        let id = item.jobId;
+        if (idAndTagArrayMap.has(id)) {
+            let tags = item.tags;
+            let existsTags = idAndTagArrayMap.get(id);
+            let existsTagsMap = new Map();
+            for (let n = 0; n < existsTags.length; n++) {
+                existsTagsMap.set(existsTags[n], null);
+            }
+            let targetTags = [];
+            targetTags.push(...existsTags);
+            for (let n = 0; n < tags.length; n++) {
+                let tag = tags[n];
+                if (!existsTagsMap.has(tag)) {
+                    targetTags.push(tag);
+                }
+            }
+            item.tags = targetTags;
+        }
+        targetList.push(item);
+    }
+    return targetList;
+}

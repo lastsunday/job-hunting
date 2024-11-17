@@ -5,7 +5,7 @@ import { convertEmptyStringToNull, genUniqueId, genIdFromText } from "../../comm
 import dayjs from "dayjs";
 import { CompanyTag } from "../../common/data/domain/companyTag";
 import { Tag } from "../../common/data/domain/tag";
-import { _addOrUpdateTag } from "./tagService";
+import { _addOrUpdateTag, _searchWithTagInfo } from "./tagService";
 import { CompanyTagDTO } from "../../common/data/dto/companyTagDTO";
 import { SearchCompanyTagBO } from "../../common/data/bo/searchCompanyTagBO";
 import { SearchCompanyTagDTO } from "../../common/data/dto/searchCompanyTagDTO";
@@ -197,70 +197,62 @@ export const CompanyTagService = {
      */
     searchCompanyTag: async function (message, param) {
         try {
-            let result = new SearchCompanyTagDTO();
-            let sqlQuery = "";
-            let whereCondition = genCompanyTagSearchWhereConditionSql(param);
-            let orderBy =
-                " ORDER BY " +
-                param.orderByColumn +
-                " " +
-                param.orderBy +
-                " NULLS LAST";
-            let limitStart = (param.pageNum - 1) * param.pageSize;
-            let limitEnd = param.pageSize;
-            let limit = " limit " + limitStart + "," + limitEnd;
-            const sqlSearchQuery = genSqlSearchQuery(genCompanyTagSearchJoinOnConditionSql(param));
-            sqlQuery += sqlSearchQuery;
-            sqlQuery += whereCondition;
-            sqlQuery += orderBy;
-            sqlQuery += limit;
-            let items = [];
-            let total = 0;
-            let queryRows = [];
-            (await getDb()).exec({
-                sql: sqlQuery,
-                rowMode: "object",
-                resultRows: queryRows,
-            });
-            for (let i = 0; i < queryRows.length; i++) {
-                let item = queryRows[i];
-                let resultItem = new CompanyTagDTO();
-                let keys = Object.keys(item);
-                for (let n = 0; n < keys.length; n++) {
-                    let key = keys[n];
-                    resultItem[key] = item[key];
+            let result = await _searchWithTagInfo({
+                param,
+                cerateResultDTOFunction: () => {
+                    return new SearchCompanyTagDTO()
+                },
+                createResultItemDTOFunction: () => {
+                    return new CompanyTagDTO();
+                },
+                genSqlSearchQueryFunction: () => {
+                    let whereCondition = "";
+                    if (param.tagIds && param.tagIds.length > 0) {
+                        let ids = "'" + param.tagIds.join("','") + "'";
+                        whereCondition +=
+                            ` AND t1.tag_id IN (${ids})`;
+                    }
+                    if (whereCondition.startsWith(" AND")) {
+                        whereCondition = whereCondition.replace("AND", "");
+                        whereCondition = " WHERE " + whereCondition;
+                    }
+                    return `
+                    SELECT t1.company_tag_id AS companyTagId, t1.company_id AS companyId, t1.company_name AS companyName,t1.create_datetime AS createDatetime, t1.update_datetime AS updateDatetime FROM company_tag AS t1  LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id ${whereCondition}  GROUP BY t1.company_id
+                    `
+                },
+                genSearchWhereConditionSqlFunction: () => {
+                    let whereCondition = "";
+                    if (param.companyName) {
+                        whereCondition +=
+                            " AND companyName LIKE '%" + param.companyName + "%' ";
+                    }
+                    if (param.tagIds && param.tagIds.length > 0) {
+                        whereCondition +=
+                            ` AND COUNT(DISTINCT t1.tag_id) = ${param.tagIds.length}`;
+                    }
+                    if (param.startDatetimeForUpdate) {
+                        whereCondition +=
+                            " AND updateDatetime >= '" +
+                            dayjs(param.startDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+                            "'";
+                    }
+                    if (param.endDatetimeForUpdate) {
+                        whereCondition +=
+                            " AND updateDatetime < '" +
+                            dayjs(param.endDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+                            "'";
+                    }
+                    if (whereCondition.startsWith(" AND")) {
+                        whereCondition = whereCondition.replace("AND", "");
+                        whereCondition = " HAVING " + whereCondition;
+                    }
+                    return whereCondition;
+                },
+                idColumn: "companyId",
+                getAllDTOByIdsFunction: async (ids) => {
+                    return _getAllCompanyTagDTOByCompanyIds(ids);
                 }
-                item.tagNameArray = [];
-                item.tagIdArray = [];
-                items.push(item);
-            }
-            let ids = [];
-            let itemIdObjectMap = new Map();
-            if (items.length > 0) {
-                items.forEach(item => {
-                    ids.push(item.companyId);
-                    itemIdObjectMap.set(item.companyId, item);
-                });
-                let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids);
-                companyTagDTOList.forEach(item => {
-                    itemIdObjectMap.get(item.companyId).tagNameArray.push(item.tagName);
-                    itemIdObjectMap.get(item.companyId).tagIdArray.push(item.tagId);
-                });
-            }
-            let sqlCountSubTable = "";
-            sqlCountSubTable += sqlSearchQuery;
-            sqlCountSubTable += whereCondition;
-            //count
-            let sqlCount = `SELECT COUNT(*) AS total FROM (${sqlCountSubTable}) AS t1`;
-            let queryCountRows = [];
-            (await getDb()).exec({
-                sql: sqlCount,
-                rowMode: "object",
-                resultRows: queryCountRows,
             });
-            total = queryCountRows[0].total;
-            result.items = items;
-            result.total = total;
             postSuccessMessage(message, result);
         } catch (e) {
             postErrorMessage(message, "[worker] searchCompanyTag error : " + e.message);
@@ -335,62 +327,6 @@ async function _addOrUpdateCompanyTag(param) {
         await _addCompanyTag(companyTag);
     }
 }
-
-/**
- *
- * @param {SearchCompanyTagBO} param
- *
- * @returns string sql
- */
-function genCompanyTagSearchWhereConditionSql(param) {
-    let whereCondition = "";
-    if (param.companyName) {
-        whereCondition +=
-            " AND companyName LIKE '%" + param.companyName + "%' ";
-    }
-    if (param.tagIds && param.tagIds.length > 0) {
-        whereCondition +=
-            ` AND COUNT(DISTINCT t1.tag_id) = ${param.tagIds.length}`;
-    }
-    if (param.startDatetimeForUpdate) {
-        whereCondition +=
-            " AND updateDatetime >= '" +
-            dayjs(param.startDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
-            "'";
-    }
-    if (param.endDatetimeForUpdate) {
-        whereCondition +=
-            " AND updateDatetime < '" +
-            dayjs(param.endDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
-            "'";
-    }
-    if (whereCondition.startsWith(" AND")) {
-        whereCondition = whereCondition.replace("AND", "");
-        whereCondition = " HAVING " + whereCondition;
-    }
-    return whereCondition;
-}
-
-/**
- *
- * @param {SearchCompanyTagBO} param
- *
- * @returns string sql
- */
-function genCompanyTagSearchJoinOnConditionSql(param) {
-    let whereCondition = "";
-    if (param.tagIds && param.tagIds.length > 0) {
-        let ids = "'" + param.tagIds.join("','") + "'";
-        whereCondition +=
-            ` AND t1.tag_id IN (${ids})`;
-    }
-    if (whereCondition.startsWith(" AND")) {
-        whereCondition = whereCondition.replace("AND", "");
-        whereCondition = " WHERE " + whereCondition;
-    }
-    return whereCondition;
-}
-
 
 /**
  * 
@@ -487,10 +423,4 @@ function genSqlSelectDTOByCompanyIds(ids) {
     return `
     SELECT t1.company_tag_id, t1.company_id, t1.company_name,t1.tag_id, t2.tag_name,t1.seq ,t1.create_datetime, t1.update_datetime FROM company_tag AS t1  LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id where company_id in (${idsString}) ORDER BY t1.seq ASC;
     `;
-}
-
-function genSqlSearchQuery(whereCondition) {
-    return `
-    SELECT t1.company_tag_id AS companyTagId, t1.company_id AS companyId, t1.company_name AS companyName,t1.create_datetime AS createDatetime, t1.update_datetime AS updateDatetime FROM company_tag AS t1  LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id ${whereCondition}  GROUP BY t1.company_id
-    `
 }

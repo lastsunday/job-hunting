@@ -1,13 +1,15 @@
 import { Message } from "../../common/api/message";
 import { postSuccessMessage, postErrorMessage } from "../util";
-import { getAll, beginTransaction, commitTransaction, rollbackTransaction } from "../database";
+import { getDb, getAll, beginTransaction, commitTransaction, rollbackTransaction } from "../database";
 import { genUniqueId, genIdFromText } from "../../common/utils";
 import { Tag } from "../../common/data/domain/tag";
-import { _addOrUpdateTag } from "./tagService";
+import { _addOrUpdateTag, _searchWithTagInfo } from "./tagService";
 import { JobTagDTO } from "../../common/data/dto/jobTagDTO";
 import { BaseService } from "./baseService";
 import { JobTag } from "../../common/data/domain/jobTag";
 import { JobTagBO } from "../../common/data/bo/jobTagBO";
+import { JobTagSearchDTO } from "../../common/data/dto/jobTagSearchDTO";
+import { JobTagSearchBO } from "../../common/data/bo/jobTagSearchBO";
 
 const JOB_ID_COLUMN = "job_id";
 
@@ -15,8 +17,13 @@ const SERVICE_INSTANCE = new BaseService("job_tag", "id",
     () => {
         return new JobTag();
     },
-    null,
-    null
+    () => {
+        return new JobTagSearchDTO();
+    },
+    (param) => {
+        let whereCondition = "";
+        return whereCondition;
+    }
 );
 
 export const JobTagService = {
@@ -29,6 +36,70 @@ export const JobTagService = {
      */
     getJobTagById: async function (message, param) {
         SERVICE_INSTANCE.getById(message, param);
+    },
+    /**
+     * 
+     * @param {*} message 
+     * @param {JobTagSearchBO} param 
+     */
+    jobTagSearch: async function (message, param) {
+        try {
+            let result = await _searchWithTagInfo({
+                param,
+                cerateResultDTOFunction: () => {
+                    return new JobTagSearchDTO()
+                },
+                createResultItemDTOFunction: () => {
+                    return new JobTagDTO();
+                },
+                genSqlSearchQueryFunction: () => {
+                    let whereCondition = "";
+                    if (param.tagIds && param.tagIds.length > 0) {
+                        let ids = "'" + param.tagIds.join("','") + "'";
+                        whereCondition +=
+                            ` AND t1.tag_id IN (${ids})`;
+                    }
+                    if (whereCondition.startsWith(" AND")) {
+                        whereCondition = whereCondition.replace("AND", "");
+                        whereCondition = " WHERE " + whereCondition;
+                    }
+                    return `
+                    SELECT t1.id AS id, t1.job_id AS jobId, t1.create_datetime AS createDatetime, t1.update_datetime AS updateDatetime FROM job_tag AS t1  LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id ${whereCondition}  GROUP BY t1.job_id
+                    `;
+                },
+                genSearchWhereConditionSqlFunction: () => {
+                    let whereCondition = "";
+                    if (param.tagIds && param.tagIds.length > 0) {
+                        whereCondition +=
+                            ` AND COUNT(DISTINCT t1.tag_id) = ${param.tagIds.length}`;
+                    }
+                    if (param.startDatetimeForUpdate) {
+                        whereCondition +=
+                            " AND updateDatetime >= '" +
+                            dayjs(param.startDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+                            "'";
+                    }
+                    if (param.endDatetimeForUpdate) {
+                        whereCondition +=
+                            " AND updateDatetime < '" +
+                            dayjs(param.endDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+                            "'";
+                    }
+                    if (whereCondition.startsWith(" AND")) {
+                        whereCondition = whereCondition.replace("AND", "");
+                        whereCondition = " HAVING " + whereCondition;
+                    }
+                    return whereCondition;
+                },
+                idColumn: "jobId",
+                getAllDTOByIdsFunction: async (ids) => {
+                    return _getAllJobTagDTOByJobIds(ids);
+                }
+            });
+            postSuccessMessage(message, result);
+        } catch (e) {
+            postErrorMessage(message, "[worker] jobTagSearch error : " + e.message);
+        }
     },
     /**
      *

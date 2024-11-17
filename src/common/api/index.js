@@ -41,6 +41,9 @@ import { SearchDataSharePartnerDTO } from "../data/dto/searchDataSharePartnerDTO
 import { StatisticDataSharePartnerDTO } from "../data/dto/statisticDataSharePartnerDTO";
 import { StatisticTaskBO } from "../data/bo/statisticTaskBO";
 import { StatisticTaskDTO } from "../data/dto/statisticTaskDTO";
+import { JobTagSearchBO } from "../data/bo/jobTagSearchBO";
+import { JobTagSearchDTO } from "../data/dto/jobTagSearchDTO";
+
 
 export const JobApi = {
   /**
@@ -200,8 +203,32 @@ export const JobApi = {
       invokeEnv: invokeEnv,
     });
     return result.data;
-  }
+  },
 
+  /**
+  * 
+  * @param {string[]} param jobId
+  */
+  jobTagGetAllDTOByJobIds: async function (param,
+    { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.jobTagGetAllDTOByJobIds.name, param, {
+      invokeEnv: invokeEnv,
+    });
+    return result.data;
+  },
+
+  /**
+ *
+ * @param {JobTagSearchBO} param
+ *
+ * @returns JobTagSearchDTO[]
+ */
+  jobTagSearch: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.jobTagSearch.name, param, {
+      invokeEnv: invokeEnv,
+    });
+    return result.data;
+  },
 };
 
 export const CompanyApi = {
