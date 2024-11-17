@@ -231,6 +231,14 @@
                         :whitelist="bossPositionDislikeWhitelist" :settings="tagSettings" placeholder="招聘人职位排除关键字">
                     </TagInput>
                 </el-form-item>
+                <el-form-item label="喜欢的职位标签">
+                    <TagInput ref="likeJobTagRef" v-model="form.likeJobTagList" :settings="tagSettings"
+                        :whitelist="whitelist" placeholder="请选择喜欢的职位标签"></TagInput>
+                </el-form-item>
+                <el-form-item label="不喜欢的职位标签">
+                    <TagInput ref="dislikeJobTagRef" v-model="form.dislikeJobTagList" :settings="tagSettings"
+                        :whitelist="whitelist" placeholder="请选择不喜欢的职位标签"></TagInput>
+                </el-form-item>
                 <el-form-item label="不喜欢的公司标签">
                     <TagInput ref="dislikeCompanyTagRef" v-model="form.dislikeCompanyTagList" :settings="tagSettings"
                         :whitelist="whitelist" placeholder="请选择不喜欢的公司标签"></TagInput>
@@ -239,14 +247,14 @@
                     <el-radio-group v-model="form.publishDateOffset">
                         <el-radio v-for="(item) in publishDateOffsetOptions" :value="item.value" :key="item.value">{{
                             item.label
-                            }}</el-radio>
+                        }}</el-radio>
                     </el-radio-group>
                 </el-form-item>
                 <el-form-item label="排序">
                     <el-radio-group v-model="form.sortMode">
                         <el-radio v-for="(item) in sortModeOptions" :value="item.value" :key="item.value">{{
                             item.label
-                            }}</el-radio>
+                        }}</el-radio>
                     </el-radio-group>
                 </el-form-item>
                 <el-form-item>
@@ -307,6 +315,8 @@ const form = reactive({
     descKeywordList: [],
     descDislikeKeywordList: [],
     dislikeCompanyTagList: [],
+    likeJobTagList: [],
+    dislikeJobTagList: [],
     publishDateOffset: -1,
     bossPositionDislikeKeywordList: [],
     sortMode: 0,
@@ -370,6 +380,8 @@ const setFormData = (jobFaviousSetting) => {
     form.descKeywordList = jobFaviousSetting.descKeywordList.flatMap(item => { return { "value": item } });
     form.descDislikeKeywordList = jobFaviousSetting.descDislikeKeywordList.flatMap(item => { return { "value": item } });
     form.dislikeCompanyTagList = jobFaviousSetting.dislikeCompanyTagList.flatMap(item => { return { "value": whitelistCodeValueMap.get(item), "code": item } });
+    form.likeJobTagList = jobFaviousSetting.likeJobTagList.flatMap(item => { return { "value": whitelistCodeValueMap.get(item), "code": item } });
+    form.dislikeJobTagList = jobFaviousSetting.dislikeJobTagList.flatMap(item => { return { "value": whitelistCodeValueMap.get(item), "code": item } });
     form.publishDateOffset = jobFaviousSetting.publishDateOffset;
     form.bossPositionDislikeKeywordList = jobFaviousSetting.bossPositionDislikeKeywordList.flatMap(item => { return { "value": item } });
     form.sortMode = jobFaviousSetting.sortMode;
@@ -425,6 +437,8 @@ const getFaviousSettingDTOFromForm = () => {
     result.descKeywordList = toRaw(form.descKeywordList).flatMap(item => item.value);
     result.descDislikeKeywordList = toRaw(form.descDislikeKeywordList).flatMap(item => item.value);
     result.dislikeCompanyTagList = toRaw(form.dislikeCompanyTagList).flatMap(item => item.code);
+    result.likeJobTagList = toRaw(form.likeJobTagList).flatMap(item => item.code);
+    result.dislikeJobTagList = toRaw(form.dislikeJobTagList).flatMap(item => item.code);
     result.publishDateOffset = toRaw(form.publishDateOffset);
     result.bossPositionDislikeKeywordList = toRaw(form.bossPositionDislikeKeywordList).flatMap(item => item.value);
     result.sortMode = toRaw(form.sortMode);
@@ -505,6 +519,8 @@ function getSearchParam() {
     searchParam.descKeywordList = toRaw(form.descKeywordList).flatMap(item => item.value);
     searchParam.descDislikeKeywordList = toRaw(form.descDislikeKeywordList).flatMap(item => item.value);
     searchParam.dislikeCompanyTagList = toRaw(form.dislikeCompanyTagList).flatMap(item => item.code);
+    searchParam.likeJobTagList = toRaw(form.likeJobTagList).flatMap(item => item.code);
+    searchParam.dislikeJobTagList = toRaw(form.dislikeJobTagList).flatMap(item => item.code);
     searchParam.publishDateOffset = toRaw(form.publishDateOffset);
     searchParam.bossPositionDislikeKeywordList = toRaw(form.bossPositionDislikeKeywordList).flatMap(item => item.value);
     searchParam.orderByColumn = jobSearchOrderByColumn.value;

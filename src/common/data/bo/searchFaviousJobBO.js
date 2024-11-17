@@ -8,6 +8,8 @@ export class SearchFaviousJobBO extends PageBO {
     descKeywordList;
     descDislikeKeywordList;
     dislikeCompanyTagList;
+    likeJobTagList;
+    dislikeJobTagList;
     publishDateOffset;
     bossPositionDislikeKeywordList;
     
