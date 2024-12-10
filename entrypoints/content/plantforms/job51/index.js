@@ -9,6 +9,7 @@ import {
   hiddenLoadingDOM,
   finalRender,
   renderFunctionPanel,
+  replaceJobCard,
 } from "../../commonRender";
 
 export function getJob51Data(responseText) {
@@ -64,15 +65,24 @@ async function parseData(list, getListItem) {
   let jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(list, PLATFORM_51JOB)
   );
-  list.forEach((item, index) => {
-    const dom = getListItem(index);
-    let tag = createDOM(jobDTOList[index]);
-    dom.appendChild(tag);
-  });
-  hiddenLoadingDOM();
-  renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_51JOB });
-  renderFunctionPanel(jobDTOList, getListItem, { platform: PLATFORM_51JOB });
-  finalRender(jobDTOList, { platform: PLATFORM_51JOB });
+  let isReplace = true;
+  if (isReplace) {
+    list.forEach((item, index) => {
+      replaceJobCard(getListItem(index), jobDTOList[index]);
+    });
+    hiddenLoadingDOM();
+    renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_51JOB });
+  } else {
+    list.forEach((item, index) => {
+      const dom = getListItem(index);
+      let tag = createDOM(jobDTOList[index]);
+      dom.appendChild(tag);
+    });
+    hiddenLoadingDOM();
+    renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_51JOB });
+    renderFunctionPanel(jobDTOList, getListItem, { platform: PLATFORM_51JOB });
+    finalRender(jobDTOList, { platform: PLATFORM_51JOB });
+  }
 }
 
 export function createDOM(jobDTO) {

@@ -49,6 +49,13 @@ import { CompanyTagBO } from "../../common/data/bo/companyTagBO";
 
 import { JobTagBO } from "../../common/data/bo/jobTagBO";
 
+import "@/lib/components/job-card.ts";
+
+export function replaceJobCard(node,jobDTO){
+  node.innerHTML = "";
+  node.appendChild($(`<job-card job-id="${jobDTO.jobId}"></job-card>`)[0]);
+}
+
 export function renderTimeTag(
   divElement,
   jobDTO,
