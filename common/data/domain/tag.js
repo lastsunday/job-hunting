@@ -10,7 +10,7 @@ export class Tag {
   createDatetime;
   updateDatetime;
   /**
-  * 0代表不公开;1:代表公开;
+  * false代表不公开;true:代表公开;
   */
-  isPublic=1;
+  isPublic=true;
 }

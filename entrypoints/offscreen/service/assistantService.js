@@ -6,7 +6,7 @@ import { AssistantStatisticDTO } from "../../../common/data/dto/assistantStatist
 import { JobFaviousSettingDTO } from "../../../common/data/dto/jobFaviousSettingDTO";
 import { SearchJobDTO } from "../../../common/data/dto/searchJobDTO";
 import { genIdFromText } from "../../../common/utils";
-import { getDb } from "../database";
+import { getDb, convertRows } from "../database";
 import { postErrorMessage, postSuccessMessage } from "../util";
 import { _addOrUpdateConfig, _getConfigByKey } from "./configService";
 import { _fillSearchResultExtraInfo } from "./jobService";
@@ -36,7 +36,7 @@ export const AssistantService = {
                 " NULLS LAST";
             let limitStart = (param.pageNum - 1) * param.pageSize;
             let limitEnd = param.pageSize;
-            let limit = " limit " + limitStart + "," + limitEnd;
+            let limit = " limit " + limitEnd + " OFFSET " + limitStart;
             sqlQuery += genSqlJobSearchQuery(param);
             sqlQuery += whereCondition;
             sqlQuery = genFilterSQL(sqlQuery, param);
@@ -45,23 +45,13 @@ export const AssistantService = {
             sqlQuery += limit;
             let items = [];
             let total = 0;
-            let queryRows = [];
-            (await getDb()).exec({
-                sql: sqlQuery,
-                rowMode: "object",
-                resultRows: queryRows,
-            });
+            const { rows } = await (await getDb()).query(sqlQuery);
+            const queryRows = convertRows(rows);
             await _fillSearchResultExtraInfo(items, queryRows);
             //count
             let sqlCount = `SELECT COUNT(*) AS total from (${sqlQueryCountSubSql}) AS t1`;
-            let queryCountRows = [];
-            (await getDb()).exec({
-                sql: sqlCount,
-                rowMode: "object",
-                resultRows: queryCountRows,
-            });
+            const { rows: queryCountRows } = await (await getDb()).query(sqlCount);
             total = queryCountRows[0].total;
-
             result.items = items;
             result.total = total;
             postSuccessMessage(message, result);
@@ -112,11 +102,11 @@ export const AssistantService = {
             let jobFaviousSettingDTO = await _getJobFaviousSetting();
             let result = new AssistantStatisticDTO();
             let now = dayjs();
-            let todayStart = now.startOf("day").format("YYYY-MM-DD HH:mm:ss");
+            let todayStart = now.startOf("day").format();
             let todayEnd = now
                 .startOf("day")
                 .add(1, "day")
-                .format("YYYY-MM-DD HH:mm:ss");
+                .format();
 
             let todayFaviousJobCount = [];
             (await getDb()).exec({
@@ -185,10 +175,10 @@ function genJobSearchWhereConditionSql(param) {
 }
 
 function genSqlJobSearchQuery(param) {
-    let joinSql = `LEFT JOIN (SELECT job_id AS _jobId,COUNT(job_id) AS browseDetailCount,MAX(job_visit_datetime) AS latestBrowseDetailDatetime FROM JOB_BROWSE_HISTORY WHERE job_visit_type = 'DETAIL' GROUP BY job_id) AS t2 ON t1.job_id = t2._jobId`;
-    joinSql += ` LEFT JOIN company_tag AS t3 ON t1.job_company_name = t3.company_name`;
+    // let joinSql = `LEFT JOIN (SELECT job_id AS _jobId,COUNT(job_id) AS browseDetailCount,MAX(job_visit_datetime) AS latestBrowseDetailDatetime FROM JOB_BROWSE_HISTORY WHERE job_visit_type = 'DETAIL' GROUP BY job_id) AS t2 ON t1.job_id = t2._jobId`;
+    let joinSql = ` LEFT JOIN company_tag AS t3 ON t1.job_company_name = t3.company_name`;
     joinSql += ` LEFT JOIN job_tag AS t4 ON t1.job_id = t4.job_id`;
-    return `SELECT t1.job_id AS jobId,job_platform AS jobPlatform,job_url AS jobUrl,job_name AS jobName,job_company_name AS jobCompanyName,job_location_name AS jobLocationName,job_address AS jobAddress,job_longitude AS jobLongitude,job_latitude AS jobLatitude,job_description AS jobDescription,job_degree_name AS jobDegreeName,job_year AS jobYear,job_salary_min AS jobSalaryMin,job_salary_max AS jobSalaryMax,job_salary_total_month AS jobSalaryTotalMonth,job_first_publish_datetime AS jobFirstPublishDatetime,boss_name AS bossName,boss_company_name AS bossCompanyName,boss_position AS bossPosition,t1.create_datetime AS createDatetime,t1.update_datetime AS updateDatetime,t1.skill_tag AS skillTag,t1.welfare_tag AS welfareTag,IFNULL(t2.browseDetailCount,0) AS browseDetailCount,t2.latestBrowseDetailDatetime AS latestBrowseDetailDatetime,GROUP_CONCAT(t3.tag_id) AS companyTagIdArray,GROUP_CONCAT(t4.tag_id) AS jobTagIdArray FROM job AS t1 ${joinSql}`;
+    return `SELECT t1.job_id AS job_id,job_platform,job_url,job_name,job_company_name,job_location_name,job_address,job_longitude,job_latitude,job_description,job_degree_name,job_year,job_salary_min,job_salary_max,job_salary_total_month,job_first_publish_datetime,boss_name,boss_company_name,boss_position,t1.create_datetime AS create_datetime,t1.update_datetime AS update_datetime,t1.skill_tag,t1.welfare_tag,STRING_AGG(t3.tag_id,',') AS company_tag_id_array,STRING_AGG(t4.tag_id,',') AS job_tag_id_array FROM job AS t1 ${joinSql}`;
 }
 
 function genFilterSQL(sql, param, createDateStartDate, createDateEndDate) {
@@ -199,10 +189,10 @@ function genFilterSQL(sql, param, createDateStartDate, createDateEndDate) {
             if (index > 0) {
                 whereCondition += " AND ";
             }
-            whereCondition += " t1.companyTagIdArray NOT LIKE '%" + genIdFromText(item) + "%' ";
+            whereCondition += " t1.company_tag_id_array NOT LIKE '%" + genIdFromText(item) + "%' ";
         });
         whereCondition += " )";
-        whereCondition += ` OR t1.companyTagIdArray IS NULL`;
+        whereCondition += ` OR t1.company_tag_id_array IS NULL`;
     }
     if (param.likeJobTagList && param.likeJobTagList.length > 0) {
         whereCondition += " AND (";
@@ -210,7 +200,7 @@ function genFilterSQL(sql, param, createDateStartDate, createDateEndDate) {
             if (index > 0) {
                 whereCondition += " AND ";
             }
-            whereCondition += " t1.jobTagIdArray LIKE '%" + genIdFromText(item) + "%' ";
+            whereCondition += " t1.job_tag_id_array LIKE '%" + genIdFromText(item) + "%' ";
         });
         whereCondition += " )";
     }
@@ -220,23 +210,23 @@ function genFilterSQL(sql, param, createDateStartDate, createDateEndDate) {
             if (index > 0) {
                 whereCondition += " AND ";
             }
-            whereCondition += " t1.jobTagIdArray NOT LIKE '%" + genIdFromText(item) + "%' ";
+            whereCondition += " t1.job_tag_id_array NOT LIKE '%" + genIdFromText(item) + "%' ";
         });
         whereCondition += " )";
         if (!(param.likeJobTagList && param.likeJobTagList.length > 0)) {
-            whereCondition += ` OR t1.jobTagIdArray IS NULL`;
+            whereCondition += ` OR t1.job_tag_id_array IS NULL`;
         }
     }
     if (createDateStartDate) {
         whereCondition +=
             " AND createDatetime >= '" +
-            dayjs(createDateStartDate).format("YYYY-MM-DD HH:mm:ss") +
+            dayjs(createDateStartDate).format() +
             "'";
     }
     if (createDateEndDate) {
         whereCondition +=
             " AND createDatetime < '" +
-            dayjs(createDateEndDate).format("YYYY-MM-DD HH:mm:ss") +
+            dayjs(createDateEndDate).format() +
             "'";
     }
     if (whereCondition.startsWith(" AND")) {

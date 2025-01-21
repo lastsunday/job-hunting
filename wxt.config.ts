@@ -86,10 +86,11 @@ export default defineConfig({
         [react(), wasm(), Icons(),]
       },
       worker: {
-        plugins: () => [wasm()]
+        plugins: () => [wasm()],
+        format: 'es',
       },
       optimizeDeps: {
-        exclude: ['@sqlite.org/sqlite-wasm']
+        exclude: ['@sqlite.org/sqlite-wasm','@electric-sql/pglite']
       }
     }
   }

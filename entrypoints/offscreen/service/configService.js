@@ -73,40 +73,28 @@ export async function _getConfigByKey(param) {
  */
 export async function _addOrUpdateConfig(param) {
     const now = new Date();
-    let rows = [];
-    (await getDb()).exec({
-        sql: SQL_SELECT_BY_KEY,
-        rowMode: "object",
-        bind: [param.key],
-        resultRows: rows,
-    });
+    const { rows } = await (await getDb()).query(SQL_SELECT_BY_KEY, [param.key]);
     if (rows.length > 0) {
-        (await getDb()).exec({
-            sql: SQL_UPDATE,
-            bind: {
-                $key: convertEmptyStringToNull(param.key),
-                $value: convertEmptyStringToNull(param.value),
-                $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-            },
-        });
+        await (await getDb()).query(SQL_UPDATE, [
+            convertEmptyStringToNull(param.value),
+            dayjs(now).format(),
+            convertEmptyStringToNull(param.key)
+        ]);
     } else {
-        (await getDb()).exec({
-            sql: SQL_INSERT,
-            bind: {
-                $key: convertEmptyStringToNull(param.key),
-                $value: convertEmptyStringToNull(param.value),
-                $create_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-                $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-            },
-        });
+        await (await getDb()).query(SQL_INSERT, [
+            convertEmptyStringToNull(param.key),
+            convertEmptyStringToNull(param.value),
+            dayjs(now).format(),
+            dayjs(now).format(),
+        ]);
     }
 }
 
 const SQL_SELECT = `SELECT key,value,create_datetime, update_datetime FROM config`;
-const SQL_SELECT_BY_KEY = `${SQL_SELECT} WHERE key = ?`;
+const SQL_SELECT_BY_KEY = `${SQL_SELECT} WHERE key = $1`;
 const SQL_INSERT = `
-INSERT INTO config (key, value, create_datetime, update_datetime) VALUES ($key,$value,$create_datetime,$update_datetime)
+INSERT INTO config (key, value, create_datetime, update_datetime) VALUES ($1,$2,$3,$4)
 `;
 const SQL_UPDATE = `
-UPDATE config SET value=$value,update_datetime=$update_datetime WHERE key = $key;
+UPDATE config SET value=$1,update_datetime=$2 WHERE key = $3;
 `;

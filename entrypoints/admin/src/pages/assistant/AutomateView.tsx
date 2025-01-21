@@ -46,8 +46,7 @@ const automateFetchJobItemData = async (item: TaskData) => {
         missionLogJobPageDetailDTO.count = result.count;
         missionLogJobPageDetailDTO.startDatetime = result.startDatetime;
         missionLogJobPageDetailDTO.endDatetime = result.endDatetime;
-        //TODO需要处理拼写错误的问题Detial -> Detail，包括数据库schema
-        missionLog.missionLogDetial = JSON.stringify(missionLogJobPageDetailDTO);
+        missionLog.missionLogDetail = JSON.stringify(missionLogJobPageDetailDTO);
         await MissionLogApi.missionLogAddOrUpdate(missionLog);
         result.screenshotList.forEach(element => {
             item.taskRunData.screenshotList = [];

@@ -1,16 +1,17 @@
 import { Flex, Form, FormProps, Input, Select, Space, Spin } from "antd";
 import SubmitButton from "../../components/SubmitButton";
-import { CompanyTagEditData } from "../../data/CompanyTagEditData";
 import { JobTagEditData } from "../../data/JobTagEditData";
 import { WhitelistData } from "../../data/WhitelistData";
+import { isBlank } from "@/common/utils";
 
 export type JobTagEditProps = {
     data: JobTagEditData;
     whitelist?: WhitelistData[];
     onSave: (data: JobTagEditData) => void;
     mode?: "add" | "update",
+    validJobId: (value) => Promise<boolean>;
 };
-const JobTagEdit: React.FC<JobTagEditProps> = ({ data, whitelist, onSave, mode = "update" }) => {
+const JobTagEdit: React.FC<JobTagEditProps> = ({ data, whitelist, onSave, mode = "update", validJobId }) => {
 
     const [form] = Form.useForm();
     const [loading, setLoading] = useState<boolean>(false);
@@ -40,7 +41,17 @@ const JobTagEdit: React.FC<JobTagEditProps> = ({ data, whitelist, onSave, mode =
                 <Form.Item
                     label="职位编号"
                     name="id"
-                    rules={[{ required: true }]}
+                    rules={[{ required: true },
+                    ({ getFieldValue }) => ({
+                        async validator(_, value) {
+                            if (mode == "update" || isBlank(value) || await validJobId(value)) {
+                                return Promise.resolve();
+                            } else {
+                                return Promise.reject(new Error('职位已存在'));
+                            }
+                        },
+                    }),
+                    ]}
                 >
                     <Input disabled={mode == "update"}></Input>
                 </Form.Item>
@@ -74,7 +85,7 @@ const JobTagEdit: React.FC<JobTagEditProps> = ({ data, whitelist, onSave, mode =
                     </Flex>
                 </Form.Item>
             </Form>
-        </Spin>
+        </Spin >
     </>
 }
 export default JobTagEdit;

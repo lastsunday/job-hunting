@@ -44,23 +44,42 @@ export async function getMergeDataListForCompany(items, idColumn, getByIdsCallba
 }
 
 export async function getMergeDataListForJob(items, idColumn, getByIdsCallback) {
-    return await getMergeDataList(items, idColumn, getByIdsCallback, (existsRecord, newRecord) => {
-        if (dayjs(newRecord.createDatetime).isAfter(dayjs(existsRecord.createDatetime))) {
-            if (!newRecord.isFullCompanyName && existsRecord.isFullCompanyName) {
-                newRecord.jobCompanyName = existsRecord.jobCompanyName;
-                newRecord.isFullCompanyName = 1;
-            }
-            return newRecord;
-        } else {
-            if (!existsRecord.isFullCompanyName && newRecord.isFullCompanyName) {
-                existsRecord.jobCompanyName = newRecord.jobCompanyName;
-                existsRecord.isFullCompanyName = 1;
-                return existsRecord;
-            } else {
-                return null;
-            }
+    return await getMergeDataList(items, idColumn, getByIdsCallback, getValidJobData);
+}
+
+export const getValidJobData = (existsRecord, newRecord) => {
+    let resultRecord = {};
+    if (dayjs(newRecord.updateDatetime).isAfter(dayjs(existsRecord.updateDatetime))) {
+        resultRecord = Object.assign(resultRecord, newRecord);
+        if (dayjs(newRecord.createDatetime).isAfter(existsRecord.createDatetime)) {
+            resultRecord.createDatetime = existsRecord.createDatetime;
         }
-    });
+        //新纪录没有公司全称，则获取旧纪录的公司全称
+        if (!newRecord.isFullCompanyName && existsRecord.isFullCompanyName) {
+            resultRecord.jobCompanyName = existsRecord.jobCompanyName;
+            resultRecord.isFullCompanyName = true;
+        }
+        return resultRecord;
+    } else {
+        resultRecord = Object.assign(resultRecord, existsRecord);
+        //由于数据来源不够新，原则上不返回去更新，但是，如果首次扫描时间更久远，或有公司全称，则返回更新这两个字段的原数据
+        let modify = false;
+        if (dayjs(existsRecord.createDatetime).isAfter(newRecord.createDatetime)) {
+            resultRecord.createDatetime = newRecord.createDatetime;
+            modify = true;
+        }
+        //当前纪录没有公司全称，则获取进来的纪录的公司全称
+        if (!existsRecord.isFullCompanyName && newRecord.isFullCompanyName) {
+            resultRecord.jobCompanyName = newRecord.jobCompanyName;
+            resultRecord.isFullCompanyName = true;
+            modify = true;
+        }
+        if (modify) {
+            return resultRecord;
+        } else {
+            return null;
+        }
+    }
 }
 
 export async function getMergeDataListForCompanyTag(items, getByIdsCallback) {
@@ -101,7 +120,7 @@ export async function getMergeDataListForCompanyTag(items, getByIdsCallback) {
     return targetList;
 }
 
-export async function getMergeDataListForTag(items,idColumn, getByIdsCallback) {
+export async function getMergeDataListForTag(items, idColumn, getByIdsCallback) {
     return await getMergeDataList(items, idColumn, getByIdsCallback, (existsRecord, newRecord) => {
         if (dayjs(newRecord.updateDatetime).isAfter(dayjs(existsRecord.updateDatetime))) {
             return newRecord;

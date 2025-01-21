@@ -25,6 +25,7 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@electric-sql/pglite": "^0.2.15",
     "@iconify/json": "^2.2.291",
     "@pansy/lnglat-transform": "^1.0.3",
     "@tsparticles/react": "^3.0.0",

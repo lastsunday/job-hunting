@@ -56,22 +56,6 @@ export const JobApi = {
       invokeEnv: invokeEnv,
     });
   },
-  /**
-     *
-     * @param {Job[]} jobs
-     */
-  batchAddOrUpdateJobWithTransaction: async function (jobs, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
-    return await invoke(this.batchAddOrUpdateJobWithTransaction.name, jobs, {
-      invokeEnv: invokeEnv,
-    });
-  },
-  /**
-   *
-   * @param {Job} job
-   */
-  addOrUpdateJobBrowse: async function (job) {
-    return await invoke(this.addOrUpdateJobBrowse.name, job);
-  },
 
   /**
    *
@@ -184,16 +168,6 @@ export const JobApi = {
       invokeEnv: invokeEnv,
     });
   },
-  /**
-   * 
-   * @param {JobTagBO[]} param
-   */
-  jobTagBatchAddOrUpdateWithTransaction: async function (param,
-    { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
-    return invoke(this.jobTagBatchAddOrUpdateWithTransaction.name, param, {
-      invokeEnv: invokeEnv,
-    });
-  },
 
   /**
   * 
@@ -242,17 +216,6 @@ export const JobApi = {
       invokeEnv: invokeEnv,
     });
   },
-
-  /**
-   * 
-   * @returns JobTagStatisticDTO
-   */
-  jobTagStatistic: async function () {
-    let result = await invoke(this.jobTagStatistic.name, {});
-    return result.data;
-  },
-
-
   /**
    * 
    * @param {JobTagNameStatisticBO} param 
@@ -391,14 +354,6 @@ export const CompanyApi = {
   },
 
   /**
- *
- * @param {CompanyBO} param
- */
-  batchAddOrUpdateCompanyWithTransaction: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
-    return await invoke(this.batchAddOrUpdateCompanyWithTransaction.name, param, { invokeEnv: invokeEnv });
-  },
-
-  /**
   *
   * @param {CompanyTagBO} param
   */
@@ -412,14 +367,6 @@ export const CompanyApi = {
   */
   batchAddOrUpdateCompanyTag: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
     return await invoke(this.batchAddOrUpdateCompanyTag.name, param, { invokeEnv: invokeEnv });
-  },
-
-  /**
-  *
-  * @param {CompanyTagBatchAddOrUpdateBO} param
-  */
-  batchAddOrUpdateCompanyTagWithTransaction: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
-    return await invoke(this.batchAddOrUpdateCompanyTagWithTransaction.name, param, { invokeEnv: invokeEnv });
   },
   /**
    * 
@@ -552,6 +499,15 @@ export const TagApi = {
     return await invoke(this.addOrUpdateTag.name, param, {
       invokeEnv: invokeEnv,
     });
+  },
+
+  /**
+     * 
+     * @param {string} param tagName
+     */
+  tagGetByName: async function (param) {
+    let result = await invoke(this.tagGetByName.name, param);
+    return result.data;
   },
 
 }

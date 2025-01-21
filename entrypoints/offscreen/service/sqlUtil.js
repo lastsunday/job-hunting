@@ -41,7 +41,7 @@ export function handleAndReturnWhereSql(whereCondition) {
 
 export function genDatetimeConditionSql(datetime, columnName, operation) {
     if (datetime) {
-        let datetimeString = dayjs(datetime).format("YYYY-MM-DD HH:mm:ss");
+        let datetimeString = dayjs(datetime).format();
         return ` AND ${columnName} ${operation} '${datetimeString}'`;
     } else {
         return "";

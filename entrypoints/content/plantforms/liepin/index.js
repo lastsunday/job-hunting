@@ -120,7 +120,7 @@ async function parseData(list, getListItem) {
       item.jobDescription = jobDesc;
       //将更新时间置空， 以新记录形式更新
       item.updateDatetime = null;
-      await JobApi.batchAddOrUpdateJobWithTransaction([item]);
+      await JobApi.batchAddOrUpdateJob([item]);
 
       const response = await fetch(url);
       const result = await response.text();

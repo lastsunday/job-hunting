@@ -30,25 +30,25 @@ const SERVICE_INSTANCE = new BaseService("file", "id",
         if (param.startDatetimeForCreate) {
             whereCondition +=
                 " AND create_datetime >= '" +
-                dayjs(param.startDatetimeForCreate).format("YYYY-MM-DD HH:mm:ss") +
+                dayjs(param.startDatetimeForCreate).format() +
                 "'";
         }
         if (param.endDatetimeForCreate) {
             whereCondition +=
                 " AND create_datetime < '" +
-                dayjs(param.endDatetimeForCreate).format("YYYY-MM-DD HH:mm:ss") +
+                dayjs(param.endDatetimeForCreate).format() +
                 "'";
         }
         if (param.startDatetimeForUpdate) {
             whereCondition +=
                 " AND update_datetime >= '" +
-                dayjs(param.startDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+                dayjs(param.startDatetimeForUpdate).format() +
                 "'";
         }
         if (param.endDatetimeForUpdate) {
             whereCondition +=
                 " AND update_datetime < '" +
-                dayjs(param.endDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+                dayjs(param.endDatetimeForUpdate).format() +
                 "'";
         }
         return whereCondition;
@@ -112,8 +112,8 @@ export const FileService = {
     },
     fileGetAllMergedNotDeleteFile: async function (message, param) {
         try {
-            let sql = `SELECT t1.id AS id,t1.size AS size,t3.update_datetime AS updateDatetime from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id WHERE t1.is_delete = 0 AND t3.status = 'FINISHED' ORDER BY t3.update_datetime DESC`
-            const result = await getAll(sql, {}, new FileDTO());
+            let sql = `SELECT t1.id AS id,t1.size AS size,t3.update_datetime AS update_datetime from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id WHERE t1.is_delete = 0 AND t3.status = 'FINISHED' ORDER BY t3.update_datetime DESC`
+            const result = await getAll(sql, [], new FileDTO());
             postSuccessMessage(message, result);
         } catch (e) {
             postErrorMessage(
@@ -132,41 +132,21 @@ export const FileService = {
         try {
             let result = new FileStatisticDTO();
 
-            const mergeFileSizeTotalSql = `SELECT IFNULL(SUM(t1.size),0) AS total  from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id`;
-            let mergeFileSizeTotal = [];
-            (await getDb()).exec({
-                sql: mergeFileSizeTotalSql,
-                rowMode: "object",
-                resultRows: mergeFileSizeTotal,
-            });
-            result.mergeFileSizeTotal = mergeFileSizeTotal[0].total;
+            const mergeFileSizeTotalSql = `SELECT COALESCE(SUM(t1.size),0) AS total  from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id`;
+            const { rows: mergeFileSizeTotalRows } = await (await getDb()).query(mergeFileSizeTotalSql);
+            result.mergeFileSizeTotal = Number.parseInt(mergeFileSizeTotalRows[0].total);
 
-            const mergeNotDeleteFileSizeTotalSql = `SELECT IFNULL(SUM(t1.size),0) AS total  from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id WHERE t1.is_delete = 0`;
-            let mergeNotDeleteFileSizeTotal = [];
-            (await getDb()).exec({
-                sql: mergeNotDeleteFileSizeTotalSql,
-                rowMode: "object",
-                resultRows: mergeNotDeleteFileSizeTotal,
-            });
-            result.mergeNotDeleteFileSizeTotal = mergeNotDeleteFileSizeTotal[0].total;
+            const mergeNotDeleteFileSizeTotalSql = `SELECT COALESCE(SUM(t1.size),0) AS total  from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id WHERE t1.is_delete = 0`;
+            const { rows: mergeNotDeleteFileSizeTotalRows } = await (await getDb()).query(mergeNotDeleteFileSizeTotalSql);
+            result.mergeNotDeleteFileSizeTotal = Number.parseInt(mergeNotDeleteFileSizeTotalRows[0].total);
 
             const mergeFileCountSql = `SELECT COUNT(*) AS total  from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id`;
-            let mergeFileCount = [];
-            (await getDb()).exec({
-                sql: mergeFileCountSql,
-                rowMode: "object",
-                resultRows: mergeFileCount,
-            });
-            result.mergeFileCount = mergeFileCount[0].total;
+            const { rows: mergeFileCountRows } = await (await getDb()).query(mergeFileCountSql);
+            result.mergeFileCount = mergeFileCountRows[0].total;
 
             const mergeNotDeleteFileCountSql = `SELECT COUNT(*) AS total  from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id WHERE t1.is_delete = 0`;
-            let mergeNotDeleteFileCount = [];
-            (await getDb()).exec({
-                sql: mergeNotDeleteFileCountSql,
-                rowMode: "object",
-                resultRows: mergeNotDeleteFileCount,
-            });
-            result.mergeNotDeleteFileCount = mergeNotDeleteFileCount[0].total;
+            const { rows: mergeNotDeleteFileCountRows } = await (await getDb()).query(mergeNotDeleteFileCountSql);
+            result.mergeNotDeleteFileCount = mergeNotDeleteFileCountRows[0].total;
 
             postSuccessMessage(message, result);
         } catch (e) {

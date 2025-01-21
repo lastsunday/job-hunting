@@ -139,17 +139,16 @@ export function randomDelay(delayTime, randomRange) {
 }
 
 export function convertEmptyStringToNull(value) {
-  if (isNumeric(value)) {
-    return value;
-  }
-  if (value) {
+  if(value == undefined){
+    return null;
+  }if (typeof value == 'string') {
     if (isEmpty(value) || isBlank(value)) {
       return null;
     } else {
       return value;
     }
   } else {
-    return null;
+    return value;
   }
 }
 

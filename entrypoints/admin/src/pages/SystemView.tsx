@@ -38,6 +38,7 @@ const SystemView: React.FC = () => {
     const [sqlExecError, setSqlExecError] = useState<string>();
     const [tables, setTables] = useState<{ name: string }[]>([]);
     const [sqlCostTime, setSqlCostTime] = useState<number>();
+    const [affectedRows, setAffectedRows] = useState<number>();
     useEffect(
         () => {
             const query = async () => {
@@ -101,53 +102,51 @@ const SystemView: React.FC = () => {
             setDataSource(null);
             return;
         }
+        setDataSource(null);
         setExecSqlLoading(true);
         setSqlExecError(null);
         try {
             const beginExecSqlTime = dayjs();
-            const result = (await dbExec({ sql })).result;
+            const { rows, fields, affectedRows } = (await dbExec({ sql })).result;
             const afterExecSqlTime = dayjs();
             setSqlCostTime(afterExecSqlTime.diff(beginExecSqlTime));
-            if (result && result.length > 0) {
-                let headers = [];
-                let keys = Object.keys(result[0]);
+            let headers = [];
+            let fieldNames = fields.map(item => item.name);
+            headers.push({
+                title: "#",
+                dataIndex: "$index",
+                key: "$index",
+                ellipsis: false,
+                width: 60,
+            });
+            for (let n = 0; n < fieldNames.length; n++) {
+                let key = fieldNames[n];
                 headers.push({
-                    title: "#",
-                    dataIndex: "$index",
-                    key: "$index",
-                    ellipsis: false,
-                    width: 60,
+                    title: key,
+                    dataIndex: key,
+                    key: key,
+                    width: 200,
+                    sorter: true,
+                    render: (value, record, index) => {
+                        return (
+                            <Popover key={index} content={<Text copyable>{value}</Text>} trigger="click">
+                                <Text key={index} title={`${value}`} ellipsis>{`${value}`}</Text>
+                            </Popover>
+                        )
+                    }
                 });
-                for (let n = 0; n < keys.length; n++) {
-                    let key = keys[n];
-                    headers.push({
-                        title: key,
-                        dataIndex: key,
-                        key: key,
-                        width: 200,
-                        sorter: true,
-                        render: (value, record, index) => {
-                            return (
-                                <Popover key={index} content={<Text copyable>{value}</Text>} trigger="click">
-                                    <Text key={index} title={value} ellipsis>{value}</Text>
-                                </Popover>
-                            )
-                        }
-                    });
-                }
-                setColumns(headers);
-                result.forEach((item, index) => {
-                    item.$index = index + 1;
-                })
-                setDataSource(result);
-                setSqlExecError("");
-            } else {
-                setColumns(null);
-                setDataSource(null);
             }
+            setColumns(headers);
+            rows.forEach((item, index) => {
+                item.$index = index + 1;
+            })
+            setDataSource(rows);
+            setAffectedRows(affectedRows);
+            setSqlExecError("");
         } catch (e) {
             errorLog(e);
             setSqlExecError(e.message);
+            setAffectedRows(null);
         } finally {
             setExecSqlLoading(false);
         }
@@ -205,7 +204,7 @@ const SystemView: React.FC = () => {
                     <Flex vertical gap={5}>
                         <Flex justify="end" gap={5}>
                             <Flex style={{ width: 200 }}>
-                                <Select disabled={execSqlLoading} style={{ width: '100%' }} allowClear onSelect={(value) => {
+                                <Select showSearch disabled={execSqlLoading} style={{ width: '100%' }} allowClear onSelect={(value) => {
                                     if (value) {
                                         const sql = `SELECT * FROM ${value}`;
                                         setSql(sql);
@@ -230,7 +229,7 @@ const SystemView: React.FC = () => {
                         </Flex>
                         {
                             sqlExecError != null ? (
-                                sqlExecError == "" ? <Alert message={`执行成功,耗时${sqlCostTime}ms`} type="success" showIcon closable /> : <Alert
+                                sqlExecError == "" ? <Alert message={`执行成功,耗时${sqlCostTime}ms${affectedRows != null ? ',影响' + affectedRows + "条数据" : ''}`} type="success" showIcon closable /> : <Alert
                                     message="执行异常"
                                     description={sqlExecError}
                                     type="error"

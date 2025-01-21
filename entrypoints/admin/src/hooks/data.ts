@@ -39,7 +39,7 @@ export function useData() {
         let targetList = await getMergeDataListForJob(jobList, "jobId", async (ids) => {
             return JobApi.jobGetByIds(ids);
         });
-        await JobApi.batchAddOrUpdateJobWithTransaction(targetList);
+        await JobApi.batchAddOrUpdateJob(targetList);
         return targetList;
     }
 
@@ -60,7 +60,7 @@ export function useData() {
         let targetList = await getMergeDataListForCompany(companyBOList, "companyId", async (ids) => {
             return CompanyApi.companyGetByIds(ids);
         });
-        await CompanyApi.batchAddOrUpdateCompanyWithTransaction(targetList);
+        await CompanyApi.batchAddOrUpdateCompany(targetList);
         return targetList;
     }
 
@@ -82,7 +82,7 @@ export function useData() {
             searchParam.companyIds = companyNames.map(item => genIdFromText(item));
             return await CompanyApi.companyTagExport(searchParam);
         })
-        await CompanyApi.batchAddOrUpdateCompanyTagWithTransaction({ items: targetList, overrideUpdateDatetime: true });
+        await CompanyApi.batchAddOrUpdateCompanyTag({ items: targetList, overrideUpdateDatetime: true });
         return targetList;
     }
 
@@ -104,7 +104,7 @@ export function useData() {
             searchParam.isPublic = null;
             return await JobApi.jobTagExport(searchParam);
         })
-        await JobApi.jobTagBatchAddOrUpdateWithTransaction({ items: targetList, overrideUpdateDatetime: true });
+        await JobApi.jobTagBatchAddOrUpdate({ items: targetList, overrideUpdateDatetime: true });
         return targetList;
     }
 

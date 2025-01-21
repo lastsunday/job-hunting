@@ -41,7 +41,7 @@ const TagView: React.FC = () => {
     {
       title: '编号',
       dataIndex: 'tagId',
-      render: (value: string) => <Text copyable ellipsis title={value}>{value}</Text>,
+      render: (value: string) => <Text copyable ellipsis title={value}>{`${value && value.length > 5 ? value.slice(0, 5) + "..." : value}`}</Text>,
       minWidth: 100,
     },
     {
@@ -57,7 +57,7 @@ const TagView: React.FC = () => {
         let entity = new Tag();
         entity.tagId = record.tagId;
         entity.tagName = record.tagName;
-        entity.isPublic = checked ? 1 : 0;
+        entity.isPublic = checked ? true : false;
         await TagApi.addOrUpdateTag(entity);
         tableRef.current.refresh();
       }}></Switch>,
@@ -94,26 +94,33 @@ const TagView: React.FC = () => {
           name={`isPublic`}
           label={`标签私密性`}
         >
-          <Select allowClear options={[{ value: 0, label: <span>私有</span> }, { value: 1, label: <span>公有</span> }]} />
+          <Select allowClear options={[{ value: false, label: <span>私有</span> }, { value: true, label: <span>公有</span> }]} />
         </Form.Item>
       </Col>,
     ]
   }
 
   const onSave = async (data: TagEditData) => {
-    const { tagName, isPublic } = data;
-    let entity = new Tag();
-    entity.tagName = tagName;
-    entity.isPublic = isPublic;
-    await TagApi.addOrUpdateTag(entity);
-    setIsEditModalOpen(false);
-    tableRef?.current.refresh();
+    try {
+      const { tagName, isPublic } = data;
+      let entity = new Tag();
+      entity.tagName = tagName;
+      entity.isPublic = isPublic;
+      await TagApi.addOrUpdateTag(entity);
+      setIsEditModalOpen(false);
+      tableRef?.current.refresh();
+    } catch (e) {
+      messageApi.open({
+        type: 'error',
+        content: e.message,
+      });
+    }
   }
 
   const onAdd = () => {
     setMode("add");
     setEditData({
-      isPublic: 0,
+      isPublic: false,
     });
     setIsEditModalOpen(true);
   }
@@ -159,6 +166,9 @@ const TagView: React.FC = () => {
         mode={mode}
         data={editData}
         onSave={onSave}
+        validTagName={async (value) => {
+          return await TagApi.tagGetByName([value]) == null;
+        }}
       ></TagEdit>
     </Modal>
   </>

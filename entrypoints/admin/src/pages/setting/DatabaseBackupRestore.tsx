@@ -1,5 +1,5 @@
 import { dbDelete, dbExport, dbImport } from "@/common/api/common";
-import { downloadBlob } from "@/common/file";
+import { downloadURL } from "@/common/file";
 import { base64ToBytes, bytesToBase64 } from "@/common/utils/base64.js";
 import { Icon } from "@iconify/react";
 import { Button, Flex, Input, Modal, Popconfirm, Spin, Switch, Typography, message } from "antd";
@@ -25,14 +25,15 @@ const DatabaseBackupRestore: React.FC<DatabaseBackupRestoreProps> = ({ }) => {
 
     const onExport = async () => {
         setExportLoading(true);
+        let url = null;
         try {
-            let result = await dbExport();
-            downloadBlob(
-                base64ToBytes(result),
-                "数据库-" + dayjs(new Date()).format("YYYYMMDDHHmmss") + ".zip",
-                "application/octet-stream"
+            url = await dbExport();
+            downloadURL(
+                url,
+                "数据库-" + dayjs(new Date()).format("YYYYMMDDHHmmss") + ".tar.gz",
             );
         } finally {
+            url ? URL.revokeObjectURL(url) : null;
             setExportLoading(false);
         }
     }
@@ -49,36 +50,27 @@ const DatabaseBackupRestore: React.FC<DatabaseBackupRestoreProps> = ({ }) => {
         if (files && files.length > 0) {
             setImportLoading(true);
             setLoading(true);
-            setTimeout(() => {
-                const reader = new FileReader();
-                reader.readAsArrayBuffer(files[0]);
-                reader.onload = async function (event) {
-                    let arrayBuffer = event.target.result;
-                    try {
-                        let base64String = bytesToBase64(
-                            new Uint8Array(arrayBuffer as ArrayBuffer)
-                        );
-                        await dbImport(base64String);
-                        setIsImportModalOpen(false);
-                        messageApi.success(`恢复${title}成功`)
-                        confirm({
-                            title: '点击确定按钮重启程序',
-                            maskClosable: false,
-                            okText: '确定',
-                            cancelButtonProps: { style: { visibility: "hidden" } },
-                            onOk() {
-                                reloadExtension();
-                            },
-                        });
-                    } catch (e) {
-                        messageApi.error(`恢复${title}失败${e.message}`);
-                    } finally {
-                        setLoading(false);
-                    }
-                };
-                reader.onerror = function (event) {
-                    messageApi.error(`读取${title}文件失败`);
-                };
+            setTimeout(async () => {
+                let url = URL.createObjectURL(files[0]);
+                try {
+                    await dbImport(url);
+                    setIsImportModalOpen(false);
+                    messageApi.success(`恢复${title}成功`)
+                    confirm({
+                        title: '点击确定按钮重启程序',
+                        maskClosable: false,
+                        okText: '确定',
+                        cancelButtonProps: { style: { visibility: "hidden" } },
+                        onOk() {
+                            reloadExtension();
+                        },
+                    });
+                } catch (e) {
+                    messageApi.error(`恢复${title}失败${e.message}`);
+                } finally {
+                    url ? URL.revokeObjectURL(url) : null;
+                    setLoading(false);
+                }
             }, 0);
         } else {
             messageApi.info(`请选择有效的${title}文件`);
@@ -160,7 +152,7 @@ const DatabaseBackupRestore: React.FC<DatabaseBackupRestoreProps> = ({ }) => {
                 <Text type="danger">注意：原数据会被清除!!!</Text>
                 <Text >请选择{title}备份文件</Text>
                 <Flex vertical gap={10}>
-                    <Input type="file" accept=".zip" onChange={handleFileImport}></Input>
+                    <Input type="file" accept=".gz" onChange={handleFileImport}></Input>
                     <Flex justify="end">
                         <Button type="primary" onClick={confirmFileImport} loading={importLoading}>
                             确定

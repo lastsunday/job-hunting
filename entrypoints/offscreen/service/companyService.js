@@ -8,7 +8,7 @@ import { CompanyDTO } from "../../../common/data/dto/companyDTO";
 import { SearchCompanyDTO } from "../../../common/data/dto/searchCompanyDTO";
 import { StatisticCompanyDTO } from "../../../common/data/dto/statisticCompanyDTO";
 import { convertEmptyStringToNull, dateToStr, isNotEmpty, toHump, toLine } from "../../../common/utils";
-import { getDb, getOne } from "../database";
+import { getDb, getOne, convertRows } from "../database";
 import { postErrorMessage, postSuccessMessage } from "../util";
 import { BaseService } from "./baseService";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
@@ -32,16 +32,8 @@ export const CompanyService = {
    * @returns Company
    */
   getCompanyById: async function (message, param) {
-    try {
-      postSuccessMessage(
-        message,
-        await getOne(SQL_SELECT_BY_ID, [param], new Company())
-      );
-    } catch (e) {
-      postErrorMessage(message, "[worker] getCompanyById error : " + e.message);
-    }
+    SERVICE_INSTANCE.getById(message, param);
   },
-
   /**
    *
    * @param {Message} message
@@ -49,7 +41,7 @@ export const CompanyService = {
    */
   addOrUpdateCompany: async function (message, param) {
     try {
-      await _addOrUpdateCompany(param);
+      await SERVICE_INSTANCE._batchAddOrUpdate([param]);
       postSuccessMessage(message, {});
     } catch (e) {
       postErrorMessage(
@@ -65,41 +57,14 @@ export const CompanyService = {
      */
   batchAddOrUpdateCompany: async function (message, param) {
     try {
-      for (let i = 0; i < param.length; i++) {
-        await _addOrUpdateCompany(param[i]);
-      }
+      await (await getDb()).transaction(async (tx) => {
+        return await SERVICE_INSTANCE._batchAddOrUpdate(param, { connection: tx });
+      });
       postSuccessMessage(message, {});
     } catch (e) {
       postErrorMessage(
         message,
         "[worker] batchAddOrUpdateCompany error : " + e.message
-      );
-    }
-  },
-  /**
-     * 
-     * @param {Message} message 
-     * @param {CompanyBO[]} param 
-     */
-  batchAddOrUpdateCompanyWithTransaction: async function (message, param) {
-    try {
-      (await getDb()).exec({
-        sql: "BEGIN TRANSACTION",
-      });
-      for (let i = 0; i < param.length; i++) {
-        await _addOrUpdateCompany(param[i]);
-      }
-      (await getDb()).exec({
-        sql: "COMMIT",
-      });
-      postSuccessMessage(message, {});
-    } catch (e) {
-      await db.exec({
-        sql: "ROLLBACK TRANSACTION",
-      });
-      postErrorMessage(
-        message,
-        "[worker] batchAddOrUpdateCompanyWithTransaction error : " + e.message
       );
     }
   },
@@ -123,7 +88,7 @@ export const CompanyService = {
         " NULLS LAST";
       let limitStart = (param.pageNum - 1) * param.pageSize;
       let limitEnd = param.pageSize;
-      let limit = " limit " + limitStart + "," + limitEnd;
+      let limit = " limit " + limitEnd + " OFFSET " + limitStart;
       const sqlSearchQuery = genSqlSearchQuery();
       sqlQuery += sqlSearchQuery;
       sqlQuery += whereCondition;
@@ -131,12 +96,8 @@ export const CompanyService = {
       sqlQuery += limit;
       let items = [];
       let total = 0;
-      let queryRows = [];
-      (await getDb()).exec({
-        sql: sqlQuery,
-        rowMode: "object",
-        resultRows: queryRows,
-      });
+      const { rows } = await (await getDb()).query(sqlQuery);
+      const queryRows = convertRows(rows);
       for (let i = 0; i < queryRows.length; i++) {
         let item = queryRows[i];
         let resultItem = new CompanyDTO();
@@ -169,12 +130,7 @@ export const CompanyService = {
       }
       //count
       let sqlCount = `SELECT COUNT(*) AS total FROM (${sqlCountSubTable}) AS t1`;
-      let queryCountRows = [];
-      (await getDb()).exec({
-        sql: sqlCount,
-        rowMode: "object",
-        resultRows: queryCountRows,
-      });
+      const { rows: queryCountRows } = await (await getDb()).query(sqlCount);
       total = queryCountRows[0].total;
       result.items = items;
       result.total = total;
@@ -209,45 +165,22 @@ export const CompanyService = {
     try {
       let result = new StatisticCompanyDTO();
       let now = dayjs();
-      let todayStart = now.startOf("day").format("YYYY-MM-DD HH:mm:ss");
+      let todayStart = now.startOf("day").format();
       let todayEnd = now
         .startOf("day")
         .add(1, "day")
-        .format("YYYY-MM-DD HH:mm:ss");
+        .format();
       let yesterdayStart = now
         .startOf("day")
         .add(2, "day")
-        .format("YYYY-MM-DD HH:mm:ss");
+        .format();
       let yesterdayEnd = now
         .startOf("day")
         .add(1, "day")
-        .format("YYYY-MM-DD HH:mm:ss");
-      let todayAddQueryResult = [];
-      (await getDb()).exec({
-        sql: `SELECT COUNT(*) AS count FROM company WHERE create_datetime >= $startDatetime AND create_datetime < $endDatetime`,
-        rowMode: "object",
-        resultRows: todayAddQueryResult,
-        bind: {
-          $startDatetime: todayStart,
-          $endDatetime: todayEnd,
-        }
-      });
-      let yesterdayAddQueryResult = [];
-      (await getDb()).exec({
-        sql: `SELECT COUNT(*) AS count FROM company WHERE create_datetime >= $startDatetime AND create_datetime < $endDatetime`,
-        rowMode: "object",
-        resultRows: yesterdayAddQueryResult,
-        bind: {
-          $startDatetime: yesterdayStart,
-          $endDatetime: yesterdayEnd,
-        }
-      });
-      let totalCompanyQueryResult = [];
-      (await getDb()).exec({
-        sql: `SELECT COUNT(*) AS count FROM company`,
-        rowMode: "object",
-        resultRows: totalCompanyQueryResult,
-      });
+        .format();
+      const { rows: todayAddQueryResult } = await (await getDb()).query(`SELECT COUNT(*) AS count FROM company WHERE create_datetime >= $1 AND create_datetime < $2`, [todayStart, todayEnd]);
+      const { rows: yesterdayAddQueryResult } = await (await getDb()).query(`SELECT COUNT(*) AS count FROM company WHERE create_datetime >= $1 AND create_datetime < $2`, [yesterdayStart, yesterdayEnd]);
+      const { rows: totalCompanyQueryResult } = await (await getDb()).query(`SELECT COUNT(*) AS count FROM company`);
       result.todayAddCount = todayAddQueryResult[0].count;
       result.yesterdayAddCount = yesterdayAddQueryResult[0].count;
       result.totalCompany = totalCompanyQueryResult[0].count;
@@ -296,7 +229,7 @@ export const CompanyService = {
           FROM
             (
             SELECT
-              (STRFTIME('%Y', 'now') - STRFTIME('%Y', company_start_date)) AS offsetValue
+              date_part('year',now()) - date_part('year',company_start_date) AS offsetValue
             FROM
               company
             ) AS t1
@@ -365,121 +298,12 @@ export const CompanyService = {
 
 async function companyStatistic({ sql }) {
   let result = [];
-  let resultRows = [];
-  (await getDb()).exec({
-    sql,
-    rowMode: "object",
-    resultRows
-  });
+  const { rows: resultRows } = await (await getDb()).query(sql);
   resultRows.forEach(item => {
     result.push(Object.assign(new ChartBasicDTO(), item));
   });
   return result;
 }
-
-/**
- * 
- * @param {Company} param
- */
-async function _addOrUpdateCompany(param) {
-  const now = new Date();
-  let rows = [];
-  (await getDb()).exec({
-    sql: SQL_SELECT_BY_ID,
-    rowMode: "object",
-    bind: [param.companyId],
-    resultRows: rows,
-  });
-  if (rows.length > 0) {
-    (await getDb()).exec({
-      sql: SQL_UPDATE_JOB,
-      bind: {
-        $company_id: convertEmptyStringToNull(param.companyId),
-        $company_name: convertEmptyStringToNull(param.companyName),
-        $company_desc: convertEmptyStringToNull(param.companyDesc),
-        $company_start_date: dayjs(param.companyStartDate).isValid()
-          ? dayjs(param.companyStartDate).format("YYYY-MM-DD HH:mm:ss")
-          : null,
-        $company_status: convertEmptyStringToNull(param.companyStatus),
-        $company_legal_person: convertEmptyStringToNull(
-          param.companyLegalPerson
-        ),
-        $company_unified_code: convertEmptyStringToNull(
-          param.companyUnifiedCode
-        ),
-        $company_web_site: convertEmptyStringToNull(param.companyWebSite),
-        $company_insurance_num: convertEmptyStringToNull(
-          param.companyInsuranceNum
-        ),
-        $company_self_risk: convertEmptyStringToNull(param.companySelfRisk),
-        $company_union_risk: convertEmptyStringToNull(
-          param.companyUnionRisk
-        ),
-        $company_address: convertEmptyStringToNull(param.companyAddress),
-        $company_scope: convertEmptyStringToNull(param.companyScope),
-        $company_tax_no: convertEmptyStringToNull(param.companyTaxNo),
-        $company_industry: convertEmptyStringToNull(param.companyIndustry),
-        $company_license_number: convertEmptyStringToNull(
-          param.companyLicenseNumber
-        ),
-        $company_longitude: convertEmptyStringToNull(
-          param.companyLongitude
-        ),
-        $company_latitude: convertEmptyStringToNull(param.companyLatitude),
-        $source_url: convertEmptyStringToNull(param.sourceUrl),
-        $source_platform: convertEmptyStringToNull(param.sourcePlatform),
-        $source_record_id: convertEmptyStringToNull(param.sourceRecordId),
-        $source_refresh_datetime: dateToStr(param.sourceRefreshDatetime),
-        $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-      },
-    });
-  } else {
-    (await getDb()).exec({
-      sql: SQL_INSERT_JOB,
-      bind: {
-        $company_id: convertEmptyStringToNull(param.companyId),
-        $company_name: convertEmptyStringToNull(param.companyName),
-        $company_desc: convertEmptyStringToNull(param.companyDesc),
-        $company_start_date: dayjs(param.companyStartDate).isValid()
-          ? dayjs(param.companyStartDate).format("YYYY-MM-DD HH:mm:ss")
-          : null,
-        $company_status: convertEmptyStringToNull(param.companyStatus),
-        $company_legal_person: convertEmptyStringToNull(
-          param.companyLegalPerson
-        ),
-        $company_unified_code: convertEmptyStringToNull(
-          param.companyUnifiedCode
-        ),
-        $company_web_site: convertEmptyStringToNull(param.companyWebSite),
-        $company_insurance_num: convertEmptyStringToNull(
-          param.companyInsuranceNum
-        ),
-        $company_self_risk: convertEmptyStringToNull(param.companySelfRisk),
-        $company_union_risk: convertEmptyStringToNull(
-          param.companyUnionRisk
-        ),
-        $company_address: convertEmptyStringToNull(param.companyAddress),
-        $company_scope: convertEmptyStringToNull(param.companyScope),
-        $company_tax_no: convertEmptyStringToNull(param.companyTaxNo),
-        $company_industry: convertEmptyStringToNull(param.companyIndustry),
-        $company_license_number: convertEmptyStringToNull(
-          param.companyLicenseNumber
-        ),
-        $company_longitude: convertEmptyStringToNull(
-          param.companyLongitude
-        ),
-        $company_latitude: convertEmptyStringToNull(param.companyLatitude),
-        $source_url: convertEmptyStringToNull(param.sourceUrl),
-        $source_platform: convertEmptyStringToNull(param.sourcePlatform),
-        $source_record_id: convertEmptyStringToNull(param.sourceRecordId),
-        $source_refresh_datetime: dateToStr(param.sourceRefreshDatetime),
-        $create_datetime: dayjs(param.createDatetime ?? now).format("YYYY-MM-DD HH:mm:ss"),
-        $update_datetime: dayjs(param.updateDatetime ?? now).format("YYYY-MM-DD HH:mm:ss"),
-      },
-    });
-  }
-}
-
 
 /**
  * 
@@ -496,12 +320,8 @@ export async function _getCompanyDTOByIds(companyIds) {
   const sqlSearchQuery = genSqlSearchQuery();
   sqlQuery += sqlSearchQuery;
   sqlQuery += whereCondition;
-  let queryRows = [];
-  (await getDb()).exec({
-    sql: sqlQuery,
-    rowMode: "object",
-    resultRows: queryRows,
-  });
+  const { rows } = await (await getDb()).query(sqlQuery);
+  const queryRows = convertRows(rows);
   for (let i = 0; i < queryRows.length; i++) {
     let item = queryRows[i];
     let resultItem = new CompanyDTO();
@@ -547,25 +367,25 @@ function genSearchWhereConditionSql(param) {
   if (param.startDateStartDatetime) {
     whereCondition +=
       " AND company_start_date >= '" +
-      dayjs(param.startDateStartDatetime).format("YYYY-MM-DD HH:mm:ss") +
+      dayjs(param.startDateStartDatetime).format() +
       "'";
   }
   if (param.startDateEndDatetime) {
     whereCondition +=
       " AND company_start_date < '" +
-      dayjs(param.startDateEndDatetime).format("YYYY-MM-DD HH:mm:ss") +
+      dayjs(param.startDateEndDatetime).format() +
       "'";
   }
   if (param.startDatetimeForUpdate) {
     whereCondition +=
       " AND update_datetime >= '" +
-      dayjs(param.startDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+      dayjs(param.startDatetimeForUpdate).format() +
       "'";
   }
   if (param.endDatetimeForUpdate) {
     whereCondition +=
       " AND update_datetime < '" +
-      dayjs(param.endDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+      dayjs(param.endDatetimeForUpdate).format() +
       "'";
   }
   if (isNotEmpty(param.minLat) && isNotEmpty(param.maxLat)) {
@@ -595,15 +415,5 @@ function genIdsWhereConditionSql(companyIds) {
 }
 
 function genSqlSearchQuery() {
-  return `
-  SELECT company_id, company_name, company_desc, company_start_date, company_status, company_legal_person, company_unified_code, company_web_site, company_insurance_num, company_self_risk, company_union_risk, company_address, company_scope, company_tax_no, company_industry, company_license_number, company_longitude, company_latitude, source_url, source_platform, source_record_id, source_refresh_datetime, create_datetime, update_datetime FROM company
-  `
+  return `SELECT company_id, company_name, company_desc, company_start_date, company_status, company_legal_person, company_unified_code, company_web_site, company_insurance_num, company_self_risk, company_union_risk, company_address, company_scope, company_tax_no, company_industry, company_license_number, company_longitude, company_latitude, source_url, source_platform, source_record_id, source_refresh_datetime, create_datetime, update_datetime FROM company`
 }
-
-const SQL_SELECT_BY_ID = `SELECT company_id, company_name, company_desc, company_start_date, company_status, company_legal_person, company_unified_code, company_web_site, company_insurance_num, company_self_risk, company_union_risk, company_address, company_scope, company_tax_no, company_industry, company_license_number, company_longitude, company_latitude, source_url, source_platform, source_record_id, source_refresh_datetime, create_datetime, update_datetime FROM company WHERE company_id = ?`;
-const SQL_INSERT_JOB = `
-INSERT INTO company (company_id, company_name, company_desc, company_start_date, company_status, company_legal_person, company_unified_code, company_web_site, company_insurance_num, company_self_risk, company_union_risk, company_address, company_scope, company_tax_no, company_industry, company_license_number, company_longitude, company_latitude, source_url, source_platform, source_record_id, source_refresh_datetime, create_datetime, update_datetime) VALUES ($company_id,$company_name,$company_desc,$company_start_date,$company_status,$company_legal_person,$company_unified_code,$company_web_site,$company_insurance_num,$company_self_risk,$company_union_risk,$company_address,$company_scope,$company_tax_no,$company_industry,$company_license_number,$company_longitude,$company_latitude,$source_url,$source_platform,$source_record_id,$source_refresh_datetime,$create_datetime,$update_datetime)
-`;
-const SQL_UPDATE_JOB = `
-UPDATE company SET company_name=$company_name, company_desc=$company_desc, company_start_date=$company_start_date, company_status=$company_status, company_legal_person=$company_legal_person, company_unified_code=$company_unified_code, company_web_site=$company_web_site, company_insurance_num=$company_insurance_num, company_self_risk=$company_self_risk, company_union_risk=$company_union_risk, company_address=$company_address, company_scope=$company_scope, company_tax_no=$company_tax_no, company_industry=$company_industry, company_license_number=$company_license_number, company_longitude=$company_longitude, company_latitude=$company_latitude, source_url=$source_url, source_platform=$source_platform, source_record_id=$source_record_id, source_refresh_datetime=$source_refresh_datetime, update_datetime=$update_datetime WHERE company_id = $company_id;
-`;

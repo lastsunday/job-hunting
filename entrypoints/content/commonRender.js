@@ -830,7 +830,7 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
             item.updateDatetime = null;
             //补全公司名后，调整公司全称标记
             item.isFullCompanyName = true;
-            await JobApi.batchAddOrUpdateJobWithTransaction([item]);
+            await JobApi.batchAddOrUpdateJob([item]);
             infoLog(`update job.id = ${item.jobId}`);
           }
         } else {

@@ -26,6 +26,30 @@ export class BaseService {
         }
     }
 
+    async count(message, param) {
+        try {
+            postSuccessMessage(message, { total: await this._count() });
+        } catch (e) {
+            postErrorMessage(message, `[worker] search error : ` + e.message);
+        }
+    }
+
+    async _count() {
+        return await searchCount(this.entityClassCreateFunction(), this.tableName);
+    }
+
+    async getOne(message, param, column) {
+        try {
+            postSuccessMessage(message, await this._getOne(param, column));
+        } catch (e) {
+            postErrorMessage(message, `[worker] getOne error : ` + e.message);
+        }
+    }
+
+    async _getOne(param, column) {
+        return await one(this.entityClassCreateFunction(), this.tableName, column, param);
+    }
+
     /**
      * 
      * @param {Message} message 
@@ -63,8 +87,8 @@ export class BaseService {
      * @param {Message} message 
      * @param {string[]} param ids
      */
-    async _getByIds(param) {
-        return batchGet(this.entityClassCreateFunction(), this.tableName, this.tableIdColumn, param);
+    async _getByIds(param, { connection = null } = {}) {
+        return batchGet(this.entityClassCreateFunction(), this.tableName, this.tableIdColumn, param, { connection });
     }
 
     async addOrUpdate(message, param) {
@@ -101,8 +125,8 @@ export class BaseService {
     * @param {string} id
     * @param {string} column 
     */
-    async _deleteById(id, column, { otherCondition } = { otherCondition: null }) {
-        return del(this.tableName, column ?? this.tableIdColumn, id, { otherCondition });
+    async _deleteById(id, column, { otherCondition, connection = null } = {}) {
+        return await del(this.tableName, column ?? this.tableIdColumn, id, { otherCondition, connection });
     }
 
     /**
@@ -134,8 +158,8 @@ export class BaseService {
      * @param {string[]} ids
      * @param {string} column 
      */
-    async _deleteByIds(ids, column, { otherCondition } = { otherCondition: null }) {
-        return batchDel(this.tableName, column ?? this.tableIdColumn, ids, { otherCondition });
+    async _deleteByIds(ids, column, { connection = null, otherCondition = null } = {}) {
+        return await batchDel(this.tableName, column ?? this.tableIdColumn, ids, { connection, otherCondition });
     }
 
     /**
@@ -145,7 +169,6 @@ export class BaseService {
     async _updateByIds(ids, column, { otherCondition } = { otherCondition: null }) {
         return batchDel(this.tableName, column ?? this.tableIdColumn, ids, { otherCondition });
     }
-
 
     /**
      *
@@ -183,12 +206,12 @@ export class BaseService {
      * 
      * @param {*} param 
      */
-    async _addOrUpdate(param, { overrideUpdateDatetime = false } = {}) {
+    async _addOrUpdate(param, { overrideUpdateDatetime = false, connection = null } = {}) {
         let idKey = toHump(this.tableIdColumn);
         if (param[idKey] == null) {
             param[idKey] = genUniqueId();
         }
-        await batchInsertOrReplace(this.entityClassCreateFunction(), this.tableName, [param], { overrideUpdateDatetime });
+        await batchInsertOrReplace(this.entityClassCreateFunction(), this.tableName, this.tableIdColumn, [param], { overrideUpdateDatetime, connection });
         return param;
     }
 
@@ -196,7 +219,7 @@ export class BaseService {
      * 
      * @param {[]} params
      */
-    async _batchAddOrUpdate(params, { overrideUpdateDatetime = false, genIdFunction = null } = {}) {
+    async _batchAddOrUpdate(params, { connection = null, overrideCreateDatetime = false, overrideUpdateDatetime = false, genIdFunction = null } = {}) {
         for (let i = 0; i < params.length; i++) {
             let item = params[i];
             let idKey = toHump(this.tableIdColumn);
@@ -208,7 +231,7 @@ export class BaseService {
                 }
             }
         }
-        await batchInsertOrReplace(this.entityClassCreateFunction(), this.tableName, params, { overrideUpdateDatetime });
+        await batchInsertOrReplace(this.entityClassCreateFunction(), this.tableName, this.tableIdColumn, params, { connection, overrideCreateDatetime, overrideUpdateDatetime });
         return params;
     }
 }

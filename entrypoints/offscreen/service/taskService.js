@@ -46,25 +46,25 @@ const SERVICE_INSTANCE = new BaseService("task", "id",
         if (param.startDatetimeForCreate) {
             whereCondition +=
                 " AND create_datetime >= '" +
-                dayjs(param.startDatetimeForCreate).format("YYYY-MM-DD HH:mm:ss") +
+                dayjs(param.startDatetimeForCreate).format() +
                 "'";
         }
         if (param.endDatetimeForCreate) {
             whereCondition +=
                 " AND create_datetime < '" +
-                dayjs(param.endDatetimeForCreate).format("YYYY-MM-DD HH:mm:ss") +
+                dayjs(param.endDatetimeForCreate).format() +
                 "'";
         }
         if (param.startDatetimeForUpdate) {
             whereCondition +=
                 " AND update_datetime >= '" +
-                dayjs(param.startDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+                dayjs(param.startDatetimeForUpdate).format() +
                 "'";
         }
         if (param.endDatetimeForUpdate) {
             whereCondition +=
                 " AND update_datetime < '" +
-                dayjs(param.endDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+                dayjs(param.endDatetimeForUpdate).format() +
                 "'";
         }
         return whereCondition;
@@ -182,33 +182,18 @@ export const TaskService = {
             let endDatetime = dateToStr(param.endDatetime);
 
             //upload total
-            const uploadTotalSql = `SELECT IFNULL(SUM(t2.data_count),0) AS count FROM task AS t1 LEFT JOIN task_data_upload AS t2 ON t1.data_id = t2.id ${genDatetimeCondition({ datetimeColumn: "t1.update_datetime", startDatetime, endDatetime, otherConditionSql: ` AND t1.status = 'FINISHED' AND t1.type IN ('JOB_DATA_UPLOAD','COMPANY_DATA_UPLOAD','COMPANY_TAG_DATA_UPLOAD')` })}`;
-            let uploadRecordTotalCount = [];
-            (await getDb()).exec({
-                sql: uploadTotalSql,
-                rowMode: "object",
-                resultRows: uploadRecordTotalCount,
-            });
+            const uploadTotalSql = `SELECT COALESCE(SUM(t2.data_count),0) AS count FROM task AS t1 LEFT JOIN task_data_upload AS t2 ON t1.data_id = t2.id ${genDatetimeCondition({ datetimeColumn: "t1.update_datetime", startDatetime, endDatetime, otherConditionSql: ` AND t1.status = 'FINISHED' AND t1.type IN ('JOB_DATA_UPLOAD','COMPANY_DATA_UPLOAD','COMPANY_TAG_DATA_UPLOAD')` })}`;
+            const { rows: uploadRecordTotalCount } = await (await getDb()).query(uploadTotalSql);
             result.uploadRecordTotalCount = uploadRecordTotalCount[0].count;
 
             //download total
-            const downloadTotalSql = `SELECT IFNULL(COUNT(*),0) AS count FROM task ${genDatetimeCondition({ startDatetime, endDatetime, otherConditionSql: ` AND status = 'FINISHED' AND type IN ('JOB_DATA_DOWNLOAD','COMPANY_DATA_DOWNLOAD','COMPANY_TAG_DATA_DOWNLOAD')` })} `;
-            let downloadFileTotalCount = [];
-            (await getDb()).exec({
-                sql: downloadTotalSql,
-                rowMode: "object",
-                resultRows: downloadFileTotalCount,
-            });
+            const downloadTotalSql = `SELECT COALESCE(COUNT(*),0) AS count FROM task ${genDatetimeCondition({ startDatetime, endDatetime, otherConditionSql: ` AND status = 'FINISHED' AND type IN ('JOB_DATA_DOWNLOAD','COMPANY_DATA_DOWNLOAD','COMPANY_TAG_DATA_DOWNLOAD')` })} `;
+            const { rows: downloadFileTotalCount } = await (await getDb()).query(downloadTotalSql);
             result.downloadFileTotalCount = downloadFileTotalCount[0].count;
 
             //merge total
-            const mergeTotalSql = `SELECT IFNULL(SUM(data_count),0) AS count FROM task_data_merge ${genDatetimeCondition({ startDatetime, endDatetime })}`;
-            let mergeRecordTotalCount = [];
-            (await getDb()).exec({
-                sql: mergeTotalSql,
-                rowMode: "object",
-                resultRows: mergeRecordTotalCount,
-            });
+            const mergeTotalSql = `SELECT COALESCE(SUM(data_count),0) AS count FROM task_data_merge ${genDatetimeCondition({ startDatetime, endDatetime })}`;
+            const { rows: mergeRecordTotalCount } = await (await getDb()).query(mergeTotalSql);
             result.mergeRecordTotalCount = mergeRecordTotalCount[0].count;
 
             postSuccessMessage(message, result);
@@ -316,13 +301,13 @@ function genDatetimeConditionOnJoin({ startDatetime, endDatetime, otherCondition
     if (startDatetime) {
         whereCondition +=
             ` AND ${datetimeColumn ?? "update_datetime"} >= '` +
-            dayjs(startDatetime).format("YYYY-MM-DD HH:mm:ss") +
+            dayjs(startDatetime).format() +
             "'";
     }
     if (endDatetime) {
         whereCondition +=
             ` AND ${datetimeColumn ?? "update_datetime"} < '` +
-            dayjs(endDatetime).format("YYYY-MM-DD HH:mm:ss") +
+            dayjs(endDatetime).format() +
             "'";
     }
     if (otherConditionSql) {
@@ -337,13 +322,13 @@ function genDatetimeCondition({ startDatetime, endDatetime, otherConditionSql, d
     if (startDatetime) {
         whereCondition +=
             ` AND ${datetimeColumn ?? "update_datetime"} >= '` +
-            dayjs(startDatetime).format("YYYY-MM-DD HH:mm:ss") +
+            dayjs(startDatetime).format() +
             "'";
     }
     if (endDatetime) {
         whereCondition +=
             ` AND ${datetimeColumn ?? "update_datetime"} < '` +
-            dayjs(endDatetime).format("YYYY-MM-DD HH:mm:ss") +
+            dayjs(endDatetime).format() +
             "'";
     }
     if (otherConditionSql) {

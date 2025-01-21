@@ -3,5 +3,5 @@ export class JobTagExportBO {
     source;
     startDatetimeForUpdate;
     endDatetimeForUpdate;
-    isPublic = 1;
+    isPublic = true;
 }

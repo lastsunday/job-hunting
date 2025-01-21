@@ -63,8 +63,8 @@ export function useTask() {
     }
 
     const convertMissionLog = (item: any): MissionLogData => {
-        const { missionId, missionLogDetial, missionLogId, missionStatus, missionStatusReason, createDatetime, updateDatetime } = item;
-        let detail = JSON.parse(missionLogDetial);
+        const { missionId, missionLogDetail, missionLogId, missionStatus, missionStatusReason, createDatetime, updateDatetime } = item;
+        let detail = JSON.parse(missionLogDetail);
         detail.startDatetime = detail.startDatetime != null ? dayjs(detail.startDatetime).toDate() : null;
         detail.endDatetime = detail.endDatetime != null ? dayjs(detail.endDatetime).toDate() : null;
         return {

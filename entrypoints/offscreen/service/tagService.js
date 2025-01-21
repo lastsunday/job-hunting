@@ -3,7 +3,7 @@ import { Message } from "../../../common/api/message";
 import { TagSearchBO } from "../../../common/data/bo/tagSearchBO";
 import { Tag } from "../../../common/data/domain/tag";
 import { TagSearchDTO } from "../../../common/data/dto/tagSearchDTO";
-import { convertEmptyStringToNull, genIdFromText } from "../../../common/utils";
+import { convertEmptyStringToNull, genIdFromText, toHump, toLine } from "../../../common/utils";
 import { batchGet, getAll, getDb, getOne } from "../database";
 import { postErrorMessage, postSuccessMessage } from "../util";
 import { BaseService } from "./baseService";
@@ -83,11 +83,14 @@ export const TagService = {
         try {
             postSuccessMessage(
                 message,
-                await getAll(SQL_SELECT, {}, new Tag())
+                await getAll(SQL_SELECT, [], new Tag())
             );
         } catch (e) {
             postErrorMessage(message, "[worker] getTagById error : " + e.message);
         }
+    },
+    tagGetByName: async function (message, param) {
+        SERVICE_INSTANCE.getOne(message, param, "tag_name");
     },
     /**
      *
@@ -96,7 +99,7 @@ export const TagService = {
      */
     addOrUpdateTag: async function (message, param) {
         try {
-            await _addOrUpdateTag(param);
+            await SERVICE_INSTANCE._addOrUpdate(param);
             postSuccessMessage(message, {});
         } catch (e) {
             postErrorMessage(
@@ -121,15 +124,15 @@ export async function _getTagById(param) {
  * @param {string[]} ids 
  * @returns 
  */
-export async function _batchGetTagByIds(ids) {
-    return batchGet(new Tag(), "tag", "tag_id", ids)
+export async function _batchGetTagByIds(ids, { connection = null } = {}) {
+    return batchGet(new Tag(), "tag", "tag_id", ids, { connection })
 }
 
 /**
  * 
  * @param {string[]} tags 
  */
-export async function _addNotExistsTags(tags) {
+export async function _addNotExistsTags(tags, { connection = null } = {}) {
     //对tags进行去重处理
     const uniqueTags = Array.from(new Set(tags));
     const tagIds = [];
@@ -138,7 +141,7 @@ export async function _addNotExistsTags(tags) {
         let id = genIdFromText(tagName);
         tagIds.push(id);
     }
-    const existsTags = await _batchGetTagByIds(tagIds);
+    const existsTags = await _batchGetTagByIds(tagIds, { connection });
     const existsTagIds = existsTags.map(item => item.tagId);
     let targetTags = [];
     for (let i = 0; i < uniqueTags.length; i++) {
@@ -151,60 +154,15 @@ export async function _addNotExistsTags(tags) {
         }
     }
     await SERVICE_INSTANCE._batchAddOrUpdate(targetTags, {
+        connection,
         genIdFunction: (item) => {
             return genIdFromText(item.tagName);
         }
     });
 }
 
-/**
- * 
- * @param {Tag} param 
- */
-export async function _addOrUpdateTag(param) {
-    const now = new Date();
-    if (param.tagId) {
-        let rows = [];
-        (await getDb()).exec({
-            sql: SQL_SELECT_BY_ID,
-            rowMode: "object",
-            bind: [param.tagId],
-            resultRows: rows,
-        });
-        if (rows.length > 0) {
-            (await getDb()).exec({
-                sql: SQL_UPDATE,
-                bind: {
-                    $tag_id: convertEmptyStringToNull(param.tagId),
-                    $tag_name: convertEmptyStringToNull(param.tagName),
-                    $is_public: param.isPublic,
-                    $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-                },
-            });
-        }
-    } else {
-        (await getDb()).exec({
-            sql: SQL_INSERT,
-            bind: {
-                $tag_id: genIdFromText(param.tagName),
-                $tag_name: convertEmptyStringToNull(param.tagName),
-                $is_public: param.isPublic,
-                $create_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-                $update_datetime: dayjs(now).format("YYYY-MM-DD HH:mm:ss"),
-            },
-        });
-    }
-
-}
-
 const SQL_SELECT = `SELECT tag_id, tag_name, create_datetime, update_datetime,is_public FROM tag`;
-const SQL_SELECT_BY_ID = `${SQL_SELECT} WHERE tag_id = ?`;
-const SQL_INSERT = `
-INSERT INTO tag (tag_id, tag_name, create_datetime, update_datetime, is_public) VALUES ($tag_id,$tag_name,$create_datetime,$update_datetime,$is_public)
-`;
-const SQL_UPDATE = `
-UPDATE tag SET tag_name=$tag_name,update_datetime=$update_datetime,is_public=$is_public WHERE tag_id = $tag_id;
-`;
+const SQL_SELECT_BY_ID = `${SQL_SELECT} WHERE tag_id = $1`;
 
 export async function _searchWithTagInfo({ param, cerateResultDTOFunction, createResultItemDTOFunction, genSqlSearchQueryFunction, genSearchWhereConditionSqlFunction, getAllDTOByIdsFunction, idColumn }) {
     let result = cerateResultDTOFunction();
@@ -212,13 +170,13 @@ export async function _searchWithTagInfo({ param, cerateResultDTOFunction, creat
     let whereCondition = genSearchWhereConditionSqlFunction();
     let orderBy =
         " ORDER BY " +
-        param.orderByColumn +
+        toLine(param.orderByColumn) +
         " " +
         param.orderBy +
         " NULLS LAST";
     let limitStart = (param.pageNum - 1) * param.pageSize;
     let limitEnd = param.pageSize;
-    let limit = " limit " + limitStart + "," + limitEnd;
+    let limit = " limit " + limitEnd + " OFFSET " + limitStart;
     const sqlSearchQuery = genSqlSearchQueryFunction();
     sqlQuery += sqlSearchQuery;
     sqlQuery += whereCondition;
@@ -226,24 +184,19 @@ export async function _searchWithTagInfo({ param, cerateResultDTOFunction, creat
     sqlQuery += limit;
     let items = [];
     let total = 0;
-    let queryRows = [];
-    (await getDb()).exec({
-        sql: sqlQuery,
-        rowMode: "object",
-        resultRows: queryRows,
-    });
+    const { rows: queryRows } = await (await getDb()).query(sqlQuery);
     for (let i = 0; i < queryRows.length; i++) {
         let item = queryRows[i];
         let resultItem = createResultItemDTOFunction();
         let keys = Object.keys(item);
         for (let n = 0; n < keys.length; n++) {
             let key = keys[n];
-            resultItem[key] = item[key];
+            resultItem[toHump(key)] = item[key];
         }
-        item.tagNameArray = [];
-        item.tagIdArray = [];
-        item.tagArray = [];
-        items.push(item);
+        resultItem.tagNameArray = [];
+        resultItem.tagIdArray = [];
+        resultItem.tagArray = [];
+        items.push(resultItem);
     }
     let ids = [];
     let itemIdObjectMap = new Map();
@@ -264,12 +217,7 @@ export async function _searchWithTagInfo({ param, cerateResultDTOFunction, creat
     sqlCountSubTable += whereCondition;
     //count
     let sqlCount = `SELECT COUNT(*) AS total FROM (${sqlCountSubTable}) AS t1`;
-    let queryCountRows = [];
-    (await getDb()).exec({
-        sql: sqlCount,
-        rowMode: "object",
-        resultRows: queryCountRows,
-    });
+    const { rows: queryCountRows } = await (await getDb()).query(sqlCount);
     total = queryCountRows[0].total;
     result.items = items;
     result.total = total;

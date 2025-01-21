@@ -1,10 +1,10 @@
 import { ChangeLog } from "./changelog";
 const SQL_CREATE_TABLE_CONFIG = `
 CREATE TABLE config (
-    key TEXT PRIMARY KEY,
+    key VARCHAR(255) PRIMARY KEY,
     value TEXT,
-    create_datetime DATETIME,
-    update_datetime DATETIME
+    create_datetime TIMESTAMPTZ,
+    update_datetime TIMESTAMPTZ
   )
   `;
 

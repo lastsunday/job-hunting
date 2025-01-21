@@ -5,7 +5,6 @@ import React from "react";
 import JobItemCard from "../../components/JobItemCard";
 
 import { SearchOutlined } from "@ant-design/icons";
-import dayjs from "dayjs";
 import type { DraggableData, DraggableEvent } from "react-draggable";
 import Draggable from "react-draggable";
 import CompanyItemTable from "../../components/CompanyItemTable";
@@ -18,6 +17,7 @@ import "./FavoriteJobView.css";
 import styles from "./FavoriteJobView.module.css";
 import BasicMap from "../../components/BasicMap";
 import { useJob } from "../../hooks/job";
+import { toLine } from "@/common/utils";
 
 const { convertToJobDataList, convertToJobData } = useJob();
 
@@ -72,10 +72,10 @@ const FavoriteJobView: React.FC = () => {
     Object.assign(searchParam, favoriteJobSetting);
     if (searchParam.sortMode == 1) {
       searchParam.orderByColumn =
-        "jobFirstPublishDatetime DESC, createDatetime DESC";
+        `${toLine('jobFirstPublishDatetime')} DESC, ${toLine('createDatetime')} DESC`;
     } else {
       searchParam.orderByColumn =
-        "createDatetime DESC, jobFirstPublishDatetime DESC";
+        `${toLine('createDatetime')} DESC, ${toLine('jobFirstPublishDatetime')} DESC `;
     }
     searchParam.orderBy = "";
     return searchParam;

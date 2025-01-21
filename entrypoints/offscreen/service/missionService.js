@@ -1,11 +1,24 @@
 import { Message } from "../../../common/api/message";
 import { postSuccessMessage, postErrorMessage } from "../util";
-import { insert, update, one, all, del, sort } from "../database";
+import { getDb, all, sort } from "../database";
 import { Mission } from "../../../common/data/domain/mission";
-import { genUniqueId } from "../../../common/utils";
+import { BaseService } from "../service/baseService";
 
 const TABLE_NAME = "mission";
 const TABLE_ID_COLUMN = "mission_id";
+
+const SERVICE_INSTANCE = new BaseService(TABLE_NAME, TABLE_ID_COLUMN,
+    () => {
+        return new Mission();
+    },
+    () => {
+        return {};
+    },
+    (param) => {
+        let whereCondition = "";
+        return whereCondition;
+    }
+);
 
 export const MissionService = {
     /**
@@ -33,7 +46,7 @@ export const MissionService = {
      */
     missionAddOrUpdate: async function (message, param) {
         try {
-            await _addOrUpdate(param);
+            await SERVICE_INSTANCE._batchAddOrUpdate([param]);
             postSuccessMessage(message, {});
         } catch (e) {
             postErrorMessage(
@@ -49,7 +62,7 @@ export const MissionService = {
      */
     missionDeleteById: async function (message, param) {
         try {
-            await del(TABLE_NAME, TABLE_ID_COLUMN, param);
+            await SERVICE_INSTANCE._deleteById(param);
             postSuccessMessage(message, {});
         } catch (e) {
             postErrorMessage(
@@ -65,7 +78,9 @@ export const MissionService = {
      */
     missionSort: async function (message, param) {
         try {
-            await sort(TABLE_NAME, TABLE_ID_COLUMN, param);
+            await (await getDb()).transaction(async (tx) => {
+                return await sort(TABLE_NAME, TABLE_ID_COLUMN, param, { connection: tx });
+            });
             postSuccessMessage(message, {});
         } catch (e) {
             postErrorMessage(
@@ -75,22 +90,3 @@ export const MissionService = {
         }
     },
 };
-
-/**
- * 
- * @param {Mission} param 
- */
-export async function _addOrUpdate(param) {
-    let needUpdate = false;
-    if (param.missionId) {
-        needUpdate = (await one(new Mission(), TABLE_NAME, TABLE_ID_COLUMN, param.missionId) ? true : false);
-    } else {
-        needUpdate = false;
-    }
-    if (needUpdate) {
-        return update(new Mission(), TABLE_NAME, TABLE_ID_COLUMN, param);
-    } else {
-        param.missionId = genUniqueId();
-        return insert(new Mission(), TABLE_NAME, param);
-    }
-}

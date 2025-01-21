@@ -36,11 +36,11 @@ const useDataSharePlanStore = create<DataSharePlanState>()((set) => {
         const statisticDataSharePartnerDTO = await DataSharePartnerApi.statisticDataSharePartner({});
         const dataSharePartnerCount = statisticDataSharePartnerDTO.totalCount;
         const now = dayjs();
-        const todayStart = now.startOf("day").format("YYYY-MM-DD HH:mm:ss");
+        const todayStart = now.startOf("day").format();
         const todayEnd = now
             .startOf("day")
             .add(1, "day")
-            .format("YYYY-MM-DD HH:mm:ss");
+            .format();
         const todayParam = new StatisticTaskBO();
         todayParam.startDatetime = todayStart;
         todayParam.endDatetime = todayEnd;

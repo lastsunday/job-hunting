@@ -98,26 +98,30 @@ export default defineContentScript({
         }
       }
     });
-   
+
     window.addEventListener("proxyScriptLoaded", async function (e) {
-      await initBridge();
-      // 不通过直接注入脚本的方式处理 ssr 页面，否则一些引入的模块需要重新打包
-      if (location.host === "www.zhaopin.com") {
-        // 智联招聘首次打开
-        const data = e?.detail?.zhipin?.initialState;
-        zhilianFirstOpen(data || {});
-      }
+      try {
+        await initBridge();
+        // 不通过直接注入脚本的方式处理 ssr 页面，否则一些引入的模块需要重新打包
+        if (location.host === "www.zhaopin.com") {
+          // 智联招聘首次打开
+          const data = e?.detail?.zhipin?.initialState;
+          zhilianFirstOpen(data || {});
+        }
 
-      if (location.host === "www.lagou.com") {
-        // 拉勾首次打开
-        const data = e?.detail?.lagou?.initialState;
-        lagouFirstOpen(data || {});
-      }
+        if (location.host === "www.lagou.com") {
+          // 拉勾首次打开
+          const data = e?.detail?.lagou?.initialState;
+          lagouFirstOpen(data || {});
+        }
 
-      if (location.host === "aiqicha.baidu.com") {
-        // 爱企查首次打开
-        const data = e?.detail?.aiqicha?.initialState?.result?.resultList;
-        aiqichaHandle(data, true);
+        if (location.host === "aiqicha.baidu.com") {
+          // 爱企查首次打开
+          const data = e?.detail?.aiqicha?.initialState?.result?.resultList;
+          aiqichaHandle(data, true);
+        }
+      } catch (e) {
+        console.log(e);
       }
     });
   },

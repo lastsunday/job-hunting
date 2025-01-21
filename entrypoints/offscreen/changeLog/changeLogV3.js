@@ -1,21 +1,21 @@
 import { ChangeLog } from "./changelog";
 const SQL_CREATE_TABLE_TAG = `
 CREATE TABLE tag (
-    tag_id TEXT PRIMARY KEY,
+    tag_id VARCHAR(255) PRIMARY KEY,
     tag_name TEXT UNIQUE,
-    create_datetime DATETIME,
-    update_datetime DATETIME
+    create_datetime TIMESTAMPTZ,
+    update_datetime TIMESTAMPTZ
   )
   `;
 const SQL_CREATE_TABLE_COMPANY_TAG = `
 CREATE TABLE company_tag (
-    company_tag_id TEXT PRIMARY KEY,
-    company_id TEXT,
-    company_name TEXT,
-    tag_id TEXT,
-    seq NUMERIC,
-    create_datetime DATETIME,
-    update_datetime DATETIME
+    company_tag_id VARCHAR(255) PRIMARY KEY,
+    company_id VARCHAR(255),
+    company_name VARCHAR(255),
+    tag_id VARCHAR(255),
+    seq INTEGER,
+    create_datetime TIMESTAMPTZ,
+    update_datetime TIMESTAMPTZ
   )
   `;
 

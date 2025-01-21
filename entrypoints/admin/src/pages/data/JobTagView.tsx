@@ -53,7 +53,7 @@ const JobTagView: React.FC = () => {
     {
       title: '职位编号',
       dataIndex: 'jobId',
-      render: (value: string) =>  <Text copyable style={{ width: 100 }} title={value}>{`${value.length > 5 ? value.slice(0, 5) : ''}...`}</Text>,
+      render: (value: string) =>  <Text copyable style={{ width: 100 }} title={value}>{`${value && value.length > 5 ? value.slice(0, 5)+"..." : value}`}</Text>,
       minWidth: 100,
     },
     {
@@ -242,6 +242,9 @@ const JobTagView: React.FC = () => {
         data={editJobTagData}
         whitelist={whitelist}
         onSave={onJobTagSave}
+        validJobId={async (value) => {
+          return (await JobApi.jobTagGetAllDTOByJobIds([value])).length <= 0;
+        }}
       ></JobTagEdit>
     </Modal>
   </>

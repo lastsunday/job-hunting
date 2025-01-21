@@ -13,6 +13,7 @@ import { getAll, getDb, getOne } from "../database";
 import { postErrorMessage, postSuccessMessage } from "../util";
 import { BaseService } from "./baseService";
 import { _addNotExistsTags, _searchWithTagInfo } from "./tagService";
+import { convertRows } from "../database";
 
 const COMPANY_ID_COLUMN = "company_id";
 
@@ -41,26 +42,10 @@ export const CompanyTagService = {
         try {
             postSuccessMessage(
                 message,
-                _getCompanyTagById(param)
+                await getOne(`SELECT company_tag_id, company_id, company_name,tag_id,seq ,create_datetime, update_datetime,source_type,source FROM company_tag WHERE company_tag_id = $1`, [param], new CompanyTag())
             );
         } catch (e) {
             postErrorMessage(message, "[worker] getTagById error : " + e.message);
-        }
-    },
-    /**
-     *
-     * @param {Message} message
-     * @param {CompanyTag} param
-     */
-    addCompanyTag: async function (message, param) {
-        try {
-            await _addCompanyTag(param);
-            postSuccessMessage(message, {});
-        } catch (e) {
-            postErrorMessage(
-                message,
-                "[worker] addOrUpdateTag error : " + e.message
-            );
         }
     },
     /**
@@ -70,7 +55,7 @@ export const CompanyTagService = {
      */
     deleteCompanyTagByCompanyId: async function (message, param) {
         try {
-            await _deleteCompanyTagByCompanyId(param);
+            await (await getDb()).query(`DELETE FROM company_tag WHERE company_id = $1`, [param]);
             postSuccessMessage(message, {});
         } catch (e) {
             postErrorMessage(
@@ -87,7 +72,7 @@ export const CompanyTagService = {
     deleteCompanyTagByCompanyIds: async function (message, param) {
         try {
             if (param && param.length > 0) {
-                await _deleteCompanyTagByCompanyIds(param);
+                await (await getDb()).exec(getSqlDeleteByCompanyIds(param));
                 postSuccessMessage(message, {});
             } else {
                 postErrorMessage(
@@ -109,18 +94,11 @@ export const CompanyTagService = {
      */
     addOrUpdateCompanyTag: async function (message, param) {
         try {
-            (await getDb()).exec({
-                sql: "BEGIN TRANSACTION",
-            });
-            await _addOrUpdateCompanyTag(param);
-            (await getDb()).exec({
-                sql: "COMMIT",
+            await (await getDb()).transaction(async (tx) => {
+                return await _addOrUpdateCompanyTag(param, false, { connection: tx });
             });
             postSuccessMessage(message, {});
         } catch (e) {
-            (await getDb()).exec({
-                sql: "ROLLBACK TRANSACTION",
-            });
             postErrorMessage(
                 message,
                 "[worker] addOrUpdateCompanyTag error : " + e.message
@@ -134,37 +112,14 @@ export const CompanyTagService = {
      */
     batchAddOrUpdateCompanyTag: async function (message, param) {
         try {
-            await _batchAddOrUpdateCompanyTag(param.items, param.overrideUpdateDatetime);
+            await (await getDb()).transaction(async (tx) => {
+                return await _batchAddOrUpdateCompanyTag(param.items, param.overrideUpdateDatetime, { connection: tx });
+            });
             postSuccessMessage(message, {});
         } catch (e) {
             postErrorMessage(
                 message,
                 "[worker] batchAddOrUpdateCompanyTag error : " + e.message
-            );
-        }
-    },
-    /**
-     * 
-     * @param {Message} message 
-     * @param {CompanyTagBatchAddOrUpdateBO} param 
-     */
-    batchAddOrUpdateCompanyTagWithTransaction: async function (message, param) {
-        try {
-            (await getDb()).exec({
-                sql: "BEGIN TRANSACTION",
-            });
-            await _batchAddOrUpdateCompanyTag(param.items, param.overrideUpdateDatetime);
-            (await getDb()).exec({
-                sql: "COMMIT",
-            });
-            postSuccessMessage(message, {});
-        } catch (e) {
-            (await getDb()).exec({
-                sql: "ROLLBACK TRANSACTION",
-            });
-            postErrorMessage(
-                message,
-                "[worker] batchAddOrUpdateCompanyTagWithTransaction error : " + e.message
             );
         }
     },
@@ -179,7 +134,7 @@ export const CompanyTagService = {
         try {
             postSuccessMessage(
                 message,
-                await _getAllCompanyTagDTOByCompanyId(param)
+                await getAll(`SELECT t1.company_tag_id, t1.company_id, t1.company_name,t1.tag_id, t2.tag_name,t1.seq ,t1.create_datetime, t1.update_datetime,t1.source_type,t1.source,t2.is_public FROM company_tag AS t1  LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id where company_id = $1 ORDER BY t1.seq ASC;`, [param], new CompanyTagDTO())
             );
         } catch (e) {
             postErrorMessage(message, "[worker] getAllCompanyTagDTOByCompanyId error : " + e.message);
@@ -236,26 +191,24 @@ export const CompanyTagService = {
                         whereCondition = whereCondition.replace("AND", "");
                         whereCondition = " WHERE " + whereCondition;
                     }
-                    return `
-                    SELECT t1.company_tag_id AS companyTagId, t1.company_id AS companyId, t1.company_name AS companyName,t1.create_datetime AS createDatetime, MAX(t1.update_datetime) AS updateDatetime FROM company_tag AS t1  LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id ${whereCondition}  GROUP BY t1.company_id
-                    `
+                    return `SELECT t1.company_id AS company_id,t1.company_name AS company_name,MAX(t1.create_datetime) AS create_datetime,MAX(t1.update_datetime) AS update_datetime FROM company_tag AS t1 LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id ${whereCondition}  GROUP BY t1.company_id,t1.company_name`
                 },
                 genSearchWhereConditionSqlFunction: () => {
                     let whereCondition = "";
                     if (param.companyName) {
                         whereCondition +=
-                            " AND companyName LIKE '%" + param.companyName + "%' ";
+                            " AND company_name LIKE '%" + param.companyName + "%' ";
                     }
                     if (param.startDatetimeForUpdate) {
                         whereCondition +=
-                            " AND updateDatetime >= '" +
-                            dayjs(param.startDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+                            " AND update_datetime >= '" +
+                            dayjs(param.startDatetimeForUpdate).format() +
                             "'";
                     }
                     if (param.endDatetimeForUpdate) {
                         whereCondition +=
-                            " AND updateDatetime < '" +
-                            dayjs(param.endDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+                            " AND update_datetime < '" +
+                            dayjs(param.endDatetimeForUpdate).format() +
                             "'";
                     }
                     if (whereCondition.startsWith(" AND")) {
@@ -285,79 +238,32 @@ export const CompanyTagService = {
         try {
             let result = new StatisticCompanyTagDTO();
             let now = dayjs();
-            let todayStart = now.startOf("day").format("YYYY-MM-DD HH:mm:ss");
+            let todayStart = now.startOf("day").format();
             let todayEnd = now
                 .startOf("day")
                 .add(1, "day")
-                .format("YYYY-MM-DD HH:mm:ss");
+                .format();
             let yesterdayStart = now
                 .startOf("day")
                 .add(2, "day")
-                .format("YYYY-MM-DD HH:mm:ss");
+                .format();
             let yesterdayEnd = now
                 .startOf("day")
                 .add(1, "day")
-                .format("YYYY-MM-DD HH:mm:ss");
-            let totalTagQueryResult = [];
-            (await getDb()).exec({
-                sql: `SELECT COUNT(*) AS count FROM tag`,
-                rowMode: "object",
-                resultRows: totalTagQueryResult,
-            });
-            const tagQuerySql = `SELECT COUNT(*) AS count FROM tag WHERE create_datetime >= $startDatetime AND create_datetime < $endDatetime`;
-            let todayTagQueryResult = [];
-            (await getDb()).exec({
-                sql: tagQuerySql,
-                rowMode: "object",
-                resultRows: todayTagQueryResult,
-                bind: {
-                    $startDatetime: todayStart,
-                    $endDatetime: todayEnd,
-                },
-            });
-            let yesterdayTagQueryResult = [];
-            (await getDb()).exec({
-                sql: tagQuerySql,
-                rowMode: "object",
-                resultRows: yesterdayTagQueryResult,
-                bind: {
-                    $startDatetime: yesterdayStart,
-                    $endDatetime: yesterdayEnd,
-                },
-            });
-            let totalCompanyTagRecordQueryResult = [];
-            (await getDb()).exec({
-                sql: `SELECT COUNT(*) AS count FROM company_tag`,
-                rowMode: "object",
-                resultRows: totalCompanyTagRecordQueryResult,
-            });
-            const tagCompanyQuerySql = `SELECT COUNT(DISTINCT company_id) AS count FROM company_tag WHERE create_datetime >= $startDatetime AND create_datetime < $endDatetime;`;
-            let todayTagCompanyQueryResult = [];
-            (await getDb()).exec({
-                sql: tagCompanyQuerySql,
-                rowMode: "object",
-                resultRows: todayTagCompanyQueryResult,
-                bind: {
-                    $startDatetime: todayStart,
-                    $endDatetime: todayEnd,
-                },
-            });
-            let yesterdayTagCompanyQueryResult = [];
-            (await getDb()).exec({
-                sql: tagCompanyQuerySql,
-                rowMode: "object",
-                resultRows: yesterdayTagCompanyQueryResult,
-                bind: {
-                    $startDatetime: yesterdayStart,
-                    $endDatetime: yesterdayEnd,
-                },
-            });
-            let totalTagCompanyQueryResult = [];
-            (await getDb()).exec({
-                sql: `SELECT COUNT(DISTINCT company_id) AS count FROM company_tag`,
-                rowMode: "object",
-                resultRows: totalTagCompanyQueryResult,
-            });
+                .format();
+            const { rows: totalTagQueryResult } = await (await getDb()).query(`SELECT COUNT(*) AS count FROM tag`);
+
+            const tagQuerySql = `SELECT COUNT(*) AS count FROM tag WHERE create_datetime >= $1 AND create_datetime < $2`;
+            const { rows: todayTagQueryResult } = await (await getDb()).query(tagQuerySql, [todayStart, todayEnd]);
+            const { rows: yesterdayTagQueryResult } = await (await getDb()).query(tagQuerySql, [yesterdayStart, yesterdayEnd]);
+
+            const { rows: totalCompanyTagRecordQueryResult } = await (await getDb()).query(`SELECT COUNT(*) AS count FROM company_tag`);
+
+            const tagCompanyQuerySql = `SELECT COUNT(DISTINCT company_id) AS count FROM company_tag WHERE create_datetime >= $1 AND create_datetime < $2;`;
+            const { rows: todayTagCompanyQueryResult } = await (await getDb()).query(tagCompanyQuerySql, [todayStart, todayEnd]);
+            const { rows: yesterdayTagCompanyQueryResult } = await (await getDb()).query(tagCompanyQuerySql, [yesterdayStart, yesterdayEnd]);
+            const { rows: totalTagCompanyQueryResult } = await (await getDb()).query(`SELECT COUNT(DISTINCT company_id) AS count FROM company_tag`);
+
             result.todayTag = todayTagQueryResult[0].count;
             result.yesterdayTag = yesterdayTagQueryResult[0].count;
             result.totalTag = totalTagQueryResult[0].count;
@@ -401,13 +307,13 @@ async function _companyTagExport(param) {
     if (param.startDatetimeForUpdate) {
         joinCondition +=
             " AND t1.update_datetime >= '" +
-            dayjs(param.startDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+            dayjs(param.startDatetimeForUpdate).format() +
             "'";
     }
     if (param.endDatetimeForUpdate) {
         joinCondition +=
             " AND t1.update_datetime < '" +
-            dayjs(param.endDatetimeForUpdate).format("YYYY-MM-DD HH:mm:ss") +
+            dayjs(param.endDatetimeForUpdate).format() +
             "'";
     }
     if (param.companyIds) {
@@ -428,26 +334,21 @@ async function _companyTagExport(param) {
     if (param.isPublic != null) {
         whereCondition += ` AND t2.is_public = ${param.isPublic}`
     }
-    let sqlQuery = `SELECT t1.company_id AS companyId,t1.company_name AS companyName,GROUP_CONCAT(t2.tag_name) AS tagNameArray,MAX(t1.update_datetime) AS updateDatetime FROM company_tag AS t1 LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id ${joinCondition} WHERE t1.source_type = 0 ${whereCondition} GROUP BY t1.company_id ORDER BY t1.seq ASC;`;
-    let queryRows = [];
-    (await getDb()).exec({
-        sql: sqlQuery,
-        rowMode: "object",
-        resultRows: queryRows,
-    });
-    return queryRows;
+    let sqlQuery = `SELECT t1.company_id AS company_id,t1.company_name AS company_name,STRING_AGG(DISTINCT t2.tag_name,',') AS tag_name_array,MAX(t1.create_datetime) AS create_datetime,MAX(t1.update_datetime) AS update_datetime FROM company_tag AS t1 LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id ${joinCondition} WHERE t1.source_type = 0 ${whereCondition} GROUP BY t1.company_id,t1.company_name ORDER BY update_datetime DESC`;
+    const { rows: queryRows } = await (await getDb()).query(sqlQuery);
+    return convertRows(queryRows);
 }
 
 /**
  * 
  * @param {CompanyTagBO[]} companyTagBOs 
  */
-async function _batchAddOrUpdateCompanyTag(companyTagBOs, overrideUpdateDatetime) {
+async function _batchAddOrUpdateCompanyTag(companyTagBOs, overrideUpdateDatetime, { connection = null } = {}) {
     let allTags = [];
     companyTagBOs.map(item => { return item.tags }).forEach(items => {
         allTags.push(...items);
     })
-    await _addNotExistsTags(allTags);
+    await _addNotExistsTags(allTags, { connection });
     let sourceTypeSourceAndIdsMap = new Map();
     let sourceTypeSourceAndSourceTypeMap = new Map();
     let sourceTypeSourceAndSourceMap = new Map();
@@ -465,7 +366,7 @@ async function _batchAddOrUpdateCompanyTag(companyTagBOs, overrideUpdateDatetime
         let ids = sourceTypeSourceAndIdsMap.get(key);
         let sourceType = sourceTypeSourceAndSourceTypeMap.get(key);
         let source = sourceTypeSourceAndSourceMap.get(key);
-        await SERVICE_INSTANCE._deleteByIds(ids, COMPANY_ID_COLUMN, { otherCondition: `source_type=${sourceType} AND ${source ? "source = '" + source + "'" : "source IS NULL"}` });
+        await SERVICE_INSTANCE._deleteByIds(ids, COMPANY_ID_COLUMN, { connection, otherCondition: `source_type=${sourceType} AND ${source ? "source = '" + source + "'" : "source IS NULL"}` });
     });
     let companyTags = [];
     for (let i = 0; i < companyTagBOs.length; i++) {
@@ -487,18 +388,19 @@ async function _batchAddOrUpdateCompanyTag(companyTagBOs, overrideUpdateDatetime
             companyTags.push(companyTag);
         }
     }
-    await SERVICE_INSTANCE._batchAddOrUpdate(companyTags, { overrideUpdateDatetime });
+    await SERVICE_INSTANCE._batchAddOrUpdate(companyTags, { connection, overrideUpdateDatetime });
 }
 
 /**
  * 
  * @param {CompanyTagBO} param 
  */
-async function _addOrUpdateCompanyTag(param, overrideUpdateDatetime) {
-    await _addNotExistsTags(param.tags);
+async function _addOrUpdateCompanyTag(param, overrideUpdateDatetime, { connection = null } = {}) {
+    await _addNotExistsTags(param.tags, { connection });
     let companyName = param.companyName;
     let companyId = genIdFromText(companyName);
-    await SERVICE_INSTANCE._deleteById(companyId, COMPANY_ID_COLUMN, { otherCondition: `source_type=${param.sourceType} AND ${param.source ? "source = '" + param.source + "'" : "source IS NULL"}` });
+    await SERVICE_INSTANCE._deleteById(companyId, COMPANY_ID_COLUMN, { connection, otherCondition: `source_type=${param.sourceType} AND ${param.source ? "source = '" + param.source + "'" : "source IS NULL"}` });
+    let companyTags = [];
     for (let i = 0; i < param.tags.length; i++) {
         let tagName = param.tags[i];
         let tagId = genIdFromText(tagName);
@@ -511,26 +413,9 @@ async function _addOrUpdateCompanyTag(param, overrideUpdateDatetime) {
         companyTag.sourceType = param.sourceType;
         companyTag.source = param.source;
         companyTag.updateDatetime = param.updateDatetime;
-        await SERVICE_INSTANCE._addOrUpdate(companyTag, { overrideUpdateDatetime });
+        companyTags.push(companyTag);
     }
-}
-
-/**
- * 
- * @param {string} param id
- */
-export async function _getCompanyTagById(param) {
-    return getOne(SQL_SELECT_BY_ID, [param], new CompanyTag());
-}
-
-/**
- * 
- * @param {string} param id
- * 
- * @return CompanyTagDTO[]
- */
-export async function _getAllCompanyTagDTOByCompanyId(param) {
-    return getAll(SQL_SELECT_DTO_BY_COMPANY_ID, [param], new CompanyTagDTO());
+    await SERVICE_INSTANCE._batchAddOrUpdate(companyTags, { connection, overrideUpdateDatetime });
 }
 
 /**
@@ -544,43 +429,12 @@ export async function _getAllCompanyTagDTOByCompanyIds(param) {
     return await getAll(sqlSelectDTOByCompanyIds, [], new CompanyTagDTO());
 }
 
-/**
- * 
- * @param {string} param companyId
- */
-export async function _deleteCompanyTagByCompanyId(param) {
-    (await getDb()).exec({
-        sql: SQL_DELETE_BY_COMPANY_ID,
-        bind: [param],
-    });
-}
-
-/**
- * 
- * @param {string[]} param companyIds
- */
-export async function _deleteCompanyTagByCompanyIds(param) {
-    (await getDb()).exec({
-        sql: getSqlDeleteByCompanyIds(param),
-    });
-}
-
-const SQL_SELECT = `SELECT company_tag_id, company_id, company_name,tag_id,seq ,create_datetime, update_datetime,source_type,source FROM company_tag`;
-const SQL_SELECT_BY_ID = `${SQL_SELECT} WHERE company_tag_id = ?`;
-const SQL_DELETE_BY_COMPANY_ID = `
-DELETE FROM company_tag WHERE company_id = ?
-`;
-
 const getSqlDeleteByCompanyIds = (ids) => {
     let idsString = "'" + ids.join("','") + "'";
     return `
         DELETE FROM company_tag WHERE company_id in (${idsString})
     `;
 }
-
-const SQL_SELECT_DTO_BY_COMPANY_ID = `
-SELECT t1.company_tag_id, t1.company_id, t1.company_name,t1.tag_id, t2.tag_name,t1.seq ,t1.create_datetime, t1.update_datetime,t1.source_type,t1.source,t2.is_public FROM company_tag AS t1  LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id where company_id = ? ORDER BY t1.seq ASC;
-`;
 
 function genSqlSelectDTOByCompanyIds(ids) {
     let idsString = "'" + ids.join("','") + "'";

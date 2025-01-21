@@ -61,7 +61,7 @@ const FileView: React.FC = () => {
         {
             title: '编号',
             dataIndex: 'id',
-            render: (value: string) => <Text copyable style={{ width: 100 }} title={value}>{`${value.length > 5 ? value.slice(0, 5) : ''}...`}</Text>,
+            render: (value: string) => <Text copyable style={{ width: 100 }} title={value}>{`${value && value.length > 5 ? value.slice(0, 5)+"..." : value}`}</Text>,
             width: 100,
         },
         {
@@ -92,7 +92,7 @@ const FileView: React.FC = () => {
         {
             title: 'SHA',
             dataIndex: 'sha',
-            render: (value: string) => <Text copyable style={{ width: 100 }} title={value}>{`${value.length > 5 ? value.slice(0, 5) : ''}...`}</Text>,
+            render: (value: string) => <Text copyable style={{ width: 100 }} title={value}>{`${value && value.length > 5 ? value.slice(0, 5)+"..." : value}`}</Text>,
             width: 100,
         },
         {

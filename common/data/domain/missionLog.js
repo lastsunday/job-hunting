@@ -3,7 +3,7 @@ export class MissionLog {
     missionId;
     missionStatus;
     missionStatusReason;
-    missionLogDetial;
+    missionLogDetail;
     createDatetime;
     updateDatetime;
 }

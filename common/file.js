@@ -26,7 +26,7 @@ export const downloadBlob = function (data, fileName, mimeType) {
     }, 0);
 };
 
-const downloadURL = function (data, fileName) {
+export const downloadURL = function (data, fileName) {
     let a;
     a = document.createElement("a");
     a.href = data;
