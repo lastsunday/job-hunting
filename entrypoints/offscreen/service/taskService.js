@@ -302,10 +302,14 @@ export const _taskAddOrUpdate = async ({ param = null, connection = null } = {})
 
 async function taskStatistic({ sql }) {
     let result = [];
-    const { rows } = await (await getDb()).query(sql);
-    let resultRows = convertRows(rows);
-    resultRows.forEach(item => {
-        result.push(Object.assign(new ChartStackedDTO(), item));
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    await (await getDb()).transaction(async (tx) => {
+        await tx.exec(`set local timezone to '${timezone}';`);
+        const { rows } = await tx.query(sql);
+        let resultRows = convertRows(rows);
+        resultRows.forEach(item => {
+            result.push(Object.assign(new ChartStackedDTO(), item));
+        });
     });
     return result;
 }

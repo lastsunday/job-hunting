@@ -442,5 +442,5 @@ export const _companyGetByIds = async ({ param = null, connection = null } = {})
 }
 
 export const _batchAddOrUpdateCompany = async ({ param = null, connection = null } = {}) => {
-  return await SERVICE_INSTANCE._batchAddOrUpdate(param, { connection, overrideUpdateDatetime: true });
+  return await SERVICE_INSTANCE._batchAddOrUpdate(param, { connection, overrideCreateDatetime: true, overrideUpdateDatetime: true });
 }
