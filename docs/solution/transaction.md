@@ -24,7 +24,7 @@ ContentScript（或SidePanel） -> Background -> OffScreen -> WebWorker
 
 ## 可能的解决方案
 
-1. 传递tx对象？
+1. 传递tx对象
 
 伪代码：
 
@@ -60,6 +60,8 @@ async main(){
 
 ```
 
-2. 将逻辑都放到WebWorker里？
+2. 将逻辑都放到WebWorker里
 
 ## 选择的解决方案
+
+1. 选择将逻辑都放到WebWorker里。

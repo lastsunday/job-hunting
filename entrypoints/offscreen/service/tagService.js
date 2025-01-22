@@ -1,9 +1,8 @@
-import dayjs from "dayjs";
 import { Message } from "../../../common/api/message";
 import { TagSearchBO } from "../../../common/data/bo/tagSearchBO";
 import { Tag } from "../../../common/data/domain/tag";
 import { TagSearchDTO } from "../../../common/data/dto/tagSearchDTO";
-import { convertEmptyStringToNull, genIdFromText, toHump, toLine } from "../../../common/utils";
+import { genIdFromText, toHump, toLine } from "../../../common/utils";
 import { batchGet, getAll, getDb, getOne } from "../database";
 import { postErrorMessage, postSuccessMessage } from "../util";
 import { BaseService } from "./baseService";
@@ -168,15 +167,21 @@ export async function _searchWithTagInfo({ param, cerateResultDTOFunction, creat
     let result = cerateResultDTOFunction();
     let sqlQuery = "";
     let whereCondition = genSearchWhereConditionSqlFunction();
-    let orderBy =
-        " ORDER BY " +
-        toLine(param.orderByColumn) +
-        " " +
-        param.orderBy +
-        " NULLS LAST";
-    let limitStart = (param.pageNum - 1) * param.pageSize;
-    let limitEnd = param.pageSize;
-    let limit = " limit " + limitEnd + " OFFSET " + limitStart;
+    let orderBy = "";
+    if (param.orderByColumn != null && param.orderBy != null) {
+        orderBy =
+            " ORDER BY " +
+            toLine(param.orderByColumn) +
+            " " +
+            param.orderBy +
+            " NULLS LAST";
+    }
+    let limit = '';
+    if (param.pageNum != null && param.pageSize != null) {
+        let limitStart = (param.pageNum - 1) * param.pageSize;
+        let limitEnd = param.pageSize;
+        limit = " limit " + limitEnd + " OFFSET " + limitStart;
+    }
     const sqlSearchQuery = genSqlSearchQueryFunction();
     sqlQuery += sqlSearchQuery;
     sqlQuery += whereCondition;

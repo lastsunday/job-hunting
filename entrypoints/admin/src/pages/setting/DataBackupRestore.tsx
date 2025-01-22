@@ -1,6 +1,6 @@
 import { validImportData } from "@/common/excel";
 import { Icon } from "@iconify/react";
-import { Button, Flex, Input, Modal, Popconfirm, Spin, Typography, message } from "antd";
+import { Button, Flex, Input, Modal, Popconfirm, Progress, Spin, Typography, message } from "antd";
 import dayjs from "dayjs";
 import { read, utils, writeFileXLSX } from "xlsx";
 
@@ -8,12 +8,14 @@ const { Title, Text } = Typography;
 
 export type DataBackupRestoreProps = {
     title: string,
-    getExcelJsonArrayFunction: () => Promise<any>,
+    getExcelJsonArrayFunction: (pageNum?: number, pageSize?: number) => Promise<any>,
+    getDataTotalFunction: () => Promise<number>,
+    getMaxExportCount: () => Promise<number>,
     fileHeader: string[],
     saveDataFunction: (data: any) => Promise<any>,
 };
 
-const DataBackupRestore: React.FC<DataBackupRestoreProps> = ({ title, getExcelJsonArrayFunction, fileHeader, saveDataFunction }) => {
+const DataBackupRestore: React.FC<DataBackupRestoreProps> = ({ title, getExcelJsonArrayFunction, fileHeader, saveDataFunction, getDataTotalFunction, getMaxExportCount }) => {
     const [exportLoading, setExportLoading] = useState(false);
     const [importLoading, setImportLoading] = useState(false);
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -22,14 +24,57 @@ const DataBackupRestore: React.FC<DataBackupRestoreProps> = ({ title, getExcelJs
 
     const [loading, setLoading] = useState(false);
 
+    const key = 'export';
+
     const onExport = async () => {
         setExportLoading(true);
         try {
-            let result = await getExcelJsonArrayFunction();
-            const ws = utils.json_to_sheet(result);
-            const wb = utils.book_new();
-            utils.book_append_sheet(wb, ws, "Data");
-            writeFileXLSX(wb, dayjs(new Date()).format(`${title}-YYYYMMDDHHmmss`) + ".xlsx");
+            messageApi.open({
+                key,
+                type: 'info',
+                content: <>
+                    <Flex vertical>
+                        <Text>正准备导出{title}数据</Text>
+                    </Flex>
+                </>,
+                duration: 0,
+            });
+            let total = await getDataTotalFunction();
+            let maxExportCount = await getMaxExportCount();
+            let pageTotal = Math.floor(total / maxExportCount);
+            if (total % maxExportCount > 0) {
+                pageTotal = pageTotal + 1;
+            }
+            const now = new Date();
+            for (let i = 0; i < pageTotal; i++) {
+                let pageNum = i + 1;
+                messageApi.open({
+                    key,
+                    content: <>
+                        <Flex vertical>
+                            <Text>导出{title}数据,共{total}条数据</Text>
+                            <Progress size="small" type="circle" steps={pageTotal} trailColor="rgba(0, 0, 0, 0.06)" percent={(((pageNum - 1) / pageTotal) * 100)} format={() => `${(pageNum - 1)}/${pageTotal}`} />
+                        </Flex>
+                    </>,
+                    duration: 0,
+                });
+                let pageSize = maxExportCount;
+                let result = await getExcelJsonArrayFunction(pageNum, pageSize);
+                const ws = utils.json_to_sheet(result);
+                const wb = utils.book_new();
+                utils.book_append_sheet(wb, ws, "Data");
+                writeFileXLSX(wb, dayjs(now).format(`${title}-YYYYMMDDHHmmss-(${pageNum}-${pageTotal})`) + ".xlsx");
+            }
+            messageApi.open({
+                key,
+                content: <>
+                    <Flex vertical>
+                        <Text>导出{title}数据,共{total}条数据</Text>
+                        <Progress size="small" type="circle" percent={100} />
+                    </Flex>
+                </>,
+                duration: 5,
+            });
         } finally {
             setExportLoading(false);
         }

@@ -13,7 +13,7 @@ const SQL_CREATE_TABLE_JOB = `
     company_self_risk INTEGER,
     company_union_risk INTEGER,
     company_address TEXT,
-    company_scope VARCHAR(255),
+    company_scope TEXT,
     company_tax_no VARCHAR(255),
     company_industry VARCHAR(255),
     company_license_number VARCHAR(255),

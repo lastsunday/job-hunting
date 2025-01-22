@@ -12,6 +12,7 @@ import useSystemStore from "../store/SystemStore";
 import DataBackupRestore from './setting/DataBackupRestore';
 import DatabaseBackupRestore from './setting/DatabaseBackupRestore';
 const { Text, Link } = Typography;
+import { JOB_MAX_EXPORT_SIZE, COMPANY_MAX_EXPORT_SIZE, JOB_TAG_MAX_EXPORT_SIZE, COMPANY_TAG_MAX_EXPORT_SIZE } from "@/common/config";
 
 const version = __APP_VERSION__;
 
@@ -26,9 +27,9 @@ const SettingView: React.FC = () => {
   ])));
   const [dataSharePlanEnable, setDataSharePlanEnable] = useState(false);
   const {
-    getJobDataToExcelJsonArray, saveJobData, getCompanyDataToExcelJsonArray,
-    saveCompanyData, getCompanyTagDataToExcelJsonArray, saveCompanyTagData,
-    getJobTagDataToExcelJsonArray, saveJobTagData,
+    getJobDataToExcelJsonArray, getJobDataTotal, saveJobData, getCompanyDataToExcelJsonArray, getCompanyDataTotal,
+    saveCompanyData, getCompanyTagDataToExcelJsonArray, saveCompanyTagData, getCompanyTagDataTotal,
+    getJobTagDataToExcelJsonArray, saveJobTagData, getJobTagDataTotal,
     JOB_FILE_HEADER, COMPANY_FILE_HEADER, COMPANY_TAG_FILE_HEADER, JOB_TAG_FILE_HEADER,
   } = useData();
   const [isHowToUpdateModalOpen, setIsHowToUpdateModalOpen] = useState(false);
@@ -185,14 +186,14 @@ const SettingView: React.FC = () => {
         <Flex vertical gap={5}>
           <DatabaseBackupRestore />
           <DataBackupRestore title="职位" getExcelJsonArrayFunction={getJobDataToExcelJsonArray}
-            fileHeader={JOB_FILE_HEADER} saveDataFunction={saveJobData} />
+            fileHeader={JOB_FILE_HEADER} saveDataFunction={saveJobData} getDataTotalFunction={getJobDataTotal} getMaxExportCount={async () => { return JOB_MAX_EXPORT_SIZE }} />
           <DataBackupRestore title="公司" getExcelJsonArrayFunction={getCompanyDataToExcelJsonArray}
-            fileHeader={COMPANY_FILE_HEADER} saveDataFunction={saveCompanyData} />
+            fileHeader={COMPANY_FILE_HEADER} saveDataFunction={saveCompanyData} getDataTotalFunction={getCompanyDataTotal} getMaxExportCount={async () => { return COMPANY_MAX_EXPORT_SIZE }} />
           <DataBackupRestore title="职位标签" getExcelJsonArrayFunction={getJobTagDataToExcelJsonArray}
-            fileHeader={JOB_TAG_FILE_HEADER} saveDataFunction={saveJobTagData} />
+            fileHeader={JOB_TAG_FILE_HEADER} saveDataFunction={saveJobTagData} getDataTotalFunction={getJobTagDataTotal} getMaxExportCount={async () => { return JOB_TAG_MAX_EXPORT_SIZE }} />
           <DataBackupRestore title="公司标签"
             getExcelJsonArrayFunction={getCompanyTagDataToExcelJsonArray} fileHeader={COMPANY_TAG_FILE_HEADER}
-            saveDataFunction={saveCompanyTagData} />
+            saveDataFunction={saveCompanyTagData} getDataTotalFunction={getCompanyTagDataTotal} getMaxExportCount={async () => { return COMPANY_TAG_MAX_EXPORT_SIZE }} />
         </Flex>
       </Card>
     </Flex >

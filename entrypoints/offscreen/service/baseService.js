@@ -12,18 +12,22 @@ export class BaseService {
         this.whereConditionFunction = whereConditionFunction;
     }
 
-    async search(message, param, { detailInjectAsyncCallback } = { detailInjectAsyncCallback: null }) {
+    async search(message, param, { detailInjectAsyncCallback = null } = {}) {
         try {
-            let result = this.searchDTOCreateFunction();
-            result.items = await search(this.entityClassCreateFunction(), this.tableName, param, this.whereConditionFunction);
-            result.total = await searchCount(this.entityClassCreateFunction(), this.tableName, param, this.whereConditionFunction);
-            if (detailInjectAsyncCallback) {
-                result = await detailInjectAsyncCallback(result);
-            }
-            postSuccessMessage(message, result);
+            postSuccessMessage(message, await this._search(param, { detailInjectAsyncCallback }));
         } catch (e) {
             postErrorMessage(message, `[worker] search error : ` + e.message);
         }
+    }
+
+    async _search(param, { detailInjectAsyncCallback = null, connection = null } = {}) {
+        let result = this.searchDTOCreateFunction();
+        result.items = await search(this.entityClassCreateFunction(), this.tableName, param, this.whereConditionFunction, { connection });
+        result.total = await searchCount(this.entityClassCreateFunction(), this.tableName, param, this.whereConditionFunction, { connection });
+        if (detailInjectAsyncCallback) {
+            result = await detailInjectAsyncCallback(result);
+        }
+        return result;
     }
 
     async count(message, param) {
@@ -57,13 +61,22 @@ export class BaseService {
      */
     async getById(message, param) {
         try {
-            postSuccessMessage(message, (await one(this.entityClassCreateFunction(), this.tableName, this.tableIdColumn, param)));
+            postSuccessMessage(message, await this._getById(param));
         } catch (e) {
             postErrorMessage(
                 message,
                 "[worker] getById error : " + e.message
             );
         }
+    }
+
+    /**
+     * 
+     * @param {Message} message 
+     * @param {string[]} param ids
+     */
+    async _getById(param, { connection = null } = {}) {
+        return (await one(this.entityClassCreateFunction(), this.tableName, this.tableIdColumn, param, { connection }));
     }
 
     /**
@@ -178,7 +191,7 @@ export class BaseService {
     async batchUpdate(message, param, column) {
         try {
             if (param.id && param.id.length > 0) {
-                await this._batchUpdate(param, column);
+                await this._batchUpdate({ param, column });
                 postSuccessMessage(message, {});
             } else {
                 postErrorMessage(
@@ -198,8 +211,8 @@ export class BaseService {
      * 
      * @param {*} param 
      */
-    async _batchUpdate(param, column, { overrideUpdateDatetime = false } = {}) {
-        return batchUpdate(this.entityClassCreateFunction(), this.tableName, column ?? this.tableIdColumn, param, { overrideUpdateDatetime });
+    async _batchUpdate({ param = null, column = null, overrideUpdateDatetime = false,connection=null } = {}) {
+        return batchUpdate(this.entityClassCreateFunction(), this.tableName, column ?? this.tableIdColumn, param, { overrideUpdateDatetime,connection });
     }
 
     /**

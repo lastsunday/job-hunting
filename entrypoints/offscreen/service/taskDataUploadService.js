@@ -5,7 +5,7 @@ import { TaskDataUpload } from "../../../common/data/domain/taskDataUpload";
 import { BaseService } from "./baseService";
 import { getDb } from "../database";
 import { postSuccessMessage, postErrorMessage } from "../util";
-import { dateToStr } from "../../../common/utils";
+import dayjs from "dayjs";
 
 export const SERVICE_INSTANCE = new BaseService("task_data_upload", "id",
     () => {
@@ -34,7 +34,11 @@ export const TaskDataUploadService = {
      * @param {string} param id
      */
     taskDataUploadGetById: async function (message, param) {
-        SERVICE_INSTANCE.getById(message, param);
+        try {
+            postSuccessMessage(message, await _taskDataUploadGetById({ param }));
+        } catch (e) {
+            postErrorMessage(message, "[worker] taskDataUploadGetById error : " + e.message);
+        }
     },
     /**
      *
@@ -42,9 +46,11 @@ export const TaskDataUploadService = {
      * @param {TaskDataUpload} param
      */
     taskDataUploadAddOrUpdate: async function (message, param) {
-        param.startDatetime = dateToStr(param.startDatetime);
-        param.endDatetime = dateToStr(param.endDatetime);
-        SERVICE_INSTANCE.addOrUpdate(message, param);
+        try {
+            postSuccessMessage(message, await _taskDataUploadAddOrUpdate({ param }));
+        } catch (e) {
+            postErrorMessage(message, "[worker] taskDataUploadAddOrUpdate error : " + e.message);
+        }
     },
     /**
      *
@@ -71,19 +77,26 @@ export const TaskDataUploadService = {
      */
     taskDataUploadGetMaxEndDatetime: async function (message, param) {
         try {
-            const SQL =
-                "SELECT MAX(end_datetime) AS maxDatetime FROM task_data_upload;";
-            let result = [];
-            (await getDb()).exec({
-                sql: SQL,
-                rowMode: "object",
-                resultRows: result,
-            });
-            postSuccessMessage(message, result[0].maxDatetime);
+            postSuccessMessage(message, await _taskDataUploadGetMaxEndDatetime());
         } catch (e) {
             postErrorMessage(message, "[worker] taskDataUploadGetMaxEndDatetime error : " + e.message);
         }
-
     },
 
 };
+
+export const _taskDataUploadGetById = async ({ param = null, connection = null } = {}) => {
+    return await SERVICE_INSTANCE._getById(param, { connection });
+}
+
+export const _taskDataUploadAddOrUpdate = async ({ param = null, connection = null } = {}) => {
+    param.startDatetime = dayjs(param.startDatetime).format();
+    param.endDatetime = dayjs(param.endDatetime).format();
+    return await SERVICE_INSTANCE._addOrUpdate(param, { connection });
+}
+
+export const _taskDataUploadGetMaxEndDatetime = async ({ connection = null } = {}) => {
+    connection ??= await getDb();
+    const { rows } = await connection.query("SELECT MAX(end_datetime) AS datetime FROM task_data_upload;");
+    return rows[0].datetime;
+}

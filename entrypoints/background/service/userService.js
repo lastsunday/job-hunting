@@ -5,8 +5,8 @@ import { Config } from "../../../common/data/domain/config";
 import {
     BACKGROUND,
 } from "../../../common/api/bridgeCommon";
+import { KEY_GITHUB_USER } from "../../../common/config";
 
-const KEY_GITHUB_USER = "KEY_GITHUB_USER";
 
 export const UserService = {
     /**
@@ -69,6 +69,3 @@ export async function getUser() {
     }
     return null;
 }
-
-
-

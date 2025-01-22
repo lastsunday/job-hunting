@@ -2,14 +2,12 @@ import { postSuccessMessage, postErrorMessage } from "../util";
 import { OauthDTO } from "../../../common/data/dto/oauthDTO";
 import { ConfigApi } from "../../../common/api";
 import { Config } from "../../../common/data/domain/config";
-import { GITHUB_APP_CLIENT_ID, GITHUB_URL_APP_INSTALL_AUTHORIZE, GITHUB_URL_AUTHORIZE } from "../../../common/config";
+import { GITHUB_APP_CLIENT_ID, GITHUB_URL_APP_INSTALL_AUTHORIZE, GITHUB_URL_AUTHORIZE,KEY_GITHUB_OAUTH_TOKEN } from "../../../common/config";
 import {
   BACKGROUND,
 } from "../../../common/api/bridgeCommon";
 
 const oauth2LoginMessageMap = new Map();
-
-const KEY_GITHUB_OAUTH_TOKEN = "KEY_GITHUB_OAUTH_TOKEN";
 
 export const AuthService = {
   /**

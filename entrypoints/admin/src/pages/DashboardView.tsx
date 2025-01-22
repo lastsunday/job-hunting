@@ -1,5 +1,4 @@
 import {
-  MAX_RECORD_COUNT,
   PLATFORM_51JOB,
   PLATFORM_BOSS,
   PLATFORM_JOBSDB,
@@ -464,8 +463,6 @@ const DashboardView: React.FC = () => {
         setTodayStatisticData(todayResult);
         let chartResult = [];
         const statisticJobSearchGroupByAvgSalaryParam = new SearchJobBO();
-        statisticJobSearchGroupByAvgSalaryParam.pageNum = 1;
-        statisticJobSearchGroupByAvgSalaryParam.pageSize = MAX_RECORD_COUNT;
         const statisticJobSearchGroupByAvgSalaryResult = await JobApi.statisticJobSearchGroupByAvgSalary({ statisticJobSearchGroupByAvgSalaryParam });
         chartResult.push({
           title: "职位薪资分析",

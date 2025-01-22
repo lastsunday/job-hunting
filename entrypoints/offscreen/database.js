@@ -27,9 +27,10 @@ export async function getDb() {
   return await Database.innerInit();
 }
 
-export async function getOne(sql, bind, obj) {
+export async function getOne(sql, bind, obj, { connection = null } = {}) {
+  connection ??= await getDb();
   let resultItem = null;
-  const { rows } = await (await getDb()).query(sql, bind);
+  const { rows } = await connection.query(sql, bind);
   if (rows.length > 0) {
     let item = rows[0];
     resultItem = obj;
@@ -219,7 +220,8 @@ export async function update(obj, tableName, idColumn, param, { overrideUpdateDa
   });
 }
 
-export async function batchUpdate(obj, tableName, idColumn, param, { overrideUpdateDatetime = false } = {}) {
+export async function batchUpdate(obj, tableName, idColumn, param, { overrideUpdateDatetime = false, connection = null } = {}) {
+  connection ??= await getDb();
   const targetObj = Object.assign(obj, param)
   const idArray = targetObj[idColumn];
   let ids = "'" + idArray.join("','") + "'";
@@ -240,10 +242,7 @@ export async function batchUpdate(obj, tableName, idColumn, param, { overrideUpd
     debugLog(`[database] [update] updateSQL = ${updateSQL}`)
     debugLog(`[database] [update] bindObject = ${JSON.stringify(bindObject)}`)
   }
-  return (await getDb()).exec({
-    sql: updateSQL,
-    bind: bindObject,
-  });
+  return await connection.query(updateSQL, bindObject);
 }
 
 export function genBatchFullUpdateSQL(obj, tableName, idColumn, ids, { overrideUpdateDatetime }) {
@@ -293,12 +292,12 @@ export function genFullBindObject(obj, { overrideUpdateDatetime = false } = {}) 
   return result;
 }
 
-export async function one(entity, tableName, idColumn, id) {
+export async function one(entity, tableName, idColumn, id, { connection = null } = {}) {
   const selectOneSql = genFullSelectByIdSQL(entity, tableName, idColumn, id);
   if (isDebug()) {
     debugLog(`[database] [one] selectOneSql = ${selectOneSql}`)
   }
-  return await getOne(selectOneSql, [], entity);
+  return await getOne(selectOneSql, [], entity, { connection });
 }
 
 export async function all(entity, tableName, orderBy, { connection = null } = {}) {
@@ -349,7 +348,8 @@ export async function batchDel(tableName, idColumn, ids, { otherCondition = null
   return await connection.exec(deleteSql);
 }
 
-export async function search(entity, tableName, param, whereConditionFunction) {
+export async function search(entity, tableName, param, whereConditionFunction, { connection = null } = {}) {
+  connection ??= await getDb();
   let sqlQuery = "";
   let whereCondition = "";
   if (whereConditionFunction) {
@@ -359,22 +359,28 @@ export async function search(entity, tableName, param, whereConditionFunction) {
     whereCondition = whereCondition.replace("AND", "");
     whereCondition = " WHERE " + whereCondition;
   }
-  let orderBy =
-    " ORDER BY " +
-    toLine(param.orderByColumn) +
-    " " +
-    param.orderBy +
-    " NULLS LAST";
-  let limitStart = (param.pageNum - 1) * param.pageSize;
-  let limitEnd = param.pageSize;
-  let limit = " limit " + limitEnd + " OFFSET " + limitStart;
+  let orderBy = "";
+  if (param.orderByColumn != null && param.orderBy != null) {
+    orderBy =
+      " ORDER BY " +
+      toLine(param.orderByColumn) +
+      " " +
+      param.orderBy +
+      " NULLS LAST";
+  }
+  let limit = '';
+  if (param.pageNum != null && param.pageSize != null) {
+    let limitStart = (param.pageNum - 1) * param.pageSize;
+    let limitEnd = param.pageSize;
+    limit = " limit " + limitEnd + " OFFSET " + limitStart;
+  }
   const sqlSearchQuery = genFullSelectSQL(Object.assign({}, entity), tableName);
   sqlQuery += sqlSearchQuery;
   sqlQuery += whereCondition;
   sqlQuery += orderBy;
   sqlQuery += limit;
   let items = [];
-  const { rows: queryRows } = await (await getDb()).query(sqlQuery);
+  const { rows: queryRows } = await connection.query(sqlQuery);
   for (let i = 0; i < queryRows.length; i++) {
     let resultItem = Object.assign({}, entity);
     let item = queryRows[i];
@@ -388,7 +394,8 @@ export async function search(entity, tableName, param, whereConditionFunction) {
   return items;
 }
 
-export async function searchCount(entity, tableName, param, whereConditionFunction) {
+export async function searchCount(entity, tableName, param, whereConditionFunction, { connection = null } = {}) {
+  connection ??= await getDb();
   let sqlCountSubTable = "";
   const sqlSearchQuery = genFullSelectSQL(Object.assign({}, entity), tableName);
   let whereCondition = "";
@@ -403,7 +410,7 @@ export async function searchCount(entity, tableName, param, whereConditionFuncti
   sqlCountSubTable += whereCondition;
   //count
   let sqlCount = `SELECT COUNT(*) AS total FROM (${sqlCountSubTable}) AS t1`;
-  const { rows } = await (await getDb()).query(sqlCount);
+  const { rows } = await connection.query(sqlCount);
   const total = rows[0].total;
   return total;
 }
@@ -460,22 +467,22 @@ export const Database = {
       if (initializing) {
         resolve(db);
       }
-      debugLog("Loading and initializing...");
-      let changelogList = [];
-      changelogList.push(new ChangeLogV1());
-      changelogList.push(new ChangeLogV2());
-      changelogList.push(new ChangeLogV3());
-      changelogList.push(new ChangeLogV4());
-      changelogList.push(new ChangeLogV5());
-      changelogList.push(new ChangeLogV6());
-      changelogList.push(new ChangeLogV7());
-      changelogList.push(new ChangeLogV8());
-      changelogList.push(new ChangeLogV9());
-      changelogList.push(new ChangeLogV10());
-      changelogList.push(new ChangeLogV11());
-      initChangeLog(changelogList);
       if (!initializing) {
         try {
+          debugLog("Loading and initializing...");
+          let changelogList = [];
+          changelogList.push(new ChangeLogV1());
+          changelogList.push(new ChangeLogV2());
+          changelogList.push(new ChangeLogV3());
+          changelogList.push(new ChangeLogV4());
+          changelogList.push(new ChangeLogV5());
+          changelogList.push(new ChangeLogV6());
+          changelogList.push(new ChangeLogV7());
+          changelogList.push(new ChangeLogV8());
+          changelogList.push(new ChangeLogV9());
+          changelogList.push(new ChangeLogV10());
+          changelogList.push(new ChangeLogV11());
+          initChangeLog(changelogList);
           initDb();
           initializing = true;
           debugLog("Done initializing. Running app...");
@@ -547,7 +554,7 @@ export const Database = {
   },
   dbSize: async function (message, param) {
     try {
-      let sql = `SELECT PG_DATABASE_SIZE('postgres') AS total`;
+      let sql = `SELECT SUM(t1.pg_relation_size) AS total FROM (SELECT PG_RELATION_SIZE(relid) FROM pg_stat_user_tables) AS t1`;
       const { rows } = await (await getDb()).query(sql);
       const total = rows[0].total;
       postSuccessMessage(message, { total });

@@ -1241,5 +1241,12 @@ export const DataSharePartnerApi = {
     return result.data;
   },
 
+}
 
+export const AppApi = {
+
+  appBackgroundTaskRun: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
+    let result = await invoke(this.appBackgroundTaskRun.name, param, { invokeEnv: invokeEnv });
+    return result.data;
+  },
 }

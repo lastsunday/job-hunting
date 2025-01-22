@@ -4,6 +4,7 @@ import { SearchTaskDataMergeDTO } from "../../../common/data/dto/searchTaskDataM
 import { TaskDataMerge } from "../../../common/data/domain/taskDataMerge";
 import { BaseService } from "./baseService";
 import { dateToStr } from "../../../common/utils";
+import dayjs from "dayjs";
 
 export const SERVICE_INSTANCE = new BaseService("task_data_merge", "id",
     () => {
@@ -32,7 +33,11 @@ export const TaskDataMergeService = {
      * @param {string} param id
      */
     taskDataMergeGetById: async function (message, param) {
-        SERVICE_INSTANCE.getById(message, param);
+        try {
+            postSuccessMessage(message, await _taskDataMergeGetById({ param }));
+        } catch (e) {
+            postErrorMessage(message, "[worker] taskDataMergeGetById error : " + e.message);
+        }
     },
     /**
      *
@@ -40,8 +45,11 @@ export const TaskDataMergeService = {
      * @param {TaskDataMerge} param
      */
     taskDataMergeAddOrUpdate: async function (message, param) {
-        param.datetime = dateToStr(param.datetime);
-        SERVICE_INSTANCE.addOrUpdate(message, param);
+        try {
+            postSuccessMessage(message, await _taskDataMergeAddOrUpdate({ param }));
+        } catch (e) {
+            postErrorMessage(message, "[worker] taskDataMergeAddOrUpdate error : " + e.message);
+        }
     },
     /**
      *
@@ -59,5 +67,13 @@ export const TaskDataMergeService = {
     taskDataMergeDeleteByIds: async function (message, param) {
         SERVICE_INSTANCE.deleteByIds(message, param);
     }
-
 };
+
+export const _taskDataMergeGetById = async ({ param = null, connection = null } = {}) => {
+    return await SERVICE_INSTANCE._getById(param, { connection });
+}
+
+export const _taskDataMergeAddOrUpdate = async ({ param = null, connection = null } = {}) => {
+    param.datetime = dayjs(param.datetime).format();
+    return await SERVICE_INSTANCE._addOrUpdate(param, { connection });;
+}

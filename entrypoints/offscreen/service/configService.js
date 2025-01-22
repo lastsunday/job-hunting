@@ -63,8 +63,8 @@ export const ConfigService = {
  * 
  * @param {string} param id
  */
-export async function _getConfigByKey(param) {
-    return getOne(SQL_SELECT_BY_KEY, [param], new Config());
+export async function _getConfigByKey(param, { connection = null } = {}) {
+    return getOne(SQL_SELECT_BY_KEY, [param], new Config(), { connection });
 }
 
 /**

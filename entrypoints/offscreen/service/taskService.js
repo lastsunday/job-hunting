@@ -14,7 +14,7 @@ import { SearchTaskDTO } from "../../../common/data/dto/searchTaskDTO";
 import { StatisticTaskDTO } from "../../../common/data/dto/statisticTaskDTO";
 import { TaskDTO } from "../../../common/data/dto/taskDTO";
 import { dateToStr } from "../../../common/utils";
-import { getDb } from "../database";
+import { getDb, convertRows } from "../database";
 import { postErrorMessage, postSuccessMessage } from "../util";
 import { BaseService } from "./baseService";
 import { SERVICE_INSTANCE as taskDataDownloadService } from "./taskDataDownloadService";
@@ -115,7 +115,14 @@ export const TaskService = {
      * @returns SearchTaskDTO
      */
     searchTask: async function (message, param) {
-        SERVICE_INSTANCE.search(message, param);
+        try {
+            postSuccessMessage(message, await _searchTask({ param }));
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] searchTask error : " + e.message
+            );
+        }
     },
     /**
      * 
@@ -152,7 +159,14 @@ export const TaskService = {
      * @param {Task} param
      */
     taskAddOrUpdate: async function (message, param) {
-        SERVICE_INSTANCE.addOrUpdate(message, param);
+        try {
+            postSuccessMessage(message, await _taskAddOrUpdate({ param }));
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] taskAddOrUpdate error : " + e.message
+            );
+        }
     },
     /**
      *
@@ -213,7 +227,7 @@ export const TaskService = {
         try {
             let startDatetime = dateToStr(param.startDatetime);
             let endDatetime = dateToStr(param.endDatetime);
-            let sql = `SELECT t1.type AS name,STRFTIME('%Y-%m-%d', t2.update_datetime) AS datetime,IFNULL(SUM(data_count),0) AS total FROM task_data_upload AS t1 LEFT JOIN task AS t2 ON t1.id = t2.data_id WHERE t2.status = 'FINISHED' ${genDatetimeConditionOnJoin({ startDatetime, endDatetime, datetimeColumn: "t2.update_datetime" })} GROUP BY name,datetime,t1.type ORDER BY name,datetime ASC;`;
+            let sql = `SELECT t1.type AS name,TO_CHAR(t2.update_datetime,'YYYY-MM-DD') AS datetime,COALESCE(SUM(data_count),0) AS total FROM task_data_upload AS t1 LEFT JOIN task AS t2 ON t1.id = t2.data_id WHERE t2.status = 'FINISHED' ${genDatetimeConditionOnJoin({ startDatetime, endDatetime, datetimeColumn: "t2.update_datetime" })} GROUP BY name,datetime,t1.type ORDER BY name,datetime ASC;`;
             let result = await taskStatistic({ sql });
             postSuccessMessage(message, result);
         } catch (e) {
@@ -232,7 +246,7 @@ export const TaskService = {
         try {
             let startDatetime = dateToStr(param.startDatetime);
             let endDatetime = dateToStr(param.endDatetime);
-            let sql = `SELECT username AS name,STRFTIME('%Y-%m-%d', datetime) AS datetime,IFNULL(COUNT(*),0) AS total FROM task_data_download AS t1 LEFT JOIN task AS t2 ON t1.id = t2.data_id WHERE t2.status = 'FINISHED' ${genDatetimeConditionOnJoin({ startDatetime, endDatetime, datetimeColumn: "datetime" })} GROUP BY name,datetime ORDER BY name,datetime ASC;`;
+            let sql = `SELECT username AS name,TO_CHAR(datetime,'YYYY-MM-DD') AS datetime,COALESCE(COUNT(*),0) AS total FROM task_data_download AS t1 LEFT JOIN task AS t2 ON t1.id = t2.data_id WHERE t2.status = 'FINISHED' ${genDatetimeConditionOnJoin({ startDatetime, endDatetime, datetimeColumn: "datetime" })} GROUP BY name,datetime ORDER BY name,datetime ASC;`;
             let result = await taskStatistic({ sql });
             postSuccessMessage(message, result);
         } catch (e) {
@@ -251,7 +265,7 @@ export const TaskService = {
         try {
             let startDatetime = dateToStr(param.startDatetime);
             let endDatetime = dateToStr(param.endDatetime);
-            let sql = `SELECT username AS name,STRFTIME('%Y-%m-%d', datetime) AS datetime,IFNULL(SUM(data_count),0) AS total FROM task_data_merge ${genDatetimeCondition({ startDatetime, endDatetime, datetimeColumn: "datetime" })} GROUP BY name,datetime ORDER BY name,datetime ASC;`;
+            let sql = `SELECT username AS name,TO_CHAR(datetime,'YYYY-MM-DD') AS datetime,COALESCE(SUM(data_count),0) AS total FROM task_data_merge ${genDatetimeCondition({ startDatetime, endDatetime, datetimeColumn: "datetime" })} GROUP BY name,datetime ORDER BY name,datetime ASC;`;
             let result = await taskStatistic({ sql });
             postSuccessMessage(message, result);
         } catch (e) {
@@ -270,7 +284,7 @@ export const TaskService = {
         try {
             let startDatetime = dateToStr(param.startDatetime);
             let endDatetime = dateToStr(param.endDatetime);
-            let sql = `SELECT status AS name, STRFTIME('%Y-%m-%d', create_datetime) AS datetime,IFNULL(COUNT(status),0) AS total FROM task ${genDatetimeCondition({ startDatetime, endDatetime, datetimeColumn: "create_datetime" })} GROUP BY status,datetime ORDER BY name;`;
+            let sql = `SELECT status AS name, TO_CHAR(create_datetime,'YYYY-MM-DD') AS datetime,COALESCE(COUNT(status),0) AS total FROM task ${genDatetimeCondition({ startDatetime, endDatetime, datetimeColumn: "create_datetime" })} GROUP BY status,datetime ORDER BY name;`;
             let result = await taskStatistic({ sql });
             postSuccessMessage(message, result);
         } catch (e) {
@@ -282,14 +296,14 @@ export const TaskService = {
     },
 };
 
+export const _taskAddOrUpdate = async ({ param = null, connection = null } = {}) => {
+    return SERVICE_INSTANCE._addOrUpdate(param, { connection });
+}
+
 async function taskStatistic({ sql }) {
     let result = [];
-    let resultRows = [];
-    (await getDb()).exec({
-        sql,
-        rowMode: "object",
-        resultRows
-    });
+    const { rows } = await (await getDb()).query(sql);
+    let resultRows = convertRows(rows);
     resultRows.forEach(item => {
         result.push(Object.assign(new ChartStackedDTO(), item));
     });
@@ -339,4 +353,8 @@ function genDatetimeCondition({ startDatetime, endDatetime, otherConditionSql, d
         whereCondition = " WHERE " + whereCondition;
     }
     return whereCondition;
+}
+
+export const _searchTask = async ({ param = null, connection = null } = {}) => {
+    return await SERVICE_INSTANCE._search(param, { connection });
 }

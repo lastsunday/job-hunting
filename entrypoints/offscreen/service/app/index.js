@@ -7,7 +7,6 @@ import {
     DATA_TYPE_NAME_COMPANY_TAG,
     DATA_TYPE_NAME_JOB,
     DATA_TYPE_NAME_JOB_TAG,
-    MAX_RECORD_COUNT,
     TASK_STATUS_ERROR,
     TASK_STATUS_FINISHED,
     TASK_STATUS_FINISHED_BUT_ERROR,
@@ -25,23 +24,21 @@ import {
     TASK_TYPE_JOB_TAG_DATA_DOWNLOAD,
     TASK_TYPE_JOB_TAG_DATA_MERGE,
     TASK_TYPE_JOB_TAG_DATA_UPLOAD,
-} from "../../../common";
-import { CompanyApi, DataSharePartnerApi, DBApi, FileApi, JobApi, TaskApi, TaskDataDownloadApi, TaskDataMergeApi, TaskDataUploadApi } from "../../../common/api";
-import { BACKGROUND } from "../../../common/api/bridgeCommon";
-import { EXCEPTION, GithubApi } from "../../../common/api/github";
-import { HISTORY_FILE_MAX_SIZE, TASK_DATA_DOWNLOAD_MAX_DAY, TASK_STATUS_ERROR_MAX_RETRY_COUNT } from "../../../common/config";
-import { CompanyTagExportBO } from "../../../common/data/bo/companyTagExportBO";
-import { JobTagExportBO } from "../../../common/data/bo/jobTagExportBO";
-import { SearchCompanyBO } from "../../../common/data/bo/searchCompanyBO";
-import { SearchDataSharePartnerBO } from "../../../common/data/bo/searchDataSharePartnerBO";
-import { SearchJobBO } from "../../../common/data/bo/searchJobBO";
-import { SearchTaskBO } from "../../../common/data/bo/searchTaskBO";
-import { SearchTaskDataDownloadBO } from "../../../common/data/bo/searchTaskDataDownloadBO";
-import { File } from "../../../common/data/domain/file";
-import { Task } from "../../../common/data/domain/task";
-import { TaskDataDownload } from "../../../common/data/domain/taskDataDownload";
-import { TaskDataMerge } from "../../../common/data/domain/taskDataMerge";
-import { TaskDataUpload } from "../../../common/data/domain/taskDataUpload";
+} from "@/common";
+import { EXCEPTION, GithubApi } from "@/common/api/github";
+import { HISTORY_FILE_MAX_SIZE, TASK_DATA_DOWNLOAD_MAX_DAY, TASK_STATUS_ERROR_MAX_RETRY_COUNT } from "@/common/config";
+import { CompanyTagExportBO } from "@/common/data/bo/companyTagExportBO";
+import { JobTagExportBO } from "@/common/data/bo/jobTagExportBO";
+import { SearchCompanyBO } from "@/common/data/bo/searchCompanyBO";
+import { SearchDataSharePartnerBO } from "@/common/data/bo/searchDataSharePartnerBO";
+import { SearchJobBO } from "@/common/data/bo/searchJobBO";
+import { SearchTaskBO } from "@/common/data/bo/searchTaskBO";
+import { SearchTaskDataDownloadBO } from "@/common/data/bo/searchTaskDataDownloadBO";
+import { File } from "@/common/data/domain/file";
+import { Task } from "@/common/data/domain/task";
+import { TaskDataDownload } from "@/common/data/domain/taskDataDownload";
+import { TaskDataMerge } from "@/common/data/domain/taskDataMerge";
+import { TaskDataUpload } from "@/common/data/domain/taskDataUpload";
 import {
     COMPANY_FILE_HEADER,
     COMPANY_TAG_FILE_HEADER,
@@ -56,19 +53,32 @@ import {
     jobTagDataToExcelJSONArray,
     jobTagExcelDataToObjectArray,
     validImportData
-} from "../../../common/excel";
-import { debugLog, errorLog, infoLog } from "../../../common/log";
-import { getMergeDataListForCompany, getMergeDataListForJob, getMergeDataListForTag } from "../../../common/service/dataSyncService";
-import { dateToStr, genIdFromText } from "../../../common/utils";
-import { bytesToBase64 } from "../../../common/utils/base64";
-import { getExcelDataFromZipFile } from "../../../common/zip";
-import { getToken, setToken } from "./authService";
-import { getUser } from "./userService";
+} from "@/common/excel";
+import { debugLog, errorLog, infoLog } from "@/common/log";
+import { getMergeDataListForCompany, getMergeDataListForJob, getMergeDataListForTag } from "@/common/service/dataSyncService";
+import { dateToStr, genIdFromText } from "@/common/utils";
+import { bytesToBase64 } from "@/common/utils/base64";
+import { getExcelDataFromZipFile } from "@/common/zip";
 
+import { _taskDataUploadGetMaxEndDatetime, _taskDataUploadAddOrUpdate } from "../taskDataUploadService";
+import { _addOrUpdateConfig, _getConfigByKey } from "../configService";
+import { OauthDTO } from "@/common/data/dto/oauthDTO";
+import { Config } from "@/common/data/domain/config";
+import { KEY_GITHUB_OAUTH_TOKEN } from "@/common/config";
+import { _searchJob, _jobGetByIds, _batchAddOrUpdateJob } from "../jobService";
+import { _searchCompany, _companyGetByIds, _batchAddOrUpdateCompany } from "../companyService";
+import { _taskAddOrUpdate, _searchTask } from "../taskService";
+import { getDb } from "../../database";
+import { _companyTagExport, _batchAddOrUpdateCompanyTag } from "../companyTagService";
+import { _jobTagExport, _jobTagBatchAddOrUpdate } from "../jobTagService";
+import { _searchDataSharePartner } from "../dataSharePartnerService";
+import { _searchTaskDataDownload, _taskDataDownloadAddOrUpdate, _taskDataDownloadGetById } from "../taskDataDownloadService";
+import { _taskDataUploadGetById } from "../taskDataUploadService";
+import { _fileAddOrUpdate, _fileGetById, _fileGetAllMergedNotDeleteFile, _fileLogicDeleteByIds } from "../fileService";
+import { _taskDataMergeAddOrUpdate, _taskDataMergeGetById } from "../taskDataMergeService";
+import { UserDTO } from "@/common/data/dto/userDTO";
+import { KEY_GITHUB_USER } from "@/common/config";
 dayjs.extend(minMax);
-export const TaskService = {
-
-}
 
 function calculateMaxYear(list) {
     let validValueArray = list.filter(item => { return item.name.match("^2[0-9]{3}$") });
@@ -122,16 +132,14 @@ export async function calculateRepoMaxUploadDate({ userName, repoName }) {
 
 export async function calculateDataSharePartnerList() {
     let searchParam = new SearchDataSharePartnerBO();
-    searchParam.pageNum = 1;
-    searchParam.pageSize = MAX_RECORD_COUNT;
     searchParam.orderByColumn = "updateDatetime";
     searchParam.orderBy = "DESC";
-    return (await DataSharePartnerApi.searchDataSharePartner(searchParam, { invokeEnv: BACKGROUND })).items;
+    return (await _searchDataSharePartner({ param: searchParam })).items;
 }
 
-export async function calculateUploadTask({ userName, repoName }) {
+export async function calculateUploadTask({ userName, repoName } = {}) {
     //根据今天的时间判断最新的job,company,companyTag任务是否已经存在
-    let taskDataUploadMaxDateString = await TaskDataUploadApi.taskDataUploadGetMaxEndDatetime({}, { invokeEnv: BACKGROUND });
+    let taskDataUploadMaxDateString = await _taskDataUploadGetMaxEndDatetime();
     let taskDataUploadMaxDate = taskDataUploadMaxDateString ? dayjs(taskDataUploadMaxDateString) : null;
     let today = dayjs(new Date()).startOf("day");
     if (today.isSame(taskDataUploadMaxDate)) {
@@ -152,26 +160,25 @@ export async function calculateUploadTask({ userName, repoName }) {
             let dataSyncStartDatetime = dayjs.min(taskDataUploadMaxDate, dayjs(repoMaxDate));
             debugLog(`[TASK DATA UPLOAD CALCULATE] dataSyncStartDatetime = ${dataSyncStartDatetime}`)
             try {
-                await DBApi.dbBeginTransaction({}, { invokeEnv: BACKGROUND });
-                await addDataUploadTask({
-                    type: TASK_TYPE_JOB_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName,
-                    total: (await getJobData({ startDatetime: dataSyncStartDatetime, endDatetime: today })).total
+                await (await getDb()).transaction(async (tx) => {
+                    await addDataUploadTask({
+                        type: TASK_TYPE_JOB_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName, connection: tx,
+                        total: (await getJobData({ startDatetime: dataSyncStartDatetime, endDatetime: today, connection: tx })).total,
+                    });
+                    await addDataUploadTask({
+                        type: TASK_TYPE_COMPANY_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName, connection: tx,
+                        total: (await getCompanyData({ startDatetime: dataSyncStartDatetime, endDatetime: today, connection: tx })).total
+                    });
+                    await addDataUploadTask({
+                        type: TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName, connection: tx,
+                        total: (await getCompanyTagData({ startDatetime: dataSyncStartDatetime, endDatetime: today, connection: tx })).total
+                    });
+                    await addDataUploadTask({
+                        type: TASK_TYPE_JOB_TAG_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName, connection: tx,
+                        total: (await getJobTagData({ startDatetime: dataSyncStartDatetime, endDatetime: today, connection: tx })).total
+                    });
                 });
-                await addDataUploadTask({
-                    type: TASK_TYPE_COMPANY_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName,
-                    total: (await getCompanyData({ startDatetime: dataSyncStartDatetime, endDatetime: today })).total
-                });
-                await addDataUploadTask({
-                    type: TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName,
-                    total: (await getCompanyTagData({ startDatetime: dataSyncStartDatetime, endDatetime: today })).total
-                });
-                await addDataUploadTask({
-                    type: TASK_TYPE_JOB_TAG_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName,
-                    total: (await getJobTagData({ startDatetime: dataSyncStartDatetime, endDatetime: today })).total
-                });
-                await DBApi.dbCommitTransaction({}, { invokeEnv: BACKGROUND });
             } catch (e) {
-                await DBApi.dbRollbackTransaction({}, { invokeEnv: BACKGROUND });
                 errorLog(e);
             }
         } catch (e) {
@@ -217,21 +224,19 @@ export async function calculateDownloadTask({ userName, repoName }) {
         endDatetimeForSearchTaskDownload = allDay[allDay.length - 1];
         startDatetimeForSearchTaskDownload = allDay[0];
         let searchParam = new SearchTaskDataDownloadBO();
-        searchParam.pageNum = 1;
-        searchParam.pageSize = MAX_RECORD_COUNT;
         searchParam.userName = userName;
         searchParam.repoName = repoName;
-        searchParam.startDatetime = startDatetimeForSearchTaskDownload;
-        searchParam.endDatetime = dayjs(endDatetimeForSearchTaskDownload).add(1, "day").toDate();
+        searchParam.startDatetime = dateToStr(startDatetimeForSearchTaskDownload);
+        searchParam.endDatetime = dateToStr(dayjs(endDatetimeForSearchTaskDownload).add(1, "day"));
         searchParam.orderByColumn = "createDatetime";
         searchParam.orderBy = "ASC";
-        let taskDataDownloadResult = await TaskDataDownloadApi.searchTaskDataDownload(searchParam, { invokeEnv: BACKGROUND });
+        let taskDataDownloadResult = await _searchTaskDataDownload({ param: searchParam });
         let taskDataDownloadMap = new Map();
         let taskDataDownloadResultItems = taskDataDownloadResult.items;
         if (taskDataDownloadResultItems.length > 0) {
             for (let i = 0; i < taskDataDownloadResultItems.length; i++) {
                 let item = taskDataDownloadResultItems[i];
-                taskDataDownloadMap.set(item.datetime, null);
+                taskDataDownloadMap.set(dateToStr(item.datetime), null);
             }
         } else {
             //skip
@@ -241,24 +246,23 @@ export async function calculateDownloadTask({ userName, repoName }) {
         //将缺失的日期任务添加到数据
         if (filterDay.length > 0) {
             try {
-                await DBApi.dbBeginTransaction({}, { invokeEnv: BACKGROUND });
-                for (let i = 0; i < filterDay.length; i++) {
-                    let day = filterDay[i];
-                    await addDataDownloadTask({ type: TASK_TYPE_JOB_DATA_DOWNLOAD, datetime: day, userName, repoName, })
-                    await addDataDownloadTask({ type: TASK_TYPE_COMPANY_DATA_DOWNLOAD, datetime: day, userName, repoName, })
-                    await addDataDownloadTask({ type: TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD, datetime: day, userName, repoName, })
-                    await addDataDownloadTask({ type: TASK_TYPE_JOB_TAG_DATA_DOWNLOAD, datetime: day, userName, repoName, })
-                }
-                await DBApi.dbCommitTransaction({}, { invokeEnv: BACKGROUND });
+                await (await getDb()).transaction(async (tx) => {
+                    for (let i = 0; i < filterDay.length; i++) {
+                        let day = filterDay[i];
+                        await addDataDownloadTask({ type: TASK_TYPE_JOB_DATA_DOWNLOAD, datetime: day, userName, repoName, connection: tx })
+                        await addDataDownloadTask({ type: TASK_TYPE_COMPANY_DATA_DOWNLOAD, datetime: day, userName, repoName, connection: tx })
+                        await addDataDownloadTask({ type: TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD, datetime: day, userName, repoName, connection: tx })
+                        await addDataDownloadTask({ type: TASK_TYPE_JOB_TAG_DATA_DOWNLOAD, datetime: day, userName, repoName, connection: tx })
+                    }
+                });
             } catch (e) {
-                await DBApi.dbRollbackTransaction({}, { invokeEnv: BACKGROUND });
                 errorLog(e);
             }
         } else {
-            debugLog(`[TASK DATA UPLOAD CALCULATE] no newer record for ${userName}/${repoName}`);
+            debugLog(`[TASK DATA DOWNLOAD CALCULATE] no newer record for ${userName}/${repoName}`);
         }
     } else {
-        debugLog(`[TASK DATA UPLOAD CALCULATE] repo(${userName}/${repoName}) has't match record `);
+        debugLog(`[TASK DATA DOWNLOAD CALCULATE] repo(${userName}/${repoName}) has't match record `);
     }
 }
 
@@ -295,29 +299,29 @@ TASK_HANDLE_MAP.set(TASK_TYPE_JOB_TAG_DATA_DOWNLOAD, async (dataId) => {
 
 // Merge
 TASK_HANDLE_MAP.set(TASK_TYPE_JOB_DATA_MERGE, async (dataId) => {
-    return mergeDataByDataId(dataId, TASK_TYPE_JOB_DATA_MERGE, DATA_TYPE_NAME_JOB, JOB_FILE_HEADER, jobExcelDataToObjectArray, async (items, taskDataMerge) => {
+    return mergeDataByDataId(dataId, TASK_TYPE_JOB_DATA_MERGE, DATA_TYPE_NAME_JOB, JOB_FILE_HEADER, jobExcelDataToObjectArray, async (items, taskDataMerge, connection) => {
         //处理数据冲突问题，根据创建时间来判断
         //处理公司名全称问题
         let targetList = await getMergeDataListForJob(items, "jobId", async (ids) => {
-            return JobApi.jobGetByIds(ids, { invokeEnv: BACKGROUND });
+            return await _jobGetByIds({ param: ids, connection });
         });
-        await JobApi.batchAddOrUpdateJob(targetList, { invokeEnv: BACKGROUND });
+        await _batchAddOrUpdateJob({ param: targetList, connection });
         return targetList.length;
     });
 })
 TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_DATA_MERGE, async (dataId) => {
-    return mergeDataByDataId(dataId, TASK_TYPE_COMPANY_DATA_MERGE, DATA_TYPE_NAME_COMPANY, COMPANY_FILE_HEADER, companyExcelDataToObjectArray, async (items, taskDataMerge) => {
+    return mergeDataByDataId(dataId, TASK_TYPE_COMPANY_DATA_MERGE, DATA_TYPE_NAME_COMPANY, COMPANY_FILE_HEADER, companyExcelDataToObjectArray, async (items, taskDataMerge, connection) => {
         //处理数据冲突问题，根据数据来源更新时间来判断
         let targetList = await getMergeDataListForCompany(items, "companyId", async (ids) => {
-            return CompanyApi.companyGetByIds(ids, { invokeEnv: BACKGROUND });
+            return _companyGetByIds({ param: ids, connection });
         });
-        await CompanyApi.batchAddOrUpdateCompany(targetList, { invokeEnv: BACKGROUND });
+        await _batchAddOrUpdateCompany({ param: targetList, connection });
         return targetList.length;
     });
 })
 TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_TAG_DATA_MERGE, async (dataId) => {
-    return mergeDataByDataId(dataId, TASK_TYPE_COMPANY_TAG_DATA_MERGE, DATA_TYPE_NAME_COMPANY_TAG, COMPANY_TAG_FILE_HEADER, companyTagExcelDataToObjectArray, async (items, taskDataMerge) => {
-        let userDTO = await getUser();
+    return mergeDataByDataId(dataId, TASK_TYPE_COMPANY_TAG_DATA_MERGE, DATA_TYPE_NAME_COMPANY_TAG, COMPANY_TAG_FILE_HEADER, companyTagExcelDataToObjectArray, async (items, taskDataMerge, connection) => {
+        let userDTO = await _getUser({ connection });
         if (userDTO) {
             let username = userDTO.login;
             //处理数据冲突问题，根据更新时间合并
@@ -326,7 +330,7 @@ TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_TAG_DATA_MERGE, async (dataId) => {
                 //如果数据是当前登录用户，则将source设置为空，作为本地用户
                 searchParam.source = taskDataMerge.username == username ? "" : taskDataMerge.username;
                 searchParam.companyIds = companyNames.map(item => genIdFromText(item));
-                return await CompanyApi.companyTagExport(searchParam, { invokeEnv: BACKGROUND });
+                return await _companyTagExport({ param: searchParam, connection });
             })
             if (targetList.length > 0) {
                 //如果补充source信息
@@ -334,7 +338,7 @@ TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_TAG_DATA_MERGE, async (dataId) => {
                     item.source = taskDataMerge.username == username ? null : taskDataMerge.username;
                 });
             }
-            await CompanyApi.batchAddOrUpdateCompanyTag({ items: targetList, overrideUpdateDatetime: true }, { invokeEnv: BACKGROUND });
+            await _batchAddOrUpdateCompanyTag({ companyTagBOs: targetList, overrideUpdateDatetime: true, connection });
             return targetList.length;
         } else {
             throw `[Task Data Merge] login user not found`;
@@ -342,8 +346,8 @@ TASK_HANDLE_MAP.set(TASK_TYPE_COMPANY_TAG_DATA_MERGE, async (dataId) => {
     });
 })
 TASK_HANDLE_MAP.set(TASK_TYPE_JOB_TAG_DATA_MERGE, async (dataId) => {
-    return mergeDataByDataId(dataId, TASK_TYPE_JOB_TAG_DATA_MERGE, DATA_TYPE_NAME_JOB_TAG, JOB_TAG_FILE_HEADER, jobTagExcelDataToObjectArray, async (items, taskDataMerge) => {
-        let userDTO = await getUser();
+    return mergeDataByDataId(dataId, TASK_TYPE_JOB_TAG_DATA_MERGE, DATA_TYPE_NAME_JOB_TAG, JOB_TAG_FILE_HEADER, jobTagExcelDataToObjectArray, async (items, taskDataMerge, connection) => {
+        let userDTO = await _getUser({ connection });
         if (userDTO) {
             let username = userDTO.login;
             //处理数据冲突问题，根据更新时间合并
@@ -352,7 +356,7 @@ TASK_HANDLE_MAP.set(TASK_TYPE_JOB_TAG_DATA_MERGE, async (dataId) => {
                 //如果数据是当前登录用户，则将source设置为空，作为本地用户
                 searchParam.source = taskDataMerge.username == username ? "" : taskDataMerge.username;
                 searchParam.jobIds = ids;
-                return await JobApi.jobTagExport(searchParam, { invokeEnv: BACKGROUND });
+                return await _jobTagExport({ param: searchParam, connection });
             })
             if (targetList.length > 0) {
                 //如果补充source信息
@@ -360,7 +364,7 @@ TASK_HANDLE_MAP.set(TASK_TYPE_JOB_TAG_DATA_MERGE, async (dataId) => {
                     item.source = taskDataMerge.username == username ? null : taskDataMerge.username;
                 });
             }
-            await JobApi.jobTagBatchAddOrUpdate({ items: targetList, overrideUpdateDatetime: true }, { invokeEnv: BACKGROUND });
+            await _jobTagBatchAddOrUpdate(targetList, true, { connection });
             return targetList.length;
         } else {
             throw `[Task Data Merge] login user not found`;
@@ -379,37 +383,37 @@ export async function runScheduleTask() {
 
 async function scheduleClearFile() {
     infoLog("[TASK] [SCHEDULE] scheduleClearFile")
-    const mergedFileList = await FileApi.fileGetAllMergedNotDeleteFile({}, { invokeEnv: BACKGROUND });
-    let totalSize = 0;
-    let readyToDeleteFileIdList = [];
-    for (let i = 0; i < mergedFileList.length; i++) {
-        const item = mergedFileList[i];
-        totalSize += item.size;
-        if (HISTORY_FILE_MAX_SIZE >= 0 && totalSize > HISTORY_FILE_MAX_SIZE) {
-            readyToDeleteFileIdList.push(item.id);
+    await (await getDb()).transaction(async (tx) => {
+        const mergedFileList = await _fileGetAllMergedNotDeleteFile({ connection: tx });
+        let totalSize = 0;
+        let readyToDeleteFileIdList = [];
+        for (let i = 0; i < mergedFileList.length; i++) {
+            const item = mergedFileList[i];
+            totalSize += item.size;
+            if (HISTORY_FILE_MAX_SIZE >= 0 && totalSize > HISTORY_FILE_MAX_SIZE) {
+                readyToDeleteFileIdList.push(item.id);
+            }
         }
-    }
-    const readyToDeleteFileIdListCount = readyToDeleteFileIdList.length;
-    infoLog(`[TASK] [SCHEDULE] history file max size = ${HISTORY_FILE_MAX_SIZE},file count readyDelete/merged  = ${readyToDeleteFileIdListCount}/${mergedFileList.length}`)
-    if (readyToDeleteFileIdListCount > 0) {
-        await FileApi.fileLogicDeleteByIds(readyToDeleteFileIdList, { invokeEnv: BACKGROUND });
-        infoLog(`[TASK] [SCHEDULE] delete history file count = ${readyToDeleteFileIdList.length}`);
-    } else {
-        infoLog(`[TASK] [SCHEDULE] no history file to delete`);
-    }
+        const readyToDeleteFileIdListCount = readyToDeleteFileIdList.length;
+        infoLog(`[TASK] [SCHEDULE] history file max size = ${HISTORY_FILE_MAX_SIZE},file count readyDelete/merged  = ${readyToDeleteFileIdListCount}/${mergedFileList.length}`)
+        if (readyToDeleteFileIdListCount > 0) {
+            await _fileLogicDeleteByIds({ param: readyToDeleteFileIdList, connection: tx });
+            infoLog(`[TASK] [SCHEDULE] delete history file count = ${readyToDeleteFileIdList.length}`);
+        } else {
+            infoLog(`[TASK] [SCHEDULE] no history file to delete`);
+        }
+    });
 }
 
 export async function runTask() {
     debugLog(`[TASK RUN] starting`)
     //获取按创建时间升序需要执行的任务
     let searchParam = new SearchTaskBO();
-    searchParam.pageNum = 1;
-    searchParam.pageSize = MAX_RECORD_COUNT;
     searchParam.statusList = [TASK_STATUS_READY, TASK_STATUS_RUNNING, TASK_STATUS_ERROR];
     searchParam.endRetryCount = TASK_STATUS_ERROR_MAX_RETRY_COUNT;
     searchParam.orderByColumn = "createDatetime";
     searchParam.orderBy = "ASC";
-    let taskResult = await TaskApi.searchTask(searchParam, { invokeEnv: BACKGROUND });
+    let taskResult = await _searchTask({ param: searchParam });
     debugLog(`[TASK RUN] task count = ${taskResult.total}`)
     if (taskResult.total > 0) {
         for (let i = 0; i < taskResult.items.length; i++) {
@@ -419,7 +423,7 @@ export async function runTask() {
             let startDatetime = dayjs();
             try {
                 taskItem.status = TASK_STATUS_RUNNING;
-                await TaskApi.taskAddOrUpdate(taskItem, { invokeEnv: BACKGROUND });
+                await _taskAddOrUpdate({ param: taskItem });
                 if (TASK_HANDLE_MAP.has(taskItem.type)) {
                     //执行
                     let errorMessage = await TASK_HANDLE_MAP.get(taskItem.type)(taskItem.dataId);
@@ -430,7 +434,7 @@ export async function runTask() {
                         taskItem.status = TASK_STATUS_FINISHED;
                     }
                     taskItem.costTime = dayjs().diff(startDatetime);
-                    await TaskApi.taskAddOrUpdate(taskItem, { invokeEnv: BACKGROUND });
+                    await _taskAddOrUpdate({ param: taskItem });
                 } else {
                     throw `[TASK RUN] not supported task type = ${taskItem.type}`
                 }
@@ -440,7 +444,7 @@ export async function runTask() {
                 taskItem.status = TASK_STATUS_ERROR;
                 taskItem.errorReason = JSON.stringify(e);
                 taskItem.costTime = dayjs().diff(startDatetime);
-                await TaskApi.taskAddOrUpdate(taskItem, { invokeEnv: BACKGROUND });
+                await _taskAddOrUpdate({ param: taskItem });
             }
         }
     } else {
@@ -449,23 +453,23 @@ export async function runTask() {
     debugLog(`[TASK RUN] end`)
 }
 
-async function addDataDownloadTask({ type, datetime, userName, repoName }) {
+async function addDataDownloadTask({ type, datetime, userName, repoName, connection = null } = {}) {
     let taskDataDownload = new TaskDataDownload();
     taskDataDownload.type = type;
     taskDataDownload.username = userName;;
     taskDataDownload.reponame = repoName;
     taskDataDownload.datetime = datetime;
-    let savedTaskDataDownload = await TaskDataDownloadApi.taskDataDownloadAddOrUpdate(taskDataDownload, { invokeEnv: BACKGROUND });
+    let savedTaskDataDownload = await _taskDataDownloadAddOrUpdate({ param: taskDataDownload, connection });
     let task = new Task();
     task.type = type;
     task.dataId = savedTaskDataDownload.id;
     task.retryCount = 0;
     task.costTime = 0;
     task.status = TASK_STATUS_READY;
-    await TaskApi.taskAddOrUpdate(task, { invokeEnv: BACKGROUND })
+    await _taskAddOrUpdate({ param: task, connection });
 }
 
-async function addDataUploadTask({ type, startDatetime, endDatetime, userName, repoName, total }) {
+async function addDataUploadTask({ type, startDatetime, endDatetime, userName, repoName, total, connection = null } = {}) {
     let taskDataUpload = new TaskDataUpload();
     taskDataUpload.type = type;
     taskDataUpload.username = userName;;
@@ -473,14 +477,14 @@ async function addDataUploadTask({ type, startDatetime, endDatetime, userName, r
     taskDataUpload.startDatetime = startDatetime;
     taskDataUpload.endDatetime = endDatetime;
     taskDataUpload.dataCount = total;
-    let savedTaskDataUpload = await TaskDataUploadApi.taskDataUploadAddOrUpdate(taskDataUpload, { invokeEnv: BACKGROUND });
+    let savedTaskDataUpload = await _taskDataUploadAddOrUpdate({ param: taskDataUpload, connection });
     let task = new Task();
     task.type = type;
     task.dataId = savedTaskDataUpload.id;
     task.retryCount = 0;
     task.costTime = 0;
     task.status = TASK_STATUS_READY;
-    await TaskApi.taskAddOrUpdate(task, { invokeEnv: BACKGROUND })
+    await _taskAddOrUpdate({ param: task, connection });
 }
 
 async function convertJsonObjectToExcelData(result) {
@@ -490,53 +494,53 @@ async function convertJsonObjectToExcelData(result) {
     return writeXLSX(wb, { type: "buffer" });
 }
 
-async function getJobData({ startDatetime, endDatetime }) {
+async function getJobData({ startDatetime, endDatetime, connection = null } = {}) {
     let searchParam = new SearchJobBO();
-    searchParam.pageNum = 1;
-    searchParam.pageSize = MAX_RECORD_COUNT;
     searchParam.startDatetimeForUpdate = startDatetime;
     searchParam.endDatetimeForUpdate = endDatetime;
     searchParam.orderByColumn = "updateDatetime";
     searchParam.orderBy = "DESC";
-    return JobApi.searchJob(searchParam, {
-        invokeEnv: BACKGROUND,
+    return _searchJob({
+        param: searchParam,
+        connection
     });
 }
 
-async function getCompanyData({ startDatetime, endDatetime }) {
+async function getCompanyData({ startDatetime, endDatetime, connection = null } = {}) {
     let searchParam = new SearchCompanyBO();
-    searchParam.pageNum = 1;
-    searchParam.pageSize = MAX_RECORD_COUNT;
     searchParam.startDatetimeForUpdate = startDatetime;
     searchParam.endDatetimeForUpdate = endDatetime;
     searchParam.orderByColumn = "updateDatetime";
     searchParam.orderBy = "DESC";
-    return CompanyApi.searchCompany(searchParam, {
-        invokeEnv: BACKGROUND,
+    return _searchCompany({
+        param: searchParam,
+        connection
     });
 }
 
-async function getCompanyTagData({ startDatetime, endDatetime }) {
+async function getCompanyTagData({ startDatetime, endDatetime, connection = null } = {}) {
     let searchParam = new CompanyTagExportBO();
     searchParam.source = "";
     searchParam.startDatetimeForUpdate = startDatetime;
     searchParam.endDatetimeForUpdate = endDatetime;
-    const items = await CompanyApi.companyTagExport(searchParam, {
-        invokeEnv: BACKGROUND,
-    })
+    const items = await _companyTagExport({
+        param: searchParam,
+        connection
+    });
     return {
         total: items.length,
         items
     };
 }
 
-async function getJobTagData({ startDatetime, endDatetime }) {
+async function getJobTagData({ startDatetime, endDatetime, connection = null } = {}) {
     let searchParam = new JobTagExportBO();
     searchParam.source = "";
     searchParam.startDatetimeForUpdate = startDatetime;
     searchParam.endDatetimeForUpdate = endDatetime;
-    const items = await JobApi.jobTagExport(searchParam, {
-        invokeEnv: BACKGROUND,
+    const items = await _jobTagExport({
+        param: searchParam,
+        connection
     })
     return {
         total: items.length,
@@ -604,9 +608,9 @@ export async function createRepoIfNotExists({ userName, repoName }) {
 
 async function mergeDataByDataId(dataId, taskType, dataTypeName, fileHeader, excelDataToObjectArrayFunction, dataInsertFunction) {
     debugLog(`[TASK DATA MERGE] Task dataId = ${dataId},taskType = ${taskType}`);
-    const taskDataMerge = await TaskDataMergeApi.taskDataMergeGetById(dataId, { invokeEnv: BACKGROUND });
-    debugLog(`[TASK DATA MERGE] taskDataMerge dataId = ${taskDataMerge.dataId},username = ${taskDataMerge.username},reponame = ${taskDataMerge.reponame},datetime = ${taskDataMerge.datetime}`);
-    const file = await FileApi.fileGetById(taskDataMerge.dataId, { invokeEnv: BACKGROUND });
+    const taskDataMerge = await _taskDataMergeGetById({ param: dataId });
+    debugLog(`[TASK DATA MERGE] taskDataMerge dataId = ${taskDataMerge.dataId},username = ${taskDataMerge.username},repoName = ${taskDataMerge.reponame},datetime = ${taskDataMerge.datetime}`);
+    const file = await _fileGetById({ param: taskDataMerge.dataId });
     debugLog(`[TASK DATA MERGE] file id = ${file.id},name = ${file.name}`);
     let base64Content = file.content;
     let excelFileBufferData = await getExcelDataFromZipFile(base64Content, dataTypeName);
@@ -618,17 +622,12 @@ async function mergeDataByDataId(dataId, taskType, dataTypeName, fileHeader, exc
     }
     debugLog(`[TASK DATA MERGE] valid file name = ${file.name}, id = ${file.id} success`);
     const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2 });
-    try {
-        await DBApi.dbBeginTransaction({}, { invokeEnv: BACKGROUND });
-        let count = await dataInsertFunction(excelDataToObjectArrayFunction(data, taskDataMerge.datetime), taskDataMerge);
+    await (await getDb()).transaction(async (tx) => {
+        let count = await dataInsertFunction(excelDataToObjectArrayFunction(data, taskDataMerge.datetime), taskDataMerge, tx);
         taskDataMerge.dataCount = count;
-        await TaskDataMergeApi.taskDataMergeAddOrUpdate(taskDataMerge, { invokeEnv: BACKGROUND });
-        await DBApi.dbCommitTransaction({}, { invokeEnv: BACKGROUND });
+        await _taskDataMergeAddOrUpdate({ param: taskDataMerge, connection: tx });
         debugLog(`[TASK DATA MERGE] merge file name = ${file.name}, id = ${file.id} success,data count = ${count}`);
-    } catch (e) {
-        await DBApi.dbRollbackTransaction({}, { invokeEnv: BACKGROUND });
-        throw e;
-    }
+    });
 }
 
 async function downloadDataByDataId(dataId, dataTypeName, taskType) {
@@ -636,7 +635,7 @@ async function downloadDataByDataId(dataId, dataTypeName, taskType) {
         infoLog(`[TASK HANDLE]No login info, skip run task dataId = ${dataId}, dataTypeName = ${dataTypeName}`)
         throw EXCEPTION.NO_LOGIN;
     }
-    let taskData = await TaskDataDownloadApi.taskDataDownloadGetById(dataId, { invokeEnv: BACKGROUND });
+    let taskData = await _taskDataDownloadGetById({ param: dataId });
     let userName = taskData.username;
     let repoName = taskData.reponame;
     let datetime = taskData.datetime;
@@ -646,7 +645,6 @@ async function downloadDataByDataId(dataId, dataTypeName, taskType) {
         content = await GithubApi.listRepoContents(userName, repoName, path, { getTokenFunction: getToken, setTokenFunction: setToken, });
         if (content.type == "file") {
             try {
-                await DBApi.dbBeginTransaction({}, { invokeEnv: BACKGROUND });
                 const file = new File();
                 file.name = content.name;
                 file.sha = content.sha;
@@ -662,28 +660,28 @@ async function downloadDataByDataId(dataId, dataTypeName, taskType) {
                 }
                 file.size = content.size;
                 file.type = content.type;
-                const savedFile = await FileApi.fileAddOrUpdate(file, { invokeEnv: BACKGROUND });
-                infoLog(`[TASK DOWNLOAD DATA] save file to database from ${userName}.${repoName}.${path}, id = ${savedFile.id}`);
-                //添加数据合并任务
-                const taskDataMerge = new TaskDataMerge();
-                taskDataMerge.type = taskType;
-                taskDataMerge.username = userName;
-                taskDataMerge.reponame = repoName;
-                taskDataMerge.datetime = datetime;
-                taskDataMerge.dataId = savedFile.id;
-                const savedTaskDataMerge = await TaskDataMergeApi.taskDataMergeAddOrUpdate(taskDataMerge, { invokeEnv: BACKGROUND })
-                infoLog(`[TASK DOWNLOAD DATA] merge task to database from ${userName}.${repoName}.${path}, id = ${savedTaskDataMerge.id}, dataId = ${dataId}`);
-                let task = new Task();
-                task.type = taskType;
-                task.dataId = savedTaskDataMerge.id;
-                task.retryCount = 0;
-                task.costTime = 0;
-                task.status = TASK_STATUS_READY;
-                const savedTask = await TaskApi.taskAddOrUpdate(task, { invokeEnv: BACKGROUND })
-                infoLog(`[TASK DOWNLOAD DATA] add task to database from task type = ${taskType}, dataId = ${task.dataId}, id = ${savedTask.id}`);
-                await DBApi.dbCommitTransaction({}, { invokeEnv: BACKGROUND });
+                await (await getDb()).transaction(async (tx) => {
+                    const savedFile = await _fileAddOrUpdate({ param: file, connection: tx });
+                    infoLog(`[TASK DOWNLOAD DATA] save file to database from ${userName}.${repoName}.${path}, id = ${savedFile.id}`);
+                    //添加数据合并任务
+                    const taskDataMerge = new TaskDataMerge();
+                    taskDataMerge.type = taskType;
+                    taskDataMerge.username = userName;
+                    taskDataMerge.reponame = repoName;
+                    taskDataMerge.datetime = datetime;
+                    taskDataMerge.dataId = savedFile.id;
+                    const savedTaskDataMerge = await _taskDataMergeAddOrUpdate({ param: taskDataMerge, connection: tx });
+                    infoLog(`[TASK DOWNLOAD DATA] merge task to database from ${userName}.${repoName}.${path}, id = ${savedTaskDataMerge.id}, dataId = ${dataId}`);
+                    let task = new Task();
+                    task.type = taskType;
+                    task.dataId = savedTaskDataMerge.id;
+                    task.retryCount = 0;
+                    task.costTime = 0;
+                    task.status = TASK_STATUS_READY;
+                    const savedTask = await _taskAddOrUpdate({ param: task, connection: tx })
+                    infoLog(`[TASK DOWNLOAD DATA] add task to database from task type = ${taskType}, dataId = ${task.dataId}, id = ${savedTask.id}`);
+                });
             } catch (e) {
-                await DBApi.dbRollbackTransaction({}, { invokeEnv: BACKGROUND });
                 throw e;
             }
         } else {
@@ -717,7 +715,7 @@ async function uploadDataByDataId(dataId, dataTypeName, getDataFunction, jsonObj
         debugLog(`[TASK HANDLE]No login info, skip run task dataId = ${dataId}, dataTypeName = ${dataTypeName}`)
         throw EXCEPTION.NO_LOGIN;
     }
-    let taskDataUpload = await TaskDataUploadApi.taskDataUploadGetById(dataId, { invokeEnv: BACKGROUND });
+    let taskDataUpload = await _taskDataUploadGetById({ param: dataId });
     let userName = taskDataUpload.username;
     let repoName = taskDataUpload.reponame;
     let startDatetime = taskDataUpload.startDatetime;
@@ -734,4 +732,49 @@ async function uploadDataByDataId(dataId, dataTypeName, getDataFunction, jsonObj
 
 function getPathByDatetime({ datetime }) {
     return `/${dayjs(datetime).format("YYYY")}/${dayjs(datetime).format("MM-DD")}`;
+}
+
+/**
+ * 
+ * @param {OauthDTO} token 
+ */
+export async function setToken(token) {
+    let config = new Config();
+    config.key = KEY_GITHUB_OAUTH_TOKEN;
+    config.value = JSON.stringify(token);
+    return _addOrUpdateConfig(config);
+}
+
+/**
+ * 
+ * @returns OauthDTO
+ */
+export async function getToken() {
+    let oauthDTO = new OauthDTO();
+    let config = await _getConfigByKey(KEY_GITHUB_OAUTH_TOKEN);
+    if (config) {
+        let value = JSON.parse(config.value);
+        if (value) {
+            Object.assign(oauthDTO, value);
+            return oauthDTO;
+        }
+    }
+    return null;
+}
+
+/**
+ * 
+ * @returns UserDTO
+ */
+export async function _getUser({ connection = null } = {}) {
+    let userDTO = new UserDTO();
+    let config = await _getConfigByKey(KEY_GITHUB_USER, { connection });
+    if (config) {
+        let value = JSON.parse(config.value);
+        if (value) {
+            Object.assign(userDTO, value);
+            return userDTO;
+        }
+    }
+    return null;
 }

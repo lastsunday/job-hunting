@@ -63,7 +63,14 @@ export const DataSharePartnerService = {
      * @returns SearchDataSharePartnerDTO
      */
     searchDataSharePartner: async function (message, param) {
-        SERVICE_INSTANCE.search(message, param);
+        try {
+            postSuccessMessage(message, await _searchDataSharePartner({ param }));
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] searchDataSharePartner error : " + e.message
+            );
+        }
     },
     /**
      *
@@ -129,3 +136,7 @@ export const DataSharePartnerService = {
         }
     }
 };
+
+export const _searchDataSharePartner = async ({ param = null, connection = null } = {}) => {
+    return await SERVICE_INSTANCE._search(param, { connection });
+}

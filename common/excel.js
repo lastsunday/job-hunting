@@ -147,7 +147,7 @@ export const jobExcelDataToObjectArray = (data) => {
         item.jobUrl = dataItem['职位访问地址'];
         item.jobName = dataItem['职位'];
         item.jobCompanyName = dataItem['公司'];
-        item.isFullCompanyName = dataItem['公司是否为全称'];
+        item.isFullCompanyName = dataItem['公司是否为全称'] ? true : false;
         item.jobLocationName = dataItem['地区'];
         item.jobAddress = dataItem['地址'];
         item.jobLongitude = dataItem['经度'];

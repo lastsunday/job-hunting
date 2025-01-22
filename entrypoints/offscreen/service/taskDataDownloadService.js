@@ -4,6 +4,8 @@ import { SearchTaskDataDownloadDTO } from "../../../common/data/dto/searchTaskDa
 import { TaskDataDownload } from "../../../common/data/domain/taskDataDownload";
 import { BaseService } from "./baseService";
 import { dateToStr } from "../../../common/utils";
+import { postSuccessMessage } from "../util";
+import dayjs from "dayjs";
 
 export const SERVICE_INSTANCE = new BaseService("task_data_download", "id",
     () => {
@@ -51,7 +53,14 @@ export const TaskDataDownloadService = {
      * @returns SearchTaskDataDownloadDTO
      */
     searchTaskDataDownload: async function (message, param) {
-        SERVICE_INSTANCE.search(message, param);
+        try {
+            postSuccessMessage(message, await _searchTaskDataDownload({ param }));
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] searchTaskDataDownload error : " + e.message
+            );
+        }
     },
     /**
      *
@@ -59,7 +68,14 @@ export const TaskDataDownloadService = {
      * @param {string} param id
      */
     taskDataDownloadGetById: async function (message, param) {
-        SERVICE_INSTANCE.getById(message, param);
+        try {
+            postSuccessMessage(message, await _taskDataDownloadGetById({ param }));
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] taskDataDownloadGetById error : " + e.message
+            );
+        }
     },
     /**
      *
@@ -67,8 +83,14 @@ export const TaskDataDownloadService = {
      * @param {TaskDataDownload} param
      */
     taskDataDownloadAddOrUpdate: async function (message, param) {
-        param.datetime = dateToStr(param.datetime);
-        SERVICE_INSTANCE.addOrUpdate(message, param);
+        try {
+            postSuccessMessage(message, await _taskDataDownloadAddOrUpdate({ param }));
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] taskDataDownloadAddOrUpdate error : " + e.message
+            );
+        }
     },
     /**
      *
@@ -88,3 +110,16 @@ export const TaskDataDownloadService = {
     }
 
 };
+
+export const _taskDataDownloadGetById = async ({ param = null, connection = null } = {}) => {
+    return await SERVICE_INSTANCE._getById(param, { connection });
+}
+
+export const _taskDataDownloadAddOrUpdate = async ({ param = null, connection = null } = {}) => {
+    param.datetime = dayjs(param.datetime).format();
+    return await SERVICE_INSTANCE._addOrUpdate(param, { connection });;
+}
+
+export const _searchTaskDataDownload = async ({ param = null, connection = null } = {}) => {
+    return await SERVICE_INSTANCE._search(param, { connection });
+}

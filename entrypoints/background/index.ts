@@ -1,4 +1,4 @@
-import { ConfigApi, JobApi } from "../../common/api";
+import { ConfigApi, JobApi, AppApi } from "../../common/api";
 import { INVOKE_WARN_TIME_COST } from "../../common/config";
 import { getAndRemovePromiseHook } from "../../common/api/bridge";
 import {
@@ -16,7 +16,6 @@ import { convertPureJobDetailUrl, paramsToObject, parseToLineObjectToToHumpObjec
 import { AuthService, getOauth2LoginMessageMap, getToken, setToken } from "./service/authService";
 import { AutomateService } from "./service/automateService";
 import { SystemService } from "./service/systemService";
-import { calculateDataSharePartnerList, calculateDownloadTask, calculateUploadTask, runScheduleTask, runTask } from "./service/taskService";
 import { getUser, setUser, UserService } from "./service/userService";
 import { postErrorMessage, postSuccessMessage } from "./util";
 import { isDevEnv } from "../../common";
@@ -194,43 +193,7 @@ export default defineBackground(() => {
           try {
             taskRunCount += 1;
             infoLog(`[Task] Task run seq = < ${taskRunCount} >`)
-            let dataSharePlanConfig = new DataSharePlanConfigDTO();
-            let configValue = await ConfigApi.getConfigByKey(CONFIG_KEY_DATA_SHARE_PLAN, { invokeEnv: BACKGROUND });
-            if (configValue && configValue.value) {
-              dataSharePlanConfig = JSON.parse(configValue.value);
-            }
-            if (dataSharePlanConfig.enable) {
-              infoLog(`[TASK] Data share plan enable`);
-              infoLog(`[TASK] Data share plan task running`);
-              let userDTO = await getUser();
-              if (userDTO) {
-                let userName = userDTO.login;
-                let repoName = DEFAULT_DATA_REPO;
-                infoLog(`[Task] has login info userName = ${userName}`)
-                infoLog(`[Task] calculateUploadTask`)
-                await calculateUploadTask({ userName: userName, repoName: repoName });
-                //获取自身的数据共享计划仓库
-                let shareDataPlanList = [{ username: userName, reponame: DEFAULT_DATA_REPO }];
-                //从数据库中获取数据共享伙伴列表
-                let dataSharePartnerList = await calculateDataSharePartnerList();
-                shareDataPlanList.push(...dataSharePartnerList);
-                infoLog(`[TASK] Share data plan list length = ${shareDataPlanList.length}`);
-                for (let i = 0; i < shareDataPlanList.length; i++) {
-                  let shareItem = shareDataPlanList[i];
-                  await calculateDownloadTask({ userName: shareItem.username, repoName: shareItem.reponame });
-                }
-                infoLog(`[TASK] runTask`)
-                await runTask();
-              } else {
-                infoLog(`[TASK] no login info`)
-                infoLog(`[TASK] skip data share plan`)
-              }
-            } else {
-              infoLog(`[TASK] Data share plan disable`);
-              infoLog(`[TASK] Data share plan task skip`);
-            }
-            infoLog(`[TASK] runScheduleTask`)
-            await runScheduleTask();
+            await AppApi.appBackgroundTaskRun({}, { invokeEnv: BACKGROUND });
           } catch (e) {
             errorLog(e);
           }

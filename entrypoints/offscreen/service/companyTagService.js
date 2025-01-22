@@ -113,7 +113,7 @@ export const CompanyTagService = {
     batchAddOrUpdateCompanyTag: async function (message, param) {
         try {
             await (await getDb()).transaction(async (tx) => {
-                return await _batchAddOrUpdateCompanyTag(param.items, param.overrideUpdateDatetime, { connection: tx });
+                return await _batchAddOrUpdateCompanyTag({ companyTagBOs: param.items, overrideUpdateDatetime: param.overrideUpdateDatetime, connection: tx });
             });
             postSuccessMessage(message, {});
         } catch (e) {
@@ -290,7 +290,7 @@ export const CompanyTagService = {
         try {
             postSuccessMessage(
                 message,
-                await _companyTagExport(param)
+                await _companyTagExport({ param })
             );
         } catch (e) {
             postErrorMessage(message, "[worker] companyTagExport error : " + e.message);
@@ -302,7 +302,14 @@ export const CompanyTagService = {
  * 
  * @param {CompanyTagExportBO} param 
  */
-async function _companyTagExport(param) {
+export async function _companyTagExport({ param = null, connection = null } = {}) {
+    connection ??= await getDb();
+    let limit = '';
+    if (param.pageNum != null && param.pageSize != null) {
+        let limitStart = (param.pageNum - 1) * param.pageSize;
+        let limitEnd = param.pageSize;
+        limit = " limit " + limitEnd + " OFFSET " + limitStart;
+    }
     let joinCondition = "";
     if (param.startDatetimeForUpdate) {
         joinCondition +=
@@ -335,15 +342,21 @@ async function _companyTagExport(param) {
         whereCondition += ` AND t2.is_public = ${param.isPublic}`
     }
     let sqlQuery = `SELECT t1.company_id AS company_id,t1.company_name AS company_name,STRING_AGG(DISTINCT t2.tag_name,',') AS tag_name_array,MAX(t1.create_datetime) AS create_datetime,MAX(t1.update_datetime) AS update_datetime FROM company_tag AS t1 LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id ${joinCondition} WHERE t1.source_type = 0 ${whereCondition} GROUP BY t1.company_id,t1.company_name ORDER BY update_datetime DESC`;
-    const { rows: queryRows } = await (await getDb()).query(sqlQuery);
-    return convertRows(queryRows);
+    let querySql = sqlQuery + limit;
+    let countSql = `SELECT COUNT(*) AS total FROM (${sqlQuery}) AS t1`;
+    let result = {};
+    const { rows: queryRows } = await connection.query(querySql);
+    result.items = convertRows(queryRows);
+    const { rows } = await connection.query(countSql);
+    result.total = rows[0].total;
+    return result;
 }
 
 /**
  * 
  * @param {CompanyTagBO[]} companyTagBOs 
  */
-async function _batchAddOrUpdateCompanyTag(companyTagBOs, overrideUpdateDatetime, { connection = null } = {}) {
+export async function _batchAddOrUpdateCompanyTag({ companyTagBOs = null, overrideUpdateDatetime = null, connection = null } = {}) {
     let allTags = [];
     companyTagBOs.map(item => { return item.tags }).forEach(items => {
         allTags.push(...items);

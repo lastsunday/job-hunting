@@ -7,8 +7,8 @@ import { ChartBasicDTO } from "../../../common/data/dto/chartBasicDTO";
 import { CompanyDTO } from "../../../common/data/dto/companyDTO";
 import { SearchCompanyDTO } from "../../../common/data/dto/searchCompanyDTO";
 import { StatisticCompanyDTO } from "../../../common/data/dto/statisticCompanyDTO";
-import { convertEmptyStringToNull, dateToStr, isNotEmpty, toHump, toLine } from "../../../common/utils";
-import { getDb, getOne, convertRows } from "../database";
+import { isNotEmpty, toHump, toLine } from "../../../common/utils";
+import { getDb, convertRows } from "../database";
 import { postErrorMessage, postSuccessMessage } from "../util";
 import { BaseService } from "./baseService";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
@@ -58,7 +58,7 @@ export const CompanyService = {
   batchAddOrUpdateCompany: async function (message, param) {
     try {
       await (await getDb()).transaction(async (tx) => {
-        return await SERVICE_INSTANCE._batchAddOrUpdate(param, { connection: tx });
+        return await _batchAddOrUpdateCompany({ param, tx });
       });
       postSuccessMessage(message, {});
     } catch (e) {
@@ -77,64 +77,7 @@ export const CompanyService = {
      */
   searchCompany: async function (message, param) {
     try {
-      let result = new SearchCompanyBO();
-      let sqlQuery = "";
-      let whereCondition = genSearchWhereConditionSql(param);
-      let orderBy =
-        " ORDER BY " +
-        toLine(param.orderByColumn) +
-        " " +
-        param.orderBy +
-        " NULLS LAST";
-      let limitStart = (param.pageNum - 1) * param.pageSize;
-      let limitEnd = param.pageSize;
-      let limit = " limit " + limitEnd + " OFFSET " + limitStart;
-      const sqlSearchQuery = genSqlSearchQuery();
-      sqlQuery += sqlSearchQuery;
-      sqlQuery += whereCondition;
-      sqlQuery += orderBy;
-      sqlQuery += limit;
-      let items = [];
-      let total = 0;
-      const { rows } = await (await getDb()).query(sqlQuery);
-      const queryRows = convertRows(rows);
-      for (let i = 0; i < queryRows.length; i++) {
-        let item = queryRows[i];
-        let resultItem = new CompanyDTO();
-        let keys = Object.keys(item);
-        for (let n = 0; n < keys.length; n++) {
-          let key = keys[n];
-          resultItem[toHump(key)] = item[key];
-        }
-        resultItem.tagNameArray = [];
-        resultItem.tagIdArray = [];
-        resultItem.companyTagList = [];
-        items.push(resultItem);
-      }
-      let sqlCountSubTable = "";
-      sqlCountSubTable += sqlSearchQuery;
-      sqlCountSubTable += whereCondition;
-      let ids = [];
-      let itemIdObjectMap = new Map();
-      if (items.length > 0) {
-        items.forEach(item => {
-          ids.push(item.companyId);
-          itemIdObjectMap.set(item.companyId, item);
-        });
-        let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids);
-        companyTagDTOList.forEach(item => {
-          itemIdObjectMap.get(item.companyId).tagNameArray.push(item.tagName);
-          itemIdObjectMap.get(item.companyId).tagIdArray.push(item.tagId);
-          itemIdObjectMap.get(item.companyId).companyTagList.push(item);
-        });
-      }
-      //count
-      let sqlCount = `SELECT COUNT(*) AS total FROM (${sqlCountSubTable}) AS t1`;
-      const { rows: queryCountRows } = await (await getDb()).query(sqlCount);
-      total = queryCountRows[0].total;
-      result.items = items;
-      result.total = total;
-      postSuccessMessage(message, result);
+      postSuccessMessage(message, await _searchCompany({ param }));
     } catch (e) {
       postErrorMessage(message, "[worker] searchCompany error : " + e.message);
     }
@@ -198,7 +141,14 @@ export const CompanyService = {
    * @param {string[]} param id
    */
   companyGetByIds: async function (message, param) {
-    SERVICE_INSTANCE.getByIds(message, param);
+    try {
+      postSuccessMessage(message, await _companyGetByIds({ param }));
+    } catch (e) {
+      postErrorMessage(
+        message,
+        "[worker] companyGetByIds error : " + e.message
+      );
+    }
   },
 
   /**
@@ -295,6 +245,74 @@ export const CompanyService = {
     }
   },
 };
+
+export const _searchCompany = async ({ param = null, connection = null } = {}) => {
+  connection ??= await getDb();
+  let result = new SearchCompanyBO();
+  let sqlQuery = "";
+  let whereCondition = genSearchWhereConditionSql(param);
+  let orderBy = "";
+  if (param.orderByColumn != null && param.orderBy != null) {
+    orderBy =
+      " ORDER BY " +
+      toLine(param.orderByColumn) +
+      " " +
+      param.orderBy +
+      " NULLS LAST";
+  }
+  let limit = '';
+  if (param.pageNum != null && param.pageSize != null) {
+    let limitStart = (param.pageNum - 1) * param.pageSize;
+    let limitEnd = param.pageSize;
+    limit = " limit " + limitEnd + " OFFSET " + limitStart;
+  }
+  const sqlSearchQuery = genSqlSearchQuery();
+  sqlQuery += sqlSearchQuery;
+  sqlQuery += whereCondition;
+  sqlQuery += orderBy;
+  sqlQuery += limit;
+  let items = [];
+  let total = 0;
+  const { rows } = await connection.query(sqlQuery);
+  const queryRows = convertRows(rows);
+  for (let i = 0; i < queryRows.length; i++) {
+    let item = queryRows[i];
+    let resultItem = new CompanyDTO();
+    let keys = Object.keys(item);
+    for (let n = 0; n < keys.length; n++) {
+      let key = keys[n];
+      resultItem[toHump(key)] = item[key];
+    }
+    resultItem.tagNameArray = [];
+    resultItem.tagIdArray = [];
+    resultItem.companyTagList = [];
+    items.push(resultItem);
+  }
+  let sqlCountSubTable = "";
+  sqlCountSubTable += sqlSearchQuery;
+  sqlCountSubTable += whereCondition;
+  let ids = [];
+  let itemIdObjectMap = new Map();
+  if (items.length > 0) {
+    items.forEach(item => {
+      ids.push(item.companyId);
+      itemIdObjectMap.set(item.companyId, item);
+    });
+    let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids);
+    companyTagDTOList.forEach(item => {
+      itemIdObjectMap.get(item.companyId).tagNameArray.push(item.tagName);
+      itemIdObjectMap.get(item.companyId).tagIdArray.push(item.tagId);
+      itemIdObjectMap.get(item.companyId).companyTagList.push(item);
+    });
+  }
+  //count
+  let sqlCount = `SELECT COUNT(*) AS total FROM (${sqlCountSubTable}) AS t1`;
+  const { rows: queryCountRows } = await connection.query(sqlCount);
+  total = queryCountRows[0].total;
+  result.items = items;
+  result.total = total;
+  return result;
+}
 
 async function companyStatistic({ sql }) {
   let result = [];
@@ -417,3 +435,12 @@ function genIdsWhereConditionSql(companyIds) {
 function genSqlSearchQuery() {
   return `SELECT company_id, company_name, company_desc, company_start_date, company_status, company_legal_person, company_unified_code, company_web_site, company_insurance_num, company_self_risk, company_union_risk, company_address, company_scope, company_tax_no, company_industry, company_license_number, company_longitude, company_latitude, source_url, source_platform, source_record_id, source_refresh_datetime, create_datetime, update_datetime FROM company`
 }
+
+export const _companyGetByIds = async ({ param = null, connection = null } = {}) => {
+  return await SERVICE_INSTANCE._getByIds(param, { connection });
+}
+
+export const _batchAddOrUpdateCompany = async ({ param = null, connection = null } = {}) => {
+  return await SERVICE_INSTANCE._batchAddOrUpdate(param, { connection });
+}
+

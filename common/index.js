@@ -76,8 +76,6 @@ export const TASK_STATUS_FINISHED_BUT_ERROR = "FINISHED_BUT_ERROR";
 export const TASK_STATUS_ERROR = "ERROR";
 export const TASK_STATUS_CANCEL = "CANCEL";
 
-export const MAX_RECORD_COUNT = 10000000;
-
 export const TAG_SOURCE_TYPE_CUSTOM = 0;
 export const TAG_SOURCE_TYPE_PLATFORM = 1;
 

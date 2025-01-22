@@ -28,15 +28,21 @@ export const AssistantService = {
             let result = new SearchJobDTO();
             let sqlQuery = "";
             let whereCondition = genJobSearchWhereConditionSql(param);
-            let orderBy =
-                " ORDER BY " +
-                param.orderByColumn +
-                " " +
-                param.orderBy +
-                " NULLS LAST";
-            let limitStart = (param.pageNum - 1) * param.pageSize;
-            let limitEnd = param.pageSize;
-            let limit = " limit " + limitEnd + " OFFSET " + limitStart;
+            let orderBy = "";
+            if (param.orderByColumn != null && param.orderBy != null) {
+                orderBy =
+                    " ORDER BY " +
+                    param.orderByColumn +
+                    " " +
+                    param.orderBy +
+                    " NULLS LAST";
+            }
+            let limit = '';
+            if (param.pageNum != null && param.pageSize != null) {
+                let limitStart = (param.pageNum - 1) * param.pageSize;
+                let limitEnd = param.pageSize;
+                limit = " limit " + limitEnd + " OFFSET " + limitStart;
+            }
             sqlQuery += genSqlJobSearchQuery(param);
             sqlQuery += whereCondition;
             sqlQuery = genFilterSQL(sqlQuery, param);

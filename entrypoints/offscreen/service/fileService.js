@@ -72,7 +72,14 @@ export const FileService = {
      * @param {string} param id
      */
     fileGetById: async function (message, param) {
-        SERVICE_INSTANCE.getById(message, param);
+        try {
+            postSuccessMessage(message, await _fileGetById({ param }));
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] fileGetById error : " + e.message
+            );
+        }
     },
     /**
      *
@@ -80,7 +87,14 @@ export const FileService = {
      * @param {File} param
      */
     fileAddOrUpdate: async function (message, param) {
-        SERVICE_INSTANCE.addOrUpdate(message, param);
+        try {
+            postSuccessMessage(message, await _fileAddOrUpdate({ param }));
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] fileAddOrUpdate error : " + e.message
+            );
+        }
     },
     /**
      *
@@ -104,17 +118,24 @@ export const FileService = {
      * @param {string[]} param ids
      */
     fileLogicDeleteByIds: async function (message, param) {
-        SERVICE_INSTANCE.batchUpdate(message, {
-            id: param,
-            content: "",
-            isDelete: 1,
-        });
+        try {
+            postSuccessMessage(message, await _fileLogicDeleteByIds({
+                param: {
+                    id: param,
+                    content: "",
+                    isDelete: 1,
+                }
+            }));
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] fileLogicDeleteByIds error : " + e.message
+            );
+        }
     },
     fileGetAllMergedNotDeleteFile: async function (message, param) {
         try {
-            let sql = `SELECT t1.id AS id,t1.size AS size,t3.update_datetime AS update_datetime from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id WHERE t1.is_delete = 0 AND t3.status = 'FINISHED' ORDER BY t3.update_datetime DESC`
-            const result = await getAll(sql, [], new FileDTO());
-            postSuccessMessage(message, result);
+            postSuccessMessage(message, await _fileGetAllMergedNotDeleteFile({}));
         } catch (e) {
             postErrorMessage(
                 message,
@@ -157,3 +178,26 @@ export const FileService = {
         }
     },
 };
+
+export const _fileGetById = async ({ param = null, connection = null } = {}) => {
+    return await SERVICE_INSTANCE._getById(param, { connection });
+}
+
+export const _fileAddOrUpdate = async ({ param = null, connection = null } = {}) => {
+    return await SERVICE_INSTANCE._addOrUpdate(param, { connection });
+}
+
+export const _fileGetAllMergedNotDeleteFile = async ({ param = null, connection = null } = {}) => {
+    return await getAll(`SELECT t1.id AS id,t1.size AS size,t3.update_datetime AS update_datetime from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id WHERE t1.is_delete = 0 AND t3.status = 'FINISHED' ORDER BY t3.update_datetime DESC`, [], new FileDTO(), { connection });
+}
+
+export const _fileLogicDeleteByIds = async ({ param = null, connection = null } = {}) => {
+    return await SERVICE_INSTANCE._batchUpdate({
+        param: {
+            id: param,
+            content: "",
+            isDelete: 1,
+        },
+        connection
+    });
+}

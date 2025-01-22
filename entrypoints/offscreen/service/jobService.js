@@ -17,7 +17,7 @@ import { postErrorMessage, postSuccessMessage } from "../util";
 import { BaseService } from "./baseService";
 import { _getCompanyDTOByIds } from "./companyService";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
-import { _getAllJobTagDTOByJobIds, _batchAddOrUpdateJobTag } from "./jobTagService";
+import { _getAllJobTagDTOByJobIds, _jobTagBatchAddOrUpdate } from "./jobTagService";
 import { JobBrowseHistory } from "../../../common/data/domain/jobBrowseHistory";
 import { getValidJobData } from "../../../common/service/dataSyncService";
 
@@ -62,8 +62,7 @@ export const JobService = {
   batchAddOrUpdateJob: async function (message, param) {
     try {
       await (await getDb()).transaction(async (tx) => {
-        await _batchInsertOrUpdateJob(param, { connection: tx });
-        await _batchInsertJobTag(param, { connection: tx });
+        await _batchAddOrUpdateJob({ param, connection: tx });
       });
       postSuccessMessage(message, {});
     } catch (e) {
@@ -144,37 +143,7 @@ export const JobService = {
    */
   searchJob: async function (message, param) {
     try {
-      let result = new SearchJobDTO();
-      let sqlQuery = "";
-      let whereCondition = genJobSearchWhereConditionSql(param);
-      let orderBy =
-        " ORDER BY " +
-        toLine(param.orderByColumn) +
-        " " +
-        param.orderBy +
-        " NULLS LAST";
-      let limitStart = (param.pageNum - 1) * param.pageSize;
-      let limitEnd = param.pageSize;
-      let limit = " limit " + limitEnd + " OFFSET " + limitStart;
-      sqlQuery += genSqlJobSearchQuery(param);
-      sqlQuery += whereCondition;
-      let sqlQueryCountSubSql = sqlQuery;
-      sqlQuery += orderBy;
-      sqlQuery += limit;
-      let items = [];
-      let total = 0;
-      const { rows } = await (await getDb()).query(sqlQuery);
-      const queryRows = convertRows(rows);
-
-      await _fillSearchResultExtraInfo(items, queryRows);
-      //count
-      let sqlCount = `SELECT COUNT(*) AS total from (${sqlQueryCountSubSql}) AS t1`;
-      const { rows: queryCountRows } = await (await getDb()).query(sqlCount);
-      total = queryCountRows[0].total;
-
-      result.items = items;
-      result.total = total;
-      postSuccessMessage(message, result);
+      postSuccessMessage(message, await _searchJob({ param }));
     } catch (e) {
       postErrorMessage(message, "[worker] searchJob error : " + e.message);
     }
@@ -354,9 +323,12 @@ export const JobService = {
    */
   jobStatisticJobCompanyTagGroupByCompany: async function (message, param) {
     try {
-      let limitStart = (param.pageNum - 1) * param.pageSize;
-      let limitEnd = param.pageSize;
-      let limit = " limit " + limitEnd + " OFFSET " + limitStart;
+      let limit = '';
+      if (param.pageNum != null && param.pageSize != null) {
+        let limitStart = (param.pageNum - 1) * param.pageSize;
+        let limitEnd = param.pageSize;
+        limit = " limit " + limitEnd + " OFFSET " + limitStart;
+      }
       let whereCondition = "";
       if (isNotEmpty(param.tagName)) {
         whereCondition += ` AND tag_id = '${genIdFromText(param.tagName)}'`;
@@ -378,6 +350,49 @@ export const JobService = {
   },
 };
 
+export const _searchJob = async ({ param = null, connection = null } = {}) => {
+  connection ??= await getDb();
+  let result = new SearchJobDTO();
+  let sqlQuery = "";
+  let whereCondition = genJobSearchWhereConditionSql(param);
+  let orderBy = "";
+  if (param.orderByColumn != null && param.orderBy != null) {
+    orderBy =
+      " ORDER BY " +
+      toLine(param.orderByColumn) +
+      " " +
+      param.orderBy +
+      " NULLS LAST";
+  }
+  let limit = '';
+  if (param.pageNum != null && param.pageSize != null) {
+    let limitStart = (param.pageNum - 1) * param.pageSize;
+    let limitEnd = param.pageSize;
+    limit = " limit " + limitEnd + " OFFSET " + limitStart;
+  }
+  sqlQuery += genSqlJobSearchQuery(param);
+  sqlQuery += whereCondition;
+  let sqlQueryCountSubSql = sqlQuery;
+  sqlQuery += orderBy;
+  sqlQuery += limit;
+  let items = [];
+  let total = 0;
+  const { rows } = await connection.query(sqlQuery);
+  const queryRows = convertRows(rows);
+
+  await _fillSearchResultExtraInfo(items, queryRows);
+  //count
+  let sqlCount = `SELECT COUNT(*) AS total from (${sqlQueryCountSubSql}) AS t1`;
+  const { rows: queryCountRows } = await connection.query(sqlCount);
+  total = queryCountRows[0].total;
+
+  result.items = items;
+  result.total = total;
+
+  return result;
+}
+
+
 const convertEnum = (value) => {
   if (TYPE_ENUM_MONTH == value) {
     return "MM";
@@ -397,8 +412,8 @@ async function jobStatistic({ sql }) {
   return rows;
 }
 
-export async function _getByIds(ids) {
-  return SERVICE_INSTANCE._getByIds(ids);
+export async function _jobGetByIds({ param = null, connection = null } = {}) {
+  return SERVICE_INSTANCE._getByIds(param, { connection });
 }
 
 async function getJobBrowseHistoryCountMap(ids, type) {
@@ -516,7 +531,7 @@ async function _batchInsertJobTag(jobs, { connection = null } = {}) {
     entity.tags = tags;
     jobTags.push(entity);
   }
-  await _batchAddOrUpdateJobTag(jobTags, false, { connection });
+  await _jobTagBatchAddOrUpdate(jobTags, false, { connection });
 }
 
 async function _batchInsertOrUpdateJob(jobs, { connection = null } = {}) {
@@ -601,6 +616,9 @@ GROUP BY
 `;
 
 export async function _fillSearchResultExtraInfo(items, queryRows) {
+  if (queryRows.length <= 0) {
+    return;
+  }
   let companyIds = [];
   let companyIdMap = new Map();
   let jobIds = [];
@@ -652,4 +670,9 @@ export async function _fillSearchResultExtraInfo(items, queryRows) {
     item.skillTagList = item.skillTag?.split(",") || [];
     item.welfareTagList = item.welfareTag?.split(",") || [];
   });
+}
+
+export const _batchAddOrUpdateJob = async ({ param = null, connection = null } = {}) => {
+  await _batchInsertOrUpdateJob(param, { connection });
+  return await _batchInsertJobTag(param, { connection });
 }

@@ -2,9 +2,11 @@
 // @ts-ignore
 globalThis._content = undefined;
 
+import { isDevEnv } from "../../common";
 import { OFFSCREEN, WEB_WORKER } from "../../common/api/bridgeCommon";
 import { debugLog } from "../../common/log";
 import { Database } from "./database";
+import { AppService } from "./service/appService";
 import { AssistantService } from "./service/assistantService";
 import { CompanyService } from "./service/companyService";
 import { CompanyTagService } from "./service/companyTagService";
@@ -23,7 +25,6 @@ import { TaskDataMergeService } from "./service/taskDataMergeService";
 import { TaskDataUploadService } from "./service/taskDataUploadService";
 import { TaskService } from "./service/taskService";
 import { postErrorMessage, postSuccessMessage } from "./util";
-import { isDevEnv } from "../../common";
 
 debugLog("worker ready");
 const ACTION_FUNCTION = new Map();
@@ -37,6 +38,7 @@ export const WorkerBridge = {
 mergeServiceMethod(ACTION_FUNCTION, WorkerBridge);
 mergeServiceMethod(ACTION_FUNCTION, Database);
 mergeServiceMethod(ACTION_FUNCTION, NetworkService);
+mergeServiceMethod(ACTION_FUNCTION, AppService);
 mergeServiceMethod(ACTION_FUNCTION, JobService);
 mergeServiceMethod(ACTION_FUNCTION, CompanyService);
 mergeServiceMethod(ACTION_FUNCTION, TagService);
@@ -53,6 +55,7 @@ mergeServiceMethod(ACTION_FUNCTION, FileService);
 mergeServiceMethod(ACTION_FUNCTION, TaskDataMergeService);
 mergeServiceMethod(ACTION_FUNCTION, DataSharePartnerService);
 mergeServiceMethod(ACTION_FUNCTION, JobTagService);
+
 
 function mergeServiceMethod(actionFunction, source) {
   let keys = Object.keys(source);
