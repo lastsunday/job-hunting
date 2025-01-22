@@ -206,7 +206,7 @@ const SystemView: React.FC = () => {
                             <Flex style={{ width: 200 }}>
                                 <Select showSearch disabled={execSqlLoading} style={{ width: '100%' }} allowClear onSelect={(value) => {
                                     if (value) {
-                                        const sql = `SELECT * FROM ${value}`;
+                                        const sql = `SELECT * FROM ${value} LIMIT 10 OFFSET 0`;
                                         setSql(sql);
                                         execSql(sql);
                                     }
@@ -238,7 +238,7 @@ const SystemView: React.FC = () => {
                             ) : null
                         }
                         <Flex>
-                            <Table loading={execSqlLoading} pagination={{ showTotal: (total, range) => `${range[0]}-${range[1]} 共 ${total} 条记录` }} scroll={{ x: '100%' }} sticky={{ offsetHeader: 64 }} size="small" dataSource={dataSource} columns={columns} />
+                            <Table loading={execSqlLoading} pagination={{ showTotal: (total, range) => `${range[0]}-${range[1]} 共 ${total} 条记录`, pageSize: 10, pageSizeOptions: [10, 50, 100, 200, 500, 1000], }} scroll={{ x: '100%' }} sticky={{ offsetHeader: 64 }} size="small" dataSource={dataSource} columns={columns} />
                         </Flex>
                     </Flex>
                 </Card>

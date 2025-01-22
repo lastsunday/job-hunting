@@ -437,9 +437,9 @@ async function _addOrUpdateCompanyTag(param, overrideUpdateDatetime, { connectio
  * 
  * @return CompanyTagDTO[]
  */
-export async function _getAllCompanyTagDTOByCompanyIds(param) {
+export async function _getAllCompanyTagDTOByCompanyIds(param, { connection = null } = {}) {
     let sqlSelectDTOByCompanyIds = genSqlSelectDTOByCompanyIds(param);
-    return await getAll(sqlSelectDTOByCompanyIds, [], new CompanyTagDTO());
+    return await getAll(sqlSelectDTOByCompanyIds, [], new CompanyTagDTO(), { connection });
 }
 
 const getSqlDeleteByCompanyIds = (ids) => {

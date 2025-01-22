@@ -144,12 +144,12 @@ export async function calculateUploadTask({ userName, repoName } = {}) {
     let today = dayjs(new Date()).startOf("day");
     if (today.isSame(taskDataUploadMaxDate)) {
         //如果存在
-        debugLog(`[TASK DATA UPLOAD CALCULATE] taskDataUploadMaxDate is today = ${taskDataUploadMaxDate}`)
-        debugLog(`[TASK DATA UPLOAD CALCULATE] skip add data upload record`)
+        infoLog(`[TASK DATA UPLOAD CALCULATE] taskDataUploadMaxDate is today = ${taskDataUploadMaxDate}`)
+        infoLog(`[TASK DATA UPLOAD CALCULATE] skip add data upload record`)
         //skip
     } else {
-        debugLog(`[TASK DATA UPLOAD CALCULATE] taskDataUploadMaxDate(${taskDataUploadMaxDate}) not equal today(${today})`)
-        debugLog(`[TASK DATA UPLOAD CALCULATE] add data upload record starting`)
+        infoLog(`[TASK DATA UPLOAD CALCULATE] taskDataUploadMaxDate(${taskDataUploadMaxDate}) not equal today(${today})`)
+        infoLog(`[TASK DATA UPLOAD CALCULATE] add data upload record starting`)
         //如果不存在
         //获取仓库中最新数据上传的时间
         try {
@@ -158,25 +158,31 @@ export async function calculateUploadTask({ userName, repoName } = {}) {
             })
             //计算数据项开始时间,取最小值(数据库时间,仓库时间)
             let dataSyncStartDatetime = dayjs.min(taskDataUploadMaxDate, dayjs(repoMaxDate));
-            debugLog(`[TASK DATA UPLOAD CALCULATE] dataSyncStartDatetime = ${dataSyncStartDatetime}`)
+            infoLog(`[TASK DATA UPLOAD CALCULATE] dataSyncStartDatetime = ${dataSyncStartDatetime}`)
             try {
                 await (await getDb()).transaction(async (tx) => {
+                    infoLog(`[TASK DATA UPLOAD CALCULATE] add data upload task ${userName}/${repoName} startDatetime=${dayjs(dataSyncStartDatetime).format()} endDatetime=${dayjs(today).format()} starting`)
+                    infoLog(`[TASK DATA UPLOAD CALCULATE] add data upload task ${userName}/${repoName} type=${TASK_TYPE_JOB_DATA_UPLOAD}`)
                     await addDataUploadTask({
                         type: TASK_TYPE_JOB_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName, connection: tx,
-                        total: (await getJobData({ startDatetime: dataSyncStartDatetime, endDatetime: today, connection: tx })).total,
+                        total: (await getJobData({ pageNum: 1, pageSize: 1, startDatetime: dataSyncStartDatetime, endDatetime: today, connection: tx })).total,
                     });
+                    infoLog(`[TASK DATA UPLOAD CALCULATE] add data upload task ${userName}/${repoName} type=${TASK_TYPE_COMPANY_DATA_UPLOAD}`)
                     await addDataUploadTask({
                         type: TASK_TYPE_COMPANY_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName, connection: tx,
-                        total: (await getCompanyData({ startDatetime: dataSyncStartDatetime, endDatetime: today, connection: tx })).total
+                        total: (await getCompanyData({ pageNum: 1, pageSize: 1, startDatetime: dataSyncStartDatetime, endDatetime: today, connection: tx })).total
                     });
+                    infoLog(`[TASK DATA UPLOAD CALCULATE] add data upload task ${userName}/${repoName} type=${TASK_TYPE_COMPANY_TAG_DATA_UPLOAD}`)
                     await addDataUploadTask({
                         type: TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName, connection: tx,
-                        total: (await getCompanyTagData({ startDatetime: dataSyncStartDatetime, endDatetime: today, connection: tx })).total
+                        total: (await getCompanyTagData({ pageNum: 1, pageSize: 1, startDatetime: dataSyncStartDatetime, endDatetime: today, connection: tx })).total
                     });
+                    infoLog(`[TASK DATA UPLOAD CALCULATE] add data upload task ${userName}/${repoName} type=${TASK_TYPE_JOB_TAG_DATA_UPLOAD}`)
                     await addDataUploadTask({
                         type: TASK_TYPE_JOB_TAG_DATA_UPLOAD, startDatetime: dataSyncStartDatetime, endDatetime: today, userName, repoName, connection: tx,
-                        total: (await getJobTagData({ startDatetime: dataSyncStartDatetime, endDatetime: today, connection: tx })).total
+                        total: (await getJobTagData({ pageNum: 1, pageSize: 1, startDatetime: dataSyncStartDatetime, endDatetime: today, connection: tx })).total
                     });
+                    infoLog(`[TASK DATA UPLOAD CALCULATE] add data upload task ${userName}/${repoName} end`)
                 });
             } catch (e) {
                 errorLog(e);
@@ -494,8 +500,10 @@ async function convertJsonObjectToExcelData(result) {
     return writeXLSX(wb, { type: "buffer" });
 }
 
-async function getJobData({ startDatetime, endDatetime, connection = null } = {}) {
+async function getJobData({ pageNum = null, pageSize = null, startDatetime = null, endDatetime = null, connection = null } = {}) {
     let searchParam = new SearchJobBO();
+    searchParam.pageNum = pageNum;
+    searchParam.pageSize = pageSize;
     searchParam.startDatetimeForUpdate = startDatetime;
     searchParam.endDatetimeForUpdate = endDatetime;
     searchParam.orderByColumn = "updateDatetime";
@@ -506,8 +514,10 @@ async function getJobData({ startDatetime, endDatetime, connection = null } = {}
     });
 }
 
-async function getCompanyData({ startDatetime, endDatetime, connection = null } = {}) {
+async function getCompanyData({ pageNum = null, pageSize = null, startDatetime, endDatetime, connection = null } = {}) {
     let searchParam = new SearchCompanyBO();
+    searchParam.pageNum = pageNum;
+    searchParam.pageSize = pageSize;
     searchParam.startDatetimeForUpdate = startDatetime;
     searchParam.endDatetimeForUpdate = endDatetime;
     searchParam.orderByColumn = "updateDatetime";
@@ -518,34 +528,30 @@ async function getCompanyData({ startDatetime, endDatetime, connection = null } 
     });
 }
 
-async function getCompanyTagData({ startDatetime, endDatetime, connection = null } = {}) {
+async function getCompanyTagData({ pageNum = null, pageSize = null, startDatetime, endDatetime, connection = null } = {}) {
     let searchParam = new CompanyTagExportBO();
+    searchParam.pageNum = pageNum;
+    searchParam.pageSize = pageSize;
     searchParam.source = "";
     searchParam.startDatetimeForUpdate = startDatetime;
     searchParam.endDatetimeForUpdate = endDatetime;
-    const items = await _companyTagExport({
+    return await _companyTagExport({
         param: searchParam,
         connection
     });
-    return {
-        total: items.length,
-        items
-    };
 }
 
-async function getJobTagData({ startDatetime, endDatetime, connection = null } = {}) {
+async function getJobTagData({ pageNum = null, pageSize = null, startDatetime, endDatetime, connection = null } = {}) {
     let searchParam = new JobTagExportBO();
+    searchParam.pageNum = pageNum;
+    searchParam.pageSize = pageSize;
     searchParam.source = "";
     searchParam.startDatetimeForUpdate = startDatetime;
     searchParam.endDatetimeForUpdate = endDatetime;
-    const items = await _jobTagExport({
+    return await _jobTagExport({
         param: searchParam,
         connection
     })
-    return {
-        total: items.length,
-        items
-    };
 }
 
 async function uploadData({ userName, repoName, dirPath, dataTypeName, dataList, jsonObjectToExcelJsonArrayFunction } = {}) {

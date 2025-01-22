@@ -298,7 +298,7 @@ export const _searchCompany = async ({ param = null, connection = null } = {}) =
       ids.push(item.companyId);
       itemIdObjectMap.set(item.companyId, item);
     });
-    let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids);
+    let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids, { connection });
     companyTagDTOList.forEach(item => {
       itemIdObjectMap.get(item.companyId).tagNameArray.push(item.tagName);
       itemIdObjectMap.get(item.companyId).tagIdArray.push(item.tagId);
@@ -328,17 +328,18 @@ async function companyStatistic({ sql }) {
  * @param {string[]} companyIds 
  * @returns CompanyDTO[]
  */
-export async function _getCompanyDTOByIds(companyIds) {
+export async function _getCompanyDTOByIds(companyIds, { connection = null } = {}) {
   if (companyIds && companyIds.length == 0) {
     return [];
   }
+  connection ??= await getDb();
   let items = [];
   let sqlQuery = "";
   let whereCondition = genIdsWhereConditionSql(companyIds);
   const sqlSearchQuery = genSqlSearchQuery();
   sqlQuery += sqlSearchQuery;
   sqlQuery += whereCondition;
-  const { rows } = await (await getDb()).query(sqlQuery);
+  const { rows } = await connection.query(sqlQuery);
   const queryRows = convertRows(rows);
   for (let i = 0; i < queryRows.length; i++) {
     let item = queryRows[i];
@@ -360,7 +361,7 @@ export async function _getCompanyDTOByIds(companyIds) {
       ids.push(item.companyId);
       itemIdObjectMap.set(item.companyId, item);
     });
-    let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids);
+    let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids, { connection });
     companyTagDTOList.forEach(item => {
       itemIdObjectMap.get(item.companyId).tagNameArray.push(item.tagName);
       itemIdObjectMap.get(item.companyId).tagIdArray.push(item.tagId);
@@ -441,6 +442,5 @@ export const _companyGetByIds = async ({ param = null, connection = null } = {})
 }
 
 export const _batchAddOrUpdateCompany = async ({ param = null, connection = null } = {}) => {
-  return await SERVICE_INSTANCE._batchAddOrUpdate(param, { connection });
+  return await SERVICE_INSTANCE._batchAddOrUpdate(param, { connection, overrideUpdateDatetime: true });
 }
-

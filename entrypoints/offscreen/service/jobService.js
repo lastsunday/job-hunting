@@ -380,7 +380,7 @@ export const _searchJob = async ({ param = null, connection = null } = {}) => {
   const { rows } = await connection.query(sqlQuery);
   const queryRows = convertRows(rows);
 
-  await _fillSearchResultExtraInfo(items, queryRows);
+  await _fillSearchResultExtraInfo(items, queryRows, { connection });
   //count
   let sqlCount = `SELECT COUNT(*) AS total from (${sqlQueryCountSubSql}) AS t1`;
   const { rows: queryCountRows } = await connection.query(sqlCount);
@@ -615,7 +615,7 @@ GROUP BY
 	t2.levels;
 `;
 
-export async function _fillSearchResultExtraInfo(items, queryRows) {
+export async function _fillSearchResultExtraInfo(items, queryRows, { connection = null } = {}) {
   if (queryRows.length <= 0) {
     return;
   }
@@ -637,7 +637,7 @@ export async function _fillSearchResultExtraInfo(items, queryRows) {
   }
   companyIds.push(...Array.from(companyIdMap.keys()));
   jobIds.push(...Array.from(jobIdMap.keys()));
-  let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(companyIds);
+  let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(companyIds, { connection });
   let companyIdAndCompanyTagListMap = new Map();
   companyTagDTOList.forEach(item => {
     let companyId = item.companyId;
@@ -646,7 +646,7 @@ export async function _fillSearchResultExtraInfo(items, queryRows) {
     }
     companyIdAndCompanyTagListMap.get(companyId).push(item);
   });
-  let jobTagDTOList = await _getAllJobTagDTOByJobIds(jobIds);
+  let jobTagDTOList = await _getAllJobTagDTOByJobIds(jobIds, { connection });
   let jobIdAndJobTagListMap = new Map();
   jobTagDTOList.forEach(item => {
     let id = item.jobId;
@@ -655,7 +655,7 @@ export async function _fillSearchResultExtraInfo(items, queryRows) {
     }
     jobIdAndJobTagListMap.get(id).push(item);
   });
-  let companyDTOList = await _getCompanyDTOByIds(companyIds);
+  let companyDTOList = await _getCompanyDTOByIds(companyIds, { connection });
   let companyIdAndCompanyDTOListMap = new Map();
   companyDTOList.forEach(item => {
     let companyId = item.companyId;

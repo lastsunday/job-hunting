@@ -366,9 +366,9 @@ export async function _getAllJobTagDTOByJobId(param) {
  * 
  * @return JobTagDTO[]
  */
-export async function _getAllJobTagDTOByJobIds(param) {
+export async function _getAllJobTagDTOByJobIds(param, { connection = null } = {}) {
     let sql = genSqlSelectDTOByJobIds(param);
-    return await getAll(sql, [], new JobTagDTO());
+    return await getAll(sql, [], new JobTagDTO(), { connection });
 }
 
 function genSqlSelectDTOByJobIds(ids) {
