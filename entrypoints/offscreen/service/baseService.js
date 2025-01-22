@@ -1,6 +1,6 @@
 import { Message } from "../../../common/api/message";
 import { genUniqueId, toHump } from "../../../common/utils";
-import { batchDel, batchGet, batchUpdate, del, insert, one, search, searchCount, update, batchInsertOrReplace } from "../database";
+import { batchDel, batchGet, del, one, search, searchCount, batchInsertOrReplace } from "../database";
 import { postErrorMessage, postSuccessMessage } from "../util";
 
 export class BaseService {
@@ -181,38 +181,6 @@ export class BaseService {
      */
     async _updateByIds(ids, column, { otherCondition } = { otherCondition: null }) {
         return batchDel(this.tableName, column ?? this.tableIdColumn, ids, { otherCondition });
-    }
-
-    /**
-     *
-     * @param {Message} message
-     * @param {*} param
-     */
-    async batchUpdate(message, param, column) {
-        try {
-            if (param.id && param.id.length > 0) {
-                await this._batchUpdate({ param, column });
-                postSuccessMessage(message, {});
-            } else {
-                postErrorMessage(
-                    message,
-                    "[worker] batchUpdate error : ids is empty"
-                );
-            }
-        } catch (e) {
-            postErrorMessage(
-                message,
-                "[worker] batchUpdate error : " + e.message
-            );
-        }
-    }
-
-    /**
-     * 
-     * @param {*} param 
-     */
-    async _batchUpdate({ param = null, column = null, overrideUpdateDatetime = false,connection=null } = {}) {
-        return batchUpdate(this.entityClassCreateFunction(), this.tableName, column ?? this.tableIdColumn, param, { overrideUpdateDatetime,connection });
     }
 
     /**

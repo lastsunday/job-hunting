@@ -234,7 +234,7 @@ const FileView: React.FC = () => {
                 },
                 orderByColumn: "createDatetime",
                 searchParam: {
-                    isDelete: 0,
+                    isDelete: false,
                 }
             }}
             rowKeyFunction={(record) => { return record.id }}

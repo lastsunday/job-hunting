@@ -119,13 +119,7 @@ export const FileService = {
      */
     fileLogicDeleteByIds: async function (message, param) {
         try {
-            postSuccessMessage(message, await _fileLogicDeleteByIds({
-                param: {
-                    id: param,
-                    content: "",
-                    isDelete: 1,
-                }
-            }));
+            postSuccessMessage(message, await _fileLogicDeleteByIds({ param }));
         } catch (e) {
             postErrorMessage(
                 message,
@@ -157,7 +151,7 @@ export const FileService = {
             const { rows: mergeFileSizeTotalRows } = await (await getDb()).query(mergeFileSizeTotalSql);
             result.mergeFileSizeTotal = Number.parseInt(mergeFileSizeTotalRows[0].total);
 
-            const mergeNotDeleteFileSizeTotalSql = `SELECT COALESCE(SUM(t1.size),0) AS total  from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id WHERE t1.is_delete = 0`;
+            const mergeNotDeleteFileSizeTotalSql = `SELECT COALESCE(SUM(t1.size),0) AS total  from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id WHERE t1.is_delete = FALSE`;
             const { rows: mergeNotDeleteFileSizeTotalRows } = await (await getDb()).query(mergeNotDeleteFileSizeTotalSql);
             result.mergeNotDeleteFileSizeTotal = Number.parseInt(mergeNotDeleteFileSizeTotalRows[0].total);
 
@@ -165,7 +159,7 @@ export const FileService = {
             const { rows: mergeFileCountRows } = await (await getDb()).query(mergeFileCountSql);
             result.mergeFileCount = mergeFileCountRows[0].total;
 
-            const mergeNotDeleteFileCountSql = `SELECT COUNT(*) AS total  from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id WHERE t1.is_delete = 0`;
+            const mergeNotDeleteFileCountSql = `SELECT COUNT(*) AS total  from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id WHERE t1.is_delete = FALSE`;
             const { rows: mergeNotDeleteFileCountRows } = await (await getDb()).query(mergeNotDeleteFileCountSql);
             result.mergeNotDeleteFileCount = mergeNotDeleteFileCountRows[0].total;
 
@@ -188,16 +182,12 @@ export const _fileAddOrUpdate = async ({ param = null, connection = null } = {})
 }
 
 export const _fileGetAllMergedNotDeleteFile = async ({ param = null, connection = null } = {}) => {
-    return await getAll(`SELECT t1.id AS id,t1.size AS size,t3.update_datetime AS update_datetime from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id WHERE t1.is_delete = 0 AND t3.status = 'FINISHED' ORDER BY t3.update_datetime DESC`, [], new FileDTO(), { connection });
+    return await getAll(`SELECT t1.id AS id,t1.size AS size,t3.update_datetime AS update_datetime from file t1 LEFT JOIN task_data_merge t2 ON t1.id = t2.data_id LEFT JOIN task t3 ON t2.id = t3.data_id WHERE t1.is_delete = FALSE AND t3.status = 'FINISHED' ORDER BY t3.update_datetime DESC`, [], new FileDTO(), { connection });
 }
 
 export const _fileLogicDeleteByIds = async ({ param = null, connection = null } = {}) => {
-    return await SERVICE_INSTANCE._batchUpdate({
-        param: {
-            id: param,
-            content: "",
-            isDelete: 1,
-        },
-        connection
-    });
+    if (param && param.length > 0) {
+        let ids = "'" + param.join("','") + "'";
+        await connection.exec(`UPDATE file SET content = '',is_delete = TRUE WHERE id in(${ids}) `);
+    }
 }

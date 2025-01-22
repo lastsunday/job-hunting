@@ -8,5 +8,5 @@ export class File {
 	type;
 	createDatetime;
 	updateDatetime;
-	isDelete = 0;
+	isDelete = false;
 }

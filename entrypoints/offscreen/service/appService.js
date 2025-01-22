@@ -44,9 +44,8 @@ export const AppService = {
                 infoLog(`[TASK] Data share plan disable`);
                 infoLog(`[TASK] Data share plan task skip`);
             }
-            //TODO
-            // infoLog(`[TASK] runScheduleTask`)
-            // await runScheduleTask();
+            infoLog(`[TASK] runScheduleTask`)
+            await runScheduleTask();
             postSuccessMessage(message, {});
         } catch (e) {
             postErrorMessage(

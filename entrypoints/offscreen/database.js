@@ -76,32 +76,6 @@ export function genFullSelectByIdSQL(obj, tableName, idColumnName, id) {
   return `${genFullSelectSQL(obj, tableName)} WHERE ${idColumnName} = '${id}'`;
 }
 
-export function genFullInsertSQL(obj, tableName) {
-  let column = [];
-  let columnParam = [];
-  let keys = Object.keys(obj);
-  for (let n = 0; n < keys.length; n++) {
-    let key = keys[n];
-    column.push(toLine(key));
-    columnParam.push(`$${toLine(key)}`);
-  }
-  return `INSERT INTO ${tableName} (${column.join(",")}) VALUES (${columnParam.join(",")})`;
-}
-
-export async function insert(obj, tableName, param, { overrideUpdateDatetime = false } = {}) {
-  const targetObj = Object.assign(obj, param)
-  const insertSQL = genFullInsertSQL(targetObj, tableName);
-  const bindObject = genFullBindObject(targetObj, { overrideUpdateDatetime });
-  if (isDebug()) {
-    debugLog(`[database] [insert] insertSQL = ${insertSQL}`)
-    debugLog(`[database] [insert] bindObject = ${JSON.stringify(bindObject)}`)
-  }
-  return (await getDb()).exec({
-    sql: insertSQL,
-    bind: bindObject,
-  });
-}
-
 export async function batchInsert(obj, tableName, params, { overrideCreateDatetime = false, overrideUpdateDatetime = false, connection = null } = {}) {
   return batchInsertOrReplace(obj, tableName, null, params, { replace: false, overrideCreateDatetime, overrideUpdateDatetime, connection })
 }
@@ -205,92 +179,6 @@ function genInsertValueSQL(obj, params) {
   return insertValues.join(",");
 }
 
-export async function update(obj, tableName, idColumn, param, { overrideUpdateDatetime = false } = {}) {
-  const targetObj = Object.assign(obj, param)
-  const updateSQL = genFullUpdateSQL(targetObj, tableName, idColumn);
-  const bindObject = genFullBindObject(targetObj, { overrideUpdateDatetime });
-  delete bindObject.$create_datetime;
-  if (isDebug()) {
-    debugLog(`[database] [update] updateSQL = ${updateSQL}`)
-    debugLog(`[database] [update] bindObject = ${JSON.stringify(bindObject)}`)
-  }
-  return (await getDb()).exec({
-    sql: updateSQL,
-    bind: bindObject,
-  });
-}
-
-export async function batchUpdate(obj, tableName, idColumn, param, { overrideUpdateDatetime = false, connection = null } = {}) {
-  connection ??= await getDb();
-  const targetObj = Object.assign(obj, param)
-  const idArray = targetObj[idColumn];
-  let ids = "'" + idArray.join("','") + "'";
-  targetObj[idColumn] = ids;
-  targetObj.updateDatetime = targetObj.updateDatetime ?? dayjs().format();
-  const updateSQL = genBatchFullUpdateSQL(targetObj, tableName, idColumn, ids, { overrideUpdateDatetime });
-  const bindObject = genFullBindObject(targetObj, { overrideUpdateDatetime });
-  delete bindObject[`$${idColumn}`];
-  delete bindObject.$create_datetime;
-  let keys = Object.keys(bindObject);
-  for (let n = 0; n < keys.length; n++) {
-    let key = keys[n];
-    if (bindObject[key] == null) {
-      delete bindObject[key];
-    }
-  }
-  if (isDebug()) {
-    debugLog(`[database] [update] updateSQL = ${updateSQL}`)
-    debugLog(`[database] [update] bindObject = ${JSON.stringify(bindObject)}`)
-  }
-  return await connection.query(updateSQL, bindObject);
-}
-
-export function genBatchFullUpdateSQL(obj, tableName, idColumn, ids, { overrideUpdateDatetime }) {
-  let column = [];
-  let keys = Object.keys(obj);
-  for (let n = 0; n < keys.length; n++) {
-    let key = keys[n];
-    if (key != "createDatetime" && key != idColumn) {
-      if (obj[key] != null) {
-        if (obj[key] == "") {
-          column.push(`${toLine(key)}=NULL`);
-        } else {
-          column.push(`${toLine(key)}=$${toLine(key)}`);
-        }
-      }
-    }
-  }
-  return `UPDATE ${tableName} SET ${column.join(",")} WHERE ${idColumn} in (${ids})`;
-}
-
-export function genFullUpdateSQL(obj, tableName, idColumn) {
-  let column = [];
-  let keys = Object.keys(obj);
-  for (let n = 0; n < keys.length; n++) {
-    let key = keys[n];
-    if (key != "createDatetime" && key != idColumn) {
-      column.push(`${toLine(key)}=$${toLine(key)}`);
-    }
-  }
-  return `UPDATE ${tableName} SET ${column.join(",")} WHERE ${idColumn} = $${idColumn}`;
-}
-
-export function genFullBindObject(obj, { overrideUpdateDatetime = false } = {}) {
-  let now = new Date();
-  const result = {};
-  let keys = Object.keys(obj);
-  for (let n = 0; n < keys.length; n++) {
-    let key = keys[n];
-    if (key == "createDatetime" || (!overrideUpdateDatetime && key == "updateDatetime")) {
-      result[`$${toLine(key)}`] = dayjs(now).format();
-    } else if (overrideUpdateDatetime && key == "updateDatetime") {
-      result[`$${toLine(key)}`] = dayjs(obj[`${key}`]).format();
-    } else {
-      result[`$${toLine(key)}`] = convertEmptyStringToNull(obj[`${key}`])
-    }
-  }
-  return result;
-}
 
 export async function one(entity, tableName, idColumn, id, { connection = null } = {}) {
   const selectOneSql = genFullSelectByIdSQL(entity, tableName, idColumn, id);
