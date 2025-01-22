@@ -163,7 +163,7 @@ const JobItemTable: React.FC<JobItemTableProps> = (props) => {
       children: (
         <>
           <Text strong type="danger">
-            {salaryMin} - {salaryMax}
+            {Math.ceil(salaryMin)} - {Math.ceil(salaryMax)}
           </Text>
         </>
       ),

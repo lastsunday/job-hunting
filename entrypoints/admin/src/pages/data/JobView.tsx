@@ -202,14 +202,14 @@ const JobView: React.FC = () => {
     {
       title: '最低薪资',
       dataIndex: 'salaryMin',
-      render: (text: string) => <Text>{text}</Text>,
+      render: (value: number) => <Text>{Math.ceil(value)}</Text>,
       minWidth: 100,
       sorter: true,
     },
     {
       title: '最高薪资',
       dataIndex: 'salaryMax',
-      render: (text: string) => <Text>{text}</Text>,
+      render: (value: number) => <Text>{Math.ceil(value)}</Text>,
       minWidth: 100,
       sorter: true,
     },

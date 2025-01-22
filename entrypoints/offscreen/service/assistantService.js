@@ -2,7 +2,6 @@ import dayjs from "dayjs";
 import { Message } from "../../../common/api/message";
 import { SearchFaviousJobBO } from "../../../common/data/bo/searchFaviousJobBO";
 import { Config } from "../../../common/data/domain/config";
-import { AssistantStatisticDTO } from "../../../common/data/dto/assistantStatisticDTO";
 import { JobFaviousSettingDTO } from "../../../common/data/dto/jobFaviousSettingDTO";
 import { SearchJobDTO } from "../../../common/data/dto/searchJobDTO";
 import { genIdFromText } from "../../../common/utils";
@@ -93,48 +92,6 @@ export const AssistantService = {
             postErrorMessage(
                 message,
                 "[worker] assistantGetJobFaviousSetting error : " + e.message
-            );
-        }
-    },
-    /**
-     *
-     * @param {Message} message
-     * @param {*} param
-     *
-     * @returns {AssistantStatisticDTO}
-     */
-    assistantStatistic: async function (message, param) {
-        try {
-            let jobFaviousSettingDTO = await _getJobFaviousSetting();
-            let result = new AssistantStatisticDTO();
-            let now = dayjs();
-            let todayStart = now.startOf("day").format();
-            let todayEnd = now
-                .startOf("day")
-                .add(1, "day")
-                .format();
-
-            let todayFaviousJobCount = [];
-            (await getDb()).exec({
-                sql: genFaviousJobCountSQL(jobFaviousSettingDTO, todayStart, todayEnd),
-                rowMode: "object",
-                resultRows: todayFaviousJobCount,
-            });
-
-            let totalFaviousJob = [];
-            let totalSql = genFaviousJobCountSQL(jobFaviousSettingDTO);
-            (await getDb()).exec({
-                sql: totalSql,
-                rowMode: "object",
-                resultRows: totalFaviousJob,
-            });
-            result.todayFaviousJobCount = todayFaviousJobCount[0].count;
-            result.totalFaviousJob = totalFaviousJob[0].count;
-            postSuccessMessage(message, result);
-        } catch (e) {
-            postErrorMessage(
-                message,
-                "[worker] assistantStatistic error : " + e.message
             );
         }
     },

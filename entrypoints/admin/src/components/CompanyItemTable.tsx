@@ -87,7 +87,7 @@ const JobItemTable: React.FC<CompanytemTableProps> = (props) => {
       key: "startDate",
       label: "成立时间",
       span: 1,
-      children: <>{dateToStr(startDate)}</>,
+      children: <>{dateToStr(startDate,"YYYY-MM-DD")}</>,
     },
     {
       key: "industry",

@@ -98,13 +98,13 @@ const PartnerView: React.FC = () => {
         {
             title: '创建时间',
             dataIndex: 'createDatetime',
-            render: (value: string) => <Text>{dateToStr(value)}</Text>,
+            render: (value: string) => <Text title={dateToStr(value)}>{dateToStr(value,"YYYY-MM-DD")}</Text>,
             minWidth: 100,
         },
         {
             title: '更新时间',
             dataIndex: 'updateDatetime',
-            render: (value: string) => <Text>{dateToStr(value)}</Text>,
+            render: (value: string) => <Text title={dateToStr(value)}>{dateToStr(value,"YYYY-MM-DD")}</Text>,
             minWidth: 100,
         },
         {

@@ -128,7 +128,7 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
             {name}
           </Link>
           <Text type="warning" className={styles.salary}>
-            {salaryMin} - {salaryMax}
+            {Math.ceil(salaryMin)} - {Math.ceil(salaryMax)}
           </Text>
         </Flex>
         <Flex className={styles.marginTop} wrap={true} gap={2}>

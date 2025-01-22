@@ -79,7 +79,7 @@ const HeaderRight: React.FC = () => {
             result.push(
                 <Flex align="center" key={obj.title}>
                     <Progress size={[170, 20]} percent={item.rateLimitRemaining / item.rateLimitLimit * 100} showInfo={true} percentPosition={{ align: 'center', type: 'inner' }} format={(percent) => {
-                        return <Text title={`将于${dateToStr(item.rateLimitReset) ?? "N/A"}重置`} className={styles.progressText}><Icon icon="mdi:github" />{title} API:{item.rateLimitRemaining}/{item.rateLimitLimit}</Text>
+                        return <Text title={`将于${dateToStr(item.rateLimitReset,"YYYY-MM-DD") ?? "N/A"}重置`} className={styles.progressText}><Icon icon="mdi:github" />{title} API:{item.rateLimitRemaining}/{item.rateLimitLimit}</Text>
                     }} />
                 </Flex>
             );

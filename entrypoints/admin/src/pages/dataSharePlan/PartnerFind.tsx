@@ -112,13 +112,13 @@ const PartnerFind: React.FC<PartnerFindProps> = ({ }) => {
         {
             title: '最近更新时间',
             dataIndex: 'updatedAt',
-            render: (value: string) => <Text>{dateToStr(dayjs(value))}</Text>,
+            render: (value: string) => <Text>{dateToStr(dayjs(value),"YYYY-MM-DD")}</Text>,
             minWidth: 100,
         },
         {
             title: '创建时间',
             dataIndex: 'createdAt',
-            render: (value: string) => <Text>{dateToStr(dayjs(value))}</Text>,
+            render: (value: string) => <Text>{dateToStr(dayjs(value),"YYYY-MM-DD")}</Text>,
             minWidth: 100,
         },
     ]

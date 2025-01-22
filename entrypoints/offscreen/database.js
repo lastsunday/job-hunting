@@ -429,23 +429,6 @@ export async function sort(tableName, idColumnName, param, { connection = null }
     });
   }
 }
-export async function beginTransaction() {
-  return (await getDb()).exec({
-    sql: "BEGIN TRANSACTION",
-  });
-};
-
-export async function commitTransaction() {
-  return (await getDb()).exec({
-    sql: "COMMIT",
-  });
-};
-
-export async function rollbackTransaction() {
-  return (await getDb()).exec({
-    sql: "ROLLBACK TRANSACTION",
-  });
-};
 
 export const Database = {
   /**

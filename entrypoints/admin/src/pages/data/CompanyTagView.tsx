@@ -159,7 +159,7 @@ const CompanyTagView: React.FC = () => {
     {
       title: '更新时间',
       dataIndex: 'updateDatetime',
-      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value)}</Text>,
+      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value,"YYYY-MM-DD")}</Text>,
       minWidth: 80,
       sorter: true,
     },

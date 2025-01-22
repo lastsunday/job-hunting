@@ -178,8 +178,8 @@ const MissionHistory: React.FC<MissionHistoryProps> = ({ data }) => {
                                 <Space direction="vertical">
                                     <Flex>
                                         <Descriptions title="">
-                                            <Descriptions.Item label="开始时间">{dateToStr(record.detail.startDatetime)}</Descriptions.Item>
-                                            <Descriptions.Item label="结束时间">{dateToStr(record.detail.startDatetime)}</Descriptions.Item>
+                                            <Descriptions.Item label="开始时间">{dateToStr(record.detail.startDatetime,"YYYY-MM-DD")}</Descriptions.Item>
+                                            <Descriptions.Item label="结束时间">{dateToStr(record.detail.startDatetime,"YYYY-MM-DD")}</Descriptions.Item>
                                             <Descriptions.Item label="浏览页数">{record.detail.count}</Descriptions.Item>
                                         </Descriptions>
                                     </Flex>

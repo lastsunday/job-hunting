@@ -48,7 +48,7 @@ const JobPin: React.FC<JobPinProps> = ({ data, onClick }) => {
         </Flex>
         <Flex>
           <Text ellipsis>
-            💵{salaryMin} - 💵{salaryMax}
+            💵{Math.ceil(salaryMin)} - 💵{Math.ceil(salaryMax)}
           </Text>
         </Flex>
         <Flex>

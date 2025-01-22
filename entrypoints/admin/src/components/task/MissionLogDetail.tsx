@@ -16,7 +16,7 @@ const MissionLogDetail: React.FC<MissionLogDetailProps> = ({ data }) => {
         <Flex vertical>
             <Flex>
                 <Flex>任务时间：</Flex>
-                <Flex>{dateToStr(startDatetime)} - {dateToStr(endDatetime)}</Flex>
+                <Flex>{dateToStr(startDatetime,"YYYY-MM-DD")} - {dateToStr(endDatetime,"YYYY-MM-DD")}</Flex>
             </Flex>
             <Flex>
                 <Flex>运行结果：</Flex>

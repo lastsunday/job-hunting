@@ -86,12 +86,12 @@ const JobPopup: React.FC<JobPopupProps> = ({ data, onClick }) => {
           </Flex>
           <Flex>
             <Text>发布时间：</Text>
-            <Text ellipsis>{dateToStr(publishDatetime)}</Text>
+            <Text ellipsis>{dateToStr(publishDatetime,"YYYY-MM-DD")}</Text>
           </Flex>
           <Flex>
             <Text>薪资：</Text>
             <Text ellipsis>
-              💵{salaryMin} - 💵{salaryMax}
+              💵{Math.ceil(salaryMin)} - 💵{Math.ceil(salaryMax)}
             </Text>
           </Flex>
           <Flex>

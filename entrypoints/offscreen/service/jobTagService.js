@@ -10,7 +10,7 @@ import { JobTagDTO } from "../../../common/data/dto/jobTagDTO";
 import { JobTagNameStatisticDTO } from "../../../common/data/dto/jobTagNameStatisticDTO";
 import { JobTagSearchDTO } from "../../../common/data/dto/jobTagSearchDTO";
 import { genIdFromText, genUniqueId, isBlank } from "../../../common/utils";
-import { getAll, getDb, rollbackTransaction } from "../database";
+import { getAll, getDb } from "../database";
 import { postErrorMessage, postSuccessMessage } from "../util";
 import { BaseService } from "./baseService";
 import { _jobGetByIds } from "./jobService";
@@ -157,7 +157,6 @@ export const JobTagService = {
             });
             postSuccessMessage(message, {});
         } catch (e) {
-            await rollbackTransaction();
             postErrorMessage(
                 message,
                 "[worker] jobTagBatchAddOrUpdate error : " + e.message

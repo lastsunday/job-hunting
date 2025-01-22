@@ -637,14 +637,6 @@ export const AssistantApi = {
     let result = await invoke(this.assistantGetJobFaviousSetting.name, {});
     return result.data;
   },
-  /**
- * 
- * @returns AssistantStatisticDTO
- */
-  assistantStatistic: async function () {
-    let result = await invoke(this.assistantStatistic.name, {});
-    return result.data;
-  },
 
 }
 
@@ -993,39 +985,6 @@ export const TaskDataDownloadApi = {
  */
   taskDataDownloadDeleteByIds: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
     let result = await invoke(this.taskDataDownloadDeleteByIds.name, param, { invokeEnv: invokeEnv });
-    return result.data;
-  },
-
-}
-
-export const DBApi = {
-
-  /**
-   * 
-   * @param {} param 
-   * @returns {}
-   */
-  dbBeginTransaction: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
-    let result = await invoke(this.dbBeginTransaction.name, param, { invokeEnv: invokeEnv });
-    return result.data;
-  },
-
-  /**
-   * 
-   * @param {} param 
-   * @returns 
-   */
-  dbCommitTransaction: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
-    let result = await invoke(this.dbCommitTransaction.name, param, { invokeEnv: invokeEnv });
-    return result.data;
-  },
-  /**
-   * 
-   * @param {} param 
-   * @returns 
-   */
-  dbRollbackTransaction: async function (param, { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }) {
-    let result = await invoke(this.dbRollbackTransaction.name, param, { invokeEnv: invokeEnv });
     return result.data;
   },
 

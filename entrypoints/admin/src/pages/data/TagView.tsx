@@ -66,14 +66,14 @@ const TagView: React.FC = () => {
     {
       title: '创建时间',
       dataIndex: 'createDatetime',
-      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value)}</Text>,
+      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value,"YYYY-MM-DD")}</Text>,
       minWidth: 100,
       sorter: true,
     },
     {
       title: '更新时间',
       dataIndex: 'updateDatetime',
-      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value)}</Text>,
+      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value,"YYYY-MM-DD")}</Text>,
       minWidth: 100,
       sorter: true,
     },
