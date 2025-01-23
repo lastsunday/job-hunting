@@ -1,5 +1,5 @@
+import Emitter from "@/common/extension/emitter";
 import { EVENT_RESPONSE_INFO } from "../../../common";
-import Emitter from "../../../common/emitter";
 import { parseToLineObjectToToHumpObject } from "../../../common/utils";
 import {
   APP_URL_LATEST_VERSION,
@@ -399,12 +399,8 @@ async function fetchJsonReturnResponse(url, data, { method, token, skipLogin, ge
   response.headers.forEach((value, key, parent) => {
     responseHeader[key] = value;
   })
-  if (location.protocol == "chrome-extension:") {
-    const eventKey = `${EVENT_RESPONSE_INFO}${responseHeader.server}`;
-    Emitter.emit(eventKey, responseHeader);
-  } else {
-    //other page
-  }
+  const eventKey = `${EVENT_RESPONSE_INFO}${responseHeader.server}`;
+  Emitter.emit(eventKey, responseHeader);
   return response;
 }
 

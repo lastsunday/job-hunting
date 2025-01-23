@@ -1,10 +1,10 @@
-import { Message } from "../../../common/api/message";
-import { TagSearchBO } from "../../../common/data/bo/tagSearchBO";
-import { Tag } from "../../../common/data/domain/tag";
-import { TagSearchDTO } from "../../../common/data/dto/tagSearchDTO";
-import { genIdFromText, toHump, toLine } from "../../../common/utils";
+import { Message } from "@/common/api/message";
+import { TagSearchBO } from "@/common/data/bo/tagSearchBO";
+import { Tag } from "@/common/data/domain/tag";
+import { TagSearchDTO } from "@/common/data/dto/tagSearchDTO";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
+import { genIdFromText, toHump, toLine } from "@/common/utils";
 import { batchGet, getAll, getDb, getOne } from "../database";
-import { postErrorMessage, postSuccessMessage } from "../util";
 import { BaseService } from "./baseService";
 
 const SERVICE_INSTANCE = new BaseService("tag", "tag_id",

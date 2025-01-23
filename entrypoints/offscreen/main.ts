@@ -1,6 +1,6 @@
+import { isDevEnv } from "../../common";
 import { BACKGROUND, OFFSCREEN, WEB_WORKER } from "../../common/api/bridgeCommon";
 import { debugLog } from "../../common/log";
-import { isDevEnv } from "../../common";
 // @ts-expect-error: Query params not typed
 import MyWorker from "./worker?worker&url";
 

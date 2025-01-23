@@ -1,5 +1,5 @@
-import { debugLog, errorLog } from "../../common/log";
-import { OFFSCREEN, WEB_WORKER } from "../../common/api/bridgeCommon";
+import { OFFSCREEN, WEB_WORKER } from "@/common/api/bridgeCommon";
+import { debugLog, errorLog } from "@/common/log";
 
 const chunkSize = 1024 * 1024 * 50;
 

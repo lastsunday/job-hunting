@@ -1,9 +1,11 @@
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
+import { debugLog, errorLog, infoLog, isDebug } from "@/common/log";
+import { convertEmptyStringToNull, toHump, toLine } from "@/common/utils";
 import dayjs from "dayjs";
-import { debugLog, errorLog, infoLog, isDebug } from "../../common/log";
-import { convertEmptyStringToNull, toHump, toLine } from "../../common/utils";
 import { getChangeLogList, initChangeLog } from "./changeLog";
 import { ChangeLogV1 } from "./changeLog/changeLogV1";
 import { ChangeLogV10 } from './changeLog/changeLogV10';
+import { ChangeLogV11 } from './changeLog/changeLogV11';
 import { ChangeLogV2 } from "./changeLog/changeLogV2";
 import { ChangeLogV3 } from './changeLog/changeLogV3';
 import { ChangeLogV4 } from './changeLog/changeLogV4';
@@ -12,8 +14,6 @@ import { ChangeLogV6 } from './changeLog/changeLogV6';
 import { ChangeLogV7 } from './changeLog/changeLogV7';
 import { ChangeLogV8 } from './changeLog/changeLogV8';
 import { ChangeLogV9 } from './changeLog/changeLogV9';
-import { ChangeLogV11 } from './changeLog/changeLogV11';
-import { postErrorMessage, postSuccessMessage } from "./util";
 
 import { PGlite } from '@electric-sql/pglite';
 
@@ -86,6 +86,7 @@ export async function batchInsertOrReplace(obj, tableName, tableIdColumn, params
     //https://www.sqlite.org/limits.html
     //Maximum Number Of Host Parameters In A Single SQL Statement
     //To prevent excessive memory allocations, the maximum value of a host parameter number is SQLITE_MAX_VARIABLE_NUMBER, which defaults to 999 for SQLite versions prior to 3.32.0 (2020-05-22) or 32766 for SQLite versions after 3.32.0.
+    //在PGlite里暂时先借用该规则，这数值不一定合理。
     let maxVarLength = 32766;
     let paramVarLength = Object.keys(obj).length;
     let maxRecordCountForOneExec = Number.parseInt(maxVarLength / paramVarLength);

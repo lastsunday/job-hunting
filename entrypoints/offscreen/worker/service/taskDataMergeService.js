@@ -1,10 +1,9 @@
-import { Message } from "../../../common/api/message";
-import { SearchTaskDataMergeBO } from "../../../common/data/bo/searchTaskDataMergeBO";
-import { SearchTaskDataMergeDTO } from "../../../common/data/dto/searchTaskDataMergeDTO";
-import { TaskDataMerge } from "../../../common/data/domain/taskDataMerge";
-import { BaseService } from "./baseService";
-import { dateToStr } from "../../../common/utils";
+import { Message } from "@/common/api/message";
+import { SearchTaskDataMergeBO } from "@/common/data/bo/searchTaskDataMergeBO";
+import { TaskDataMerge } from "@/common/data/domain/taskDataMerge";
+import { SearchTaskDataMergeDTO } from "@/common/data/dto/searchTaskDataMergeDTO";
 import dayjs from "dayjs";
+import { BaseService } from "./baseService";
 
 export const SERVICE_INSTANCE = new BaseService("task_data_merge", "id",
     () => {

@@ -1,7 +1,3 @@
-import dayjs from "dayjs";
-import minMax from 'dayjs/plugin/minMax'; // ES 2015
-import JSZip from "jszip";
-import { read, utils, writeXLSX } from "xlsx";
 import {
     DATA_TYPE_NAME_COMPANY,
     DATA_TYPE_NAME_COMPANY_TAG,
@@ -59,25 +55,27 @@ import { getMergeDataListForCompany, getMergeDataListForJob, getMergeDataListFor
 import { dateToStr, genIdFromText } from "@/common/utils";
 import { bytesToBase64 } from "@/common/utils/base64";
 import { getExcelDataFromZipFile } from "@/common/zip";
+import dayjs from "dayjs";
+import minMax from 'dayjs/plugin/minMax'; // ES 2015
+import JSZip from "jszip";
+import { read, utils, writeXLSX } from "xlsx";
 
-import { _taskDataUploadGetMaxEndDatetime, _taskDataUploadAddOrUpdate } from "../taskDataUploadService";
-import { _addOrUpdateConfig, _getConfigByKey } from "../configService";
-import { OauthDTO } from "@/common/data/dto/oauthDTO";
+import { KEY_GITHUB_OAUTH_TOKEN, KEY_GITHUB_USER } from "@/common/config";
 import { Config } from "@/common/data/domain/config";
-import { KEY_GITHUB_OAUTH_TOKEN } from "@/common/config";
-import { _searchJob, _jobGetByIds, _batchAddOrUpdateJob } from "../jobService";
-import { _searchCompany, _companyGetByIds, _batchAddOrUpdateCompany } from "../companyService";
-import { _taskAddOrUpdate, _searchTask } from "../taskService";
-import { getDb } from "../../database";
-import { _companyTagExport, _batchAddOrUpdateCompanyTag } from "../companyTagService";
-import { _jobTagExport, _jobTagBatchAddOrUpdate } from "../jobTagService";
-import { _searchDataSharePartner } from "../dataSharePartnerService";
-import { _searchTaskDataDownload, _taskDataDownloadAddOrUpdate, _taskDataDownloadGetById } from "../taskDataDownloadService";
-import { _taskDataUploadGetById } from "../taskDataUploadService";
-import { _fileAddOrUpdate, _fileGetById, _fileGetAllMergedNotDeleteFile, _fileLogicDeleteByIds } from "../fileService";
-import { _taskDataMergeAddOrUpdate, _taskDataMergeGetById } from "../taskDataMergeService";
+import { OauthDTO } from "@/common/data/dto/oauthDTO";
 import { UserDTO } from "@/common/data/dto/userDTO";
-import { KEY_GITHUB_USER } from "@/common/config";
+import { getDb } from "../../database";
+import { _batchAddOrUpdateCompany, _companyGetByIds, _searchCompany } from "../companyService";
+import { _batchAddOrUpdateCompanyTag, _companyTagExport } from "../companyTagService";
+import { _addOrUpdateConfig, _getConfigByKey } from "../configService";
+import { _searchDataSharePartner } from "../dataSharePartnerService";
+import { _fileAddOrUpdate, _fileGetAllMergedNotDeleteFile, _fileGetById, _fileLogicDeleteByIds } from "../fileService";
+import { _batchAddOrUpdateJob, _jobGetByIds, _searchJob } from "../jobService";
+import { _jobTagBatchAddOrUpdate, _jobTagExport } from "../jobTagService";
+import { _searchTaskDataDownload, _taskDataDownloadAddOrUpdate, _taskDataDownloadGetById } from "../taskDataDownloadService";
+import { _taskDataMergeAddOrUpdate, _taskDataMergeGetById } from "../taskDataMergeService";
+import { _taskDataUploadAddOrUpdate, _taskDataUploadGetById, _taskDataUploadGetMaxEndDatetime } from "../taskDataUploadService";
+import { _searchTask, _taskAddOrUpdate } from "../taskService";
 dayjs.extend(minMax);
 
 function calculateMaxYear(list) {

@@ -1,9 +1,9 @@
-import { postErrorMessage, postSuccessMessage } from "../util";
-import { _getConfigByKey } from "./configService";
 import { CONFIG_KEY_DATA_SHARE_PLAN, DEFAULT_DATA_REPO } from "@/common/config";
 import { DataSharePlanConfigDTO } from "@/common/data/dto/dataSharePlanConfigDTO";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
 import { infoLog } from "@/common/log";
-import { calculateUploadTask, calculateDataSharePartnerList, calculateDownloadTask, runTask, _getUser, runScheduleTask } from "./app";
+import { _getUser, calculateDataSharePartnerList, calculateDownloadTask, calculateUploadTask, runScheduleTask, runTask } from "./app";
+import { _getConfigByKey } from "./configService";
 
 export const AppService = {
 

@@ -1,21 +1,21 @@
-import dayjs from "dayjs";
 import {
     isDownloadType,
     isMergeType,
     isUploadType
-} from "../../../common";
-import { Message } from "../../../common/api/message";
-import { SearchTaskBO } from "../../../common/data/bo/searchTaskBO";
-import { StatisticTaskBO } from "../../../common/data/bo/statisticTaskBO";
-import { TaskStatisticBO } from "../../../common/data/bo/taskStatisticBO";
-import { Task } from "../../../common/data/domain/task";
-import { ChartStackedDTO } from "../../../common/data/dto/chartStackedDTO";
-import { SearchTaskDTO } from "../../../common/data/dto/searchTaskDTO";
-import { StatisticTaskDTO } from "../../../common/data/dto/statisticTaskDTO";
-import { TaskDTO } from "../../../common/data/dto/taskDTO";
-import { dateToStr } from "../../../common/utils";
-import { getDb, convertRows } from "../database";
-import { postErrorMessage, postSuccessMessage } from "../util";
+} from "@/common";
+import { Message } from "@/common/api/message";
+import { SearchTaskBO } from "@/common/data/bo/searchTaskBO";
+import { StatisticTaskBO } from "@/common/data/bo/statisticTaskBO";
+import { TaskStatisticBO } from "@/common/data/bo/taskStatisticBO";
+import { Task } from "@/common/data/domain/task";
+import { ChartStackedDTO } from "@/common/data/dto/chartStackedDTO";
+import { SearchTaskDTO } from "@/common/data/dto/searchTaskDTO";
+import { StatisticTaskDTO } from "@/common/data/dto/statisticTaskDTO";
+import { TaskDTO } from "@/common/data/dto/taskDTO";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
+import { dateToStr } from "@/common/utils";
+import dayjs from "dayjs";
+import { convertRows, getDb } from "../database";
 import { BaseService } from "./baseService";
 import { SERVICE_INSTANCE as taskDataDownloadService } from "./taskDataDownloadService";
 import { SERVICE_INSTANCE as taskDataMergeService } from "./taskDataMergeService";

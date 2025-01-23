@@ -1,24 +1,24 @@
-import { ConfigApi, JobApi, AppApi } from "../../common/api";
-import { INVOKE_WARN_TIME_COST } from "../../common/config";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/background/util";
+import { isDevEnv } from "../../common";
+import { AppApi, JobApi } from "../../common/api";
 import { getAndRemovePromiseHook } from "../../common/api/bridge";
 import {
   BACKGROUND,
   CONTENT_SCRIPT,
   OFFSCREEN,
+  WEB_WORKER,
 } from "../../common/api/bridgeCommon";
 import { httpFetchGetText, httpFetchJson } from "../../common/api/common";
-import { CONFIG_KEY_DATA_SHARE_PLAN, DEFAULT_DATA_REPO, GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_APP_INSTALL_CALLBACK_URL, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_URL_GET_USER, TASK_LOOP_DELAY } from "../../common/config";
-import { DataSharePlanConfigDTO } from "../../common/data/dto/dataSharePlanConfigDTO";
+import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_APP_INSTALL_CALLBACK_URL, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_URL_GET_USER, INVOKE_WARN_TIME_COST, TASK_LOOP_DELAY } from "../../common/config";
 import { OauthDTO } from "../../common/data/dto/oauthDTO";
 import { UserDTO } from "../../common/data/dto/userDTO";
 import { debugLog, errorLog, infoLog, warnLog } from "../../common/log";
 import { convertPureJobDetailUrl, paramsToObject, parseToLineObjectToToHumpObject, randomDelay } from "../../common/utils";
 import { AuthService, getOauth2LoginMessageMap, getToken, setToken } from "./service/authService";
 import { AutomateService } from "./service/automateService";
+import { EmitterService } from "./service/emitterService";
 import { SystemService } from "./service/systemService";
-import { getUser, setUser, UserService } from "./service/userService";
-import { postErrorMessage, postSuccessMessage } from "./util";
-import { isDevEnv } from "../../common";
+import { setUser, UserService } from "./service/userService";
 
 export default defineBackground(() => {
   debugLog("background ready");
@@ -163,7 +163,7 @@ export default defineBackground(() => {
   mergeServiceMethod(ACTION_FUNCTION, UserService);
   mergeServiceMethod(ACTION_FUNCTION, SystemService);
   mergeServiceMethod(ACTION_FUNCTION, AutomateService);
-
+  mergeServiceMethod(ACTION_FUNCTION, EmitterService);
 
   let creating: any;
   async function setupOffscreenDocument(path: string) {
@@ -180,7 +180,7 @@ export default defineBackground(() => {
         reasons: [
           chrome.offscreen.Reason.WORKERS || chrome.offscreen.Reason.BLOBS,
         ],
-        justification: "To run web worker to run sqlite",
+        justification: "To run database in web worker",
       });
       await creating;
       creating = null;
@@ -260,6 +260,7 @@ export default defineBackground(() => {
             chrome.runtime.sendMessage(message);
           }
         } else if (message.from == OFFSCREEN && message.to == BACKGROUND) {
+          const invokeEnv = message.invokeEnv;
           debugLog(
             "10.[background][receive][" +
             message.from +
@@ -268,14 +269,14 @@ export default defineBackground(() => {
             "] message [action=" +
             message.action +
             ",invokeEnv=" +
-            message.invokeEnv +
+            invokeEnv +
             ",callbackId=" +
             message.callbackId +
             ",error=" +
             message.error +
             "]"
           );
-          if (message.invokeEnv == CONTENT_SCRIPT) {
+          if (invokeEnv == CONTENT_SCRIPT) {
             message.from = BACKGROUND;
             message.to = CONTENT_SCRIPT;
             debugLog(
@@ -286,7 +287,7 @@ export default defineBackground(() => {
               "] message [action=" +
               message.action +
               ",invokeEnv=" +
-              message.invokeEnv +
+              invokeEnv +
               ",callbackId=" +
               message.callbackId +
               ",error=" +
@@ -301,12 +302,12 @@ export default defineBackground(() => {
               //Note that extensions cannot send messages to content scripts using this method. To send messages to content scripts, use tabs.sendMessage.
               chrome.runtime.sendMessage(message);
             }
-          } else if (message.invokeEnv == BACKGROUND) {
+          } else if (invokeEnv == BACKGROUND) {
             if (isDevEnv()) {
               let costTime = message.invokeTimeList.slice(-1)[0].time - message.invokeTimeList.slice(0, 1)[0].time;
               if (costTime > INVOKE_WARN_TIME_COST) {
                 //invoke > warnTimeCost to show warning
-                warnLog(`[${message.invokeEnv}][${message.invokeSeq}]Invoke [${message.action}] cost time = %c${costTime.toFixed(2)}ms`, `color:white;background-color:hsl(360 ${costTime / 100} 50%);`, message.invokeTimeList, message);
+                warnLog(`[${invokeEnv}][${message.invokeSeq}]Invoke [${message.action}] cost time = %c${costTime.toFixed(2)}ms`, `color:white;background-color:hsl(360 ${costTime / 100} 50%);`, message.invokeTimeList, message);
               }
             }
             let promiseHook = getAndRemovePromiseHook(message.callbackId);
@@ -322,6 +323,25 @@ export default defineBackground(() => {
                 `callbackId = ${message.callbackId} lost callback promiseHook`
               );
             }
+          } else if (invokeEnv == WEB_WORKER) {
+            debugLog(
+              "[background][receive][" +
+              message.from +
+              " -> " +
+              message.to +
+              "] message [action=" +
+              message.action +
+              ",invokeEnv=" +
+              invokeEnv +
+              ",callbackId=" +
+              message.callbackId +
+              ",error=" +
+              message.error +
+              "]"
+            );
+            let action = message.action;
+            debugLog("[background] invoke action = " + action);
+            ACTION_FUNCTION.get(action)(message, message.param);
           }
         }
       }

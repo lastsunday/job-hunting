@@ -1,4 +1,4 @@
-import { postSuccessMessage, postErrorMessage } from "../util";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
 
 const callbackIdAndAbortControllerMap = new Map();
 

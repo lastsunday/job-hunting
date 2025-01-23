@@ -1,9 +1,9 @@
-import { Message } from "../../../common/api/message";
-import { postSuccessMessage, postErrorMessage } from "../util";
-import { getDb, getOne, getAll } from "../database";
-import { Config } from "../../../common/data/domain/config";
-import { convertEmptyStringToNull } from "../../../common/utils";
+import { Message } from "@/common/api/message";
+import { Config } from "@/common/data/domain/config";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
+import { convertEmptyStringToNull } from "@/common/utils";
 import dayjs from "dayjs";
+import { getAll, getDb, getOne } from "../database";
 
 export const ConfigService = {
     /**

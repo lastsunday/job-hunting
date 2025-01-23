@@ -1209,3 +1209,11 @@ export const AppApi = {
     return result.data;
   },
 }
+
+export const EmitterApi = {
+
+  emitterEmit: async function (param, { invokeEnv = CONTENT_SCRIPT } = {}) {
+    let result = await invoke(this.emitterEmit.name, param, { invokeEnv });
+    return result.data;
+  },
+}

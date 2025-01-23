@@ -1,11 +1,11 @@
-import { postSuccessMessage, postErrorMessage } from "../util";
-import { UserDTO } from "../../../common/data/dto/userDTO";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/background/util";
 import { ConfigApi } from "../../../common/api";
-import { Config } from "../../../common/data/domain/config";
 import {
     BACKGROUND,
 } from "../../../common/api/bridgeCommon";
 import { KEY_GITHUB_USER } from "../../../common/config";
+import { Config } from "../../../common/data/domain/config";
+import { UserDTO } from "../../../common/data/dto/userDTO";
 
 
 export const UserService = {

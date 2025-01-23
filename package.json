@@ -18,14 +18,13 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
-    "@0xecho/button": "^0.0.17",
     "@ant-design/icons": "^5.5.2",
     "@ant-design/pro-components": "^2.8.2",
     "@ant-design/v5-patch-for-react-19": "^1.0.3",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@electric-sql/pglite": "^0.2.15",
+    "@electric-sql/pglite": "^0.2.16",
     "@iconify/json": "^2.2.291",
     "@pansy/lnglat-transform": "^1.0.3",
     "@tsparticles/react": "^3.0.0",
@@ -61,7 +60,7 @@
     "semver": "^7.6.3",
     "swiper": "^11.2.0",
     "tsparticles": "^3.7.1",
-    "uuid": "^11.0.3",
+    "uuid": "^11.0.5",
     "xlsx": "^0.18.5",
     "zustand": "^5.0.2"
   },
@@ -69,8 +68,7 @@
     "@eslint/js": "^9.17.0",
     "@iconify/react": "^5.1.0",
     "@rollup/plugin-node-resolve": "^16.0.0",
-    "@sqlite.org/sqlite-wasm": "3.47.2-build1",
-    "@types/chrome": "^0.0.297",
+    "@types/chrome": "^0.0.299",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/webextension-polyfill": "^0.12.1",
@@ -86,12 +84,12 @@
     "rollup-plugin-copy": "^3.5.0",
     "sass": "^1.83.0",
     "typescript": "^5.7.2",
-    "typescript-eslint": "^8.19.0",
-    "unocss": "^65.4.2",
+    "typescript-eslint": "^8.21.0",
+    "unocss": "^65.4.3",
     "unplugin-icons": "^22.0.0",
     "vite-plugin-wasm": "^3.4.1",
     "vite-plugin-web-extension": "^4.4.1",
     "web-ext": "^8.3.0",
-    "wxt": "^0.19.24"
+    "wxt": "^0.19.25"
   }
 }

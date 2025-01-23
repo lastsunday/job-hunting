@@ -1,15 +1,13 @@
 import { initBridge } from "@/common/api/common";
-import Emitter from "@/common/emitter";
+import '@ant-design/v5-patch-for-react-19';
 import { ConfigProvider } from "antd";
 import zhCN from "antd/es/locale/zh_CN";
 import 'dayjs/locale/zh-cn';
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import '@ant-design/v5-patch-for-react-19';
 import 'uno.css';
 import App from "./App.tsx";
 import "./index.css";
-Emitter.init();
 
 async function init() {
   await initBridge();

@@ -1,9 +1,14 @@
+import { EmitterApi } from "@/common/api";
+import { WEB_WORKER } from "@/common/api/bridgeCommon";
+import App, { WORLD_WEB_WORKER } from "@/common/extension/app";
 const Emitter = (() => {
 
     const eventCallbackMap = new Map();
 
     const initMethod = () => {
-        if (location.protocol == "chrome-extension:") {
+        if (App.isWorld(WORLD_WEB_WORKER)) {
+            //skip
+        } else {
             chrome.storage.onChanged.addListener((changes, namespace) => {
                 for (let [key, { oldValue, newValue }] of Object.entries(changes)) {
                     if (eventCallbackMap.has(key)) {
@@ -14,18 +19,12 @@ const Emitter = (() => {
                     }
                 }
             });
-        } else {
-            //other page
         }
     }
 
     initMethod();
 
     const api = {
-
-        init: () => {
-
-        },
 
         /**
          * 
@@ -52,7 +51,12 @@ const Emitter = (() => {
         emit: async (key, value) => {
             const obj = {};
             obj[key] = value;
-            await chrome.storage.local.set(obj);
+            if (App.isWorld(WORLD_WEB_WORKER)) {
+                console.log(`WEB_WORKER emit`)
+                await EmitterApi.emitterEmit(obj, { invokeEnv: WEB_WORKER })
+            } else {
+                await chrome.storage.local.set(obj);
+            }
         }
     }
 

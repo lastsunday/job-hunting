@@ -1,21 +1,20 @@
+import { Message } from "@/common/api/message";
+import { JobTagBatchAddOrUpdateBO } from "@/common/data/bo/jobTagBatchAddOrUpdateBO";
+import { JobTagBO } from "@/common/data/bo/jobTagBO";
+import { JobTagExportBO } from "@/common/data/bo/jobTagExportBO";
+import { JobTagNameStatisticBO } from "@/common/data/bo/jobTagNameStatisticBO";
+import { JobTagSearchBO } from "@/common/data/bo/jobTagSearchBO";
+import { JobTag } from "@/common/data/domain/jobTag";
+import { JobTagDTO } from "@/common/data/dto/jobTagDTO";
+import { JobTagNameStatisticDTO } from "@/common/data/dto/jobTagNameStatisticDTO";
+import { JobTagSearchDTO } from "@/common/data/dto/jobTagSearchDTO";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
+import { genIdFromText, genUniqueId, isBlank } from "@/common/utils";
 import dayjs from "dayjs";
-import { Message } from "../../../common/api/message";
-import { JobTagBatchAddOrUpdateBO } from "../../../common/data/bo/jobTagBatchAddOrUpdateBO";
-import { JobTagBO } from "../../../common/data/bo/jobTagBO";
-import { JobTagExportBO } from "../../../common/data/bo/jobTagExportBO";
-import { JobTagNameStatisticBO } from "../../../common/data/bo/jobTagNameStatisticBO";
-import { JobTagSearchBO } from "../../../common/data/bo/jobTagSearchBO";
-import { JobTag } from "../../../common/data/domain/jobTag";
-import { JobTagDTO } from "../../../common/data/dto/jobTagDTO";
-import { JobTagNameStatisticDTO } from "../../../common/data/dto/jobTagNameStatisticDTO";
-import { JobTagSearchDTO } from "../../../common/data/dto/jobTagSearchDTO";
-import { genIdFromText, genUniqueId, isBlank } from "../../../common/utils";
-import { getAll, getDb } from "../database";
-import { postErrorMessage, postSuccessMessage } from "../util";
+import { convertRows, getAll, getDb } from "../database";
 import { BaseService } from "./baseService";
 import { _jobGetByIds } from "./jobService";
 import { _addNotExistsTags, _searchWithTagInfo } from "./tagService";
-import { convertRows } from "../database";
 
 const JOB_ID_COLUMN = "job_id";
 

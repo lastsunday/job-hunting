@@ -1,5 +1,5 @@
 import { API_SERVER_GITHUB, EVENT_RESPONSE_INFO } from "@/common";
-import Emitter from "@/common/emitter";
+import Emitter from "@/common/extension/emitter";
 import dayjs from "dayjs";
 import React from "react";
 import { HashRouter, Route, Routes } from "react-router";

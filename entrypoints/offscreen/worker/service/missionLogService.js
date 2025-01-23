@@ -1,7 +1,7 @@
-import { Message } from "../../../common/api/message";
-import { postSuccessMessage, postErrorMessage } from "../util";
-import { MissionLog } from "../../../common/data/domain/missionLog";
-import { SearchMissionLogBO } from "../../../common/data/bo/searchMissionLogBO";
+import { Message } from "@/common/api/message";
+import { SearchMissionLogBO } from "@/common/data/bo/searchMissionLogBO";
+import { MissionLog } from "@/common/data/domain/missionLog";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
 import { BaseService } from "../service/baseService";
 
 const TABLE_NAME = "mission_log";

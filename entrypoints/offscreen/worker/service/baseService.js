@@ -1,7 +1,7 @@
-import { Message } from "../../../common/api/message";
-import { genUniqueId, toHump } from "../../../common/utils";
-import { batchDel, batchGet, del, one, search, searchCount, batchInsertOrReplace } from "../database";
-import { postErrorMessage, postSuccessMessage } from "../util";
+import { Message } from "@/common/api/message";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
+import { genUniqueId, toHump } from "@/common/utils";
+import { batchDel, batchGet, batchInsertOrReplace, del, one, search, searchCount } from "../database";
 
 export class BaseService {
     constructor(tableName, tableIdColumn, entityClassCreateFunction, searchDTOCreateFunction, whereConditionFunction) {

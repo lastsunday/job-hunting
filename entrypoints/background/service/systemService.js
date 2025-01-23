@@ -1,4 +1,4 @@
-import { postSuccessMessage, postErrorMessage } from "../util";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/background/util";
 
 export const SystemService = {
     /**
@@ -18,4 +18,3 @@ export const SystemService = {
         }
     },
 };
-

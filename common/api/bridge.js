@@ -1,8 +1,9 @@
+import App from "@/common/extension/app";
 import { v4 as uuidv4 } from "uuid";
-import { debugLog, errorLog, warnLog } from "../log";
-import { BACKGROUND, CONTENT_SCRIPT, OFFSCREEN } from "./bridgeCommon.js";
-import { INVOKE_WARN_TIME_COST } from "../config.js";
 import { isDevEnv } from "../../common";
+import { INVOKE_WARN_TIME_COST } from "../config.js";
+import { debugLog, errorLog, warnLog } from "../log";
+import { BACKGROUND, CONTENT_SCRIPT, OFFSCREEN, WEB_WORKER } from "./bridgeCommon.js";
 
 export const EVENT_BRIDGE = "EVENT_BRIDGE";
 
@@ -57,7 +58,6 @@ export function invoke(
           message.error +
           "]"
         );
-        sendMessage(message);
       } else if (invokeEnv == BACKGROUND) {
         message.from = BACKGROUND;
         message.to = OFFSCREEN;
@@ -76,19 +76,29 @@ export function invoke(
           message.error +
           "]"
         );
-        sendMessage(message);
-        try {
-          //for firefox hack
-          if (window) {
-            const event = new CustomEvent(EVENT_BRIDGE, { detail: message });
-            window.dispatchEvent(event);
-          }
-        } catch (e) {
-          //skip
-        }
+      } else if (invokeEnv == WEB_WORKER) {
+        message.from = WEB_WORKER;
+        message.to = OFFSCREEN;
+        debugLog(
+          "1.[worker script][send][" +
+          message.from +
+          " -> " +
+          message.to +
+          "] message [action=" +
+          message.action +
+          ",invokeEnv=" +
+          message.invokeEnv +
+          ",callbackId=" +
+          message.callbackId +
+          ",error=" +
+          message.error +
+          "]"
+        );
       } else {
         reject(`unknow invokeEnv = ${invokeEnv}`);
+        return;
       }
+      sendMessage(message);
     } catch (e) {
       errorLog(e);
       reject(e);
@@ -128,99 +138,109 @@ async function sendMessage(message) {
 }
 
 async function _sendMessage(message) {
-  await chrome.runtime.sendMessage(message);
+  if (message.invokeEnv == WEB_WORKER) {
+    postMessage({ data: message });
+  } else {
+    await chrome.runtime.sendMessage(message);
+  }
 }
 
 const callbackIdAndDataMap = new Map();
 
 export function init() {
   chrome.runtime.onMessage.addListener(function (result, sender, sendResponse) {
-    let message = result;
-    let callbackId = message.callbackId;
-    if (isDevEnv()) {
-      const time = new Date().getTime();
-      message.invokeTimeList.push({ env: CONTENT_SCRIPT, time, offset: time - message.invokeTimeList.slice(-1)[0].time });
-    }
+    const message = result;
     if (message.from == BACKGROUND && message.to == CONTENT_SCRIPT) {
-      //message = {action,callbackId,param,data,error}
-      debugLog(
-        "12.[content script][receive][" +
-        message.from +
-        " -> " +
-        message.to +
-        "] message [action=" +
-        message.action +
-        ",invokeEnv=" +
-        message.invokeEnv +
-        ",callbackId=" +
-        callbackId +
-        ",error=" +
-        message.error +
-        "]"
-      );
-      let chunk = message.chunk
-      let chunkTotal = message.chunkTotal;
-      let isReturn = true;
-      let isChunk = (chunk != null && chunkTotal != null);
-      if (isChunk) {
-        if (chunk == chunkTotal) {
-          isReturn = true;
-        } else {
-          isReturn = false;
-        }
-      }
-      let data = message.data;
-      if (!callbackIdAndDataMap.has(callbackId)) {
-        callbackIdAndDataMap.set(callbackId, data);
-      } else {
-        if (isChunk) {
-          if (typeof data === 'string') {
-            let originalData = callbackIdAndDataMap.get(callbackId);
-            callbackIdAndDataMap.set(callbackId, originalData.concat(data));
-          } else {
-            let promiseHook = getAndRemovePromiseHook(callbackId);
-            if (promiseHook) {
-              message.message = `unsupported chunk data type = ${typeof data}`;
-              promiseHook.reject(message);
-            } else {
-              errorLog(
-                `callbackId = ${callbackId} lost callback promiseHook`
-              );
-            }
-            callbackIdAndDataMap.delete(callbackId);
-            return;
-          }
-        }
-      }
-      if (isReturn) {
-        try {
-          if (isDevEnv()) {
-            let costTime = message.invokeTimeList.slice(-1)[0].time - message.invokeTimeList.slice(0, 1)[0].time;
-            if (costTime > INVOKE_WARN_TIME_COST) {
-              //invoke > warnTimeCost to show warning
-              warnLog(`[${message.invokeEnv}][${message.invokeSeq}]Invoke [${message.action}] cost time = %c${costTime.toFixed(2)}ms`, `color:white;background-color:hsl(360 ${costTime / 100} 50%);`, message.invokeTimeList, message);
-            }
-          }
-          let promiseHook = getAndRemovePromiseHook(callbackId);
-          if (promiseHook) {
-            if (message.error) {
-              message.message = message.error;
-              promiseHook.reject(message);
-            } else {
-              message.data = callbackIdAndDataMap.get(callbackId);
-              promiseHook.resolve(message);
-            }
-          } else {
-            errorLog(
-              `callbackId = ${callbackId} lost callback promiseHook`
-            );
-          }
-        } finally {
-          callbackIdAndDataMap.delete(callbackId);
-        }
-      }
+      handle(message);
     }
   });
+}
+
+export function handle(message) {
+  console.log(`handle ${App.getWorld()}`, message)
+  let callbackId = message.callbackId;
+  if (isDevEnv()) {
+    const time = new Date().getTime();
+    message.invokeTimeList.push({ env: CONTENT_SCRIPT, time, offset: time - message.invokeTimeList.slice(-1)[0].time });
+  }
+  //message = {action,callbackId,param,data,error}
+  debugLog(
+    "12.[content script][receive][" +
+    message.from +
+    " -> " +
+    message.to +
+    "] message [action=" +
+    message.action +
+    ",invokeEnv=" +
+    message.invokeEnv +
+    ",callbackId=" +
+    callbackId +
+    ",error=" +
+    message.error +
+    "]"
+  );
+  let chunk = message.chunk
+  let chunkTotal = message.chunkTotal;
+  let isReturn = true;
+  let isChunk = (chunk != null && chunkTotal != null);
+  if (isChunk) {
+    if (chunk == chunkTotal) {
+      isReturn = true;
+    } else {
+      isReturn = false;
+    }
+  }
+  let data = message.data;
+  if (!callbackIdAndDataMap.has(callbackId)) {
+    callbackIdAndDataMap.set(callbackId, data);
+  } else {
+    if (isChunk) {
+      if (typeof data === 'string') {
+        let originalData = callbackIdAndDataMap.get(callbackId);
+        callbackIdAndDataMap.set(callbackId, originalData.concat(data));
+      } else {
+        let promiseHook = getAndRemovePromiseHook(callbackId);
+        if (promiseHook) {
+          message.message = `unsupported chunk data type = ${typeof data}`;
+          promiseHook.reject(message);
+        } else {
+          errorLog(
+            `callbackId = ${callbackId} lost callback promiseHook`
+          );
+        }
+        callbackIdAndDataMap.delete(callbackId);
+        return;
+      }
+    }
+  }
+  if (isReturn) {
+    try {
+      if (isDevEnv()) {
+        let costTime = message.invokeTimeList.slice(-1)[0].time - message.invokeTimeList.slice(0, 1)[0].time;
+        if (costTime > INVOKE_WARN_TIME_COST) {
+          //invoke > warnTimeCost to show warning
+          warnLog(`[${message.invokeEnv}][${message.invokeSeq}]Invoke [${message.action}] cost time = %c${costTime.toFixed(2)}ms`, `color:white;background-color:hsl(360 ${costTime / 100} 50%);`, message.invokeTimeList, message);
+        }
+      }
+      let promiseHook = getAndRemovePromiseHook(callbackId);
+      if (promiseHook) {
+        if (message.error) {
+          message.message = message.error;
+          promiseHook.reject(message);
+        } else {
+          message.data = callbackIdAndDataMap.get(callbackId);
+          promiseHook.resolve(message);
+        }
+      } else {
+        errorLog(
+          `callbackId = ${callbackId} lost callback promiseHook`
+        );
+      }
+    } finally {
+      callbackIdAndDataMap.delete(callbackId);
+    }
+
+  }
 }
 
 function addCallbackPromiseHook(callbackId, promiseHook) {

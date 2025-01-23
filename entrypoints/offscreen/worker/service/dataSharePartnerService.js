@@ -1,12 +1,12 @@
-import { Message } from "../../../common/api/message";
-import { postSuccessMessage, postErrorMessage } from "../util";
-import { SearchDataSharePartnerBO } from "../../../common/data/bo/searchDataSharePartnerBO";
-import { SearchDataSharePartnerDTO } from "../../../common/data/dto/searchDataSharePartnerDTO";
-import { StatisticDataSharePartnerDTO } from "../../../common/data/dto/statisticDataSharePartnerDTO";
-import { BaseService } from "./baseService";
-import { DataSharePartner } from "../../../common/data/domain/dataSharePartner";
-import { getDb } from "../database";
+import { Message } from "@/common/api/message";
+import { SearchDataSharePartnerBO } from "@/common/data/bo/searchDataSharePartnerBO";
+import { DataSharePartner } from "@/common/data/domain/dataSharePartner";
+import { SearchDataSharePartnerDTO } from "@/common/data/dto/searchDataSharePartnerDTO";
+import { StatisticDataSharePartnerDTO } from "@/common/data/dto/statisticDataSharePartnerDTO";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
 import dayjs from "dayjs";
+import { getDb } from "../database";
+import { BaseService } from "./baseService";
 
 export const SERVICE_INSTANCE = new BaseService("data_share_partner", "id",
     () => {

@@ -1,15 +1,15 @@
+import { Message } from "@/common/api/message";
+import { CompanyBO } from "@/common/data/bo/companyBO";
+import { SearchCompanyBO } from "@/common/data/bo/searchCompanyBO";
+import { Company } from "@/common/data/domain/company";
+import { ChartBasicDTO } from "@/common/data/dto/chartBasicDTO";
+import { CompanyDTO } from "@/common/data/dto/companyDTO";
+import { SearchCompanyDTO } from "@/common/data/dto/searchCompanyDTO";
+import { StatisticCompanyDTO } from "@/common/data/dto/statisticCompanyDTO";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
+import { isNotEmpty, toHump, toLine } from "@/common/utils";
 import dayjs from "dayjs";
-import { Message } from "../../../common/api/message";
-import { CompanyBO } from "../../../common/data/bo/companyBO";
-import { SearchCompanyBO } from "../../../common/data/bo/searchCompanyBO";
-import { Company } from "../../../common/data/domain/company";
-import { ChartBasicDTO } from "../../../common/data/dto/chartBasicDTO";
-import { CompanyDTO } from "../../../common/data/dto/companyDTO";
-import { SearchCompanyDTO } from "../../../common/data/dto/searchCompanyDTO";
-import { StatisticCompanyDTO } from "../../../common/data/dto/statisticCompanyDTO";
-import { isNotEmpty, toHump, toLine } from "../../../common/utils";
-import { getDb, convertRows } from "../database";
-import { postErrorMessage, postSuccessMessage } from "../util";
+import { convertRows, getDb } from "../database";
 import { BaseService } from "./baseService";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
 

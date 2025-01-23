@@ -1,7 +1,7 @@
-import { Message } from "../../../common/api/message";
-import { postSuccessMessage, postErrorMessage } from "../util";
-import { getDb, all, sort } from "../database";
-import { Mission } from "../../../common/data/domain/mission";
+import { Message } from "@/common/api/message";
+import { Mission } from "@/common/data/domain/mission";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
+import { all, getDb, sort } from "../database";
 import { BaseService } from "../service/baseService";
 
 const TABLE_NAME = "mission";

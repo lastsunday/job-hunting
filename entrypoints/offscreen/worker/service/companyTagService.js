@@ -1,19 +1,18 @@
+import { Message } from "@/common/api/message";
+import { CompanyTagBO } from "@/common/data/bo/companyTagBO";
+import { CompanyTagBatchAddOrUpdateBO } from "@/common/data/bo/companyTagBatchAddOrUpdateBO";
+import { CompanyTagExportBO } from "@/common/data/bo/companyTagExportBO";
+import { SearchCompanyTagBO } from "@/common/data/bo/searchCompanyTagBO";
+import { CompanyTag } from "@/common/data/domain/companyTag";
+import { CompanyTagDTO } from "@/common/data/dto/companyTagDTO";
+import { SearchCompanyTagDTO } from "@/common/data/dto/searchCompanyTagDTO";
+import { StatisticCompanyTagDTO } from "@/common/data/dto/statisticCompanyTagDTO";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
+import { genIdFromText, genUniqueId, isBlank } from "@/common/utils";
 import dayjs from "dayjs";
-import { Message } from "../../../common/api/message";
-import { CompanyTagBO } from "../../../common/data/bo/companyTagBO";
-import { CompanyTagBatchAddOrUpdateBO } from "../../../common/data/bo/companyTagBatchAddOrUpdateBO";
-import { CompanyTagExportBO } from "../../../common/data/bo/companyTagExportBO";
-import { SearchCompanyTagBO } from "../../../common/data/bo/searchCompanyTagBO";
-import { CompanyTag } from "../../../common/data/domain/companyTag";
-import { CompanyTagDTO } from "../../../common/data/dto/companyTagDTO";
-import { SearchCompanyTagDTO } from "../../../common/data/dto/searchCompanyTagDTO";
-import { StatisticCompanyTagDTO } from "../../../common/data/dto/statisticCompanyTagDTO";
-import { genIdFromText, genUniqueId, isBlank } from "../../../common/utils";
-import { getAll, getDb, getOne } from "../database";
-import { postErrorMessage, postSuccessMessage } from "../util";
+import { convertRows, getAll, getDb, getOne } from "../database";
 import { BaseService } from "./baseService";
 import { _addNotExistsTags, _searchWithTagInfo } from "./tagService";
-import { convertRows } from "../database";
 
 const COMPANY_ID_COLUMN = "company_id";
 

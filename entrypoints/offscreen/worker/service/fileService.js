@@ -1,12 +1,12 @@
+import { Message } from "@/common/api/message";
+import { SearchFileBO } from "@/common/data/bo/searchFileBO";
+import { File } from "@/common/data/domain/file";
+import { FileDTO } from "@/common/data/dto/fileDTO";
+import { FileStatisticDTO } from "@/common/data/dto/fileStatisticDTO";
+import { SearchFileDTO } from "@/common/data/dto/searchFileDTO";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
 import dayjs from "dayjs";
-import { Message } from "../../../common/api/message";
-import { SearchFileBO } from "../../../common/data/bo/searchFileBO";
-import { File } from "../../../common/data/domain/file";
-import { FileDTO } from "../../../common/data/dto/fileDTO";
-import { FileStatisticDTO } from "../../../common/data/dto/fileStatisticDTO";
-import { SearchFileDTO } from "../../../common/data/dto/searchFileDTO";
 import { getAll, getDb } from "../database";
-import { postErrorMessage, postSuccessMessage } from "../util";
 import { BaseService } from "./baseService";
 
 const SERVICE_INSTANCE = new BaseService("file", "id",

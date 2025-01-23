@@ -1,6 +1,6 @@
-import { Message } from "../../../common/api/message";
-import { postSuccessMessage, postErrorMessage } from "../util";
-import { Config } from "../../../common/data/domain/config";
+import { Message } from "@/common/api/message";
+import { Config } from "@/common/data/domain/config";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
 import { _addOrUpdateConfig, _getConfigByKey } from "./configService";
 
 const KEY_DEVELOPER_TOKEN = "KEY_DEVELOPER_TOKEN";

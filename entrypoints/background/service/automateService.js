@@ -1,3 +1,4 @@
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/background/util";
 import dayjs from "dayjs";
 import {
     connect,
@@ -14,7 +15,6 @@ import {
 } from "../../../common";
 import { errorLog, infoLog } from "../../../common/log";
 import { randomDelay } from "../../../common/utils";
-import { postErrorMessage, postSuccessMessage } from "../util";
 const DATE_FORMAT = "YYYY-MM-DD HH:mm:ss.SSS";
 
 export const AutomateService = {

@@ -1,11 +1,11 @@
-import { postSuccessMessage, postErrorMessage } from "../util";
-import { OauthDTO } from "../../../common/data/dto/oauthDTO";
+import { postErrorMessage, postSuccessMessage } from "@/common/extension/background/util";
 import { ConfigApi } from "../../../common/api";
-import { Config } from "../../../common/data/domain/config";
-import { GITHUB_APP_CLIENT_ID, GITHUB_URL_APP_INSTALL_AUTHORIZE, GITHUB_URL_AUTHORIZE,KEY_GITHUB_OAUTH_TOKEN } from "../../../common/config";
 import {
   BACKGROUND,
 } from "../../../common/api/bridgeCommon";
+import { GITHUB_APP_CLIENT_ID, GITHUB_URL_APP_INSTALL_AUTHORIZE, GITHUB_URL_AUTHORIZE, KEY_GITHUB_OAUTH_TOKEN } from "../../../common/config";
+import { Config } from "../../../common/data/domain/config";
+import { OauthDTO } from "../../../common/data/dto/oauthDTO";
 
 const oauth2LoginMessageMap = new Map();
 

@@ -1,11 +1,16 @@
-import { debugLog, errorLog } from "../../common/log";
-import { CONTENT_SCRIPT, BACKGROUND } from "../../common/api/bridgeCommon";
+import { BACKGROUND, CONTENT_SCRIPT, OFFSCREEN, WEB_WORKER } from "@/common/api/bridgeCommon";
+import { debugLog, errorLog } from "@/common/log";
 
 export function postSuccessMessage(message, data) {
-    message.from = BACKGROUND;
-    message.to = CONTENT_SCRIPT;
+    if (message.invokeEnv == WEB_WORKER) {
+        message.from = BACKGROUND;
+        message.to = OFFSCREEN;
+    } else {
+        message.from = BACKGROUND;
+        message.to = CONTENT_SCRIPT;
+    }
     debugLog(
-        "3.[background][send][" +
+        "[background][send][" +
         message.from +
         " -> " +
         message.to +
@@ -32,10 +37,15 @@ export function postSuccessMessage(message, data) {
 }
 
 export function postErrorMessage(message, error) {
-    message.from = BACKGROUND;
-    message.to = CONTENT_SCRIPT;
+    if (message.invokeEnv == WEB_WORKER) {
+        message.from = BACKGROUND;
+        message.to = OFFSCREEN;
+    } else {
+        message.from = BACKGROUND;
+        message.to = CONTENT_SCRIPT;
+    }
     errorLog(
-        "3.[background][send][" +
+        "[background][send][" +
         message.from +
         " -> " +
         message.to +

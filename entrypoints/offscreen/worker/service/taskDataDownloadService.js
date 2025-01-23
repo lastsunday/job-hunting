@@ -1,11 +1,11 @@
-import { Message } from "../../../common/api/message";
-import { SearchTaskDataDownloadBO } from "../../../common/data/bo/searchTaskDataDownloadBO";
-import { SearchTaskDataDownloadDTO } from "../../../common/data/dto/searchTaskDataDownloadDTO";
-import { TaskDataDownload } from "../../../common/data/domain/taskDataDownload";
-import { BaseService } from "./baseService";
-import { dateToStr } from "../../../common/utils";
-import { postSuccessMessage } from "../util";
+import { Message } from "@/common/api/message";
+import { SearchTaskDataDownloadBO } from "@/common/data/bo/searchTaskDataDownloadBO";
+import { TaskDataDownload } from "@/common/data/domain/taskDataDownload";
+import { SearchTaskDataDownloadDTO } from "@/common/data/dto/searchTaskDataDownloadDTO";
+import { postSuccessMessage } from "@/common/extension/worker/util";
+import { dateToStr } from "@/common/utils";
 import dayjs from "dayjs";
+import { BaseService } from "./baseService";
 
 export const SERVICE_INSTANCE = new BaseService("task_data_download", "id",
     () => {

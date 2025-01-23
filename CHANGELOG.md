@@ -1,5 +1,28 @@
 # CHANGELOG
 
+## WIP
+
+### ⚠️ Noteworthy
+
+1. 升级到3.x.x,由于底层数据库的更换,所有的数据将会失效,有两种方法恢复数据:
+    1. 开启数据共享计划,重新添加伙伴后,程序会自动进行数据的同步。
+    2. 版本升级前，使用全量导出功能（职位数据，公司数据，职位标签数据，公司标签数据）导出数据,版本升级后，将导出的数据重新导入.
+2. 数据库导出和数据库恢复功能暂不可用.
+
+### 💣 BREAKING CHANGES
+
+1. 底层数据库更换:SQLite更换为PGlite.
+
+### 🚀 Performance
+
+1. 优化招聘平台搜索页职位卡片额外信息的加载速度。
+
+### 🔨 Dependency
+
+1. Delete @0xecho/button
+2. Delete @sqlite.org/sqlite-wasm
+3. Update some lib
+
 ## 2.6.6(2025-01-17)
 
 ### 🚀 Performance
