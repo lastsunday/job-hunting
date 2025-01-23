@@ -157,7 +157,6 @@ export function init() {
 }
 
 export function handle(message) {
-  console.log(`handle ${App.getWorld()}`, message)
   let callbackId = message.callbackId;
   if (isDevEnv()) {
     const time = new Date().getTime();
