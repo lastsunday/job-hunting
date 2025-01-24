@@ -1,19 +1,16 @@
-import { CONFIG_KEY_DATA_SHARE_PLAN, DEFAULT_DATA_REPO } from "@/common/config";
-import { DataSharePlanConfigDTO } from "@/common/data/dto/dataSharePlanConfigDTO";
+import { DEFAULT_DATA_REPO } from "@/common/config";
 import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
 import { infoLog } from "@/common/log";
-import { _getUser, calculateDataSharePartnerList, calculateDownloadTask, calculateUploadTask, runScheduleTask, runTask } from "./app";
-import { _getConfigByKey } from "./configService";
+import { _getUser, runScheduleTask, runTask } from "./app";
+import { calculateDataSharePartnerList, getDataSharePlanConfig } from "./app/dataSharePlan";
+import { calculateDownloadTask } from "./app/taskDownload";
+import { calculateUploadTask } from "./app/taskUpload";
 
 export const AppService = {
 
     appBackgroundTaskRun: async function (message, param) {
         try {
-            let dataSharePlanConfig = new DataSharePlanConfigDTO();
-            let configValue = await _getConfigByKey(CONFIG_KEY_DATA_SHARE_PLAN);
-            if (configValue && configValue.value) {
-                dataSharePlanConfig = JSON.parse(configValue.value);
-            }
+            let dataSharePlanConfig = await getDataSharePlanConfig();
             if (dataSharePlanConfig.enable) {
                 infoLog(`[TASK] Data share plan enable`);
                 infoLog(`[TASK] Data share plan task running`);
