@@ -1,18 +1,14 @@
-import { postErrorMessage, postSuccessMessage } from "@/common/extension/background/util";
-import { isDevEnv } from "../../common";
+import { onMessageHandle, postErrorMessage, postSuccessMessage } from "@/common/extension/background/util";
+import useService from "@/common/extension/hooks/service";
 import { AppApi, JobApi } from "../../common/api";
-import { getAndRemovePromiseHook } from "../../common/api/bridge";
 import {
-  BACKGROUND,
-  CONTENT_SCRIPT,
-  OFFSCREEN,
-  WEB_WORKER,
+  BACKGROUND
 } from "../../common/api/bridgeCommon";
 import { httpFetchGetText, httpFetchJson } from "../../common/api/common";
-import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_APP_INSTALL_CALLBACK_URL, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_URL_GET_USER, INVOKE_WARN_TIME_COST, TASK_LOOP_DELAY } from "../../common/config";
+import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_APP_INSTALL_CALLBACK_URL, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_URL_GET_USER, TASK_LOOP_DELAY } from "../../common/config";
 import { OauthDTO } from "../../common/data/dto/oauthDTO";
 import { UserDTO } from "../../common/data/dto/userDTO";
-import { debugLog, errorLog, infoLog, warnLog } from "../../common/log";
+import { debugLog, errorLog, infoLog } from "../../common/log";
 import { convertPureJobDetailUrl, paramsToObject, parseToLineObjectToToHumpObject, randomDelay } from "../../common/utils";
 import { AuthService, getOauth2LoginMessageMap, getToken, setToken } from "./service/authService";
 import { AutomateService } from "./service/automateService";
@@ -151,13 +147,7 @@ export default defineBackground(() => {
 
   const ACTION_FUNCTION = new Map();
 
-  function mergeServiceMethod(actionFunction, source) {
-    let keys = Object.keys(source);
-    for (let i = 0; i < keys.length; i++) {
-      let key = keys[i];
-      actionFunction.set(key, source[key]);
-    }
-  }
+  const { mergeServiceMethod } = useService();
 
   mergeServiceMethod(ACTION_FUNCTION, AuthService)
   mergeServiceMethod(ACTION_FUNCTION, UserService);
@@ -210,141 +200,7 @@ export default defineBackground(() => {
       sender,
       sendResponse
     ) {
-      if (message) {
-        if (isDevEnv()) {
-          const time = new Date().getTime();
-          message.invokeTimeList.push({ env: BACKGROUND, time, offset: time - message.invokeTimeList.slice(-1)[0].time });
-        }
-        if (message.from == CONTENT_SCRIPT && message.to == BACKGROUND) {
-          //get the tab id from content script page,not the extension page(eg: sidepanel)
-          if (sender.tab) {
-            message.tabId = sender.tab.id;
-          }
-          debugLog(
-            "[Message][receive][" +
-            message.from +
-            " -> " +
-            message.to +
-            "] message [action=" +
-            message.action +
-            ",invokeEnv=" +
-            message.invokeEnv +
-            ",callbackId=" +
-            message.callbackId +
-            ",error=" +
-            message.error +
-            "]"
-          );
-          let action = message.action;
-          if (ACTION_FUNCTION.has(action)) {
-            debugLog("[background] invoke action = " + action);
-            ACTION_FUNCTION.get(action)(message, message.param);
-          } else {
-            message.from = BACKGROUND;
-            message.to = OFFSCREEN;
-            debugLog(
-              "[Message][send][" +
-              message.from +
-              " -> " +
-              message.to +
-              "] message [action=" +
-              message.action +
-              ",invokeEnv=" +
-              message.invokeEnv +
-              ",callbackId=" +
-              message.callbackId +
-              ",error=" +
-              message.error +
-              "]"
-            );
-            chrome.runtime.sendMessage(message);
-          }
-        } else if (message.from == OFFSCREEN && message.to == BACKGROUND) {
-          const invokeEnv = message.invokeEnv;
-          debugLog(
-            "[Message][receive][" +
-            message.from +
-            " -> " +
-            message.to +
-            "] message [action=" +
-            message.action +
-            ",invokeEnv=" +
-            invokeEnv +
-            ",callbackId=" +
-            message.callbackId +
-            ",error=" +
-            message.error +
-            "]"
-          );
-          if (invokeEnv == CONTENT_SCRIPT) {
-            message.from = BACKGROUND;
-            message.to = CONTENT_SCRIPT;
-            debugLog(
-              "[Message][send][" +
-              message.from +
-              " -> " +
-              message.to +
-              "] message [action=" +
-              message.action +
-              ",invokeEnv=" +
-              invokeEnv +
-              ",callbackId=" +
-              message.callbackId +
-              ",error=" +
-              message.error +
-              "]"
-            );
-            if (message.tabId) {
-              //content script invoke
-              chrome.tabs.sendMessage(message.tabId, message);
-            } else {
-              //other invoke
-              //Note that extensions cannot send messages to content scripts using this method. To send messages to content scripts, use tabs.sendMessage.
-              chrome.runtime.sendMessage(message);
-            }
-          } else if (invokeEnv == BACKGROUND) {
-            if (isDevEnv()) {
-              let costTime = message.invokeTimeList.slice(-1)[0].time - message.invokeTimeList.slice(0, 1)[0].time;
-              if (costTime > INVOKE_WARN_TIME_COST) {
-                //invoke > warnTimeCost to show warning
-                warnLog(`[${invokeEnv}][${message.invokeSeq}]Invoke [${message.action}] cost time = %c${costTime.toFixed(2)}ms`, `color:white;background-color:hsl(360 ${costTime / 100} 50%);`, message.invokeTimeList, message);
-              }
-            }
-            let promiseHook = getAndRemovePromiseHook(message.callbackId);
-            if (promiseHook) {
-              if (message.error) {
-                message.message = message.error;
-                promiseHook.reject(message);
-              } else {
-                promiseHook.resolve(message);
-              }
-            } else {
-              errorLog(
-                `callbackId = ${message.callbackId} lost callback promiseHook`
-              );
-            }
-          } else if (invokeEnv == WEB_WORKER) {
-            debugLog(
-              "[Message][receive][" +
-              message.from +
-              " -> " +
-              message.to +
-              "] message [action=" +
-              message.action +
-              ",invokeEnv=" +
-              invokeEnv +
-              ",callbackId=" +
-              message.callbackId +
-              ",error=" +
-              message.error +
-              "]"
-            );
-            let action = message.action;
-            debugLog("[background] invoke action = " + action);
-            ACTION_FUNCTION.get(action)(message, message.param);
-          }
-        }
-      }
+      onMessageHandle(message, sender, ACTION_FUNCTION);
     });
   }
 
