@@ -221,7 +221,7 @@ export default defineBackground(() => {
             message.tabId = sender.tab.id;
           }
           debugLog(
-            "2.[background][receive][" +
+            "[Message][receive][" +
             message.from +
             " -> " +
             message.to +
@@ -243,7 +243,7 @@ export default defineBackground(() => {
             message.from = BACKGROUND;
             message.to = OFFSCREEN;
             debugLog(
-              "3.[background][send][" +
+              "[Message][send][" +
               message.from +
               " -> " +
               message.to +
@@ -262,7 +262,7 @@ export default defineBackground(() => {
         } else if (message.from == OFFSCREEN && message.to == BACKGROUND) {
           const invokeEnv = message.invokeEnv;
           debugLog(
-            "10.[background][receive][" +
+            "[Message][receive][" +
             message.from +
             " -> " +
             message.to +
@@ -280,7 +280,7 @@ export default defineBackground(() => {
             message.from = BACKGROUND;
             message.to = CONTENT_SCRIPT;
             debugLog(
-              "11.[background][send][" +
+              "[Message][send][" +
               message.from +
               " -> " +
               message.to +
@@ -325,7 +325,7 @@ export default defineBackground(() => {
             }
           } else if (invokeEnv == WEB_WORKER) {
             debugLog(
-              "[background][receive][" +
+              "[Message][receive][" +
               message.from +
               " -> " +
               message.to +

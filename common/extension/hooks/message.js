@@ -33,7 +33,7 @@ export default function useMessage() {
         message.to = to;
         message.error = error;
         errorLog(
-            "[send][" +
+            "[Message][send][" +
             message.from +
             " -> " +
             message.to +
@@ -58,7 +58,7 @@ export default function useMessage() {
         message.from = from;
         message.to = to;
         debugLog(
-            "[send][" +
+            "[Message][send][" +
             message.from +
             " -> " +
             message.to +

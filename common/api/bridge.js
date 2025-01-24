@@ -44,7 +44,7 @@ export function invoke(
       }
       if (invokeEnv == CONTENT_SCRIPT) {
         debugLog(
-          "1.[content script][send][" +
+          "[Message][send][" +
           message.from +
           " -> " +
           message.to +
@@ -62,7 +62,7 @@ export function invoke(
         message.from = BACKGROUND;
         message.to = OFFSCREEN;
         debugLog(
-          "1.[background script][send][" +
+          "[Message][send][" +
           message.from +
           " -> " +
           message.to +
@@ -80,7 +80,7 @@ export function invoke(
         message.from = WEB_WORKER;
         message.to = OFFSCREEN;
         debugLog(
-          "1.[worker script][send][" +
+          "[Message][send][" +
           message.from +
           " -> " +
           message.to +
@@ -164,7 +164,7 @@ export function handle(message) {
   }
   //message = {action,callbackId,param,data,error}
   debugLog(
-    "12.[content script][receive][" +
+    "[Message][receive][" +
     message.from +
     " -> " +
     message.to +

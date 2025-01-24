@@ -10,7 +10,7 @@ export function postSuccessMessage(message, data) {
         message.to = CONTENT_SCRIPT;
     }
     debugLog(
-        "[background][send][" +
+        "[Message][send][" +
         message.from +
         " -> " +
         message.to +
@@ -45,7 +45,7 @@ export function postErrorMessage(message, error) {
         message.to = CONTENT_SCRIPT;
     }
     errorLog(
-        "[background][send][" +
+        "[Message][send][" +
         message.from +
         " -> " +
         message.to +

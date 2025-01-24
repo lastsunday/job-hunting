@@ -19,7 +19,7 @@ worker.onmessage = function (event) {
     }
     if (message.from == WEB_WORKER && message.to == OFFSCREEN) {
       debugLog(
-        "8.[offscreen][receive][" +
+        "[Message][receive][" +
         message.from +
         " -> " +
         message.to +
@@ -36,7 +36,7 @@ worker.onmessage = function (event) {
       message.from = OFFSCREEN;
       message.to = BACKGROUND;
       debugLog(
-        "9.[offscreen][send][" +
+        "[Message][send][" +
         message.from +
         " -> " +
         message.to +
@@ -63,7 +63,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     if (message.from == BACKGROUND && message.to == OFFSCREEN) {
       debugLog(
-        "4.[offscreen][receive][" +
+        "[Message][receive][" +
         message.from +
         " -> " +
         message.to +
@@ -80,7 +80,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       message.from = OFFSCREEN;
       message.to = WEB_WORKER;
       debugLog(
-        "5.[offscreen][send][" +
+        "[Message][send][" +
         message.from +
         " -> " +
         message.to +

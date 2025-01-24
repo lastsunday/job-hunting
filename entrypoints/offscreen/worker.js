@@ -81,7 +81,7 @@ onmessage = function (e) {
       if (message.from == OFFSCREEN && message.to == WEB_WORKER) {
         let callbackId = message.callbackId;
         debugLog(
-          "6.[worker][receive][" +
+          "[Message][receive][" +
           message.from +
           " -> " +
           message.to +
