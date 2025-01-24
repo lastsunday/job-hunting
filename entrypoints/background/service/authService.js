@@ -97,7 +97,7 @@ export async function setToken(token) {
   let config = new Config();
   config.key = KEY_GITHUB_OAUTH_TOKEN;
   config.value = JSON.stringify(token);
-  return ConfigApi.addOrUpdateConfig(config, { invokeEnv: BACKGROUND });
+  return ConfigApi.addOrUpdateConfig(config);
 }
 
 /**
@@ -106,7 +106,7 @@ export async function setToken(token) {
  */
 export async function getToken() {
   let oauthDTO = new OauthDTO();
-  let config = await ConfigApi.getConfigByKey(KEY_GITHUB_OAUTH_TOKEN, { invokeEnv: BACKGROUND });
+  let config = await ConfigApi.getConfigByKey(KEY_GITHUB_OAUTH_TOKEN);
   if (config) {
     let value = JSON.parse(config.value);
     if (value) {

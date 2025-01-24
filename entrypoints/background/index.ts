@@ -84,7 +84,7 @@ export default defineBackground(() => {
             code,
           });
           let urlWithParam = `${GITHUB_URL_GET_ACCESS_TOKEN}?${searchParams.toString()}`;
-          let tokenText = await httpFetchGetText(urlWithParam, (abortFunction) => { }, { invokeEnv: BACKGROUND })
+          let tokenText = await httpFetchGetText(urlWithParam, (abortFunction) => { })
           let tokenURLSearchParam = new URLSearchParams(tokenText);
           const tokenObject = paramsToObject(tokenURLSearchParam);
           let oauthDTO = parseToLineObjectToToHumpObject(new OauthDTO(), tokenObject);
@@ -93,7 +93,7 @@ export default defineBackground(() => {
             url: GITHUB_URL_GET_USER, headers: {
               "Authorization": `Bearer ${oauthDTO.accessToken}`,
             }
-          }, (abortFunction) => { }, { invokeEnv: BACKGROUND });
+          }, (abortFunction) => { });
           let userDTO = parseToLineObjectToToHumpObject(new UserDTO(), userResultJson);
           await setUser(userDTO);
           let targetToken = await getToken();
@@ -114,14 +114,10 @@ export default defineBackground(() => {
     if (changeInfo?.status == "complete" && !isSavedByTabId(tab.id)) {
       if (tab.url) {
         let pureUrl = convertPureJobDetailUrl(tab.url);
-        let job = await JobApi.getJobByDetailUrl(pureUrl, {
-          invokeEnv: BACKGROUND,
-        });
+        let job = await JobApi.getJobByDetailUrl(pureUrl);
         if (job) {
           infoLog(`save jobBrowseDetailHistory start jobId = ${job.jobId}`);
-          await JobApi.addJobBrowseDetailHistory(job.jobId, {
-            invokeEnv: BACKGROUND,
-          });
+          await JobApi.addJobBrowseDetailHistory(job.jobId);
           infoLog(`save jobBrowseDetailHistory success jobId = ${job.jobId}`);
           recordSavedByTabId(tab.id);
         }
@@ -183,7 +179,7 @@ export default defineBackground(() => {
           try {
             taskRunCount += 1;
             infoLog(`[Task] Task run seq = < ${taskRunCount} >`)
-            await AppApi.appBackgroundTaskRun({}, { invokeEnv: BACKGROUND });
+            await AppApi.appBackgroundTaskRun({});
           } catch (e) {
             errorLog(e);
           }

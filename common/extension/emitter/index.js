@@ -52,7 +52,7 @@ const Emitter = (() => {
             const obj = {};
             obj[key] = value;
             if (App.isWorld(WORLD_WEB_WORKER)) {
-                await EmitterApi.emitterEmit(obj, { invokeEnv: WEB_WORKER })
+                await EmitterApi.emitterEmit(obj)
             } else {
                 await chrome.storage.local.set(obj);
             }

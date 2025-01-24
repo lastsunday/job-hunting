@@ -1,9 +1,8 @@
-import App from "@/common/extension/app";
 import { v4 as uuidv4 } from "uuid";
 import { isDevEnv } from "../../common";
 import { INVOKE_WARN_TIME_COST } from "../config.js";
 import { debugLog, errorLog, warnLog } from "../log";
-import { BACKGROUND, CONTENT_SCRIPT, OFFSCREEN, WEB_WORKER } from "./bridgeCommon.js";
+import { BACKGROUND, CONTENT_SCRIPT, OFFSCREEN, WEB_WORKER, getInvokeEnv } from "./bridgeCommon.js";
 
 export const EVENT_BRIDGE = "EVENT_BRIDGE";
 
@@ -21,8 +20,9 @@ let invokeSeq = 0;
 export function invoke(
   action,
   param,
-  { onMessageCallback, invokeEnv } = { invokeEnv: CONTENT_SCRIPT }
+  { onMessageCallback = null, invokeEnv = null } = {}
 ) {
+  invokeEnv ??= getInvokeEnv();
   let callbackId = genCallbackId();
   let promise = new Promise((resolve, reject) => {
     try {
@@ -33,7 +33,7 @@ export function invoke(
         param,
         from: CONTENT_SCRIPT,
         to: BACKGROUND,
-        invokeEnv: invokeEnv,
+        invokeEnv,
       };
       if (isDevEnv()) {
         message.invokeTimeList = [{ env: invokeEnv, time: new Date().getTime(), offset: 0 }];

@@ -1,6 +1,7 @@
 import { isDevEnv } from "@/common";
 import { getAndRemovePromiseHook } from "@/common/api/bridge";
 import { BACKGROUND, CONTENT_SCRIPT, OFFSCREEN, WEB_WORKER } from "@/common/api/bridgeCommon";
+import { INVOKE_WARN_TIME_COST } from "@/common/config";
 import { debugLog, errorLog, warnLog } from "@/common/log";
 
 /**

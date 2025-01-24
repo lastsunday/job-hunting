@@ -1,5 +1,4 @@
 import { init, invoke } from "./bridge";
-import { CONTENT_SCRIPT } from "./bridgeCommon";
 
 export async function initBridge() {
   init();
@@ -62,16 +61,14 @@ export async function dbExec(param) {
  */
 export async function httpFetchGetText(
   param,
-  onReturnAbortHandlerCallbackFunction,
-  { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }
+  onReturnAbortHandlerCallbackFunction
 ) {
   let result = await invoke("httpFetchGetText", param, {
     onMessageCallback: (message) => {
       onReturnAbortHandlerCallbackFunction(() => {
         httpFetchGetTextAbort(message.callbackId);
       });
-    },
-    invokeEnv: invokeEnv,
+    }
   });
   return result.data;
 }
@@ -84,8 +81,7 @@ export async function httpFetchGetText(
  */
 export async function httpFetchJson(
   param,
-  onReturnAbortHandlerCallbackFunction,
-  { invokeEnv } = { invokeEnv: CONTENT_SCRIPT }
+  onReturnAbortHandlerCallbackFunction
 ) {
   let result = await invoke("httpFetchJson", param, {
     onMessageCallback: (message) => {
@@ -95,7 +91,6 @@ export async function httpFetchJson(
         });
       }
     },
-    invokeEnv: invokeEnv,
   });
   return result.data;
 }

@@ -50,7 +50,7 @@ export async function setUser(user) {
     let config = new Config();
     config.key = KEY_GITHUB_USER;
     config.value = JSON.stringify(user);
-    return ConfigApi.addOrUpdateConfig(config, { invokeEnv: BACKGROUND });
+    return ConfigApi.addOrUpdateConfig(config);
 }
 
 /**
@@ -59,7 +59,7 @@ export async function setUser(user) {
  */
 export async function getUser() {
     let userDTO = new UserDTO();
-    let config = await ConfigApi.getConfigByKey(KEY_GITHUB_USER, { invokeEnv: BACKGROUND });
+    let config = await ConfigApi.getConfigByKey(KEY_GITHUB_USER);
     if (config) {
         let value = JSON.parse(config.value);
         if (value) {
