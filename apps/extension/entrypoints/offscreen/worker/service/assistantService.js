@@ -98,22 +98,6 @@ export const AssistantService = {
 };
 
 /**
- * 
- * @param {JobFaviousSettingDTO} param 
- * @param {*} todayStart 
- * @param {*} todayEnd 
- * @returns 
- */
-function genFaviousJobCountSQL(param, todayStart, todayEnd) {
-    let sqlQuery = "";
-    let whereCondition = genJobSearchWhereConditionSql(param);
-    sqlQuery += genSqlJobSearchQuery(param);
-    sqlQuery += whereCondition;
-    sqlQuery = genFilterSQL(sqlQuery, param, todayStart, todayEnd);
-    return `SELECT COUNT(*) AS count FROM (${sqlQuery}) AS t1`
-}
-
-/**
  *
  * @param {SearchFaviousJobBO} param
  *
@@ -139,15 +123,26 @@ function genJobSearchWhereConditionSql(param) {
 
 function genSqlJobSearchQuery(param) {
     // let joinSql = `LEFT JOIN (SELECT job_id AS _jobId,COUNT(job_id) AS browseDetailCount,MAX(job_visit_datetime) AS latestBrowseDetailDatetime FROM JOB_BROWSE_HISTORY WHERE job_visit_type = 'DETAIL' GROUP BY job_id) AS t2 ON t1.job_id = t2._jobId`;
-    let joinSql = ` LEFT JOIN company_tag AS t3 ON t1.job_company_name = t3.company_name`;
-    joinSql += ` LEFT JOIN job_tag AS t4 ON t1.job_id = t4.job_id`;
-    return `SELECT t1.job_id AS job_id,job_platform,job_url,job_name,job_company_name,job_location_name,job_address,job_longitude,job_latitude,job_description,job_degree_name,job_year,job_salary_min,job_salary_max,job_salary_total_month,job_first_publish_datetime,boss_name,boss_company_name,boss_position,t1.create_datetime AS create_datetime,t1.update_datetime AS update_datetime,t1.skill_tag,t1.welfare_tag,STRING_AGG(t3.tag_id,',') AS company_tag_id_array,STRING_AGG(t4.tag_id,',') AS job_tag_id_array FROM job AS t1 ${joinSql}`;
+    let joinSql = ``;
+    let companyTagSelectSql = ``;
+    if (param.dislikeCompanyTagList && param.dislikeCompanyTagList.length > 0) {
+        joinSql += ` LEFT JOIN company_tag AS t3 ON t1.job_company_name = t3.company_name`;
+        companyTagSelectSql += `,STRING_AGG(t3.tag_id,',') AS company_tag_id_array `;
+    }
+    let jobTagSelectSql = ``;
+    let isJobTagLikeSelect = param.likeJobTagList && param.likeJobTagList.length > 0;
+    let isJobTagDisLikeSelect = param.dislikeJobTagList && param.dislikeJobTagList.length > 0;
+    if (isJobTagLikeSelect || isJobTagDisLikeSelect) {
+        joinSql += ` LEFT JOIN job_tag AS t4 ON t1.job_id = t4.job_id`;
+        jobTagSelectSql = `,STRING_AGG(t4.tag_id,',') AS job_tag_id_array `;
+    }
+    return `SELECT t1.job_id AS job_id,job_platform,job_url,job_name,job_company_name,job_location_name,job_address,job_longitude,job_latitude,job_description,job_degree_name,job_year,job_salary_min,job_salary_max,job_salary_total_month,job_first_publish_datetime,boss_name,boss_company_name,boss_position,t1.create_datetime AS create_datetime,t1.update_datetime AS update_datetime,t1.skill_tag,t1.welfare_tag ${companyTagSelectSql} ${jobTagSelectSql} FROM job AS t1 ${joinSql}`;
 }
 
 function genFilterSQL(sql, param, createDateStartDate, createDateEndDate) {
     let whereCondition = "";
     if (param.dislikeCompanyTagList && param.dislikeCompanyTagList.length > 0) {
-        whereCondition += " AND (";
+        whereCondition += " AND ((";
         param.dislikeCompanyTagList.forEach((item, index) => {
             if (index > 0) {
                 whereCondition += " AND ";
@@ -155,7 +150,7 @@ function genFilterSQL(sql, param, createDateStartDate, createDateEndDate) {
             whereCondition += " t1.company_tag_id_array NOT LIKE '%" + genIdFromText(item) + "%' ";
         });
         whereCondition += " )";
-        whereCondition += ` OR t1.company_tag_id_array IS NULL`;
+        whereCondition += ` OR t1.company_tag_id_array IS NULL) `;
     }
     if (param.likeJobTagList && param.likeJobTagList.length > 0) {
         whereCondition += " AND (";
