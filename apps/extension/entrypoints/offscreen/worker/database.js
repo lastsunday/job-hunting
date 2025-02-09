@@ -16,6 +16,7 @@ import { ChangeLogV8 } from './changeLog/changeLogV8';
 import { ChangeLogV9 } from './changeLog/changeLogV9';
 
 import { isDevEnv } from "@/common";
+import { ENABLE_SQL_AUTO_EXPLAIN } from "@/common/config";
 import { PGlite } from '@electric-sql/pglite';
 import { auto_explain } from '@electric-sql/pglite/contrib/auto_explain';
 
@@ -492,7 +493,7 @@ const _dbDelete = async () => {
  */
 const initDb = async function () {
   const dataDir = `opfs-ahp://${JOB_DB_PATH}`;
-  if (isDevEnv()) {
+  if (isDevEnv() && ENABLE_SQL_AUTO_EXPLAIN) {
     db = new PGlite(dataDir, {
       extensions: { auto_explain },
       debug: 1,

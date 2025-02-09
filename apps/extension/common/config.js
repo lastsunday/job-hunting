@@ -54,3 +54,6 @@ export const JOB_MAX_EXPORT_SIZE = 6000;
 export const COMPANY_MAX_EXPORT_SIZE = 6000;
 export const JOB_TAG_MAX_EXPORT_SIZE = 10000;
 export const COMPANY_TAG_MAX_EXPORT_SIZE = 10000;
+
+// Dev Config
+export const ENABLE_SQL_AUTO_EXPLAIN = false;
