@@ -24,7 +24,7 @@
     "@monodon/rust"
   ],
   "release": {
-    "projects": ["*"],
+    "projects": ["apps/extension"],
     "projectsRelationship": "independent",
     "changelog": {
       "projectChangelogs": {
