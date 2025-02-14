@@ -4,6 +4,7 @@ import zhilian from "../assets/logo/logo-zhilian.svg";
 import lagou from "../assets/logo/logo-lagou.svg";
 import liepin from "../assets/logo/logo-liepin.svg";
 import jobsdb from "../assets/logo/logo-jobsdb.png";
+import ggfw_hrss_gd from "../assets/logo/logo-ggfw_hrss_gd.png";
 
 export const logo = {
     boss,
@@ -12,4 +13,5 @@ export const logo = {
     lagou,
     liepin,
     jobsdb,
+    ggfw_hrss_gd,
 }

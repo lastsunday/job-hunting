@@ -222,6 +222,13 @@ import { logo } from "../assets";
 import StatisticCard from "../components/StatisticCard";
 import { WhitelistData } from "../data/WhitelistData";
 
+const publicJobWebsiteList = [
+  {
+    url: "https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/#/search?type=1",
+    label: "广东公共求职招聘服务平台",
+    logo: logo.ggfw_hrss_gd,
+  },
+];
 const jobWebsiteList = [
   {
     url: "https://www.zhipin.com/web/geek/job",
@@ -625,8 +632,39 @@ const DashboardView: React.FC = () => {
         ))}
       </Row>
       <Row gutter={2}>
+      <Col sm={24} xl={24}>
+          <Card size="small" title="公共招聘网站" style={{ margin: 10 }}>
+            <Row>
+              {publicJobWebsiteList.map((item, index) => (
+                <Col
+                  key={index}
+                  xs={12}
+                  sm={8}
+                  md={6}
+                  lg={4}
+                  className="cardItem flexCenter"
+                >
+                  <Link href={item.url} target="_blank" className="flexCenter">
+                    <Row>
+                      <Col xs={24} className="flexCenter">
+                        <img
+                          className="companyLogo"
+                          src={item.logo}
+                          alt="logo"
+                        />
+                      </Col>
+                      <Col xs={24} className="cardLabel flexCenter">
+                        <Flex>{item.label}</Flex>
+                      </Col>
+                    </Row>
+                  </Link>
+                </Col>
+              ))}
+            </Row>
+          </Card>
+        </Col>
         <Col sm={24} xl={12}>
-          <Card size="small" title="招聘网站" style={{ margin: 10 }}>
+          <Card size="small" title="商业化招聘网站" style={{ margin: 10 }}>
             <Row>
               {jobWebsiteList.map((item, index) => (
                 <Col
