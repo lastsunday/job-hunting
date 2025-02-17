@@ -3,7 +3,7 @@
   height: 50px;
 }
 .cardItem {
-  height: 120px;
+  padding-top: 10px;
 }
 .cardLabel{
   margin-top:5px;
@@ -12,6 +12,6 @@
 .flexCenter {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: start;
 }
 
