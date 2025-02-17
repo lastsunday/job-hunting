@@ -418,13 +418,13 @@ export async function _jobGetByIds({ param = null, connection = null } = {}) {
 
 async function getJobBrowseHistoryCountMap(ids, type) {
   let countMap = new Map();
-  const SQL_QUERY_JOB_BOWSE_HISTORY_GROUP_COUNT = `SELECT job_id AS jobId ,count(*) AS total FROM job_browse_history WHERE job_id IN (
+  const SQL_QUERY_JOB_BOWSE_HISTORY_GROUP_COUNT = `SELECT job_id AS id ,count(*) AS total FROM job_browse_history WHERE job_id IN (
     ${ids}
     ) AND job_visit_type = '${type}'  GROUP BY job_id;`;
   const { rows: countRows } = await (await getDb()).query(SQL_QUERY_JOB_BOWSE_HISTORY_GROUP_COUNT);
   for (let i = 0; i < countRows.length; i++) {
     let item = countRows[i];
-    countMap.set(item.jobId, item.total);
+    countMap.set(item.id, item.total);
   }
   return countMap;
 }
