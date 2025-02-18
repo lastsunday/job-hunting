@@ -24,6 +24,7 @@ export default defineConfig({
       {
         "resources": [
           "proxyAjax.js",
+          "firstOpen.js",
           "CHANGELOG.md",
           "package.json",
           "LICENSE"
@@ -35,7 +36,7 @@ export default defineConfig({
           "https://www.lagou.com/*",
           "https://hk.jobsdb.com/*",
           "https://www.liepin.com/*",
-          "https://aiqicha.baidu.com/*"
+          "https://aiqicha.baidu.com/*",
         ]
       }
     ],

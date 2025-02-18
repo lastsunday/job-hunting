@@ -1,23 +1,20 @@
 import '@webcomponents/custom-elements';
 import { getBossData } from "./plantforms/boss/index.js";
-import { handleBossRecommendData } from "./plantforms/boss/recommend.js"
-import { getZhiLianData } from "./plantforms/zhilian/index.js";
+import { handleBossRecommendData } from "./plantforms/boss/recommend.js";
 import { getJob51Data } from "./plantforms/job51/index.js";
-import { getLaGouData } from "./plantforms/lagou/index.js";
 import { getJobsdbData } from "./plantforms/jobsdb/index.js";
 import { getLiepinData } from "./plantforms/liepin/index.js";
-import zhilianFirstOpen from "./plantforms/zhilian/firstOpen.js";
+import { getZhiLianData } from "./plantforms/zhilian/index.js";
 import lagouFirstOpen from "./plantforms/lagou/firstOpen.js";
+import { handle as aiqichaHandle } from "./company/plantforms/aiqicha/index.js";
 
-import { handle as aiqichaHandle } from "./company/plantforms/aiqicha/index.js"
-
-import { createLink, createScript } from "../../common/utils.js";
 import $ from "jquery";
-import { initBridge } from "../../common/api/common.js";
 
-import "@yaireo/tagify/dist/tagify.css";
 import "@yaireo/dragsort/dist/dragsort.css";
+import "@yaireo/tagify/dist/tagify.css";
 import "../assets/css/app.css";
+
+import { initBridge } from "../../common/api/common.js";
 
 export default defineContentScript({
   // Set manifest options
@@ -28,23 +25,17 @@ export default defineContentScript({
     "https://www.lagou.com/*",
     "https://hk.jobsdb.com/*",
     "https://www.liepin.com/*",
-    "https://aiqicha.baidu.com/*"
+    "https://aiqicha.baidu.com/*",
   ],
 
   main(ctx) {
     // Executed when content script is loaded, can be async
     // 这里的 window 和页面的 window 不是同一个
     window.$ = window.jQuery = $;
-    const head = document.head;
-    // eslint-disable-next-line no-undef
-    const proxyScript = createScript(chrome.runtime.getURL("proxyAjax.js"));
-
-    if (head.firstChild) {
-      // proxyScript 要保证在第一个插入
-      head.insertBefore(proxyScript, head.firstChild);
-    } else {
-      head.appendChild(proxyScript);
-    }
+    const script = document.createElement('script');
+    script.setAttribute('type', 'text/javascript');
+    script.setAttribute('src', chrome.runtime.getURL('firstOpen.js'));
+    document.body.appendChild(script);
 
     window.addEventListener("ajaxGetData", function (e) {
       const data = e?.detail;
@@ -71,16 +62,6 @@ export default defineContentScript({
           getJob51Data(data?.response, true);
         }
 
-        // 拉勾网接口
-        if (responseURL.indexOf("/jobs/v2/positionAjax.json") !== -1) {
-          /**
-           * Question: 接口响应是加密的，为什么这里拿到的是解密后的？
-           * 拉勾的加密是自己重写了 XMLHttpRequest，在 send 前进行加密，接受到响应后解密，再派发事件出去
-           * 由于拉勾的重写在 proxyAjax 之前运行，所以这里拿到的是解密后的数据
-           */
-          getLaGouData(data?.response);
-        }
-
         // jobsdb
         if (responseURL.indexOf("/api/chalice-search/v4/search") !== -1) {
           getJobsdbData(data?.response);
@@ -99,16 +80,9 @@ export default defineContentScript({
       }
     });
 
-    window.addEventListener("proxyScriptLoaded", async function (e) {
+    window.addEventListener("firstOpen", async function (e) {
       try {
         await initBridge();
-        // 不通过直接注入脚本的方式处理 ssr 页面，否则一些引入的模块需要重新打包
-        if (location.host === "www.zhaopin.com") {
-          // 智联招聘首次打开
-          const data = e?.detail?.zhipin?.initialState;
-          zhilianFirstOpen(data || {});
-        }
-
         if (location.host === "www.lagou.com") {
           // 拉勾首次打开
           const data = e?.detail?.lagou?.initialState;

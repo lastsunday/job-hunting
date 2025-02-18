@@ -148,7 +148,9 @@ function mutationContainer(data, firstTimeOpen) {
     return new Promise((resolve, reject) => {
         const companyList = document.querySelector(".company-list");
         //fix comment dialog display
-        companyList.style = "overflow: visible;";
+        if(companyList){
+            companyList.style = "overflow: visible;";
+        }
         const dom = companyList?.querySelector(".wrap");
         if (firstTimeOpen) {
             if (dom) {
