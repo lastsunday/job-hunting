@@ -69,4 +69,4 @@ window.addEventListener("ajaxReadyStateChange", async function (e) {
   }
 });
 
-console.log("inject proxy ajax");
+console.log("[Inject] proxy ajax");

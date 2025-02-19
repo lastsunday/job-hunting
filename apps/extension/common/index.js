@@ -5,6 +5,7 @@ export const PLATFORM_LAGOU = "LAGOU";
 export const PLATFORM_JOBSDB = "JOBSDB";
 export const PLATFORM_LIEPIN = "LIEPIN";
 export const PLATFORM_JOBONLINE = "JOBONLINE";
+export const PLATFORM_GGFW_HRSS_GD = "GGFW_HRSS_GD";
 /**
  * 爱企查
  */

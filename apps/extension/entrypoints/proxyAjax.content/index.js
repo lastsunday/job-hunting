@@ -1,3 +1,16 @@
+import '@webcomponents/custom-elements';
+import { getBossData } from "../content/plantforms/boss/index.js";
+import { handleBossRecommendData } from "../content/plantforms/boss/recommend.js";
+import { getJob51Data } from "../content/plantforms/job51/index.js";
+import { getJobsdbData } from "../content/plantforms/jobsdb/index.js";
+import { getLiepinData } from "../content/plantforms/liepin/index.js";
+import { getZhiLianData } from "../content/plantforms/zhilian/index.js";
+import { handle as aiqichaHandle } from "../content/company/plantforms/aiqicha/index.js";
+import { getJobOnlineData } from "../content/plantforms/jobonline/index.js";
+import { getGgfwHrssGdData } from "../content/plantforms/ggfw_hrss_gd/index.js";
+import $ from "jquery";
+import { initBridge } from "../../common/api/common.js";
+
 export default defineContentScript({
     // Set manifest options
     matches: [
@@ -9,13 +22,73 @@ export default defineContentScript({
         "https://www.liepin.com/*",
         "https://aiqicha.baidu.com/*",
         "https://www.jobonline.cn/*",
+        "https://ggfw.hrss.gd.gov.cn/*",
     ],
     runAt: 'document_start',
 
     main(ctx) {
-        const script = document.createElement('script');
-        script.setAttribute('type', 'text/javascript');
-        script.setAttribute('src', chrome.runtime.getURL('proxyAjax.js'));
-        document.documentElement.appendChild(script);
+        console.log(`[Inject] proxy ajax content js`);
+        (async () => {
+            await initBridge();
+            // Executed when content script is loaded, can be async
+            // 这里的 window 和页面的 window 不是同一个
+            window.$ = window.jQuery = $;
+            window.addEventListener("ajaxGetData", async function (e) {
+                const data = e?.detail;
+                if (!data) return;
+                const responseURL = data?.responseURL;
+                if (responseURL) {
+                    // boss直聘接口
+                    if (responseURL.indexOf("/search/joblist.json") !== -1) {
+                        getBossData(data?.response);
+                    }
+
+                    // boss直聘推荐页接口
+                    if (responseURL.indexOf("/wapi/zpgeek/pc/recommend/job/list.json") !== -1) {
+                        handleBossRecommendData(JSON.parse(data?.response)?.zpData?.jobList);
+                    }
+
+                    // 智联招聘接口
+                    if (responseURL.indexOf("/search/positions") !== -1) {
+                        getZhiLianData(data?.response, true);
+                    }
+
+                    // 前程无忧接口
+                    if (responseURL.indexOf("/api/job/search-pc") !== -1) {
+                        getJob51Data(data?.response, true);
+                    }
+
+                    // jobsdb
+                    if (responseURL.indexOf("/api/chalice-search/v4/search") !== -1) {
+                        getJobsdbData(data?.response);
+                    }
+
+                    // liepin
+                    if (responseURL.indexOf("/api/com.liepin.searchfront4c.pc-search-job") !== -1) {
+                        getLiepinData(data?.response);
+                    }
+
+                    // jobonline
+                    if (responseURL.indexOf("/jobtbao-es-api/elastic/api/position/common/v1/showlist?bodytarget=INDEX_PAGE") !== -1) {
+                        getJobOnlineData(data?.response);
+                    }
+
+                    // ggfwHrssGd
+                    if (responseURL.indexOf("/recruitment/internet/main/internet/retrieval/c/recruitment/homepage/positions") !== -1) {
+                        getGgfwHrssGdData(data?.response);
+                    }
+
+                    // aiqicha
+                    if (responseURL.indexOf("/s/advanceFilterAjax") !== -1) {
+                        let list = JSON.parse(data?.response)?.data?.resultList;
+                        aiqichaHandle(list, false);
+                    }
+                }
+            });
+            const script = document.createElement('script');
+            script.setAttribute('type', 'text/javascript');
+            script.setAttribute('src', chrome.runtime.getURL('proxyAjax.js'));
+            document.documentElement.appendChild(script);
+        })();
     },
 })

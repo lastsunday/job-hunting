@@ -6,6 +6,7 @@ import {
     PLATFORM_LIEPIN,
     PLATFORM_ZHILIAN,
     PLATFORM_JOBONLINE,
+    PLATFORM_GGFW_HRSS_GD,
 } from "@/common";
 
 import dayjs from "dayjs";
@@ -126,6 +127,8 @@ export function useJob() {
                 return "智联招聘";
             case PLATFORM_JOBONLINE:
                 return "就业在线";
+            case PLATFORM_GGFW_HRSS_GD:
+                return "广东公共求职招聘服务平台";
             default:
                 return value;
         }
@@ -147,6 +150,8 @@ export function useJob() {
                 return logo.jobsdb;
             case PLATFORM_JOBONLINE:
                 return logo.jobonline;
+            case PLATFORM_GGFW_HRSS_GD:
+                return logo.ggfw_hrss_gd;
             default:
                 return "";
         }

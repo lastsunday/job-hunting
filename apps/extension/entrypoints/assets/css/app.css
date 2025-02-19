@@ -173,6 +173,34 @@
   background-color: white;
 }
 
+.__job_ggfw_hrss_gd_time_tag {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: rgba(229, 248, 248);
+  color: #00a6a7;
+  padding: 0 8px;
+  font-size: 14px;
+  border-radius: 0 0 0 4px;
+  text-align: right;
+}
+
+/*for ggfw_hrss_gd*/
+.ant-list-item {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.card-item-bottom{
+  height: auto !important;
+}
+
+.__GGFW_HRSS_GD_function_panel {
+  width: 100%;
+  padding-top: 5px;
+}
+
 /*for jbsdb job item*/
 div[data-search-sol-meta] {
   display: flex;

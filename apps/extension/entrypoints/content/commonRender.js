@@ -672,6 +672,8 @@ export async function renderFunctionPanel(
     }
     let functionPanelDiv = document.createElement("div");
     functionPanelDiv.classList.add(`__${platform}_function_panel`);
+    //delete before insert element
+    targetDom.querySelectorAll(`.__${platform}_function_panel`).forEach(item => item.parentElement.removeChild(item));
     targetDom.append(functionPanelDiv);
     functionPanelDiv.onclick = (event) => {
       event.stopPropagation();

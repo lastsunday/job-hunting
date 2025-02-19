@@ -38,6 +38,7 @@ export default defineConfig({
           "https://www.liepin.com/*",
           "https://aiqicha.baidu.com/*",
           "https://www.jobonline.cn/*",
+          "https://ggfw.hrss.gd.gov.cn/*",
         ]
       }
     ],

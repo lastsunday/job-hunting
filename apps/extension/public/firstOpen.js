@@ -1,4 +1,4 @@
-console.log("inject first open start");
+console.log("[Inject] first open start");
 ; (function () {
   const host = window.location.host;
   let detail = {};
@@ -17,5 +17,5 @@ console.log("inject first open start");
   }
   let event = new CustomEvent('firstOpen', { detail });
   window.dispatchEvent(event);
-  console.log("inject first open end");
+  console.log("[Inject] first open end");
 })();

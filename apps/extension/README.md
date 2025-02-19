@@ -26,6 +26,7 @@
    - 拉钩网：<https://www.lagou.com/wn/zhaopin>
    - 猎聘网： <https://www.liepin.com/zhaopin>
    - 就业在线： <https://www.jobonline.cn/position>
+   - 广东公共求职招聘服务平台 <https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/#/search?type=1>
 
 **开发**
 

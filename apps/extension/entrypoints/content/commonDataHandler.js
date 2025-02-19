@@ -9,6 +9,7 @@ import {
   PLATFORM_LIEPIN,
   PLATFORM_ZHILIAN,
   PLATFORM_JOBONLINE,
+  PLATFORM_GGFW_HRSS_GD,
 } from "../../common";
 import { CompanyApi, JobApi } from "../../common/api";
 import { httpFetchGetText } from "../../common/api/common";
@@ -74,6 +75,8 @@ export async function saveBrowseJob(list, platform) {
     jobs = handleLiepin(list);
   } else if (PLATFORM_JOBONLINE == platform) {
     jobs = handleJobOnline(list);
+  } else if (PLATFORM_GGFW_HRSS_GD == platform) {
+    jobs = handleGgfwHrssGd(list);
   } else {
     //skip
   }
@@ -111,12 +114,74 @@ export function getJobIds(list, platform) {
       jobId = item.job.jobId;
     } else if (PLATFORM_JOBONLINE == platform) {
       jobId = item.id;
+    } else if (PLATFORM_GGFW_HRSS_GD == platform) {
+      jobId = item.bcb009;
     } else {
       //skip
     }
     result.push(genId(jobId, platform));
   }
   return result;
+}
+
+function handleGgfwHrssGd(list) {
+  let jobs = [];
+  for (let i = 0; i < list.length; i++) {
+    let job = new Job();
+    let item = list[i];
+    const {
+      bcb009:id,
+      bce055:jobName,
+      aab004:companyName,
+      acb204Name:cityName,
+      acc530:address,
+      aac011Name:eduDegree,
+      aae162Name:jobAge,
+      bdb286:publishTime,
+      acb241:lowSalaryOrigin,
+      acb242:highSalaryOrigin,
+      acb22a:description,
+      bcb034:longitude,
+      bcb035:latitude,
+      bcb182Name:welfare,
+    } = item;
+    job.jobId = genId(id, PLATFORM_GGFW_HRSS_GD);
+    job.jobPlatform = PLATFORM_GGFW_HRSS_GD;
+    job.jobUrl = `https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/#/positionDetail?bcb009=${id}`;
+    job.jobName = jobName;
+    job.jobCompanyName = companyName;
+    job.jobLocationName = cityName;
+    job.jobAddress = address;
+    job.jobLongitude = longitude;
+    job.jobLatitude = latitude;
+    if (job.jobLongitude && job.jobLatitude) {
+      let wgs84 = bd09ToWgs84(job.jobLongitude, job.jobLatitude);
+      job.jobLongitude = wgs84[0];
+      job.jobLatitude = wgs84[1];
+    }
+    job.jobDescription = description;
+    job.jobDegreeName = eduDegree;
+    if (jobAge) {
+      if (jobAge == '经验不限') {
+        job.jobYear = 0;
+      } else {
+        let groups = jobAge.match(/(?<min>[0-9\.]*)/)?.groups;
+        job.jobYear = groups.min;
+      }
+    }
+    job.jobSalaryMin = lowSalaryOrigin > 0 ? lowSalaryOrigin : null;
+    job.jobSalaryMax = highSalaryOrigin > 0 ? highSalaryOrigin : null;
+    job.jobSalaryTotalMonth = '';
+    job.jobFirstPublishDatetime = dayjs(publishTime);
+    job.bossName = '';
+    job.bossCompanyName = companyName;
+    job.bossPosition = '';
+    job.isFullCompanyName = true;
+    job.welfareTag = welfare;
+    job.skillTag = '';
+    jobs.push(job);
+  }
+  return jobs;
 }
 
 function handleJobOnline(list) {
