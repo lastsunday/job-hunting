@@ -1,3 +1,19 @@
+## 3.3.0 (2025-02-19)
+
+### 🚀 Features
+
+- 新增自动化运行平台(就业在线)
+- 新增招聘平台支持(就业在线 <https://www.jobonline.cn/>)
+
+### 🩹 Fixes
+
+- 调整自动化任务排序
+- perf proxy ajax logic and add first open script
+
+### ❤️ Thank You
+
+- lastsunday
+
 ## 3.2.0 (2025-02-17)
 
 ### 🚀 Features
