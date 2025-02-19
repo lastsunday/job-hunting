@@ -1,3 +1,14 @@
+## 3.4.0 (2025-02-19)
+
+### 🚀 Features
+
+- 新增招聘平台支持(广东公共求职招聘服务平台 <https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/#/search?type=1>)
+- 添加公共职业培训网站导航
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.3.0 (2025-02-19)
 
 ### 🚀 Features
