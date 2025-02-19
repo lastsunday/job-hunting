@@ -12,6 +12,7 @@ import {
     PLATFORM_LAGOU,
     PLATFORM_LIEPIN,
     PLATFORM_ZHILIAN,
+    PLATFORM_JOBONLINE,
 } from "../../../common";
 import { errorLog, infoLog } from "../../../common/log";
 import { randomDelay } from "../../../common/utils";
@@ -44,6 +45,7 @@ jobItemPageHandleFunction.set(PLATFORM_BOSS, _bossHandle);
 jobItemPageHandleFunction.set(PLATFORM_ZHILIAN, _zhilianHandle);
 jobItemPageHandleFunction.set(PLATFORM_LAGOU, _lagouHandle);
 jobItemPageHandleFunction.set(PLATFORM_LIEPIN, _liepinHandle);
+jobItemPageHandleFunction.set(PLATFORM_JOBONLINE, _jobonlineHandle);
 
 async function _automateFetchJobItemData({ url, platform, delay, delayRandomRange, maxPage }) {
     if (platform == PLATFORM_51JOB) {
@@ -105,6 +107,50 @@ async function _automateFetchJobItemData({ url, platform, delay, delayRandomRang
 function _log(logList, message) {
     infoLog(message);
     logList.push(`${dayjs(new Date()).format(DATE_FORMAT)} ${message}`);
+}
+
+async function _jobonlineHandle(tab, browser, page, platform, delay, delayRandomRange, maxPage) {
+    const logList = [];
+    const screenshotList = [];
+    let error = null;
+    let count = 1;
+    try {
+        _log(logList, `[puppeteer] [${platform}] handle _jobonlineHandle`)
+        let jobItemLoaded = await page.waitForSelector(".btn-next", { timeout: 5000 });
+        if (jobItemLoaded) {
+            while (true) {
+                await page.waitForSelector(".__status_job_render_finish");
+                let nextButtonElementHandle = await page.waitForSelector(".btn-next");
+                screenshotList.push(await page.screenshot({ encoding: 'base64', fullPage: true }));
+                count++;
+                if (maxPage && maxPage > 0 && count > maxPage) {
+                    _log(logList, `[puppeteer] [${platform}] page(${count}) over maxPage(${maxPage})`)
+                    break;
+                }
+                let isLastPage = await (await nextButtonElementHandle.getProperty("disabled")).jsonValue();
+                if (isLastPage) {
+                    _log(logList, `[puppeteer] [${platform}] is last page`)
+                    _log(logList, `[puppeteer] [${platform}] close page tab id = ${tab.id}`)
+                    break;
+                } else {
+                    _log(logList, `[puppeteer] [${platform}] has next page tab id = ${tab.id}`)
+                    _log(logList, `[puppeteer] [${platform}] will go to page no = ${count}`)
+                    await randomDelay(delay, delayRandomRange);
+                    await nextButtonElementHandle.click();
+                    _log(logList, `[puppeteer] [${platform}] go to page no = ${count}`)
+                }
+            }
+            return { logList, count, error, screenshotList };
+        } else {
+            await chrome.tabs.reload(tab.id);
+        }
+    } catch (e) {
+        errorLog(e);
+        _log(logList, `[puppeteer] [${platform}] handle has error`);
+        error = await _checkValidHuman(platform, page) ? AUTOMATE_ERROR_HUMAN_VALID : AUTOMATE_ERROR_UNKNOW;
+        screenshotList.push(await page.screenshot({ encoding: 'base64', fullPage: true }));
+        return { logList, count, error, screenshotList };
+    }
 }
 
 async function _51jobHandle(tab, browser, page, platform, delay, delayRandomRange, maxPage) {
@@ -333,6 +379,8 @@ async function _checkValidHuman(platform, page) {
             return false;
         } else if (platform == PLATFORM_LIEPIN) {
             //TODO LIEPIN
+            return false;
+        } else if (platform == PLATFORM_JOBONLINE) {
             return false;
         } else {
             throw `checkValidHuman unknow platform ${platform}`
