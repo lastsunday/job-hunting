@@ -6,6 +6,8 @@ import liepin from "../assets/logo/logo-liepin.svg";
 import jobsdb from "../assets/logo/logo-jobsdb.png";
 import ggfw_hrss_gd from "../assets/logo/logo-ggfw_hrss_gd.png";
 import jobonline from "../assets/logo/logo-jobonline.ico";
+import jcmohrss from "../assets/logo/logo-jcmohrss.png";
+import xzymohrss from "../assets/logo/logo-xzymohrss.png";
 
 export const logo = {
     boss,
@@ -16,4 +18,6 @@ export const logo = {
     jobsdb,
     ggfw_hrss_gd,
     jobonline,
+    jcmohrss,
+    xzymohrss,
 }

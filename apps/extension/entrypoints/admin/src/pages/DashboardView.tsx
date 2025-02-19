@@ -235,6 +235,23 @@ const publicJobWebsiteList = [
     desc: `面向求职者和用人单位的公共服务平台，为招聘单位提供发布岗位、搜索人才、面试管理等招聘人才的服务。求职者在求职招聘管理模块实现发布求职意向、查找岗位、简历管理等求职功能。开展招聘会、直播带岗等活动，细化求职招聘服务，为求职者和用人单位提供了高效、便捷、专业的求职招聘一体化服务`,
   },
 ];
+const publicJobTrainList = [
+  {
+    url: 'https://jc.mohrss.gov.cn/',
+    label: '就业创业和职业培训在线服务平台',
+    logo: logo.jcmohrss,
+    desc: `
+    就业创业和职业培训在线服务平台（就创平台）是人力资源和社会保障部中国就业培训技术指导中心以提升就业创业技能为核心，汇集短缺职业、龙头企业等课程，融合“教、学、测、练、考、证、就”的数字化在线培训服务平台。
+    `,
+  },
+  {
+    url: 'https://xzy.mohrss.gov.cn/',
+    label: '新职业在线学习平台',
+    logo: logo.xzymohrss,
+    desc: `
+    `,
+  },
+];
 const jobWebsiteList = [
   {
     url: 'https://www.zhipin.com/web/geek/job',
@@ -711,6 +728,38 @@ const DashboardView: React.FC = () => {
           <Card size="small" title="公共招聘网站" style={{ margin: 10 }}>
             <Row>
               {publicJobWebsiteList.map((item, index) => (
+                <Col
+                  title={item.desc}
+                  key={index}
+                  xs={12}
+                  sm={8}
+                  md={6}
+                  lg={4}
+                  className="cardItem flexCenter"
+                >
+                  <Link href={item.url} target="_blank" className="flexCenter">
+                    <Row>
+                      <Col xs={24} className="flexCenter">
+                        <img
+                          className="companyLogo"
+                          src={item.logo}
+                          alt="logo"
+                        />
+                      </Col>
+                      <Col xs={24} className="cardLabel flexCenter">
+                        <Flex>{item.label}</Flex>
+                      </Col>
+                    </Row>
+                  </Link>
+                </Col>
+              ))}
+            </Row>
+          </Card>
+        </Col>
+        <Col sm={24} xl={24}>
+          <Card size="small" title="公共职业培训网站" style={{ margin: 10 }}>
+            <Row>
+              {publicJobTrainList.map((item, index) => (
                 <Col
                   title={item.desc}
                   key={index}
