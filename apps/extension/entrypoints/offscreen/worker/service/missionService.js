@@ -33,7 +33,7 @@ export const MissionService = {
             let entity = new Mission();
             postSuccessMessage(
                 message,
-                await all(entity, TABLE_NAME, "seq ASC,update_datetime DESC")
+                await all(entity, TABLE_NAME, "seq ASC NULLS FIRST,create_datetime DESC")
             );
         } catch (e) {
             postErrorMessage(message, "[worker] missionGetAll error : " + e.message);
@@ -46,7 +46,14 @@ export const MissionService = {
      */
     missionAddOrUpdate: async function (message, param) {
         try {
-            await SERVICE_INSTANCE._batchAddOrUpdate([param]);
+            await SERVICE_INSTANCE._batchAddOrUpdate([param], {
+                entityClassCreateFunction: () => {
+                    //不保存seq
+                    const obj = new Mission();
+                    delete obj.seq;
+                    return obj;
+                }
+            });
             postSuccessMessage(message, {});
         } catch (e) {
             postErrorMessage(

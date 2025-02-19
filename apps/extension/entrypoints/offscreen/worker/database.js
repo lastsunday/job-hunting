@@ -317,7 +317,7 @@ export async function sort(tableName, idColumnName, param, { connection = null }
   connection ??= await getDb();
   if (param && param.length > 0) {
     param.forEach(async (id, index) => {
-      await connection.query(`UPDATE ${tableName} SET seq=$1,update_datetime=$2 WHERE ${idColumnName} = $2`, [index, nowDatetimeString, id]);
+      await connection.query(`UPDATE ${tableName} SET seq=$1,update_datetime=$2 WHERE ${idColumnName} = $3`, [index, nowDatetimeString, id]);
     });
   }
 }

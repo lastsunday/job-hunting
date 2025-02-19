@@ -200,7 +200,7 @@ export class BaseService {
      * 
      * @param {[]} params
      */
-    async _batchAddOrUpdate(params, { connection = null, overrideCreateDatetime = false, overrideUpdateDatetime = false, genIdFunction = null } = {}) {
+    async _batchAddOrUpdate(params, { connection = null, overrideCreateDatetime = false, overrideUpdateDatetime = false, genIdFunction = null, entityClassCreateFunction = null } = {}) {
         for (let i = 0; i < params.length; i++) {
             let item = params[i];
             let idKey = toHump(this.tableIdColumn);
@@ -212,7 +212,7 @@ export class BaseService {
                 }
             }
         }
-        await batchInsertOrReplace(this.entityClassCreateFunction(), this.tableName, this.tableIdColumn, params, { connection, overrideCreateDatetime, overrideUpdateDatetime });
+        await batchInsertOrReplace(entityClassCreateFunction ? entityClassCreateFunction() : this.entityClassCreateFunction(), this.tableName, this.tableIdColumn, params, { connection, overrideCreateDatetime, overrideUpdateDatetime });
         return params;
     }
 }
