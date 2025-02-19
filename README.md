@@ -35,6 +35,7 @@
 | 智联招聘  | <https://sou.zhaopin.com/>            | 搜索页 |
 | 拉钩网    | <https://www.lagou.com/wn/zhaopin>    | 搜索页 |
 | 猎聘网    | <https://www.liepin.com/zhaopin>      | 搜索页,需点击搜索按钮才有效果 |
+| 就业在线    | <https://www.jobonline.cn/position>      | 搜索页 |
 
 ## 企业搜索平台支持列表
 

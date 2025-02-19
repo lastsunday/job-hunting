@@ -4,6 +4,7 @@ export const PLATFORM_ZHILIAN = "ZHILIAN";
 export const PLATFORM_LAGOU = "LAGOU";
 export const PLATFORM_JOBSDB = "JOBSDB";
 export const PLATFORM_LIEPIN = "LIEPIN";
+export const PLATFORM_JOBONLINE = "JOBONLINE";
 /**
  * 爱企查
  */

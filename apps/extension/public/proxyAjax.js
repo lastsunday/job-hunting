@@ -29,6 +29,7 @@ if (window._ahrealxhr) {
   function proxy_ajax() {
     XMLHttpRequest.prototype.open = function () {
       var open_arguments = arguments;
+      this.__id = crypto.randomUUID();
       this.addEventListener('readystatechange', function (event) {
         ajaxEventTrigger.call(this, 'ajaxReadyStateChange');
       });
@@ -60,10 +61,10 @@ window.addEventListener("ajaxReadyStateChange", async function (e) {
     if (dispatchDataMap.has(dispatchDataKey)) {
       return;
     } else {
-      dispatchDataMap.set(dispatchDataKey, null);
-      // 直接给 xhr，app.js 收不到。
-      let event = new CustomEvent('ajaxGetData', { detail: data });
-      window.dispatchEvent(event);
+    dispatchDataMap.set(dispatchDataKey, null);
+    // 直接给 xhr，app.js 收不到。
+    let event = new CustomEvent('ajaxGetData', { detail: data });
+    window.dispatchEvent(event);
     }
   }
 });

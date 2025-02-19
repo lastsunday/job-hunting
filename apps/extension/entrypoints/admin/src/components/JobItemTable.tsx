@@ -1,18 +1,18 @@
-import { TAG_SOURCE_TYPE_CUSTOM } from "@/common";
-import { cleanHTMLTag, dateToStr } from "@/common/utils";
-import { QuestionCircleOutlined } from "@ant-design/icons";
-import { Descriptions, DescriptionsProps, Flex, Tag, Typography } from "antd";
-import Link from "antd/es/typography/Link";
-import Markdown from "marked-react";
-import { CompanyData } from "../data/CompanyData";
-import { JobData } from "../data/JobData";
-import { useJob } from "../hooks/job";
-import CustomTag from "./CustomTag";
-import styles from "./JobItemTable.module.css";
+import { TAG_SOURCE_TYPE_CUSTOM } from '@/common';
+import { cleanHTMLTag, dateToStr } from '@/common/utils';
+import { QuestionCircleOutlined } from '@ant-design/icons';
+import { Descriptions, DescriptionsProps, Flex, Tag, Typography } from 'antd';
+import Link from 'antd/es/typography/Link';
+import Markdown from 'marked-react';
+import { CompanyData } from '../data/CompanyData';
+import { JobData } from '../data/JobData';
+import { useJob } from '../hooks/job';
+import CustomTag from './CustomTag';
+import styles from './JobItemTable.module.css';
 const { platformFormat } = useJob();
 const { Text } = Typography;
 
-import { useTag } from "../hooks/tag";
+import { useTag } from '../hooks/tag';
 const { convertToTagData } = useTag();
 
 export type JobItemTableProps = {
@@ -44,16 +44,18 @@ const JobItemTable: React.FC<JobItemTableProps> = (props) => {
   const genJobTag = (jobTagList) => {
     if (jobTagList) {
       const result = [];
-      convertToTagData(jobTagList?.filter(item => item.sourceType == TAG_SOURCE_TYPE_CUSTOM)).map((item, index) => {
+      convertToTagData(
+        jobTagList?.filter((item) => item.sourceType == TAG_SOURCE_TYPE_CUSTOM)
+      ).map((item, index) => {
         result.push(
           <CustomTag item={item} color="#1677ff" key={index}></CustomTag>
         );
-      })
+      });
       return result.length > 0 ? result : <Text>无</Text>;
     } else {
       return <Text>无</Text>;
     }
-  }
+  };
 
   const genCompanyTag = (companyTagList) => {
     if (companyTagList) {
@@ -62,17 +64,17 @@ const JobItemTable: React.FC<JobItemTableProps> = (props) => {
         result.push(
           <CustomTag key={index} item={item} color="#faad14"></CustomTag>
         );
-      })
+      });
       return result.length > 0 ? result : <Text>无</Text>;
     } else {
       return <Text>无</Text>;
     }
-  }
+  };
 
-  const items: DescriptionsProps["items"] = [
+  const items: DescriptionsProps['items'] = [
     {
-      key: "name",
-      label: "名称",
+      key: 'name',
+      label: '名称',
       span: 1,
       children: (
         <>
@@ -94,20 +96,20 @@ const JobItemTable: React.FC<JobItemTableProps> = (props) => {
       ),
     },
     {
-      key: "degree",
-      label: "学历",
+      key: 'degree',
+      label: '学历',
       span: 1,
       children: <>{degree}</>,
     },
     {
-      key: "platform",
-      label: "招聘平台",
+      key: 'platform',
+      label: '招聘平台',
       span: 1,
       children: <>{platformFormat(platform)}</>,
     },
     {
-      key: "Company",
-      label: "公司",
+      key: 'Company',
+      label: '公司',
       span: 1,
       children: (
         <>
@@ -157,8 +159,8 @@ const JobItemTable: React.FC<JobItemTableProps> = (props) => {
       ),
     },
     {
-      key: "salary",
-      label: "薪资",
+      key: 'salary',
+      label: '薪资',
       span: 1,
       children: (
         <>
@@ -169,18 +171,18 @@ const JobItemTable: React.FC<JobItemTableProps> = (props) => {
       ),
     },
     {
-      key: "boss",
-      label: "招聘人",
+      key: 'boss',
+      label: '招聘人',
       span: 1,
       children: (
         <>
-          <Text ellipsis>{`${bossName}【${bossPosition}】`}</Text>
+          <Text ellipsis>{`${bossName ?? ''}【${bossPosition ?? ''}】`}</Text>
         </>
       ),
     },
     {
-      key: "address",
-      label: "工作地址",
+      key: 'address',
+      label: '工作地址',
       span: 1,
       children: (
         <>
@@ -191,8 +193,8 @@ const JobItemTable: React.FC<JobItemTableProps> = (props) => {
       ),
     },
     {
-      key: "longitude",
-      label: "经纬度",
+      key: 'longitude',
+      label: '经纬度',
       span: 1,
       children: (
         <>
@@ -203,52 +205,66 @@ const JobItemTable: React.FC<JobItemTableProps> = (props) => {
       ),
     },
     {
-      key: "publishDate",
-      label: "发布时间",
+      key: 'publishDate',
+      label: '发布时间',
       span: 1,
       children: (
-        <>{publishDatetime ? dateToStr(publishDatetime, "YYYY-MM-DD") : `-`}</>
+        <>{publishDatetime ? dateToStr(publishDatetime, 'YYYY-MM-DD') : `-`}</>
       ),
     },
     {
-      key: "jobSkillTag",
-      label: "技能标签",
+      key: 'jobSkillTag',
+      label: '技能标签',
       span: 3,
       children: (
         <>
           <Flex wrap={true} gap={2}>
-            {skillTagList && skillTagList.length > 0
-              ? skillTagList.map((item, index) => (
-                <Tag className={styles.tag} bordered={false} key={index} color="processing">
+            {skillTagList && skillTagList.length > 0 ? (
+              skillTagList.map((item, index) => (
+                <Tag
+                  className={styles.tag}
+                  bordered={false}
+                  key={index}
+                  color="processing"
+                >
                   {item}
                 </Tag>
               ))
-              : <Text>无</Text>}
+            ) : (
+              <Text>无</Text>
+            )}
           </Flex>
         </>
       ),
     },
     {
-      key: "jobWelfareTag",
-      label: "福利标签",
+      key: 'jobWelfareTag',
+      label: '福利标签',
       span: 3,
       children: (
         <>
           <Flex wrap={true} gap={2}>
-            {welfareTagList && welfareTagList.length > 0
-              ? welfareTagList.map((item, index) => (
-                <Tag className={styles.tag} bordered={false} key={index} color="gold">
+            {welfareTagList && welfareTagList.length > 0 ? (
+              welfareTagList.map((item, index) => (
+                <Tag
+                  className={styles.tag}
+                  bordered={false}
+                  key={index}
+                  color="gold"
+                >
                   {item}
                 </Tag>
               ))
-              : <Text>无</Text>}
+            ) : (
+              <Text>无</Text>
+            )}
           </Flex>
         </>
       ),
     },
     {
-      key: "jobTag",
-      label: "职位标签",
+      key: 'jobTag',
+      label: '职位标签',
       span: 3,
       children: (
         <>
@@ -259,8 +275,8 @@ const JobItemTable: React.FC<JobItemTableProps> = (props) => {
       ),
     },
     {
-      key: "companyTag",
-      label: "公司标签",
+      key: 'companyTag',
+      label: '公司标签',
       span: 3,
       children: (
         <>
@@ -271,9 +287,9 @@ const JobItemTable: React.FC<JobItemTableProps> = (props) => {
       ),
     },
     {
-      key: "desc",
+      key: 'desc',
       span: 3,
-      label: "职位描述",
+      label: '职位描述',
       children: (
         <>
           <Text className={styles.desc}>

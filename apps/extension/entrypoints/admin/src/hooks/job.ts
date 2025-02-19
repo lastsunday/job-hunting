@@ -5,6 +5,7 @@ import {
     PLATFORM_LAGOU,
     PLATFORM_LIEPIN,
     PLATFORM_ZHILIAN,
+    PLATFORM_JOBONLINE,
 } from "@/common";
 
 import dayjs from "dayjs";
@@ -123,6 +124,8 @@ export function useJob() {
                 return "猎聘网";
             case PLATFORM_ZHILIAN:
                 return "智联招聘";
+            case PLATFORM_JOBONLINE:
+                return "就业在线";
             default:
                 return value;
         }
@@ -142,6 +145,8 @@ export function useJob() {
                 return logo.zhilian;
             case PLATFORM_JOBSDB:
                 return logo.jobsdb;
+            case PLATFORM_JOBONLINE:
+                return logo.jobonline;
             default:
                 return "";
         }

@@ -2,7 +2,7 @@ import { MissionLogData } from "../data/MissionLogData";
 import { TaskData } from "../data/TaskData";
 import {
     MISSION_AUTO_BROWSE_JOB_SEARCH_PAGE, PLATFORM_51JOB,
-    PLATFORM_BOSS, PLATFORM_ZHILIAN, PLATFORM_LAGOU, PLATFORM_LIEPIN,
+    PLATFORM_BOSS, PLATFORM_ZHILIAN, PLATFORM_LAGOU, PLATFORM_LIEPIN, PLATFORM_JOBONLINE,
     MISSION_STATUS_SUCCESS, MISSION_STATUS_FAILURE, AUTOMATE_ERROR_HUMAN_VALID, AUTOMATE_ERROR_UNKNOW
 } from "@/common"
 import dayjs from "dayjs";
@@ -41,6 +41,8 @@ export function useTask() {
             return "拉钩网";
         } else if (value == PLATFORM_LIEPIN) {
             return "猎聘网";
+        } else if (value == PLATFORM_JOBONLINE) {
+            return "就业在线";
         } else {
             return value;
         }

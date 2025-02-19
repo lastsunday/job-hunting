@@ -25,6 +25,7 @@
    - 智联招聘： <https://sou.zhaopin.com/>
    - 拉钩网：<https://www.lagou.com/wn/zhaopin>
    - 猎聘网： <https://www.liepin.com/zhaopin>
+   - 就业在线： <https://www.jobonline.cn/position>
 
 **开发**
 

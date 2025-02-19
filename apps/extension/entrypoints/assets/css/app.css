@@ -8,8 +8,8 @@
   align-items: stretch;
 }
 
-.tagify[disabled]:not(.tagify--mix):not(.tagify--select)>.tagify__input,
-.tagify[readonly]:not(.tagify--mix):not(.tagify--select)>.tagify__input {
+.tagify[disabled]:not(.tagify--mix):not(.tagify--select) > .tagify__input,
+.tagify[readonly]:not(.tagify--mix):not(.tagify--select) > .tagify__input {
   min-width: 0px;
 }
 
@@ -21,8 +21,8 @@
   }
 }
 
-.__job_tag{
-  display:contents;
+.__job_tag {
+  display: contents;
   flex: 1;
 
   .tagify {
@@ -30,7 +30,7 @@
   }
 }
 
-.__job_tag_all{
+.__job_tag_all {
   display: flex;
   flex: 1;
   flex-wrap: wrap;
@@ -40,8 +40,8 @@
 .__tag_operation_button {
   background-color: mediumblue;
   color: white !important;
-  padding-left:8px;
-  padding-right:8px;
+  padding-left: 8px;
+  padding-right: 8px;
   border-radius: 5px;
   font-size: 12px !important;
   cursor: pointer;
@@ -50,7 +50,7 @@
   text-wrap: nowrap;
 }
 
-.__job_tag_wrapper{
+.__job_tag_wrapper {
   display: flex;
   align-items: baseline;
   padding: 5px;
@@ -65,11 +65,11 @@
   display: inline-block;
   vertical-align: middle;
   border-radius: 3px;
-  padding: .3em .5em;
-  border: 1px solid #CCC;
-  background: #F3F3F3;
-  margin: .2em;
-  font-size: .85em;
+  padding: 0.3em 0.5em;
+  border: 1px solid #ccc;
+  background: #f3f3f3;
+  margin: 0.2em;
+  font-size: 0.85em;
   color: black;
   transition: 0s;
 }
@@ -86,8 +86,8 @@
 .tags-look .tagify__dropdown__item--hidden {
   max-width: 0;
   max-height: initial;
-  padding: .3em 0;
-  margin: .2em 0;
+  padding: 0.3em 0;
+  margin: 0.2em 0;
   white-space: nowrap;
   text-indent: -20px;
   border: 0;
@@ -145,6 +145,34 @@
   margin-top: 10px;
 }
 
+.__job_online_time_tag {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background: rgba(229, 248, 248);
+  color: #00a6a7;
+  padding: 0 8px;
+  font-size: 14px;
+  border-radius: 0 0 0 4px;
+  text-align: right;
+}
+
+.position-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+/*for job online*/
+.position-wrap .position_item {
+  position: relative;
+  padding: 20px;
+  border-radius: 10px;
+  background-color: white;
+}
+
 /*for jbsdb job item*/
 div[data-search-sol-meta] {
   display: flex;
@@ -163,7 +191,8 @@ div[data-search-sol-meta] {
   display: none;
 }
 
-.__is_outsourcing_or_training {}
+.__is_outsourcing_or_training {
+}
 
 .__rencent_update {
   color: red;
@@ -175,9 +204,11 @@ div[data-search-sol-meta] {
   line-height: 18px;
 }
 
-.echo-like .echo-like__icon {}
+.echo-like .echo-like__icon {
+}
 
-.echo-like__count {}
+.echo-like__count {
+}
 
 .__company_info_search {
   display: flex;
@@ -215,11 +246,11 @@ div[data-search-sol-meta] {
   }
 }
 
-.__company_info_quick_search_sub_item{
-  display:flex;
+.__company_info_quick_search_sub_item {
+  display: flex;
 }
 
-.__company_info_quick_search_item>div {
+.__company_info_quick_search_item > div {
   display: flex;
   align-items: inherit;
   margin-right: 8px;
@@ -238,8 +269,8 @@ div[data-search-sol-meta] {
 .__company_info_quick_search_button {
   background-color: mediumblue;
   color: white !important;
-  padding-left:8px;
-  padding-right:8px;
+  padding-left: 8px;
+  padding-right: 8px;
   border-radius: 5px;
   font-size: 12px !important;
   cursor: pointer;
@@ -252,12 +283,12 @@ div[data-search-sol-meta] {
   justify-content: end;
 }
 
-.__company_reputation_content{
+.__company_reputation_content {
   display: flex;
   flex-wrap: wrap;
 
-  div{
-    padding:2px;
+  div {
+    padding: 2px;
   }
 }
 
@@ -287,12 +318,13 @@ div[data-search-sol-meta] {
   position: relative;
 }
 
-.__LIEPIN_function_panel {}
+.__LIEPIN_function_panel {
+}
 
 .__AIQICHA_function_panel {
   position: relative;
   clear: both;
-  margin: 20px
+  margin: 20px;
 }
 
 .__comment_wrapper {
@@ -308,9 +340,11 @@ div[data-search-sol-meta] {
   padding-bottom: 10px;
 }
 
-.__51JOB_comment_wrapper {}
+.__51JOB_comment_wrapper {
+}
 
-.__ZHILIAN_comment_wrapper {}
+.__ZHILIAN_comment_wrapper {
+}
 
 .__LAGOU_comment_wrapper {
   padding-right: 10px;
@@ -375,7 +409,7 @@ div[data-search-sol-meta] {
   color: black;
   padding: 6px;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, .08);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
 .__comment_loading {
@@ -392,7 +426,7 @@ div[data-search-sol-meta] {
   border-radius: 5px;
   flex-direction: column;
 
-  div{
+  div {
     color: white;
   }
 }
@@ -440,7 +474,7 @@ div[data-search-sol-meta] {
   margin-left: 5px;
   text-decoration: underline;
   color: blue;
-  padding-right:5px;
+  padding-right: 5px;
 }
 
 .__comment_empty_content {
@@ -528,7 +562,6 @@ div[data-search-sol-meta] {
   }
 
   .__comment_content_wrapper {
-
     padding: 10px;
     border: 0.5px solid black;
     border-top: 0;

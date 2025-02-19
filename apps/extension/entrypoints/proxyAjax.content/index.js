@@ -8,6 +8,7 @@ export default defineContentScript({
         "https://hk.jobsdb.com/*",
         "https://www.liepin.com/*",
         "https://aiqicha.baidu.com/*",
+        "https://www.jobonline.cn/*",
     ],
     runAt: 'document_start',
 

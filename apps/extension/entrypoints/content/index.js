@@ -7,6 +7,7 @@ import { getLiepinData } from "./plantforms/liepin/index.js";
 import { getZhiLianData } from "./plantforms/zhilian/index.js";
 import lagouFirstOpen from "./plantforms/lagou/firstOpen.js";
 import { handle as aiqichaHandle } from "./company/plantforms/aiqicha/index.js";
+import { getJobOnlineData } from "./plantforms/jobonline/index.js";
 
 import $ from "jquery";
 
@@ -26,6 +27,7 @@ export default defineContentScript({
     "https://hk.jobsdb.com/*",
     "https://www.liepin.com/*",
     "https://aiqicha.baidu.com/*",
+    "https://www.jobonline.cn/*",
   ],
 
   main(ctx) {
@@ -70,6 +72,11 @@ export default defineContentScript({
         // liepin
         if (responseURL.indexOf("/api/com.liepin.searchfront4c.pc-search-job") !== -1) {
           getLiepinData(data?.response);
+        }
+
+        // jobonline
+        if (responseURL.indexOf("/jobtbao-es-api/elastic/api/position/common/v1/showlist?bodytarget=INDEX_PAGE") !== -1) {
+          getJobOnlineData(data?.response);
         }
 
         // aiqicha

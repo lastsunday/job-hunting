@@ -8,6 +8,7 @@ import {
   PLATFORM_LAGOU,
   PLATFORM_LIEPIN,
   PLATFORM_ZHILIAN,
+  PLATFORM_JOBONLINE,
 } from "../../common";
 import { CompanyApi, JobApi } from "../../common/api";
 import { httpFetchGetText } from "../../common/api/common";
@@ -71,6 +72,8 @@ export async function saveBrowseJob(list, platform) {
     jobs = handleJobsdb(list);
   } else if (PLATFORM_LIEPIN == platform) {
     jobs = handleLiepin(list);
+  } else if (PLATFORM_JOBONLINE == platform) {
+    jobs = handleJobOnline(list);
   } else {
     //skip
   }
@@ -106,12 +109,75 @@ export function getJobIds(list, platform) {
       jobId = item.id;
     } else if (PLATFORM_LIEPIN == platform) {
       jobId = item.job.jobId;
+    } else if (PLATFORM_JOBONLINE == platform) {
+      jobId = item.id;
     } else {
       //skip
     }
     result.push(genId(jobId, platform));
   }
   return result;
+}
+
+function handleJobOnline(list) {
+  let jobs = [];
+  for (let i = 0; i < list.length; i++) {
+    let job = new Job();
+    let item = list[i];
+    const {
+      id,
+      positionName,
+      companyName,
+      cityName,
+      address,
+      eduDegree,
+      jobAge,
+      months,
+      publishTime,
+      lowSalaryOrigin,
+      highSalaryOrigin,
+      description,
+      location,
+      light,
+    } = item;
+    job.jobId = genId(id, PLATFORM_JOBONLINE);
+    job.jobPlatform = PLATFORM_JOBONLINE;
+    job.jobUrl = `https://www.jobonline.cn/positionDetail?id=${id}`;
+    job.jobName = positionName;
+    job.jobCompanyName = companyName;
+    job.jobLocationName = cityName;
+    job.jobAddress = address;
+    const locationArray = location.split(",");
+    job.jobLongitude = locationArray[0];
+    job.jobLatitude = locationArray[1];
+    if (job.jobLongitude && job.jobLatitude) {
+      let wgs84 = bd09ToWgs84(job.jobLongitude, job.jobLatitude);
+      job.jobLongitude = wgs84[0];
+      job.jobLatitude = wgs84[1];
+    }
+    job.jobDescription = description;
+    job.jobDegreeName = eduDegree;
+    if (jobAge) {
+      if (jobAge == '经验不限') {
+        job.jobYear = 0;
+      } else {
+        let groups = jobAge.match(/(?<min>[0-9\.]*)/)?.groups;
+        job.jobYear = groups.min;
+      }
+    }
+    job.jobSalaryMin = lowSalaryOrigin > 0 ? lowSalaryOrigin : null;
+    job.jobSalaryMax = highSalaryOrigin > 0 ? highSalaryOrigin : null;
+    job.jobSalaryTotalMonth = months;
+    job.jobFirstPublishDatetime = dayjs.unix(publishTime);
+    job.bossName = '';
+    job.bossCompanyName = companyName;
+    job.bossPosition = '';
+    job.isFullCompanyName = true;
+    job.welfareTag = light && light.length > 0 ? light.map(item => item.replaceAll("。", "").replaceAll("；", "").replaceAll(" ", ",").replaceAll("，", ",").split(",").join(",")).join(",") : null;
+    job.skillTag = '';
+    jobs.push(job);
+  }
+  return jobs;
 }
 
 function handleLiepin(list) {

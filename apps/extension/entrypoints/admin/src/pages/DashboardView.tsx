@@ -5,6 +5,7 @@ import {
   PLATFORM_LAGOU,
   PLATFORM_LIEPIN,
   PLATFORM_ZHILIAN,
+  PLATFORM_JOBONLINE,
 } from '@/common';
 import { CompanyApi, JobApi, TagApi } from '@/common/api';
 import { convertToAbbreviation } from '@/common/utils';
@@ -336,6 +337,7 @@ const PLATFORM_NAME_ARRAY = [
   PLATFORM_LAGOU,
   PLATFORM_LIEPIN,
   PLATFORM_JOBSDB,
+  PLATFORM_JOBONLINE,
 ];
 
 const { platformFormat } = useJob();
