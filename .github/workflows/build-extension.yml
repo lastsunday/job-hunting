@@ -44,11 +44,20 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Package
+      - name: Zip extensions
         run: |
           pnpm install
-          pnpm exec nx run @job-hunting/extension:build
-          pnpm exec nx run @job-hunting/extension:build:firefox
+          pnpm exec nx run @job-hunting/extension:zip
+          pnpm exec nx run @job-hunting/extension:zip:firefox
+
+      - name: Rename dist files
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          CHROME_ZIP=$(ls ${{ env.ROOT_DIR }}.output/job-huntingextension-*-chrome.zip)
+          FIREFOX_ZIP=$(ls ${{ env.ROOT_DIR }}.output/job-huntingextension-*-firefox.zip)
+
+          mv "$CHROME_ZIP" ${{ env.ROOT_DIR }}.output/job-hunting-extension-chrome-${{ env.VERSION }}.zip
+          mv "$FIREFOX_ZIP" ${{ env.ROOT_DIR }}.output/job-hunting-extension-firefox-${{ env.VERSION }}.zip
 
       - name: Deploy chrome dist branch
         uses: JamesIves/github-pages-deploy-action@4.1.4
@@ -67,24 +76,6 @@ jobs:
         run: |
           awk '/^##[^#]/{print NR}' ${{ env.ROOT_DIR }}CHANGELOG.md | head -n 2 | xargs | tr ' ' ',' | xargs -I {} sed -n {}p  ${{ env.ROOT_DIR }}CHANGELOG.md | sed '$d' > ${{ env.ROOT_DIR }}CHANGELOG.txt
 
-      - name: Rename dist
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          mv ${{ env.ROOT_DIR }}.output/chrome-mv3 job-hunting-extension-chrome
-          mv ${{ env.ROOT_DIR }}.output/firefox-mv2 job-hunting-extension-firefox
-
-      - name: Zip chrome dist
-        uses: montudor/action-zip@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          args: zip -qq -r job-hunting-extension-chrome-${{ env.VERSION }}.zip job-hunting-extension-chrome
-
-      - name: Zip firefox dist
-        uses: montudor/action-zip@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          args: zip -qq -r job-hunting-extension-firefox-${{ env.VERSION }}.zip job-hunting-extension-firefox
-
       - name: Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
@@ -92,5 +83,5 @@ jobs:
           body_path: ${{ env.ROOT_DIR }}CHANGELOG.txt
           make_latest: true
           files: |
-            job-hunting-extension-chrome-${{ env.VERSION }}.zip
-            job-hunting-extension-firefox-${{ env.VERSION }}.zip
+            ${{ env.ROOT_DIR }}.output/job-hunting-extension-chrome-${{ env.VERSION }}.zip
+            ${{ env.ROOT_DIR }}.output/job-hunting-extension-firefox-${{ env.VERSION }}.zip
