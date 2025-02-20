@@ -21,9 +21,9 @@
 
 1. 打开 Release 页 或 直接访问 [最新发布](https://github.com/lastsunday/job-hunting/releases/latest)
 2. 点击下载 Assets 下的 job-hunting-extension-chrome-xxx.zip
-3. 解压 zip 文件
-4. 打开 chrome，选择加载已解压的扩展程序，选择解压后 manifest.json 文件所在的目录
-
+3. 打开浏览器，安装插件，下面是针对不同浏览器的安装步骤
+    1. chrome：地址栏输入 <chrome://extensions/>，打开开发者模式，将zip文件拖进页面里
+    2. edge，地址栏输入 <edge://extensions/>，打开开发人员模式，将zip文件拖进页面里
 
 ## 招聘平台支持列表
 
