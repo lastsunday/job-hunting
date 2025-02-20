@@ -1,3 +1,14 @@
+## 3.4.1 (2025-02-20)
+
+### 🩹 Fixes
+
+- 调整插件安装文件的内部目录结构，使其可直接安装（通过直接拖动zip文件到浏览器扩展页面的方式进行安装）
+
+### ❤️ Thank You
+
+- kakuuuu @kakuuuu
+- lastsunday @lastsunday
+
 ## 3.4.0 (2025-02-19)
 
 ### 🚀 Features
