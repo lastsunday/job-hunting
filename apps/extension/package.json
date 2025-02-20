@@ -61,7 +61,7 @@
     "swiper": "^11.2.0",
     "tsparticles": "^3.7.1",
     "uuid": "^11.0.5",
-    "xlsx": "^0.18.5",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zustand": "^5.0.2"
   },
   "devDependencies": {

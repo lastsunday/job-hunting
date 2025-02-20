@@ -106,7 +106,7 @@ export function useData() {
             searchParam.source = "";
             searchParam.isPublic = null;
             searchParam.companyIds = companyNames.map(item => genIdFromText(item));
-            return await CompanyApi.companyTagExport(searchParam);
+            return (await CompanyApi.companyTagExport(searchParam)).items;
         })
         await CompanyApi.batchAddOrUpdateCompanyTag({ items: targetList, overrideUpdateDatetime: true });
         return targetList;
@@ -141,7 +141,7 @@ export function useData() {
             searchParam.source = "";
             searchParam.jobIds = ids;
             searchParam.isPublic = null;
-            return await JobApi.jobTagExport(searchParam);
+            return (await JobApi.jobTagExport(searchParam)).items;
         })
         await JobApi.jobTagBatchAddOrUpdate({ items: targetList, overrideUpdateDatetime: true });
         return targetList;

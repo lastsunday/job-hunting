@@ -2,7 +2,7 @@ import { CompanyBO } from "./data/bo/companyBO";
 import { CompanyTagBO } from "./data/bo/companyTagBO";
 import { JobTagBO } from "./data/bo/jobTagBO";
 import { Job } from "./data/domain/job";
-import { convertDateStringToDateObject, genIdFromText } from "./utils";
+import { convertDateStringToDateObject, genIdFromText, dateToStr } from "./utils";
 
 const HEADER_VERSION_PREFIX = "__VERSION_";
 
@@ -124,12 +124,12 @@ export const jobDataToExcelJSONArray = (list) => {
             最低薪资: item.jobSalaryMin,
             最高薪资: item.jobSalaryMax,
             几薪: item.jobSalaryTotalMonth,
-            首次发布时间: item.jobFirstPublishDatetime,
+            首次发布时间: dateToStr(item.jobFirstPublishDatetime),
             招聘人: item.bossName,
             招聘公司: item.bossCompanyName,
             招聘者职位: item.bossPosition,
-            首次扫描日期: item.createDatetime,
-            记录更新日期: item.updateDatetime,
+            首次扫描日期: dateToStr(item.createDatetime),
+            记录更新日期: dateToStr(item.updateDatetime),
         };
         fillDataVersion(obj, JOB_FILE_HEADER);
         result.push(obj);
@@ -160,12 +160,12 @@ export const jobExcelDataToObjectArray = (data) => {
         item.jobSalaryMin = dataItem['最低薪资'];
         item.jobSalaryMax = dataItem['最高薪资'];
         item.jobSalaryTotalMonth = dataItem['几薪'];
-        item.jobFirstPublishDatetime = dataItem['首次发布时间'];
+        item.jobFirstPublishDatetime = convertDateStringToDateObject(dataItem['首次发布时间']);
         item.bossName = dataItem['招聘人'];
         item.bossCompanyName = dataItem['招聘公司'];
         item.bossPosition = dataItem['招聘者职位'];
-        item.createDatetime = dataItem['首次扫描日期'];
-        item.updateDatetime = dataItem['记录更新日期'];
+        item.createDatetime = convertDateStringToDateObject(dataItem['首次扫描日期']);
+        item.updateDatetime = convertDateStringToDateObject(dataItem['记录更新日期']);
         jobList.push(item);
     }
     return jobList;
@@ -228,7 +228,7 @@ export const companyDataToExcelJSONArray = (list) => {
         let obj = {
             公司: item.companyName,
             公司描述: item.companyDesc,
-            成立时间: item.companyStartDate,
+            成立时间: dateToStr(item.companyStartDate),
             经营状态: item.companyStatus,
             法人: item.companyLegalPerson,
             统一社会信用代码: item.companyUnifiedCode,
@@ -246,9 +246,9 @@ export const companyDataToExcelJSONArray = (list) => {
             数据来源地址: item.sourceUrl,
             数据来源平台: item.sourcePlatform,
             数据来源记录编号: item.sourceRecordId,
-            数据来源更新时间: item.sourceRefreshDatetime,
-            记录创建日期: item.createDatetime,
-            记录更新日期: item.updateDatetime,
+            数据来源更新时间: dateToStr(item.sourceRefreshDatetime),
+            记录创建日期: dateToStr(item.createDatetime),
+            记录更新日期: dateToStr(item.updateDatetime),
         };
         fillDataVersion(obj, COMPANY_FILE_HEADER);
         result.push(obj);
@@ -309,7 +309,7 @@ export const companyTagDataToExcelJSONArrayForView = (list) => {
         let obj = {
             公司: item.companyName,
             标签: Array.from(new Set(item.tagNameArray)).join(","),
-            记录更新日期: item.updateDatetime,
+            记录更新日期: dateToStr(item.updateDatetime),
         }
         fillDataVersion(obj, JOB_TAG_FILE_HEADER);
         result.push(obj);
@@ -324,7 +324,7 @@ export const companyTagDataToExcelJSONArray = (list) => {
         let obj = {
             公司: item.companyName,
             标签: item.tagNameArray,
-            记录更新日期: item.updateDatetime,
+            记录更新日期: dateToStr(item.updateDatetime),
         };
         fillDataVersion(obj, COMPANY_TAG_FILE_HEADER);
         result.push(obj);
@@ -364,7 +364,7 @@ export const jobTagDataToExcelJSONArrayForView = (list) => {
         let obj = {
             职位编号: item.jobId,
             标签: Array.from(new Set(item.tagNameArray)).join(","),
-            记录更新日期: item.updateDatetime,
+            记录更新日期: dateToStr(item.updateDatetime),
         }
         fillDataVersion(obj, JOB_TAG_FILE_HEADER);
         result.push(obj);
@@ -379,7 +379,7 @@ export const jobTagDataToExcelJSONArray = (list) => {
         let obj = {
             职位编号: item.jobId,
             标签: item.tagNameArray,
-            记录更新日期: item.updateDatetime,
+            记录更新日期: dateToStr(item.updateDatetime),
         }
         fillDataVersion(obj, JOB_TAG_FILE_HEADER);
         result.push(obj);

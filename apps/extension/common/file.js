@@ -10,7 +10,7 @@ export function getFileName(filename) {
 }
 
 export async function exportExcelFromBase64ZipFile(base64, fileName) {
-    var wb = read(await getExcelDataFromZipFile(base64, getFileName(fileName)));
+    var wb = read(await getExcelDataFromZipFile(base64, getFileName(fileName)), { cellDates: true });
     writeFileXLSX(wb, fileName);
 }
 

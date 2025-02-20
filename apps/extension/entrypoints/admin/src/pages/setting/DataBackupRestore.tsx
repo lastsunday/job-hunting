@@ -94,13 +94,13 @@ const DataBackupRestore: React.FC<DataBackupRestoreProps> = ({ title, getExcelJs
                 reader.onload = async function (event) {
                     let arrayBuffer = event.target.result;
                     try {
-                        let wb = read(arrayBuffer);
-                        let validResultObject = validImportData(utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }), fileHeader);
+                        let wb = read(arrayBuffer,{cellDates:true});
+                        let validResultObject = validImportData(utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1,UTC:true }), fileHeader);
                         if (!validResultObject.validResult) {
                             messageApi.error(`${title}文件校验失败，缺少数据列(${validResultObject.lackColumn.length}):${validResultObject.lackColumn.join(",")}`);
                             return;
                         }
-                        const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2 });
+                        const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2,UTC:true });
                         let targetList = await saveDataFunction(data);
                         setIsImportModalOpen(false);
                         messageApi.success(`导入${title}数据成功，共${targetList.length}条`)

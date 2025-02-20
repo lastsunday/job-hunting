@@ -72,7 +72,7 @@ export function setup(handleMap) {
                     //如果数据是当前登录用户，则将source设置为空，作为本地用户
                     searchParam.source = taskDataMerge.username == username ? "" : taskDataMerge.username;
                     searchParam.companyIds = companyNames.map(item => genIdFromText(item));
-                    return await _companyTagExport({ param: searchParam, connection });
+                    return (await _companyTagExport({ param: searchParam, connection })).items;
                 })
                 if (targetList.length > 0) {
                     //如果补充source信息
@@ -98,7 +98,7 @@ export function setup(handleMap) {
                     //如果数据是当前登录用户，则将source设置为空，作为本地用户
                     searchParam.source = taskDataMerge.username == username ? "" : taskDataMerge.username;
                     searchParam.jobIds = ids;
-                    return await _jobTagExport({ param: searchParam, connection });
+                    return (await _jobTagExport({ param: searchParam, connection })).items;
                 })
                 if (targetList.length > 0) {
                     //如果补充source信息
@@ -123,14 +123,14 @@ async function mergeDataByDataId(dataId, taskType, dataTypeName, fileHeader, exc
     debugLog(`[TASK DATA MERGE] file id = ${file.id},name = ${file.name}`);
     let base64Content = file.content;
     let excelFileBufferData = await getExcelDataFromZipFile(base64Content, dataTypeName);
-    let wb = read(excelFileBufferData, { type: "buffer" });
-    let validResultObject = validImportData(utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 }), fileHeader);
+    let wb = read(excelFileBufferData, { type: "buffer", cellDates: true });
+    let validResultObject = validImportData(utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, UTC: true }), fileHeader);
     if (!validResultObject.validResult) {
         debugLog(`[TASK DATA MERGE] valid file name = ${file.name}, id = ${file.id} failure`);
         return `文件校验失败，缺少数据列(${validResultObject.lackColumn.length}):${validResultObject.lackColumn.join(",")}`;
     }
     debugLog(`[TASK DATA MERGE] valid file name = ${file.name}, id = ${file.id} success`);
-    const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2 });
+    const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2, UTC: true });
     await (await getDb()).transaction(async (tx) => {
         let count = await dataInsertFunction(excelDataToObjectArrayFunction(data, taskDataMerge.datetime), taskDataMerge, tx);
         taskDataMerge.dataCount = count;

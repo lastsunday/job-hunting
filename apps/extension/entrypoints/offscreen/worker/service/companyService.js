@@ -58,7 +58,7 @@ export const CompanyService = {
   batchAddOrUpdateCompany: async function (message, param) {
     try {
       await (await getDb()).transaction(async (tx) => {
-        return await _batchAddOrUpdateCompany({ param, tx });
+        return await _batchAddOrUpdateCompany({ param, connection: tx });
       });
       postSuccessMessage(message, {});
     } catch (e) {
