@@ -213,6 +213,9 @@ importers:
       '@wxt-dev/unocss':
         specifier: ^1.0.0
         version: 1.0.0(unocss@65.4.3(postcss@8.5.1)(rollup@4.32.0)(vite@6.0.11(@types/node@22.13.4)(jiti@1.21.7)(lightningcss@1.29.1)(sass@1.83.4)(tsx@4.19.2)(yaml@2.7.0))(vue@3.5.13(typescript@5.7.3)))(wxt@0.19.25(@types/node@22.13.4)(lightningcss@1.29.1)(rollup@4.32.0)(sass@1.83.4)(tsx@4.19.2)(yaml@2.7.0))
+      allure-playwright:
+        specifier: ^3.2.0
+        version: 3.2.0(@playwright/test@1.50.1)
       eslint:
         specifier: ^9.17.0
         version: 9.19.0(jiti@1.21.7)
@@ -3465,6 +3468,19 @@ packages:
 
   ajv@8.17.1:
     resolution: {integrity: sha512-B/gBuNg5SiMTrPkC+A2+cW0RszwxYmn6VYxB/inlBStS5nx6xHIt/ehKRhIMhqusl7a8LjQoZnjCs5vhwxOQ1g==}
+
+  allure-js-commons@3.2.0:
+    resolution: {integrity: sha512-UXRo3D6/XEIMosro+OldWj8phJ65eSOYaAUlThOpl6nJJ0sGngMpJYog+Z9FmZDo1BZn4edwLs4aAUaTgkz4Cg==}
+    peerDependencies:
+      allure-playwright: 3.2.0
+    peerDependenciesMeta:
+      allure-playwright:
+        optional: true
+
+  allure-playwright@3.2.0:
+    resolution: {integrity: sha512-E9YNqFBXrycMaOs4x5/Tsdl4xN8Ss0yw8XnwcVUzezR3cjlPb5gUdR81G/zQsi+I3mb+UQMS21yORHKTI9W2fw==}
+    peerDependencies:
+      '@playwright/test': '>=1.36.0'
 
   ansi-align@3.0.1:
     resolution: {integrity: sha512-IOfwwBF5iczOjp/WeY4YxyjqAFMQoZufdQWDd19SEExbVLNXqvpzSJ/M7Za4/sCPmQ0+GRquoA7bGcINcxew6w==}
@@ -11483,6 +11499,17 @@ snapshots:
       fast-uri: 3.0.6
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
+
+  allure-js-commons@3.2.0(allure-playwright@3.2.0(@playwright/test@1.50.1)):
+    dependencies:
+      md5: 2.3.0
+    optionalDependencies:
+      allure-playwright: 3.2.0(@playwright/test@1.50.1)
+
+  allure-playwright@3.2.0(@playwright/test@1.50.1):
+    dependencies:
+      '@playwright/test': 1.50.1
+      allure-js-commons: 3.2.0(allure-playwright@3.2.0(@playwright/test@1.50.1))
 
   ansi-align@3.0.1:
     dependencies:

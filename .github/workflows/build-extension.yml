@@ -67,13 +67,43 @@ jobs:
         run: |
           pnpm exec nx run @job-hunting/extension:e2e
 
-      - name: Upload e2e tests report
+      - name: Upload e2e tests report(cucumber-report)
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: extension-e2e-tests-report
+          name: extension-e2e-tests-cucumber-report
           path: ${{ env.ROOT_DIR }}cucumber-report/
           retention-days: 30
+      
+      - name: (allure-report) Upload e2e tests report
+        uses: actions/setup-java@v3
+        with:
+          distribution: zulu
+          java-version: 17
+      - uses: actions/checkout@v3
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+      - uses: simple-elf/allure-report-action@v1.7
+        if: always()
+        with:
+          gh_pages: gh-pages
+          allure_history: allure-history
+          allure_results: ${{ env.ROOT_DIR }}allure-results
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: extension-e2e-tests-allure-report
+          path: ${{ env.ROOT_DIR }}allure-report/
+          retention-days: 30
+      - uses: peaceiris/actions-gh-pages@v3
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
 
       - name: Rename dist files
         if: startsWith(github.ref, 'refs/tags/')

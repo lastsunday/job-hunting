@@ -25,7 +25,7 @@ export default defineConfig({
       outputFile: 'cucumber-report/index.html',
       externalAttachments: true,
     }),
-    ['html', { open: 'never' }],
+    ['allure-playwright'],
   ],
 
   use: {
