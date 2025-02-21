@@ -27,5 +27,9 @@ export default defineConfig({
       //channel: "chromium" -> https://github.com/microsoft/playwright/issues/33682
       use: { ...devices["Desktop Chrome"], channel: "chromium" },
     },
+    {
+      name: 'Microsoft Edge',
+      use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    },
   ],
 });
