@@ -1,3 +1,14 @@
+## 3.4.3 (2025-02-21)
+
+### 🩹 Fixes
+
+- 新增e2e tests(base on playwright-bdd)
+- 提升程序启动的稳定性(对Bridge进行重试)
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.4.2 (2025-02-20)
 
 ### 🩹 Fixes
