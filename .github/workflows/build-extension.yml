@@ -67,13 +67,48 @@ jobs:
         run: |
           pnpm exec nx run @job-hunting/extension:e2e
 
-      - name: Upload e2e tests report
+      - name: (cucumber-report)Upload test report to action artifacts
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
-          name: extension-e2e-tests-report
-          path: ${{ env.ROOT_DIR }}playwright-report/
+          name: extension-e2e-tests-cucumber-report
+          path: ${{ env.ROOT_DIR }}cucumber-report/
           retention-days: 30
+
+      - name: (allure-report)Set up JDK
+        uses: actions/setup-java@v3
+        if: ${{ !cancelled() }}
+        with:
+          distribution: zulu
+          java-version: 17
+      - name: (allure-report)Load test report history
+        uses: actions/checkout@v3
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+      - name: (allure-report)Build test report
+        uses: simple-elf/allure-report-action@v1.7
+        if: ${{ !cancelled() }}
+        with:
+          gh_pages: gh-pages
+          allure_history: gh-pages
+          allure_results: ${{ env.ROOT_DIR }}allure-results
+      - name: (allure-report)Upload test report to action artifacts
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: extension-e2e-tests-allure-report
+          path: allure-report/
+          retention-days: 30
+      - name: (allure-report)Publish test report to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ !cancelled() }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: gh-pages
 
       - name: Rename dist files
         if: startsWith(github.ref, 'refs/tags/')

@@ -1,12 +1,14 @@
-import { test as base, chromium, type BrowserContext } from "@playwright/test";
+import { chromium, type BrowserContext } from "@playwright/test";
+import { test as base, createBdd } from 'playwright-bdd';
 import path from "path";
-
 const pathToExtension = path.resolve(".output/chrome-mv3");
 
-export const test = base.extend<{
+type Fixtures = {
     context: BrowserContext;
     extensionId: string;
-}>({
+};
+
+export const test = base.extend<Fixtures>({
     context: async ({ }, use) => {
         const context = await chromium.launchPersistentContext("", {
             headless: true,
@@ -33,4 +35,5 @@ export const test = base.extend<{
         await use(extensionId);
     },
 });
-export const expect = test.expect;
+
+export const { Given, When, Then } = createBdd(test);
