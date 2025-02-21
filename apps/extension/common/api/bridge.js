@@ -25,84 +25,86 @@ export function invoke(
   invokeEnv ??= getInvokeEnv();
   let callbackId = genCallbackId();
   let promise = new Promise((resolve, reject) => {
-    try {
-      addCallbackPromiseHook(callbackId, { resolve, reject });
-      let message = {
-        action,
-        callbackId,
-        param,
-        from: CONTENT_SCRIPT,
-        to: BACKGROUND,
-        invokeEnv,
-      };
-      if (isDevEnv()) {
-        message.invokeTimeList = [{ env: invokeEnv, time: new Date().getTime(), offset: 0 }];
-        message.invokeSeq = invokeSeq++;
+    (async () => {
+      try {
+        addCallbackPromiseHook(callbackId, { resolve, reject });
+        let message = {
+          action,
+          callbackId,
+          param,
+          from: CONTENT_SCRIPT,
+          to: BACKGROUND,
+          invokeEnv,
+        };
+        if (isDevEnv()) {
+          message.invokeTimeList = [{ env: invokeEnv, time: new Date().getTime(), offset: 0 }];
+          message.invokeSeq = invokeSeq++;
+        }
+        if (onMessageCallback) {
+          onMessageCallback(message);
+        }
+        if (invokeEnv == CONTENT_SCRIPT) {
+          debugLog(
+            "[Message][send][" +
+            message.from +
+            " -> " +
+            message.to +
+            "] message [action=" +
+            message.action +
+            ",invokeEnv=" +
+            message.invokeEnv +
+            ",callbackId=" +
+            message.callbackId +
+            ",error=" +
+            message.error +
+            "]"
+          );
+        } else if (invokeEnv == BACKGROUND) {
+          message.from = BACKGROUND;
+          message.to = OFFSCREEN;
+          debugLog(
+            "[Message][send][" +
+            message.from +
+            " -> " +
+            message.to +
+            "] message [action=" +
+            message.action +
+            ",invokeEnv=" +
+            message.invokeEnv +
+            ",callbackId=" +
+            message.callbackId +
+            ",error=" +
+            message.error +
+            "]"
+          );
+        } else if (invokeEnv == WEB_WORKER) {
+          message.from = WEB_WORKER;
+          message.to = OFFSCREEN;
+          debugLog(
+            "[Message][send][" +
+            message.from +
+            " -> " +
+            message.to +
+            "] message [action=" +
+            message.action +
+            ",invokeEnv=" +
+            message.invokeEnv +
+            ",callbackId=" +
+            message.callbackId +
+            ",error=" +
+            message.error +
+            "]"
+          );
+        } else {
+          reject(`unknow invokeEnv = ${invokeEnv}`);
+          return;
+        }
+        await sendMessage(message);
+      } catch (e) {
+        errorLog(e);
+        reject(e);
       }
-      if (onMessageCallback) {
-        onMessageCallback(message);
-      }
-      if (invokeEnv == CONTENT_SCRIPT) {
-        debugLog(
-          "[Message][send][" +
-          message.from +
-          " -> " +
-          message.to +
-          "] message [action=" +
-          message.action +
-          ",invokeEnv=" +
-          message.invokeEnv +
-          ",callbackId=" +
-          message.callbackId +
-          ",error=" +
-          message.error +
-          "]"
-        );
-      } else if (invokeEnv == BACKGROUND) {
-        message.from = BACKGROUND;
-        message.to = OFFSCREEN;
-        debugLog(
-          "[Message][send][" +
-          message.from +
-          " -> " +
-          message.to +
-          "] message [action=" +
-          message.action +
-          ",invokeEnv=" +
-          message.invokeEnv +
-          ",callbackId=" +
-          message.callbackId +
-          ",error=" +
-          message.error +
-          "]"
-        );
-      } else if (invokeEnv == WEB_WORKER) {
-        message.from = WEB_WORKER;
-        message.to = OFFSCREEN;
-        debugLog(
-          "[Message][send][" +
-          message.from +
-          " -> " +
-          message.to +
-          "] message [action=" +
-          message.action +
-          ",invokeEnv=" +
-          message.invokeEnv +
-          ",callbackId=" +
-          message.callbackId +
-          ",error=" +
-          message.error +
-          "]"
-        );
-      } else {
-        reject(`unknow invokeEnv = ${invokeEnv}`);
-        return;
-      }
-      sendMessage(message);
-    } catch (e) {
-      errorLog(e);
-      reject(e);
-    }
+    })();
   });
   return promise;
 }

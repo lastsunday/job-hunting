@@ -1,8 +1,21 @@
 import { init, invoke } from "./bridge";
+import { randomDelay } from "@/common/utils";
 
 export async function initBridge() {
+  console.log(`[Bridge] initBridge start`)
   init();
-  await invoke("init", {});
+  await _initBridge();
+  console.log(`[Bridge] initBridge success`)
+}
+
+async function _initBridge() {
+  try {
+    await invoke("init", {});
+  } catch (e) {
+    //retry after delay
+    await randomDelay(100, 0);
+    await _initBridge();
+  }
 }
 
 /**

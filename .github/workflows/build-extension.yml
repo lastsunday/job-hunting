@@ -50,6 +50,31 @@ jobs:
           pnpm exec nx run @job-hunting/extension:zip
           pnpm exec nx run @job-hunting/extension:zip:firefox
 
+      - name: Setup e2e tests from cache
+        uses: actions/cache@v4
+        id: e2e-tests-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/playwright.config.ts') }}
+
+      - name: Setup e2e tests
+        run: |
+          pnpm exec nx run @job-hunting/extension:e2e:install
+        if: steps.e2e-tests-cache.outputs.cache-hit != 'true'
+
+      - name: Run e2e tests
+        run: |
+          pnpm exec nx run @job-hunting/extension:e2e
+
+      - name: Upload e2e tests report
+        uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: extension-e2e-tests-report
+          path: ${{ env.ROOT_DIR }}playwright-report/
+          retention-days: 30
+
       - name: Rename dist files
         if: startsWith(github.ref, 'refs/tags/')
         run: |
@@ -64,12 +89,14 @@ jobs:
         with:
           branch: dist/chrome-${{  github.ref_name }}
           folder: ${{ env.ROOT_DIR }}.output/chrome-mv3
+        if: github.event_name != 'pull_request'
 
       - name: Deploy firefox dist branch
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           branch: dist/firefox-${{  github.ref_name }}
           folder: ${{ env.ROOT_DIR }}.output/firefox-mv2
+        if: github.event_name != 'pull_request'
 
       - name: Gen latest changelog
         if: startsWith(github.ref, 'refs/tags/')
