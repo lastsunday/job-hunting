@@ -49,6 +49,8 @@
 
 > https://vitalets.github.io/playwright-bdd/
 
+1. [在线测试报告-Allure Report](https://lastsunday.github.io/job-hunting/)
+
 ## Thanks
 
 1. <https://github.com/tangzhiyao/boss-show-time> **_boss 直聘时间展示插件_**

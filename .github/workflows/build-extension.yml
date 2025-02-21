@@ -74,22 +74,23 @@ jobs:
           name: extension-e2e-tests-cucumber-report
           path: ${{ env.ROOT_DIR }}cucumber-report/
           retention-days: 30
-      
+
       - name: (allure-report)Set up JDK
         uses: actions/setup-java@v3
+        if: ${{ !cancelled() }}
         with:
           distribution: zulu
           java-version: 17
       - name: (allure-report)Load test report history
         uses: actions/checkout@v3
-        if: always()
+        if: ${{ !cancelled() }}
         continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
       - name: (allure-report)Build test report
         uses: simple-elf/allure-report-action@v1.7
-        if: always()
+        if: ${{ !cancelled() }}
         with:
           gh_pages: gh-pages
           allure_history: gh-pages
@@ -103,7 +104,7 @@ jobs:
           retention-days: 30
       - name: (allure-report)Publish test report
         uses: peaceiris/actions-gh-pages@v3
-        if: always()
+        if: ${{ github.event_name != 'pull_request' && !cancelled() }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
