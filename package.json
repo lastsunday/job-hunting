@@ -5,14 +5,14 @@
   "scripts": {},
   "private": true,
   "devDependencies": {
-    "@monodon/rust": "^2.1.1",
+    "@monodon/rust": "^2.2.0",
     "@nx/js": "20.3.3",
-    "@swc-node/register": "~1.9.1",
-    "@swc/core": "~1.5.7",
-    "@swc/helpers": "~0.5.11",
+    "@swc-node/register": "~1.9.2",
+    "@swc/core": "~1.5.29",
+    "@swc/helpers": "~0.5.15",
     "nx": "20.3.3",
-    "prettier": "^2.6.2",
-    "tslib": "^2.3.0",
-    "typescript": "~5.6.2"
+    "prettier": "^2.8.8",
+    "tslib": "^2.8.1",
+    "typescript": "~5.6.3"
   }
 }
