@@ -92,7 +92,7 @@ jobs:
         if: always()
         with:
           gh_pages: gh-pages
-          allure_history: allure-history
+          allure_history: gh-pages
           allure_results: ${{ env.ROOT_DIR }}allure-results
       - name: Upload e2e tests report(allure-report)
         uses: actions/upload-artifact@v4
@@ -107,7 +107,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: allure-history
+          publish_dir: gh-pages
 
       - name: Rename dist files
         if: startsWith(github.ref, 'refs/tags/')
