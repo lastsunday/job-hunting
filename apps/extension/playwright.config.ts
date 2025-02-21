@@ -30,8 +30,8 @@ export default defineConfig({
 
   use: {
     // Collect trace when retrying the failed test.
-    trace: "on",
-    screenshot: 'on',
+    trace: { mode: "retain-on-first-failure" },
+    screenshot: { mode: 'on' },
   },
 
   // Configure projects for major browsers.
