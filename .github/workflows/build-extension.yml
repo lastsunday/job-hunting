@@ -104,7 +104,7 @@ jobs:
           retention-days: 30
       - name: (allure-report)Publish test report
         uses: peaceiris/actions-gh-pages@v3
-        if: ${{ github.event_name != 'pull_request' && !cancelled() }}
+        if: ${{ !cancelled() }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
