@@ -16,6 +16,7 @@
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
     "postinstall": "wxt prepare",
+    "e2e:install": "playwright install --with-deps",
     "e2e": "playwright test"
   },
   "dependencies": {

@@ -52,7 +52,7 @@ jobs:
 
       - name: Run e2e tests
         run: |
-          pnpm exec playwright install --with-deps
+          pnpm exec nx run @job-hunting/extension:e2e:install
           pnpm exec nx run @job-hunting/extension:e2e
 
       - name: Upload e2e tests report
