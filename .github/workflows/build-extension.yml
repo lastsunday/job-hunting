@@ -25,18 +25,18 @@ jobs:
           echo "VERSION=$(echo '${{  github.ref_name }}' | sed -e 's/\@job-hunting\/extension\@//g')" >> $GITHUB_ENV
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
         name: Install pnpm
         with:
           version: 9
           run_install: false
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version: 20
           cache: 'pnpm'
@@ -51,7 +51,7 @@ jobs:
           pnpm exec nx run @job-hunting/extension:zip:firefox
 
       - name: Setup e2e tests from cache
-        uses: actions/cache@v4
+        uses: actions/cache@0c907a75c2c80ebcb7f088228285e798b750cf8f
         id: e2e-tests-cache
         with:
           path: |
@@ -68,7 +68,7 @@ jobs:
           pnpm exec nx run @job-hunting/extension:e2e
 
       - name: (cucumber-report)Upload test report to action artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
         if: ${{ !cancelled() }}
         with:
           name: extension-e2e-tests-cucumber-report
@@ -76,34 +76,34 @@ jobs:
           retention-days: 30
 
       - name: (allure-report)Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12
         if: ${{ !cancelled() }}
         with:
           distribution: zulu
           java-version: 17
       - name: (allure-report)Load test report history
-        uses: actions/checkout@v3
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         if: ${{ !cancelled() }}
         continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
       - name: (allure-report)Build test report
-        uses: simple-elf/allure-report-action@v1.7
+        uses: simple-elf/allure-report-action@f841fec0e421b5d7d8e807dedfb03efb8cf30303
         if: ${{ !cancelled() }}
         with:
           gh_pages: gh-pages
           allure_history: gh-pages
           allure_results: ${{ env.ROOT_DIR }}allure-results
       - name: (allure-report)Upload test report to action artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
         if: ${{ !cancelled() }}
         with:
           name: extension-e2e-tests-allure-report
           path: allure-report/
           retention-days: 30
       - name: (allure-report)Publish test report to gh-pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e
         if: ${{ !cancelled() }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -120,14 +120,14 @@ jobs:
           mv "$FIREFOX_ZIP" ${{ env.ROOT_DIR }}.output/job-hunting-extension-firefox-${{ env.VERSION }}.zip
 
       - name: Deploy chrome dist branch
-        uses: JamesIves/github-pages-deploy-action@4.1.4
+        uses: JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8
         with:
           branch: dist/chrome-${{  github.ref_name }}
           folder: ${{ env.ROOT_DIR }}.output/chrome-mv3
         if: github.event_name != 'pull_request'
 
       - name: Deploy firefox dist branch
-        uses: JamesIves/github-pages-deploy-action@4.1.4
+        uses: JamesIves/github-pages-deploy-action@6c2d9db40f9296374acc17b90404b6e8864128c8
         with:
           branch: dist/firefox-${{  github.ref_name }}
           folder: ${{ env.ROOT_DIR }}.output/firefox-mv2
@@ -139,7 +139,7 @@ jobs:
           awk '/^##[^#]/{print NR}' ${{ env.ROOT_DIR }}CHANGELOG.md | head -n 2 | xargs | tr ' ' ',' | xargs -I {} sed -n {}p  ${{ env.ROOT_DIR }}CHANGELOG.md | sed '$d' > ${{ env.ROOT_DIR }}CHANGELOG.txt
 
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
         if: startsWith(github.ref, 'refs/tags/')
         with:
           body_path: ${{ env.ROOT_DIR }}CHANGELOG.txt
