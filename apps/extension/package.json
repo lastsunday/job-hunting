@@ -15,7 +15,8 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
-    "postinstall": "wxt prepare"
+    "postinstall": "wxt prepare",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@ant-design/icons": "^5.5.2",
@@ -67,8 +68,10 @@
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@iconify/react": "^5.1.0",
+    "@playwright/test": "^1.50.1",
     "@rollup/plugin-node-resolve": "^16.0.0",
     "@types/chrome": "^0.0.299",
+    "@types/node": "^22.13.4",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/webextension-polyfill": "^0.12.1",
