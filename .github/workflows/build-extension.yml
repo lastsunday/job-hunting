@@ -75,30 +75,34 @@ jobs:
           path: ${{ env.ROOT_DIR }}cucumber-report/
           retention-days: 30
       
-      - name: (allure-report) Upload e2e tests report
+      - name: (allure-report)Set up JDK
         uses: actions/setup-java@v3
         with:
           distribution: zulu
           java-version: 17
-      - uses: actions/checkout@v3
+      - name: (allure-report)Load test report history
+        uses: actions/checkout@v3
         if: always()
         continue-on-error: true
         with:
           ref: gh-pages
           path: gh-pages
-      - uses: simple-elf/allure-report-action@v1.7
+      - name: (allure-report)Build test report
+        uses: simple-elf/allure-report-action@v1.7
         if: always()
         with:
           gh_pages: gh-pages
           allure_history: allure-history
           allure_results: ${{ env.ROOT_DIR }}allure-results
-      - uses: actions/upload-artifact@v4
+      - name: Upload e2e tests report(allure-report)
+        uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: extension-e2e-tests-allure-report
-          path: ${{ env.ROOT_DIR }}allure-report/
+          path: ${{ env.ROOT_DIR }}allure-results/
           retention-days: 30
-      - uses: peaceiris/actions-gh-pages@v3
+      - name: (allure-report)Publish test report
+        uses: peaceiris/actions-gh-pages@v3
         if: always()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
