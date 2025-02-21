@@ -50,12 +50,21 @@ jobs:
           pnpm exec nx run @job-hunting/extension:zip
           pnpm exec nx run @job-hunting/extension:zip:firefox
 
-      - name: Setup e2e tests cache
-        uses: ./.github/actions/setup-e2e-tests-cache
+      - name: Setup e2e tests from cache
+        uses: actions/cache
+        id: e2e-tests-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+
+      - name: Setup e2e tests
+        run: |
+          pnpm exec nx run @job-hunting/extension:e2e:install
+        if: steps.e2e-tests-cache.outputs.cache-hit != 'true'
 
       - name: Run e2e tests
         run: |
-          pnpm exec nx run @job-hunting/extension:e2e:install
           pnpm exec nx run @job-hunting/extension:e2e
 
       - name: Upload e2e tests report
