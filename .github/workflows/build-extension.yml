@@ -51,7 +51,9 @@ jobs:
           pnpm exec nx run @job-hunting/extension:zip:firefox
 
       - name: Run e2e tests
-        run: pnpm exec nx run @job-hunting/extension:e2e
+        run: |
+          pnpm exec playwright install --with-deps
+          pnpm exec nx run @job-hunting/extension:e2e
 
       - name: Upload e2e tests report
         uses: actions/upload-artifact@v4
@@ -75,12 +77,14 @@ jobs:
         with:
           branch: dist/chrome-${{  github.ref_name }}
           folder: ${{ env.ROOT_DIR }}.output/chrome-mv3
+        if: github.event_name != 'pull_request'
 
       - name: Deploy firefox dist branch
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           branch: dist/firefox-${{  github.ref_name }}
           folder: ${{ env.ROOT_DIR }}.output/firefox-mv2
+        if: github.event_name != 'pull_request'
 
       - name: Gen latest changelog
         if: startsWith(github.ref, 'refs/tags/')
