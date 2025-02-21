@@ -50,6 +50,9 @@ jobs:
           pnpm exec nx run @job-hunting/extension:zip
           pnpm exec nx run @job-hunting/extension:zip:firefox
 
+      - name: Setup e2e tests cache
+        uses: ./.github/actions/setup-e2e-tests-cache
+
       - name: Run e2e tests
         run: |
           pnpm exec nx run @job-hunting/extension:e2e:install

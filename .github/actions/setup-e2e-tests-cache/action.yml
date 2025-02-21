@@ -1,0 +1,16 @@
+name: 'Setup Playwright'
+description: 'Setup Playwright with caching, using pnpm (should already be installed)'
+runs:
+  using: 'composite'
+  steps:
+    - name: Extract Playwright version
+      id: playwright-version
+      shell: bash
+      run: echo "PLAYWRIGHT_VERSION=$(jq -r '.devDependencies.playwright' package.json)" >> $GITHUB_ENV
+
+    - name: Cache Playwright
+      id: playwright-cache
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ env.PLAYWRIGHT_VERSION }}
