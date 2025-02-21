@@ -67,7 +67,7 @@ jobs:
         run: |
           pnpm exec nx run @job-hunting/extension:e2e
 
-      - name: (cucumber-report)Upload e2e tests report
+      - name: (cucumber-report)Upload test report to action artifacts
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
@@ -95,14 +95,14 @@ jobs:
           gh_pages: gh-pages
           allure_history: gh-pages
           allure_results: ${{ env.ROOT_DIR }}allure-results
-      - name: (allure-report)Upload e2e tests report
+      - name: (allure-report)Upload test report to action artifacts
         uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: extension-e2e-tests-allure-report
           path: allure-report/
           retention-days: 30
-      - name: (allure-report)Publish test report
+      - name: (allure-report)Publish test report to gh-pages
         uses: peaceiris/actions-gh-pages@v3
         if: ${{ !cancelled() }}
         with:
