@@ -56,7 +56,7 @@ jobs:
         with:
           path: |
             ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/playwright.config.ts') }}
 
       - name: Setup e2e tests
         run: |
