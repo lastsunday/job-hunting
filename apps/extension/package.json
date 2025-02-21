@@ -17,7 +17,7 @@
     "compile": "tsc --noEmit",
     "postinstall": "wxt prepare",
     "e2e:install": "playwright install --with-deps",
-    "e2e": "playwright test"
+    "e2e": "bddgen && playwright test"
   },
   "dependencies": {
     "@ant-design/icons": "^5.5.2",
@@ -85,6 +85,7 @@
     "eslint-plugin-react-refresh": "^0.4.16",
     "globals": "^15.14.0",
     "lightningcss": "^1.28.2",
+    "playwright-bdd": "^8.2.0",
     "rollup-plugin-copy": "^3.5.0",
     "sass": "^1.83.0",
     "typescript": "^5.7.2",

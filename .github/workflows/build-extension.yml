@@ -72,7 +72,7 @@ jobs:
         if: ${{ !cancelled() }}
         with:
           name: extension-e2e-tests-report
-          path: ${{ env.ROOT_DIR }}playwright-report/
+          path: ${{ env.ROOT_DIR }}cucumber-report/
           retention-days: 30
 
       - name: Rename dist files
