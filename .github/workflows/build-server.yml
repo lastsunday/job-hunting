@@ -35,18 +35,18 @@ jobs:
           echo "VERSION=$(echo '${{  github.ref_name }}' | sed -e 's/server\@//g')" >> $GITHUB_ENV
 
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
         name: Install pnpm
         with:
           version: 9
           run_install: false
 
       - name: Install Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
         with:
           node-version: 20
           cache: 'pnpm'
@@ -70,14 +70,14 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
       - name: Gen latest changelog
         run: |
           awk '/^##[^#]/{print NR}' CHANGELOG.md | head -n 2 | xargs | tr ' ' ',' | xargs -I {} sed -n {}p  CHANGELOG.md | sed '$d' > CHANGELOG.txt
       - name: Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
         id: create_release
         with:
           body_path: ${{env.ROOT_DIR}}CHANGELOG.txt
@@ -115,14 +115,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
       - name: Set Version Env
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           echo "VERSION=$(echo '${{  github.ref_name }}' | sed -e 's/server\@//g')" >> $GITHUB_ENV
-      - uses: taiki-e/upload-rust-binary-action@v1
+      - uses: taiki-e/upload-rust-binary-action@e7953b6078194a4ae5f5619632e3715db6275561
         with:
           # (required) Comma-separated list of binary names (non-extension portion of filename) to build and upload.
           # Note that glob pattern is not supported yet.
@@ -138,7 +138,7 @@ jobs:
         run: |
           mv ${{github.workspace}}/dist/target/${{ matrix.target }}/release/${{ env.BIN_NAME}} ${{github.workspace}}/dist/target/${{ matrix.target }}/release/${{ env.BIN_NAME}}-${{ matrix.targetOSAndARCH }}
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
         if: matrix.target != 'x86_64-pc-windows-msvc'
         with:
           name: ${{ env.BIN_NAME}}-${{ matrix.targetOSAndARCH }}
@@ -154,9 +154,9 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Download bin
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
         with:
           path: ${{env.ROOT_DIR}}${{ env.IMAGE_NAME}}
           pattern: ${{ env.BIN_NAME}}-*
@@ -168,9 +168,9 @@ jobs:
         run: |
           chmod 755 ${{ env.BIN_NAME}}-*
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@27d0a4f181a40b142cce983c5393082c365d1480
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@f211e3e9ded2d9377c8cadc4489a4e38014bc4c9
       - name: Log in to Docker Hub
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
         with:
@@ -201,7 +201,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
       - name: Generate artifact attestation
-        uses: actions/attest-build-provenance@v1
+        uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018
         with:
           subject-name: ${{ env.REGISTRY }}/${{env.USER_NAME}}/${{ env.IMAGE_NAME}}
           subject-digest: ${{ steps.push.outputs.digest }}
