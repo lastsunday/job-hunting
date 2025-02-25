@@ -128,6 +128,9 @@ importers:
       ajax-hooks:
         specifier: ^1.8.0
         version: 1.8.0
+      analysis:
+        specifier: workspace:analysis
+        version: link:../../libs/analysis
       antd:
         specifier: ^5.24.1
         version: 5.24.1(moment@2.30.1)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)

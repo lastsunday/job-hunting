@@ -84,20 +84,20 @@ export function renderTimeTag(
     }
   } else if (platform && platform == PLATFORM_LIEPIN) {
     //refreshTime
-    let refreshTime = jobDTO.jobFirstPublishDatetime;
+    const refreshTime = jobDTO.jobFirstPublishDatetime;
     if (refreshTime) {
-      let refreshTimeTag = document.createElement("span");
-      let refreshTimeHumanReadable = convertTimeToHumanReadable(refreshTime);
+      const refreshTimeTag = document.createElement("span");
+      const refreshTimeHumanReadable = convertTimeToHumanReadable(refreshTime);
       refreshTimeTag.textContent += "【" + refreshTimeHumanReadable + "更新】";
       refreshTimeTag.classList.add("__time_tag_base_text_font");
       divElement.appendChild(refreshTimeTag);
     }
   } else {
     //firstPublishTime
-    let firstPublishTime = jobDTO.jobFirstPublishDatetime;
+    const firstPublishTime = jobDTO.jobFirstPublishDatetime;
     if (firstPublishTime) {
-      let firstPublishTimeTag = document.createElement("span");
-      let firstPublishTimeHumanReadable = convertTimeToHumanReadable(
+      const firstPublishTimeTag = document.createElement("span");
+      const firstPublishTimeHumanReadable = convertTimeToHumanReadable(
         firstPublishTime
       );
       firstPublishTimeTag.textContent +=
@@ -107,14 +107,14 @@ export function renderTimeTag(
     }
   }
   if (jobDTO.hrActiveTimeDesc) {
-    let hrActiveTimeDescTag = document.createElement("span");
+    const hrActiveTimeDescTag = document.createElement("span");
     hrActiveTimeDescTag.textContent = "【HR-" + jobDTO.hrActiveTimeDesc + "】";
     hrActiveTimeDescTag.classList.add("__time_tag_base_text_font");
     divElement.appendChild(hrActiveTimeDescTag);
   }
   //companyInfo
   let companyInfoTag = null;
-  let companyInfoText = getCompanyInfoText(jobDTO.jobCompanyName);
+  const companyInfoText = getCompanyInfoText(jobDTO.jobCompanyName);
   if (companyInfoText !== "") {
     companyInfoTag = document.createElement("span");
     companyInfoTag.textContent = companyInfoText;
@@ -127,8 +127,8 @@ export function renderTimeTag(
   //为time tag染色
   if (jobDTO.hrActiveTimeDesc && platform == PLATFORM_BOSS) {
     //根据hr活跃时间为JobItem染色
-    let now = dayjs();
-    let hrActiveDatetime = now.subtract(
+    const now = dayjs();
+    const hrActiveDatetime = now.subtract(
       convertHrActiveTimeDescToOffsetTime(jobDTO.hrActiveTimeDesc),
       "millisecond"
     );
@@ -139,17 +139,29 @@ export function renderTimeTag(
       jobStatusDesc
     );
   }
+  // TODO setting:url,model,resume,auto
+  const url = "http://localhost:11434";
+  const model = "deepseek-r1:7b";
+  const demand = `${jobDTO.jobName}\n${jobDTO.jobDescription}`;
+  const resume = `## 个人信息\n- 学历：本科\n- 工作经验：1年\n\n## 个人情况\n- 了解 Python、Linux/Shell  \n- 了解 Docker 的基本使用，能看懂 Dockerfile 文件  \n- 了解 网络、安全, MySQL   \n- 熟练运用 AI 工具与搜索引擎，提升工作效率  \n- 没有驾照  \n\n## 工作经验\n**阳光雨露信息技术服务（北京）有限公司**  2023.10-2024.11  \n**职位**：桌面运维工程师\n\n通过服务台系统处理用户提交的故障申报\n\n- AD域密码重置、账户解锁\n- 解决软件错误、蓝屏、系统空间不足等问题；重新安装或修复软件。\n- 配置打印机、扫描仪、投影仪等设备，解决连接或驱动问题。\n- 显示器、键盘鼠标等外设损坏；处理硬件故障（如硬盘损坏、内存更换）。为资产管理部门给员工更换设备给出依据\n\n与资产管理部门配合\n\n- 为离职员工/入库电脑进行低级格式化\n- 出库前，为新电脑/格式化后的电脑安装标准化镜像\n- 维护FAQ文档、记录常见问题解决方案\n\n\n## 补充经历`;
+  const element = document.createElement('job-analysis-element');
+  element.classList.add("__job_analysis");
+  element.url = url;
+  element.model = model;
+  element.demand = demand;
+  element.resume = resume;
+  divElement.appendChild(element);
 }
 
 export function finalRender(jobDTOList, { platform }) {
   for (let i = 0; i < jobDTOList.length; i++) {
-    let item = jobDTOList[i];
-    let jobId = item.jobId;
-    let jobItemIdSha256 = genIdFromText(jobId);
-    let commentWrapperDiv = document.getElementById("wrapper" + jobId);
+    const item = jobDTOList[i];
+    const jobId = item.jobId;
+    const jobItemIdSha256 = genIdFromText(jobId);
+    const commentWrapperDiv = document.getElementById("wrapper" + jobId);
     commentWrapperDiv.classList.add("__comment_wrapper");
     commentWrapperDiv.classList.add("__" + platform + "_comment_wrapper");
-    let jobItemCommentButton = genCommentTextButton(
+    const jobItemCommentButton = genCommentTextButton(
       commentWrapperDiv,
       "查看职位评论💬",
       item.jobName + "-" + item.jobCompanyName,
@@ -229,8 +241,8 @@ export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle
 }
 
 async function renderCommentContent({ first, after, last, before, id } = {}, contentDiv) {
-  let loadingLabel = $('<div>正加载评论⌛︎</div>')[0];
-  let loadingDiv = $(`<div class="__comment_loading"></div>`)
+  const loadingLabel = $('<div>正加载评论⌛︎</div>')[0];
+  const loadingDiv = $(`<div class="__comment_loading"></div>`)
     .append(loadingLabel)[0];
   contentDiv.appendChild(loadingDiv);
   //获取loginInfo，如获取成功
@@ -238,9 +250,9 @@ async function renderCommentContent({ first, after, last, before, id } = {}, con
   if (!loginInfo) {
     //获取失败
     contentDiv.removeChild(loadingDiv);
-    let login = $(`<div>点击登录到GitHub后可查看评论</div>`);
-    let installLogin = $(`<div>(如需添加评论，请到后台管理[设置]页面安装GitHubApp)</div>`);
-    let loginDiv = $(`<div class="__comment_loading"></div>`).append(login).append(installLogin)[0];
+    const login = $(`<div>点击登录到GitHub后可查看评论</div>`);
+    const installLogin = $(`<div>(如需添加评论，请到后台管理[设置]页面安装GitHubApp)</div>`);
+    const loginDiv = $(`<div class="__comment_loading"></div>`).append(login).append(installLogin)[0];
     contentDiv.appendChild(loginDiv);
     loginDiv.addEventListener("click", async () => {
       //执行登录流程
@@ -267,22 +279,22 @@ async function renderCommentContent({ first, after, last, before, id } = {}, con
   try {
     data = await queryComment({ first, after, last, before, id });
     clearAllChildNode(contentDiv);
-    let items = data?.search?.nodes;
-    let pageInfo = data?.search?.pageInfo;
-    let total = data?.search?.issueCount;
+    const items = data?.search?.nodes;
+    const pageInfo = data?.search?.pageInfo;
+    const total = data?.search?.issueCount;
     if (total == 0) {
       contentDiv.appendChild(createEmptyComment());
     } else {
       for (let i = 0; i < items.length; i++) {
-        let item = items[i];
-        let author = item.author;
+        const item = items[i];
+        const author = item.author;
         contentDiv.appendChild(createCommentRow(author.avatarUrl, author.login, item.createdAt, item.lastEditedAt, item.bodyText, item.bodyUrl));
       }
       contentDiv.appendChild(createCommonPageOperationMenu(pageInfo.hasPreviousPage, pageInfo.hasNextPage, pageInfo.startCursor, pageInfo.endCursor, total, async ({ first, after, last, before } = {}) => {
         renderCommentContent({ first, after, last, before, id }, contentDiv)
       }));
     }
-    let userDTO = await UserApi.userGet();
+    const userDTO = await UserApi.userGet();
     contentDiv.appendChild(createAddCommentRow(contentDiv, loadingDiv, () => {
       renderCommentContent({ first: COMMENT_PAGE_SIZE, id }, contentDiv)
     }, id, userDTO?.avatarUrl, userDTO?.login));
@@ -301,12 +313,12 @@ async function queryComment({ first, after, last, before, id } = {}) {
 }
 
 function createEmptyComment() {
-  let result = $(`<div class="__comment_empty_content">没有评论</div>`);
+  const result = $(`<div class="__comment_empty_content">没有评论</div>`);
   return result[0];
 }
 
 function createCommentRow(avatarUrl, username, createdAt, lastEditedAt, content, bodyUrl) {
-  let result = $(`
+  const result = $(`
     <div class="__comment_row">
       <div>
         <img class="__avatar" src="${avatarUrl}" alt="@${username}">
@@ -329,19 +341,19 @@ function createCommentRow(avatarUrl, username, createdAt, lastEditedAt, content,
 }
 
 function createAddCommentRow(contentDiv, loadingDiv, queryFunction, id, avatarUrl, username) {
-  let textareaId = genUniqueId();
-  let submitComment = $(`<div class="__comment_submit_button_wrapper"><div class="__comment_submit_button">提交评论</div></div>`)[0];
+  const textareaId = genUniqueId();
+  const submitComment = $(`<div class="__comment_submit_button_wrapper"><div class="__comment_submit_button">提交评论</div></div>`)[0];
   const submitFunction = async () => {
     loadingDiv.textContent = "评论提交中⌛︎";
     try {
       contentDiv.appendChild(loadingDiv);
-      let content = $(`#${textareaId}`)[0].value;
+      const content = $(`#${textareaId}`)[0].value;
       if (content && content.length > 10) {
         infoLog(`submit comment title(company id)=${id},body=${content}`)
         await GithubApi.addComment(id, content);
         loadingDiv.textContent = "评论内容成功，点击刷新列表";
         contentDiv.appendChild(loadingDiv);
-        let removeLoadingFunction = () => {
+        const removeLoadingFunction = () => {
           loadingDiv.removeEventListener("click", removeLoadingFunction);
           contentDiv.removeChild(loadingDiv);
           queryFunction();
@@ -350,7 +362,7 @@ function createAddCommentRow(contentDiv, loadingDiv, queryFunction, id, avatarUr
       } else {
         loadingDiv.textContent = "评论内容长度过短，请重新编辑后提交";
         contentDiv.appendChild(loadingDiv);
-        let removeLoadingFunction = () => {
+        const removeLoadingFunction = () => {
           loadingDiv.removeEventListener("click", removeLoadingFunction);
           contentDiv.removeChild(loadingDiv);
         };
@@ -360,7 +372,7 @@ function createAddCommentRow(contentDiv, loadingDiv, queryFunction, id, avatarUr
       errorLog(e);
       loadingDiv.textContent = "评论提交失败，点击后，重新提交";
       contentDiv.appendChild(loadingDiv);
-      let removeLoadingFunction = () => {
+      const removeLoadingFunction = () => {
         loadingDiv.removeEventListener("click", removeLoadingFunction);
         contentDiv.removeChild(loadingDiv);
       };
@@ -368,7 +380,7 @@ function createAddCommentRow(contentDiv, loadingDiv, queryFunction, id, avatarUr
     }
   };
   submitComment.addEventListener("click", submitFunction);
-  let result = $(`
+  const result = $(`
     <div>
     <div class="__comment_submit_content">
       <div>
@@ -389,20 +401,20 @@ function createAddCommentRow(contentDiv, loadingDiv, queryFunction, id, avatarUr
 }
 
 function createCommonPageOperationMenu(hasPreviousPage, hasNextPage, startCursor, endCursor, total, queryFunction) {
-  let result = $(`
+  const result = $(`
     <div class="__comment_paging_wrapper">
       <div class="__comment_paging_total">共${total}条</div>
     </div>
     `);
   if (hasPreviousPage) {
-    let element = $(`<div class="__company_info_quick_search_button __comment_paging_button">上一页</div>`)[0];
+    const element = $(`<div class="__company_info_quick_search_button __comment_paging_button">上一页</div>`)[0];
     element.addEventListener("click", async (event) => {
       queryFunction({ last: COMMENT_PAGE_SIZE, before: `${startCursor}` });
     })
     result.append(element);
   }
   if (hasNextPage) {
-    let element = $(`<div class="__company_info_quick_search_button __comment_paging_button">下一页</div>`)[0];
+    const element = $(`<div class="__company_info_quick_search_button __comment_paging_button">下一页</div>`)[0];
     element.addEventListener("click", async (event) => {
       queryFunction({ first: COMMENT_PAGE_SIZE, after: `${endCursor}` });
     })
@@ -420,7 +432,7 @@ export function createLoadingDOM(brandName, styleClass) {
 }
 
 export function setErrorLoadingDOM(text) {
-  let loadingTagList = document.querySelectorAll(".__loading_tag");
+  const loadingTagList = document.querySelectorAll(".__loading_tag");
   if (loadingTagList) {
     loadingTagList.forEach((item) => {
       item.classList.add("__status_job_render_error");
@@ -430,7 +442,7 @@ export function setErrorLoadingDOM(text) {
 }
 
 export function hiddenLoadingDOM() {
-  let loadingTagList = document.querySelectorAll(".__loading_tag");
+  const loadingTagList = document.querySelectorAll(".__loading_tag");
   if (loadingTagList) {
     loadingTagList.forEach((item) => {
       item.style = "visibility: hidden;";
@@ -439,7 +451,7 @@ export function hiddenLoadingDOM() {
 }
 
 export function renderTimeLoadingTag(divElement, brandName) {
-  let timeText = "【正查找发布时间⌛︎】";
+  const timeText = "【正查找发布时间⌛︎】";
   let text = timeText;
   text += getCompanyInfoText(brandName);
   divElement.style = getRenderTimeStyle();
@@ -510,7 +522,7 @@ export function setupSortJobItem(node) {
   const jobListItemList = node.querySelectorAll(".joblist-item");
   if (jobListItemList && jobListItemList.length > 0) {
     for (let i = 0; i < jobListItemList.length; i++) {
-      let item = jobListItemList[i];
+      const item = jobListItemList[i];
       item.classList.add("__51JOB_job_item");
     }
   }
@@ -541,7 +553,7 @@ export function renderSortJobItem(list, getListItem, { platform, orderStartIndex
   //handle hr active time
   if (platform == PLATFORM_BOSS || platform == PLATFORM_LIEPIN) {
     sortList.forEach((item) => {
-      let hrActiveTimeOffsetTime = convertHrActiveTimeDescToOffsetTime(
+      const hrActiveTimeOffsetTime = convertHrActiveTimeDescToOffsetTime(
         item.hrActiveTimeDesc
       );
       item.hrActiveTimeOffsetTime = hrActiveTimeOffsetTime;
@@ -582,7 +594,7 @@ export function renderSortJobItem(list, getListItem, { platform, orderStartIndex
     } else {
       targetDom = dom;
     }
-    let styleString =
+    const styleString =
       "order:" + (idAndSortIndexMap.get(item.renderSortCustomId) + orderStartIndex) + ";";
     targetDom.style = styleString;
   });
@@ -618,9 +630,9 @@ function convertHrActiveTimeDescToOffsetTime(hrActiveTimeDesc) {
       } else {
         coefficient = 86400000 * 30;
       }
-      let groups = hrActiveTimeDesc.match(ACTIVE_TIME_MATCH).groups;
+      const groups = hrActiveTimeDesc.match(ACTIVE_TIME_MATCH).groups;
       if (groups) {
-        let num = groups.num;
+        const num = groups.num;
         if (num) {
           offsetTime = Number.parseInt(num) * coefficient;
         } else {
@@ -649,10 +661,10 @@ export async function renderFunctionPanel(
   { platform, getCompanyInfoFunction, searchButtonTitle } = {}
 ) {
   stopAndCleanAbortFunctionHandler();
-  let jobTagDTOArray = await JobApi.jobTagGetAllDTOByJobIds(list.map(item => item.jobId));
-  let jobIdAndDTOMap = new Map();
+  const jobTagDTOArray = await JobApi.jobTagGetAllDTOByJobIds(list.map(item => item.jobId));
+  const jobIdAndDTOMap = new Map();
   jobTagDTOArray.forEach(item => {
-    let jobId = item.jobId;
+    const jobId = item.jobId;
     if (!jobIdAndDTOMap.has(jobId)) {
       jobIdAndDTOMap.set(jobId, []);
     }
@@ -670,7 +682,7 @@ export async function renderFunctionPanel(
     } else {
       targetDom = dom;
     }
-    let functionPanelDiv = document.createElement("div");
+    const functionPanelDiv = document.createElement("div");
     functionPanelDiv.classList.add(`__${platform}_function_panel`);
     //delete before insert element
     targetDom.querySelectorAll(`.__${platform}_function_panel`).forEach(item => item.parentElement.removeChild(item));
@@ -735,7 +747,7 @@ function createMyJobTag(item, jobIdAndDTOMap) {
   asyncRenderTag(jobTagDiv, "职位", async () => {
     return (jobIdAndDTOMap.get(item.jobId) ?? []).filter(item => item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source == null)
   }, async (tags) => {
-    let param = new JobTagBO();
+    const param = new JobTagBO();
     param.jobId = item.jobId;
     param.tags = tags;
     return JobApi.jobTagAddOrUpdate(param);
@@ -744,15 +756,15 @@ function createMyJobTag(item, jobIdAndDTOMap) {
 }
 
 export function createLogo() {
-  let logo = document.createElement("div");
+  const logo = document.createElement("div");
   logo.innerHTML = logoResource;
   logo.classList.add("__logo_in_function_panel");
   return logo;
 }
 
 function createCommentWrapper(jobDTO) {
-  let jobId = jobDTO.jobId;
-  let commentWrapperDiv = document.createElement("div");
+  const jobId = jobDTO.jobId;
+  const commentWrapperDiv = document.createElement("div");
   commentWrapperDiv.id = "wrapper" + jobId;
   commentWrapperDiv.appendChild(createBrowseDetail(jobDTO));
   commentWrapperDiv.appendChild(createFirstBrowse(jobDTO));
@@ -760,15 +772,15 @@ function createCommentWrapper(jobDTO) {
 }
 
 function createBrowseDetail(jobDTO) {
-  let browseDetailTag = document.createElement("div");
+  const browseDetailTag = document.createElement("div");
   browseDetailTag.textContent += `【查看过${jobDTO.browseDetailCount ?? 0}次】`;
   browseDetailTag.classList.add("__first_browse_time");
   return browseDetailTag;
 }
 
 function createFirstBrowse(jobDTO) {
-  let firstBrowseTimeTag = document.createElement("div");
-  let firstBrowseTimeHumanReadable = convertTimeOffsetToHumanReadable(
+  const firstBrowseTimeTag = document.createElement("div");
+  const firstBrowseTimeHumanReadable = convertTimeOffsetToHumanReadable(
     jobDTO.createDatetime
   );
   firstBrowseTimeTag.textContent +=
@@ -784,20 +796,20 @@ function createFirstBrowse(jobDTO) {
 function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButtonTitle, jobCardItemDom } = {}) {
   const dom = document.createElement("div");
   dom.className = "__company_info_quick_search";
-  let mainChannelDiv = document.createElement("div");
-  let otherChannelDiv = document.createElement("div");
-  let quickSearchButton = document.createElement("div");
+  const mainChannelDiv = document.createElement("div");
+  const otherChannelDiv = document.createElement("div");
+  const quickSearchButton = document.createElement("div");
   quickSearchButton.className = "__company_info_quick_search_button";
   if (searchButtonTitle) {
     quickSearchButton.textContent = `🔎${searchButtonTitle}`;
   } else {
     quickSearchButton.textContent = "🔎点击快速查询公司信息";
   }
-  let fixValidHummanButton = document.createElement("a");
+  const fixValidHummanButton = document.createElement("a");
   fixValidHummanButton.className = "__company_info_quick_search_button";
   fixValidHummanButton.target = "_blank";
   fixValidHummanButton.ref = "noopener noreferrer";
-  let quickSearchButtonLoading = document.createElement("div");
+  const quickSearchButtonLoading = document.createElement("div");
   quickSearchButtonLoading.className = "__company_info_quick_search_button";
   const quickSearchHandle = async (forceSyncData) => {
     try {
@@ -858,8 +870,8 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
         mainChannelDiv.appendChild(quickSearchButton);
         mainChannelDiv.appendChild(fixValidHummanButton);
       } finally {
-        let reputationWrapperDiv = document.createElement("div");
-        let companyTagWrapperDiv = document.createElement("div");
+        const reputationWrapperDiv = document.createElement("div");
+        const companyTagWrapperDiv = document.createElement("div");
         otherChannelDiv.appendChild(reputationWrapperDiv);
         otherChannelDiv.appendChild(companyTagWrapperDiv);
         companyTagWrapperDiv.append(createCompanyTag(companyName))
@@ -868,10 +880,10 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
           companyTagWrapperDiv.append(createCompanyTag(companyName));
         }));
         otherChannelDiv.appendChild(createSearchCompanyLink(companyName));
-        let companyIdSha256 = genIdFromText(companyName);
-        let commentWrapperDiv = document.createElement("div");
+        const companyIdSha256 = genIdFromText(companyName);
+        const commentWrapperDiv = document.createElement("div");
         commentWrapperDiv.className = `__comment_wrapper __${platform}_comment_wrapper`
-        let companyCommentButton = genCommentTextButton(
+        const companyCommentButton = genCommentTextButton(
           commentWrapperDiv,
           "查看公司评论💬",
           companyName,
@@ -907,12 +919,12 @@ async function asyncRenderCompanyInfo(
   quickSearchHandle
 ) {
   try {
-    let convertedCompanyName = companyNameConvert(keyword);
+    const convertedCompanyName = companyNameConvert(keyword);
     //查询数据库是否有公司信息
     let company = await CompanyApi.getCompanyById(
       genSha256(convertedCompanyName) + ""
     );
-    let now = dayjs();
+    const now = dayjs();
     if (
       !forceSyncData &&
       company &&
@@ -921,7 +933,7 @@ async function asyncRenderCompanyInfo(
       //skip
     } else {
       //数据库没有数据或数据过期了，则进行网络查询，保存数据到数据库
-      let companyInfo = await getCompanyInfoByAiqicha(keyword);
+      const companyInfo = await getCompanyInfoByAiqicha(keyword);
       company = await getCompanyFromCompanyInfo(companyInfo, convertedCompanyName);
     }
     div.appendChild(createCompanyInfoDetail(company, quickSearchHandle));
@@ -937,7 +949,7 @@ async function asyncRenderCompanyInfo(
  * @returns
  */
 export function createCompanyInfoDetail(company, quickSearchHandle) {
-  let contentDiv = $("<div></div>");
+  const contentDiv = $("<div></div>");
   contentDiv.append(
     $(`<div class="__company_info_quick_search_item"></div>`)
       .append(
@@ -984,11 +996,11 @@ export function createCompanyInfoDetail(company, quickSearchHandle) {
         )
       )
   );
-  let websiteStatusElement = $(`<div></div>`);
+  const websiteStatusElement = $(`<div></div>`);
   renderWebsiteStatus(websiteStatusElement[0], company.companyWebSite);
-  let websiteWhoisElement = $(`<div></div>`);
+  const websiteWhoisElement = $(`<div></div>`);
   renderWebsiteWhois(websiteWhoisElement[0], company.companyWebSite);
-  let websiteIpcElement = $(`<div></div>`);
+  const websiteIpcElement = $(`<div></div>`);
   renderWebsiteIpc(websiteIpcElement[0], company.companyWebSite);
   contentDiv.append(
     $(`<div class="__company_info_quick_search_item"></div>`).append(
@@ -1030,7 +1042,7 @@ export function createCompanyInfoDetail(company, quickSearchHandle) {
       )
     )
   );
-  let syncDataButton = document.createElement("div");
+  const syncDataButton = document.createElement("div");
   syncDataButton.className = "__company_info_quick_search_button";
   syncDataButton.textContent = "📥立即同步数据";
   syncDataButton.onclick = () => {
@@ -1065,7 +1077,7 @@ async function renderWebsiteIpc(element, website) {
       element.className = "";
     } else {
       let abortFunctionHandler = null;
-      let url = `https://icp.aizhan.com/${encodeURIComponent(
+      const url = `https://icp.aizhan.com/${encodeURIComponent(
         getDomain(website)
       )}/`;
       const result = await httpFetchGetText(url, (abortFunction) => {
@@ -1075,11 +1087,11 @@ async function renderWebsiteIpc(element, website) {
       });
       //请求正常结束，从手动中断列表中移除
       deleteAbortFunctionHandler(abortFunctionHandler);
-      let firstMatchArray = result.match(
+      const firstMatchArray = result.match(
         /<table class="table">[\s\S]*<tr><td class="thead">主办单位名称<\/td><td>.*[<\td>]?/
       );
       if (firstMatchArray && firstMatchArray.length > 0) {
-        let groups = firstMatchArray[0]
+        const groups = firstMatchArray[0]
           ?.replaceAll("\n", "")
           ?.replaceAll("\t", "")
           ?.replaceAll(" ", "")
@@ -1088,14 +1100,14 @@ async function renderWebsiteIpc(element, website) {
             /<tr>(?<name>.*?)<\/tr><tr>(?<type>.*?)<\/tr><tr>(?<ipc>.*?)<\/tr>/
           )?.groups;
         if (groups) {
-          let name = groups.name.match(/<td>(?<name>.*)<a/).groups.name;
-          let type = groups.type.match(/<td>(?<type>.*)<\/td>/).groups.type;
-          let ipc = groups.ipc.match(/<span>(?<ipc>.*)<\/span>/).groups.ipc;
+          const name = groups.name.match(/<td>(?<name>.*)<a/).groups.name;
+          const type = groups.type.match(/<td>(?<type>.*)<\/td>/).groups.type;
+          const ipc = groups.ipc.match(/<span>(?<ipc>.*)<\/span>/).groups.ipc;
           element.textContent = "";
           element.className = "";
           element.className = "__company_info_quick_search_sub_item";
           element.title = `${name}(性质：${type})`;
-          let rootElement = $(element);
+          const rootElement = $(element);
           rootElement.append(
             $(
               `<div class="__company_info_quick_search_item_label">备案：</div><div class="__company_info_quick_search_item_value">${ipc}</div>`
@@ -1106,7 +1118,7 @@ async function renderWebsiteIpc(element, website) {
       }
       clearAllChildNode(element);
       element.className = "";
-      let syncDataButton = document.createElement("div");
+      const syncDataButton = document.createElement("div");
       syncDataButton.className = "__company_info_quick_search_button";
       syncDataButton.textContent = "🔎未找到备案信息，点击到工信部核实";
       syncDataButton.onclick = () => {
@@ -1135,7 +1147,7 @@ async function renderWebsiteWhois(element, website) {
       element.className = "";
     } else {
       let abortFunctionHandler = null;
-      let url = `https://whois.chinaz.com/${encodeURIComponent(website)}`;
+      const url = `https://whois.chinaz.com/${encodeURIComponent(website)}`;
       const result = await httpFetchGetText(url, (abortFunction) => {
         abortFunctionHandler = abortFunction;
         //加入请求手动中断列表
@@ -1143,11 +1155,11 @@ async function renderWebsiteWhois(element, website) {
       });
       //请求正常结束，从手动中断列表中移除
       deleteAbortFunctionHandler(abortFunctionHandler);
-      let groups = result.match(
+      const groups = result.match(
         /注册时间[\s\S]*<\/div>[\s\S]*<div item-value>(?<registDate>.*)<\/div>[\s\S]*/
       )?.groups;
       if (groups && groups.registDate) {
-        let date = dayjs(
+        const date = dayjs(
           groups.registDate
             .replaceAll("年", "-")
             .replaceAll("月", "-")
@@ -1182,7 +1194,7 @@ async function renderWebsiteStatus(element, website) {
       element.className = "";
     } else {
       let abortFunctionHandler = null;
-      let url = `${autoFillHttp(website)}`;
+      const url = `${autoFillHttp(website)}`;
       await httpFetchGetText(url, (abortFunction) => {
         abortFunctionHandler = abortFunction;
         //加入请求手动中断列表
@@ -1209,7 +1221,7 @@ export function createSearchCompanyLink(keyword) {
   const internetDiv = document.createElement("div");
   internetDiv.className =
     "__company_info_quick_search_item __company_info_other_channel";
-  let internetLabelDiv = document.createElement("div");
+  const internetLabelDiv = document.createElement("div");
   internetLabelDiv.className = "__company_info_quick_search_item_label";
   internetLabelDiv.textContent = " - 互联网渠道";
   internetDiv.appendChild(
@@ -1238,7 +1250,7 @@ export function createSearchCompanyLink(keyword) {
   const govDiv = document.createElement("div");
   govDiv.className =
     "__company_info_quick_search_item __company_info_other_channel";
-  let govLabelDiv = document.createElement("div");
+  const govLabelDiv = document.createElement("div");
   govLabelDiv.className = "__company_info_quick_search_item_label";
   govLabelDiv.textContent = "- 政府渠道";
   govDiv.appendChild(
@@ -1281,7 +1293,7 @@ export function createCompanyTag(companyName) {
 }
 
 function createOtherCompanyTag(companyName) {
-  let companyId = genIdFromText(companyName);
+  const companyId = genIdFromText(companyName);
   const root = document.createElement("div");
   root.className = "__company_info_quick_search_item";
   const labelDiv = document.createElement("div");
@@ -1313,10 +1325,10 @@ function createMyCompanyTag(companyName) {
   root.appendChild(labelDiv);
   root.appendChild(tagDiv);
   asyncRenderTag(tagDiv, "公司", async () => {
-    let companyId = genIdFromText(companyName);
+    const companyId = genIdFromText(companyName);
     return (await CompanyApi.getAllCompanyTagDTOByCompanyId(companyId)).filter(item => item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source == null);
   }, async (tags) => {
-    let param = new CompanyTagBO();
+    const param = new CompanyTagBO();
     param.companyName = companyName;
     param.tags = tags;
     return CompanyApi.addOrUpdateCompanyTag(param)
@@ -1326,9 +1338,9 @@ function createMyCompanyTag(companyName) {
 
 async function asyncRenderTag(div, title, getAllDTOFunction, saveTagFunction) {
   let inputReadOnly = true;
-  let input = document.createElement("input");
+  const input = document.createElement("input");
   div.appendChild(input);
-  let tagify = new Tagify(input, {
+  const tagify = new Tagify(input, {
     transformTag: transformTag,
     dropdown: {
       maxItems: 20,           // <- mixumum allowed rendered suggestions
@@ -1338,11 +1350,11 @@ async function asyncRenderTag(div, title, getAllDTOFunction, saveTagFunction) {
     }
   });
   //get tag
-  let tagArray = await getAllDTOFunction();
+  const tagArray = await getAllDTOFunction();
   tagArray.forEach(item => {
     tagify.addTags(item.tagName);
   });
-  let dragsort = new DragSort(tagify.DOM.scope, {
+  const dragsort = new DragSort(tagify.DOM.scope, {
     selector: '.' + tagify.settings.classNames.tag,
     callbacks: {
       dragEnd: (elem) => {
@@ -1352,7 +1364,7 @@ async function asyncRenderTag(div, title, getAllDTOFunction, saveTagFunction) {
   });
   tagify.setReadonly(true);
   //add tag to tagify
-  let operationButton = document.createElement("div");
+  const operationButton = document.createElement("div");
   operationButton.className = "__tag_operation_button";
   operationButton.textContent = "📝编辑"
   div.append(operationButton);
@@ -1366,12 +1378,12 @@ async function asyncRenderTag(div, title, getAllDTOFunction, saveTagFunction) {
       operationButton.textContent = `${title}标签保存中⌛︎`;
       tagify.setReadonly(true);
       //save tag
-      let value = tagify.getInputValue();
+      const value = tagify.getInputValue();
       let result = [];
       if (value) {
         result = JSON.parse(tagify.getInputValue());
       }
-      let tags = [];
+      const tags = [];
       result.forEach((item) => {
         tags.push(item.value);
       })
@@ -1380,8 +1392,8 @@ async function asyncRenderTag(div, title, getAllDTOFunction, saveTagFunction) {
       tagify.setReadonly(true);
       saving = false;
     } else {
-      let allTags = await TagApi.getAllTag();
-      let tagItems = [];
+      const allTags = await TagApi.getAllTag();
+      const tagItems = [];
       allTags.forEach(item => {
         tagItems.push(item.tagName);
       });
@@ -1399,7 +1411,7 @@ function getRandomColor() {
     return min + Math.random() * (max - min);
   }
 
-  let h = rand(1, 360) | 0,
+  const h = rand(1, 360) | 0,
     s = rand(40, 70) | 0,
     l = rand(65, 72) | 0;
 
@@ -1414,11 +1426,11 @@ function transformTag(tagData) {
 export function createCompanyReputation(keyword, companyTagUpdateCallback) {
   const dom = document.createElement("div");
   dom.className = "__company_info_quick_search_item";
-  let labelDiv = document.createElement("div");
+  const labelDiv = document.createElement("div");
   labelDiv.className = "__company_info_quick_search_item_label";
   labelDiv.textContent = "公司风评检测：";
   dom.appendChild(labelDiv);
-  let contentDiv = document.createElement("div");
+  const contentDiv = document.createElement("div");
   contentDiv.className = "__company_reputation_content";
   dom.appendChild(contentDiv);
   contentDiv.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
@@ -1435,7 +1447,7 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
     handleSearchCount: (result) => {
       if (result.status == "1200") {
         let count = 0;
-        let totalNum = (result?.data?.page?.totalNum) ?? 0;
+        const totalNum = (result?.data?.page?.totalNum) ?? 0;
         if (totalNum > 0) {
           count = result?.data?.list?.filter(item => item.zzmc == keyword).length;
         }
@@ -1454,7 +1466,7 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
       return await httpFetchGetTextWithAbort(`https://kjxb.org/?s=${encodeURIComponent(keyword)}&post_type=question`);
     },
     handleSearchCount: (result) => {
-      let hyperlinks = $(result).find(".ap-questions-hyperlink");
+      const hyperlinks = $(result).find(".ap-questions-hyperlink");
       return hyperlinks ? hyperlinks.length : 0;
     },
   }));
@@ -1467,7 +1479,7 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
       return await httpFetchGetTextWithAbort(`https://job.me88.top/index.php/search/${encodeURIComponent(keyword)}`);
     },
     handleSearchCount: (result) => {
-      let hyperlinks = $(result).find("div[class=\"post-box paddingall\"]");
+      const hyperlinks = $(result).find("div[class=\"post-box paddingall\"]");
       return hyperlinks ? hyperlinks.length : 0;
     },
   }));
@@ -1480,7 +1492,7 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
       return await httpFetchGetTextWithAbort(`http://www.blackdir.com/?search=${encodeURIComponent(keyword)}`);
     },
     handleSearchCount: (result) => {
-      let hyperlinks = $(result).find("div[class=\"media\"]")
+      const hyperlinks = $(result).find("div[class=\"media\"]")
       return hyperlinks ? hyperlinks.length : 0;
     },
   }));
@@ -1536,18 +1548,18 @@ async function asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback
   renderCompanyReputationColor(loaddingTag, "black");
   try {
     const result = await searchFunction(keyword)
-    let count = handleSearchCount(result);
+    const count = handleSearchCount(result);
     clearAllChildNode(div);
     if (count > 0) {
       //存在于黑名单
-      let tag = createATag("📡", sourceUrl, `${title}(疑似${count}条记录)`);
+      const tag = createATag("📡", sourceUrl, `${title}(疑似${count}条记录)`);
       div.appendChild(tag);
       renderCompanyReputationColor(tag, "red");
       await addCompanyTagNotExists(keyword, [companyTag]);
       companyTagUpdateCallback();
     } else {
       //不存在
-      let tag = createATag("📡", sourceUrl, `${title}(无记录)`);
+      const tag = createATag("📡", sourceUrl, `${title}(无记录)`);
       div.appendChild(tag);
       renderCompanyReputationColor(tag, "yellowgreen");
     }
@@ -1620,7 +1632,7 @@ function createATagWithSearch(url, label) {
 }
 
 function createATag(emoji, url, label, callback) {
-  let aTag = document.createElement("a");
+  const aTag = document.createElement("a");
   aTag.href = url;
   aTag.target = "_blank";
   aTag.ref = "noopener noreferrer";

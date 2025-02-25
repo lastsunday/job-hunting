@@ -19,6 +19,10 @@
     "e2e:install": "playwright install --with-deps",
     "e2e": "bddgen && playwright test"
   },
+  "nx": {
+    "sourceRoot": "apps/extension/src",
+    "projectType": "application"
+  },
   "dependencies": {
     "@ant-design/icons": "^5.6.1",
     "@ant-design/pro-components": "^2.8.6",
@@ -64,7 +68,8 @@
     "tsparticles": "^3.8.1",
     "uuid": "^11.1.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
-    "zustand": "^5.0.3"
+    "zustand": "^5.0.3",
+    "analysis": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^9.21.0",

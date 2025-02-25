@@ -1,5 +1,5 @@
 {
-  "extends": ["../../tsconfig.base.json","./.wxt/tsconfig.json"],
+  "extends": ["../../tsconfig.base.json", "./.wxt/tsconfig.json"],
   "compilerOptions": {
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
@@ -15,10 +15,11 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "lib": [
-      "DOM",
-      "ESNext",
-      "WebWorker"
-    ]
-  }
+    "lib": ["DOM", "ESNext", "WebWorker"]
+  },
+  "references": [
+    {
+      "path": "../../libs/analysis"
+    }
+  ]
 }

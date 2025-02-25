@@ -6,6 +6,7 @@ import "@yaireo/dragsort/dist/dragsort.css";
 import "@yaireo/tagify/dist/tagify.css";
 import "../assets/css/app.css";
 import { initBridge } from "../../common/api/common.js";
+import "analysis";
 
 export default defineContentScript({
   // Set manifest options
