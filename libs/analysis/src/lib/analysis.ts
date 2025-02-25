@@ -14,6 +14,9 @@ export class JobAnalysisElement extends LitElement {
   url?: string;
 
   @property({ type: String })
+  token?: string;
+
+  @property({ type: String })
   model?: string;
 
   @property({ type: String })
@@ -22,26 +25,48 @@ export class JobAnalysisElement extends LitElement {
   @property({ type: String })
   resume?: string;
 
+  @property({ type: Function })
+  getResponse?: (url: string, bodyString: string) => Promise<{
+    json: () => object;
+  }>;
+
   @state()
   private _matchValue?: number;
 
   @state()
+  private _thinking?: string;
+
+  @state()
   private _loading = true;
+
+  @state()
+  private _error = false;
+
+  fetchData = async () => {
+    this._loading = true;
+    this._error = false;
+    try {
+      const result = await analyze({ source: this.source, url: this.url, token: this.token, model: this.model, demand: this.demand, resume: this.resume, getResponse: this.getResponse });
+      const { matchValue, thinking } = result;
+      this._matchValue = matchValue;
+      this._thinking = thinking;
+    } catch (e) {
+      //TODO
+      console.error(e);
+      this._error = true;
+    } finally {
+      this._loading = false;
+    }
+  }
 
   override connectedCallback(): void {
     super.connectedCallback();
-    const fetchData = async () => {
-      const result = await analyze({ source: this.source, url: this.url, model: this.model, demand: this.demand, resume: this.resume });
-      const { matchValue } = result;
-      this._matchValue = matchValue;
-      this._loading = false;
-    }
-    fetchData();
+    this.fetchData();
   }
 
   override render() {
     return this._loading
       ? html`<div>职位分析中...</div>`
-      : html`<div>匹配度:${this._matchValue}分</div>`;
+      : (this._error ? html`<div @onclick="${this.fetchData}">分析失败，点击重试</div>` : html`<div title="${this._thinking}">匹配度:${this._matchValue}分</div>`);
   }
 }
