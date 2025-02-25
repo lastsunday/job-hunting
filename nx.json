@@ -88,6 +88,15 @@
         "^production"
       ]
     },
+    "zip": {
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
+    },
     "dev": {
       "dependsOn": [
         "^build"
