@@ -32,7 +32,6 @@
     "strict": true,
     "target": "es2022",
     "verbatimModuleSyntax": false,
-    "baseUrl":".",
     "paths": {
       "@packages/*": [
         "packages/*"
