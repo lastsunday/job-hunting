@@ -1,7 +1,11 @@
-import { useOllama } from "./ai.js";
-import { MatchResult, Source } from "./index.js";
+import { MatchResult } from "./ai/index.js";
+import { useOllama } from "./ai/ollama.js";
+import { useSiliconflow } from "./ai/siliconflow.js";
 
-const { analyze: analyzeByOllama } = useOllama();
+export enum Source {
+  OLLAMA = 'OLLAMA',
+  SILICONFLOW = 'SILICONFLOW',
+}
 
 export function useAnalysis() {
 
@@ -15,7 +19,8 @@ export function useAnalysis() {
     getResponse?: (url: string, bodyString: string) => Promise<{ json: () => object }>;
   }) => Promise<MatchResult>>();
 
-  sourceMap.set(Source.OLLAMA, analyzeByOllama);
+  sourceMap.set(Source.OLLAMA, useOllama().analyze);
+  sourceMap.set(Source.SILICONFLOW, useSiliconflow().analyze);
 
   const analyze = async ({ source, url, token, model, hr, demand, resume, getResponse }: {
     source: Source;

@@ -139,17 +139,43 @@ export function renderTimeTag(
       jobStatusDesc
     );
   }
-  // TODO setting:url,model,resume,auto
+  // TODO setting:source,url,model,resume,auto,token
+  const source = 'OLLAMA';
   const url = "http://localhost:11434";
   const model = "deepseek-r1:7b";
+  const token = "";
+  const auto = false;
   const demand = `${jobDTO.jobName}\n${jobDTO.jobDescription}`;
-  const resume = `## 个人信息\n- 学历：本科\n- 工作经验：1年\n\n## 个人情况\n- 了解 Python、Linux/Shell  \n- 了解 Docker 的基本使用，能看懂 Dockerfile 文件  \n- 了解 网络、安全, MySQL   \n- 熟练运用 AI 工具与搜索引擎，提升工作效率  \n- 没有驾照  \n\n## 工作经验\n**阳光雨露信息技术服务（北京）有限公司**  2023.10-2024.11  \n**职位**：桌面运维工程师\n\n通过服务台系统处理用户提交的故障申报\n\n- AD域密码重置、账户解锁\n- 解决软件错误、蓝屏、系统空间不足等问题；重新安装或修复软件。\n- 配置打印机、扫描仪、投影仪等设备，解决连接或驱动问题。\n- 显示器、键盘鼠标等外设损坏；处理硬件故障（如硬盘损坏、内存更换）。为资产管理部门给员工更换设备给出依据\n\n与资产管理部门配合\n\n- 为离职员工/入库电脑进行低级格式化\n- 出库前，为新电脑/格式化后的电脑安装标准化镜像\n- 维护FAQ文档、记录常见问题解决方案\n\n\n## 补充经历`;
+  const resume = `
+## 个人信息
+- 学历：本科
+- 工作经验：5年
+
+## 专业技能
+1.（掌握）编程语言：Java、Javascript、Typescript、HTML、CSS、Dart
+2.（掌握）后端开发技术：Spring Boot，Spring Cloud、Spring Cloud Alibaba、Hibernate、MyBatisPlus
+3.（掌握）中间件技术：Nginx、MySQL、PostgreSQL、Sqlite、Redis、ElasticSearch、RabbitMQ、Flink、Minio、Fastdfs、Nacos
+4.（掌握）Web前端技术：VueJs、Angular、ReactJS、GWT、JQuery、Chrome Extension
+5.（了解）GIS技术：Leaflet、Maplibre、Cesium、Mars3d、SuperMap
+6.（掌握）移动端和跨平台技术：Android、IOS、微信小程序、Cordova、Flutter、UniApp、ElectronJS
+7.（掌握）源代码与项目管理：CVS、SVN、Git、Gitlab、Gitea、Gitlab FLow、Maven、Gradle
+8.（掌握）DevOps开发运维：能独立搭建私有的Docker, Jenkins, Gitlab, Nexus, Harbor、SonarQube
+9.（了解）云平台K8S：蓝鲸K8s、K3s、Autok3s、云服务器 ECS
+10.（掌握）基础运维技术: Linux服务器基本命令，配置管理、性能调优
+
+## 工作经验
+**职位猎人有限公司**  2019.11-2024.11  
+**职位**：高级Java工程师
+  `;
   const element = document.createElement('job-analysis-element');
   element.classList.add("__job_analysis");
   element.url = url;
   element.model = model;
+  element.token = token;
   element.demand = demand;
   element.resume = resume;
+  element.source = source;
+  element.auto = auto;
   divElement.appendChild(element);
 }
 

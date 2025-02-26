@@ -1,7 +1,6 @@
 import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { useAnalysis } from './hooks/analysis.js';
-import { Source } from './hooks/index.js';
+import { Source, useAnalysis } from './hooks/analysis.js';
 import { styleMap } from 'lit/directives/style-map.js';
 const { analyze } = useAnalysis();
 

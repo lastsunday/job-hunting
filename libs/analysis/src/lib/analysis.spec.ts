@@ -14,7 +14,7 @@ describe('analysis', () => {
     document.body.innerHTML = "";
   })
 
-  it('should display element', async () => {
+  it('should display success', async () => {
     const element = document.createElement('job-analysis-element');
     element.url = url;
     element.model = model;
@@ -79,8 +79,8 @@ describe('analysis', () => {
       }
     };
     document.body.appendChild(element);
-    await expect.poll(() => page.getByText('点击分析').element(), { timeout: 1000 }).toBeVisible();
-    page.getByText('点击分析').element().click();
+    await expect.poll(() => page.getByText('点击职位分析').element(), { timeout: 1000 }).toBeVisible();
+    page.getByText('点击职位分析').element().click();
     await expect.poll(() => {
       try {
         return page.getByText('职位分析中').element();

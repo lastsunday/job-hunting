@@ -1,54 +1,56 @@
-import { API_SERVER_GITHUB, EVENT_RESPONSE_INFO } from "@/common";
-import Emitter from "@/common/extension/emitter";
-import dayjs from "dayjs";
-import React from "react";
-import { HashRouter, Route, Routes } from "react-router";
+import { API_SERVER_GITHUB, EVENT_RESPONSE_INFO } from '@/common';
+import Emitter from '@/common/extension/emitter';
+import dayjs from 'dayjs';
+import React from 'react';
+import { HashRouter, Route, Routes } from 'react-router';
 import { useShallow } from 'zustand/shallow';
-import "./App.css";
-import RootLayout from "./layout/RootLayout";
-import BbsView from "./pages/BbsView";
-import DashboardView from "./pages/DashboardView";
-import FileView from "./pages/FileView";
-import SettingView from "./pages/SettingView";
-import SystemView from "./pages/SystemView";
-import AutomateView from "./pages/assistant/AutomateView";
-import FavoriteJobView from "./pages/assistant/FavoriteJobView";
-import HistoryJobView from "./pages/assistant/HistoryJobView";
-import CompanyTagView from "./pages/data/CompanyTagView";
-import CompanyView from "./pages/data/CompanyView";
-import JobTagView from "./pages/data/JobTagView";
-import JobView from "./pages/data/JobView";
-import TagView from "./pages/data/TagView";
-import PartnerView from "./pages/dataSharePlan/PartnerView";
-import DataSharePlanStatisticView from "./pages/dataSharePlan/StatisticView";
-import TaskView from "./pages/dataSharePlan/TaskView";
-import DataSharePlanWelcomeView from "./pages/dataSharePlan/WelcomeView";
-import useApiStore from "./store/ApiStore";
-import useAuthStore from "./store/AuthStore";
-import useDataSharePlanStore from "./store/DataSharePlanStore";
+import './App.css';
+import RootLayout from './layout/RootLayout';
+import BbsView from './pages/BbsView';
+import DashboardView from './pages/DashboardView';
+import FileView from './pages/FileView';
+import SettingView from './pages/SettingView';
+import SystemView from './pages/SystemView';
+import AutomateView from './pages/assistant/AutomateView';
+import FavoriteJobView from './pages/assistant/FavoriteJobView';
+import HistoryJobView from './pages/assistant/HistoryJobView';
+import CompanyTagView from './pages/data/CompanyTagView';
+import CompanyView from './pages/data/CompanyView';
+import JobTagView from './pages/data/JobTagView';
+import JobView from './pages/data/JobView';
+import TagView from './pages/data/TagView';
+import PartnerView from './pages/dataSharePlan/PartnerView';
+import DataSharePlanStatisticView from './pages/dataSharePlan/StatisticView';
+import TaskView from './pages/dataSharePlan/TaskView';
+import DataSharePlanWelcomeView from './pages/dataSharePlan/WelcomeView';
+import AnalysisWelcomeView from './pages/analysis/WelcomeView';
+import AnalysisSettingView from './pages/analysis/SettingView';
+import useApiStore from './store/ApiStore';
+import useAuthStore from './store/AuthStore';
+import useDataSharePlanStore from './store/DataSharePlanStore';
+import useAnalysisStore from './store/AnalysisStore';
 const App: React.FC = () => {
-
   const [init, setInit] = useState(false);
 
-  const [authStoreInit] = useAuthStore(useShallow(((state) => [
-    state.init,
-  ])));
-  const [dataSharePlanStoreInit] = useDataSharePlanStore(useShallow(((state) => [
-    state.init,
-  ])));
-  const [updateApiInfo] = useApiStore(useShallow(((state) => [
-    state.update,
-  ])));
+  const [authStoreInit] = useAuthStore(useShallow((state) => [state.init]));
+  const [dataSharePlanStoreInit] = useDataSharePlanStore(
+    useShallow((state) => [state.init])
+  );
+  const [analysisStoreInit] = useAnalysisStore(
+    useShallow((state) => [state.init])
+  );
+  const [updateApiInfo] = useApiStore(useShallow((state) => [state.update]));
 
   useEffect(() => {
     const initStore = async () => {
       await authStoreInit();
       await dataSharePlanStoreInit();
+      await analysisStoreInit();
       setInit(true);
-      document.getElementById("loading")?.remove()
-    }
+      document.getElementById('loading')?.remove();
+    };
     initStore();
-  }, [])
+  }, []);
 
   useEffect(() => {
     const initListener = async () => {
@@ -62,9 +64,9 @@ const App: React.FC = () => {
       });
     };
     initListener();
-  }, [])
-  return (
-    init ? <HashRouter>
+  }, []);
+  return init ? (
+    <HashRouter>
       <Routes>
         <Route element={<RootLayout />}>
           <Route index element={<DashboardView />} />
@@ -77,8 +79,16 @@ const App: React.FC = () => {
           <Route path="tag" element={<TagView />} />
           <Route path="jobTag" element={<JobTagView />} />
           <Route path="companyTag" element={<CompanyTagView />} />
-          <Route path="dataSharePlanWelcome" element={<DataSharePlanWelcomeView />} />
-          <Route path="dataSharePlanStatistic" element={<DataSharePlanStatisticView />} />
+          <Route path="analysisWelcome" element={<AnalysisWelcomeView />} />
+          <Route path="analysisSetting" element={<AnalysisSettingView />} />
+          <Route
+            path="dataSharePlanWelcome"
+            element={<DataSharePlanWelcomeView />}
+          />
+          <Route
+            path="dataSharePlanStatistic"
+            element={<DataSharePlanStatisticView />}
+          />
           <Route path="task" element={<TaskView />} />
           <Route path="partner" element={<PartnerView />} />
           <Route path="file" element={<FileView />} />
@@ -87,8 +97,8 @@ const App: React.FC = () => {
           <Route path="*" element={<DashboardView />} />
         </Route>
       </Routes>
-    </HashRouter> : null
-  );
+    </HashRouter>
+  ) : null;
 };
 
 export default App;
