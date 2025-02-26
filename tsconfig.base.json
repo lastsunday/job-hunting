@@ -34,13 +34,13 @@
     "verbatimModuleSyntax": false,
     "paths": {
       "@packages/*": [
-        "packages/*"
+        "/packages/*"
       ],
       "@apps/*": [
-        "apps/*"
+        "/apps/*"
       ],
       "@libs/*": [
-        "libs/*"
+        "/libs/*"
       ]
     }
   }
