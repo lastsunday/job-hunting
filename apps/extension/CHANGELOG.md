@@ -1,3 +1,17 @@
+## 3.5.0 (2025-02-27)
+
+### 🚀 Features
+
+- 新增职位分析功能（支持大模型本地部署软件**OLLAMA**，大模型接入厂商**Siliconflow(硅基流动)**）
+
+### 🩹 Fixes
+
+- 修复jobsdb招聘网站插件不显示的问题
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.4.4 (2025-02-27)
 
 ### 🩹 Fixes
