@@ -57,7 +57,7 @@ const { convertToTagData } = useTag();
 export function renderTimeTag(
   divElement,
   jobDTO,
-  { jobStatusDesc, platform } = {}
+  { jobStatusDesc, platform, analysisConfig } = {}
 ) {
   if (jobDTO == null || jobDTO == undefined) {
     throw new Error("jobDTO is required");
@@ -139,44 +139,29 @@ export function renderTimeTag(
       jobStatusDesc
     );
   }
-  // TODO setting:source,url,model,resume,auto,token
-  const source = 'OLLAMA';
-  const url = "http://localhost:11434";
-  const model = "deepseek-r1:7b";
-  const token = "";
-  const auto = false;
-  const demand = `${jobDTO.jobName}\n${jobDTO.jobDescription}`;
-  const resume = `
-## 个人信息
-- 学历：本科
-- 工作经验：5年
-
-## 专业技能
-1.（掌握）编程语言：Java、Javascript、Typescript、HTML、CSS、Dart
-2.（掌握）后端开发技术：Spring Boot，Spring Cloud、Spring Cloud Alibaba、Hibernate、MyBatisPlus
-3.（掌握）中间件技术：Nginx、MySQL、PostgreSQL、Sqlite、Redis、ElasticSearch、RabbitMQ、Flink、Minio、Fastdfs、Nacos
-4.（掌握）Web前端技术：VueJs、Angular、ReactJS、GWT、JQuery、Chrome Extension
-5.（了解）GIS技术：Leaflet、Maplibre、Cesium、Mars3d、SuperMap
-6.（掌握）移动端和跨平台技术：Android、IOS、微信小程序、Cordova、Flutter、UniApp、ElectronJS
-7.（掌握）源代码与项目管理：CVS、SVN、Git、Gitlab、Gitea、Gitlab FLow、Maven、Gradle
-8.（掌握）DevOps开发运维：能独立搭建私有的Docker, Jenkins, Gitlab, Nexus, Harbor、SonarQube
-9.（了解）云平台K8S：蓝鲸K8s、K3s、Autok3s、云服务器 ECS
-10.（掌握）基础运维技术: Linux服务器基本命令，配置管理、性能调优
-
-## 工作经验
-**职位猎人有限公司**  2019.11-2024.11  
-**职位**：高级Java工程师
-  `;
-  const element = document.createElement('job-analysis-element');
-  element.classList.add("__job_analysis");
-  element.url = url;
-  element.model = model;
-  element.token = token;
-  element.demand = demand;
-  element.resume = resume;
-  element.source = source;
-  element.auto = auto;
-  divElement.appendChild(element);
+  if (analysisConfig && analysisConfig.enable) {
+    const source = analysisConfig.source;
+    const url = analysisConfig.url;
+    const model = analysisConfig.model;
+    const token = analysisConfig.token;
+    const auto = analysisConfig.autoAnalysisToSeachPage;
+    const demand = `${jobDTO.jobName}\n${jobDTO.jobDescription}`;
+    const resume = analysisConfig.resume;
+    const element = document.createElement('job-analysis-element');
+    element.classList.add("__job_analysis");
+    element.url = url;
+    element.model = model;
+    element.token = token;
+    element.demand = demand;
+    element.resume = resume;
+    element.source = source;
+    element.auto = auto;
+    element.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+    })
+    divElement.appendChild(element);
+  }
 }
 
 export function finalRender(jobDTOList, { platform }) {
@@ -698,16 +683,7 @@ export async function renderFunctionPanel(
   });
   list.forEach((item, index) => {
     const dom = getListItem(index);
-    let targetDom;
-    if (platform) {
-      if (PLATFORM_JOBSDB == platform) {
-        targetDom = dom.parentNode.parentNode;
-      } else {
-        targetDom = dom;
-      }
-    } else {
-      targetDom = dom;
-    }
+    const targetDom = dom;
     const functionPanelDiv = document.createElement("div");
     functionPanelDiv.classList.add(`__${platform}_function_panel`);
     //delete before insert element
@@ -928,8 +904,8 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
   mainChannelDiv.appendChild(quickSearchButton);
   dom.appendChild(mainChannelDiv);
   dom.appendChild(otherChannelDiv);
-  if (getCompanyInfoFunction) {
-    //for boss,liepin
+  if (getCompanyInfoFunction || platform == PLATFORM_JOBSDB) {
+    //for boss,liepin,jobsdb
     //skip
   } else {
     //自动查询公司信息

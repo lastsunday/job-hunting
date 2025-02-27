@@ -5,6 +5,7 @@ import { getJob51Data } from "../content/plantforms/job51/index.js";
 import { getJobsdbData } from "../content/plantforms/jobsdb/index.js";
 import { getLiepinData } from "../content/plantforms/liepin/index.js";
 import { getZhiLianData } from "../content/plantforms/zhilian/index.js";
+import { getLaGouData } from "../content/plantforms/lagou/index.js";
 import { handle as aiqichaHandle } from "../content/company/plantforms/aiqicha/index.js";
 import { getJobOnlineData } from "../content/plantforms/jobonline/index.js";
 import { getGgfwHrssGdData } from "../content/plantforms/ggfw_hrss_gd/index.js";
@@ -58,8 +59,19 @@ export default defineContentScript({
                         getJob51Data(data?.response, true);
                     }
 
+                    // 拉勾网接口
+                    if (responseURL.indexOf("/jobs/v2/positionAjax.json") !== -1) {
+                        /**
+                         * Question: 接口响应是加密的，为什么这里拿到的是解密后的？
+                         * 拉勾的加密是自己重写了 XMLHttpRequest，在 send 前进行加密，接受到响应后解密，再派发事件出去
+                         * 由于拉勾的重写在 proxyAjax 之前运行，所以这里拿到的是解密后的数据
+                         */
+                        // TODO 这里拿到的还是加密的数据，需要研究
+                        getLaGouData(data?.response);
+                    }
+
                     // jobsdb
-                    if (responseURL.indexOf("/api/chalice-search/v4/search") !== -1) {
+                    if (responseURL.indexOf("/api/jobsearch/v5/search") !== -1) {
                         getJobsdbData(data?.response);
                     }
 
@@ -80,7 +92,7 @@ export default defineContentScript({
 
                     // aiqicha
                     if (responseURL.indexOf("/s/advanceFilterAjax") !== -1) {
-                        let list = JSON.parse(data?.response)?.data?.resultList;
+                        const list = JSON.parse(data?.response)?.data?.resultList;
                         aiqichaHandle(list, false);
                     }
                 }

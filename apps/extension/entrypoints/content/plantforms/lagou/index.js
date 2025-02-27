@@ -9,7 +9,7 @@ import {
 } from "../../commonRender";
 import { debounce } from "../../../../common/utils";
 import { PLATFORM_LAGOU } from "../../../../common";
-import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { saveBrowseJob, getJobIds, getAnalysisConfig } from "../../commonDataHandler";
 import { JobApi } from "../../../../common/api";
 
 export function getListValue(data = {}) {
@@ -67,19 +67,20 @@ async function parseLaGouData(list, getListItem) {
   list.forEach((item, index) => {
     const dom = getListItem(index);
     const { companyShortName } = item;
-    let loadingLastModifyTimeTag = createLoadingDOM(
+    const loadingLastModifyTimeTag = createLoadingDOM(
       companyShortName,
       "__zhipin_time_tag"
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
   await saveBrowseJob(list, PLATFORM_LAGOU);
-  let jobDTOList = await JobApi.getJobBrowseInfoByIds(
+  const jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(list, PLATFORM_LAGOU)
   );
+  const analysisConfig = await getAnalysisConfig();
   list.forEach((item, index) => {
     const dom = getListItem(index);
-    let tag = createDOM(jobDTOList[index]);
+    const tag = createDOM(jobDTOList[index], { analysisConfig });
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
@@ -88,9 +89,9 @@ async function parseLaGouData(list, getListItem) {
   finalRender(jobDTOList, { platform: PLATFORM_LAGOU });
 }
 
-export function createDOM(jobDTO) {
+export function createDOM(jobDTO, { analysisConfig }) {
   const div = document.createElement("div");
   div.classList.add("__zhipin_time_tag");
-  renderTimeTag(div, jobDTO);
+  renderTimeTag(div, jobDTO, { analysisConfig });
   return div;
 }

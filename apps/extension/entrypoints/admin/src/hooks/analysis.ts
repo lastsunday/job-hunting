@@ -8,10 +8,6 @@ export enum Page {
      * 搜索页
      */
     CONTENT_SEARCH = 'CONTENT_SEARCH',
-    /**
-     * 推荐页
-     */
-    CONTENT_RECOMMEND = 'CONTENT_RECOMMEND',
 }
 
 export function useAnalysis() {
@@ -31,12 +27,10 @@ export function useAnalysis() {
         switch (page) {
             case Page.CONTENT_SEARCH:
                 return `搜索页`;
-            case Page.CONTENT_RECOMMEND:
-                return `推荐页`;
             default:
                 throw `unknow source ${page}`;
         }
     }
 
-    return { getLabelBySource ,getLableByPage};
+    return { getLabelBySource, getLableByPage };
 }

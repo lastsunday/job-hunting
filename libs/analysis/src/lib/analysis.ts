@@ -16,6 +16,7 @@ export class JobAnalysisElement extends LitElement {
           cursor: pointer;
           font-weight: bolder;
           margin-left: 4px;
+          color: white;
       }
       .retry {
         background-color:black;

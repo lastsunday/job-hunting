@@ -1,5 +1,6 @@
 import MarkdownEditor from '@uiw/react-markdown-editor';
 import {
+  Alert,
   Button,
   Col,
   Divider,
@@ -19,6 +20,7 @@ import SubmitButton from '../../components/SubmitButton';
 import { Source, useAnalysis } from '../../hooks/analysis';
 import useAnalysisStore from '../../store/AnalysisStore';
 import { errorLog } from '@/common/log';
+import Markdown from 'marked-react';
 
 const SettingView: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
@@ -70,6 +72,30 @@ const SettingView: React.FC = () => {
       url: { rules: { required: false }, default: 'http://localhost:11434' },
       model: { rules: { required: false }, default: 'deepseek-r1:7b' },
       token: { rules: { required: false }, default: '' },
+      info: (
+        <Alert
+          message={getLabelBySource(source ?? Source.OLLAMA)}
+          description=<Markdown>
+            {`（推荐）可本地部署的大模型工具。
+              
+安装详情请访问 [ollama官网](https://ollama.com/)
+
+服务器启动步骤（以Window为例）
+
+  1. 执行跨域配置
+      \`\`\`shell
+      set OLLAMA_ORIGINS=*
+      \`\`\`
+  2. 启动ollama服务器
+      \`\`\`shell
+      ollama serve
+      \`\`\`
+`}
+          </Markdown>
+          type="info"
+          showIcon
+        />
+      ),
     },
     SILICONFLOW: {
       url: {
@@ -81,6 +107,18 @@ const SettingView: React.FC = () => {
         default: 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B',
       },
       token: { rules: { required: true }, default: '' },
+      info: (
+        <Alert
+          message={getLabelBySource(source ?? Source.OLLAMA)}
+          description=<Markdown>
+            {`（注意敏感信息的泄漏）第三方大模型接口。
+              
+模型名称，令牌的获取请访问 [硅基流动用户手册](https://docs.siliconflow.cn/cn/userguide/quickstart)`}
+          </Markdown>
+          type="warning"
+          showIcon
+        />
+      ),
     },
   };
 
@@ -121,6 +159,7 @@ const SettingView: React.FC = () => {
             ))}
           </Radio.Group>
         </Form.Item>
+        {sourceData[source ?? Source.OLLAMA]['info']}
         <Form.Item<FieldType>
           label="访问地址"
           name="url"
