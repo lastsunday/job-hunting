@@ -56,6 +56,7 @@
    6. 保存职位数据，公司数据到本地数据库
    7. 职位评论，公司评论
    8. 公司自定义标签，职位自定义标签（可添加，修改），内置外包公司标签数据
+   9. 职位分析
 
 2. 爱企查公司卡片
 
@@ -100,7 +101,7 @@
 
 | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="Edge" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br/> Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br/>Chrome |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| Edge                                                         | last version                                                 |
+| last version                                                 | last version                                                 |
 
 ## 运行截图
 
@@ -136,6 +137,16 @@
 
 <div style="margin-top:30px">
     <img src="docs\introduction\sidepanel_admin_home.png" alt="sidepanel_admin_home" width="1000px"/>
+</div>
+
+### 职位分析
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\sidepanel_admin_analysis_welcome.png" alt="sidepanel_admin_analysis_welcome" width="1000px"/>
+</div>
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\sidepanel_admin_analysis_setting.png" alt="sidepanel_admin_analysis_setting" width="1000px"/>
 </div>
 
 ### 数据共享计划
