@@ -1,22 +1,15 @@
-import {
-  renderTimeTag,
-  setupSortJobItem,
-  renderSortJobItem,
-  createLoadingDOM,
-  hiddenLoadingDOM,
-  finalRender,
-  renderFunctionPanel,
-  setErrorLoadingDOM,
-} from "../../commonRender";
 import { PLATFORM_ZHILIAN } from "../../../../common";
-import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
 import { JobApi } from "../../../../common/api";
-import { httpFetchGetText } from "../../../../common/api/common";
+import { getJobIds, saveBrowseJob } from "../../commonDataHandler";
 import {
-  addAbortFunctionHandler,
-  deleteAbortFunctionHandler,
-} from "../../commonDataHandler";
-import { randomDelay } from "../../../../common/utils";
+  createLoadingDOM,
+  finalRender,
+  hiddenLoadingDOM,
+  renderFunctionPanel,
+  renderSortJobItem,
+  renderTimeTag,
+  setupSortJobItem
+} from "../../commonRender";
 const DELAY_FETCH_TIME = 75; //ms
 const DELAY_FETCH_TIME_RANDOM_OFFSET = 50; //ms
 
@@ -74,62 +67,84 @@ export async function parseZhilianData(list, getListItem) {
       "https:"
     ));
   });
-  const promiseList = apiUrlList.map(async (url, index) => {
-    await randomDelay(DELAY_FETCH_TIME * index, DELAY_FETCH_TIME_RANDOM_OFFSET); // 避免频繁请求触发风控
-    let abortFunctionHandler = null;
-    const result = await httpFetchGetText(url, (abortFunction) => {
-      abortFunctionHandler = abortFunction;
-      //加入请求手动中断列表
-      addAbortFunctionHandler(abortFunctionHandler);
-    });
-    //请求正常结束，从手动中断列表中移除
-    deleteAbortFunctionHandler(abortFunctionHandler);
-    return result;
+  await saveBrowseJob(list, PLATFORM_ZHILIAN);
+  let jobDTOList = await JobApi.getJobBrowseInfoByIds(
+    getJobIds(list, PLATFORM_ZHILIAN)
+  );
+  list.forEach((item, index) => {
+    const dom = getListItem(index);
+    let tag = createDOM(jobDTOList[index]);
+    dom.appendChild(tag);
   });
-  Promise.allSettled(promiseList)
-    .then(async (jsonList) => {
-      jsonList.forEach((item, index) => {
-        let htmlText = item.value;
-        let parser = new DOMParser();
-        let doc = parser.parseFromString(htmlText, "text/html");
-        let targetScript = null;
-        for (let i = 0; i < doc.scripts.length; i++) {
-          let script = doc.scripts[i];
-          if (script.outerText.includes("__INITIAL_STATE__=")) {
-            targetScript = script;
-            break;
-          }
-        }
-        let data = JSON.parse(targetScript.outerText.replace("__INITIAL_STATE__=", ""))
-        const { latitude, longitude } = data.jobInfo.jobDetail.detailedPosition;
-        list[index].latitude = latitude;
-        list[index].longitude = longitude;
-      });
-      await saveBrowseJob(list, PLATFORM_ZHILIAN);
-      let jobDTOList = await JobApi.getJobBrowseInfoByIds(
-        getJobIds(list, PLATFORM_ZHILIAN)
-      );
-      list.forEach((item, index) => {
-        const dom = getListItem(index);
-        let tag = createDOM(jobDTOList[index]);
-        dom.appendChild(tag);
-      });
-      hiddenLoadingDOM();
-      renderSortJobItem(
-        jobDTOList,
-        getListItem,
-        { platform: PLATFORM_ZHILIAN }
-      );
-      await renderFunctionPanel(
-        jobDTOList,
-        getListItem,
-        { platform: PLATFORM_ZHILIAN }
-      );
-      finalRender(jobDTOList, { platform: PLATFORM_ZHILIAN });
-    }).catch((error) => {
-      console.log(error);
-      setErrorLoadingDOM("加载职位信息失败，疑似详情页需要人机校验❕");
-    });
+  hiddenLoadingDOM();
+  renderSortJobItem(
+    jobDTOList,
+    getListItem,
+    { platform: PLATFORM_ZHILIAN }
+  );
+  await renderFunctionPanel(
+    jobDTOList,
+    getListItem,
+    { platform: PLATFORM_ZHILIAN }
+  );
+  finalRender(jobDTOList, { platform: PLATFORM_ZHILIAN });
+  // 由于频繁访问详情页会必然触发风控，在未找到其他方法前，暂不获取经纬度信息
+  // const promiseList = apiUrlList.map(async (url, index) => {
+  //   await randomDelay(DELAY_FETCH_TIME * index, DELAY_FETCH_TIME_RANDOM_OFFSET); // 避免频繁请求触发风控
+  //   let abortFunctionHandler = null;
+  //   const result = await httpFetchGetText(url, (abortFunction) => {
+  //     abortFunctionHandler = abortFunction;
+  //     //加入请求手动中断列表
+  //     addAbortFunctionHandler(abortFunctionHandler);
+  //   });
+  //   //请求正常结束，从手动中断列表中移除
+  //   deleteAbortFunctionHandler(abortFunctionHandler);
+  //   return result;
+  // });
+  // Promise.allSettled(promiseList)
+  //   .then(async (jsonList) => {
+  //     jsonList.forEach((item, index) => {
+  //       let htmlText = item.value;
+  //       let parser = new DOMParser();
+  //       let doc = parser.parseFromString(htmlText, "text/html");
+  //       let targetScript = null;
+  //       for (let i = 0; i < doc.scripts.length; i++) {
+  //         let script = doc.scripts[i];
+  //         if (script.outerText.includes("__INITIAL_STATE__=")) {
+  //           targetScript = script;
+  //           break;
+  //         }
+  //       }
+  //       let data = JSON.parse(targetScript.outerText.replace("__INITIAL_STATE__=", ""))
+  //       const { latitude, longitude } = data.jobInfo.jobDetail.detailedPosition;
+  //       list[index].latitude = latitude;
+  //       list[index].longitude = longitude;
+  //     });
+  //     await saveBrowseJob(list, PLATFORM_ZHILIAN);
+  //     let jobDTOList = await JobApi.getJobBrowseInfoByIds(
+  //       getJobIds(list, PLATFORM_ZHILIAN)
+  //     );
+  //     list.forEach((item, index) => {
+  //       const dom = getListItem(index);
+  //       let tag = createDOM(jobDTOList[index]);
+  //       dom.appendChild(tag);
+  //     });
+  //     hiddenLoadingDOM();
+  //     renderSortJobItem(
+  //       jobDTOList,
+  //       getListItem,
+  //       { platform: PLATFORM_ZHILIAN }
+  //     );
+  //     await renderFunctionPanel(
+  //       jobDTOList,
+  //       getListItem,
+  //       { platform: PLATFORM_ZHILIAN }
+  //     );
+  //     finalRender(jobDTOList, { platform: PLATFORM_ZHILIAN });
+  //   }).catch((error) => {
+  //     console.log(error);
+  //     setErrorLoadingDOM("加载职位信息失败，疑似详情页需要人机校验❕");
+  //   });
 }
 
 export function createDOM(jobDTO) {
