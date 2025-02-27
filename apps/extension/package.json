@@ -99,7 +99,7 @@
     "typescript-eslint": "^8.25.0",
     "unocss": "^65.5.0",
     "unplugin-icons": "^22.1.0",
-    "vite": "^6.2.0",
+    "vite": "^6.0.9",
     "vite-plugin-wasm": "^3.4.1",
     "vite-plugin-web-extension": "^4.4.3",
     "web-ext": "^8.4.0",
