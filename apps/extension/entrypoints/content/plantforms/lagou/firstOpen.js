@@ -9,7 +9,7 @@ import {
 import { createDOM } from "./index";
 import { mutationContainer, getListValue } from "./index";
 import { PLATFORM_LAGOU } from "../../../../common";
-import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { saveBrowseJob, getJobIds, getAnalysisConfig } from "../../commonDataHandler";
 import { JobApi } from "../../../../common/api";
 
 // 首次打开页面时是服务端渲染，没法监听接口，但是 html 中保存了列表数据
@@ -24,21 +24,22 @@ export default function firstOpen(data) {
     list.forEach((item, index) => {
       const dom = children?.[index];
       const { companyShortName } = item;
-      let loadingLastModifyTimeTag = createLoadingDOM(
+      const loadingLastModifyTimeTag = createLoadingDOM(
         companyShortName,
         "__zhipin_time_tag"
       );
       dom.appendChild(loadingLastModifyTimeTag);
     });
     await saveBrowseJob(list, PLATFORM_LAGOU);
-    let jobDTOList = await JobApi.getJobBrowseInfoByIds(
+    const jobDTOList = await JobApi.getJobBrowseInfoByIds(
       getJobIds(list, PLATFORM_LAGOU)
     );
+    const analysisConfig = await getAnalysisConfig();
     list.forEach((item, index) => {
       const dom = children?.[index];
       if (!dom) return;
 
-      let tag = createDOM(jobDTOList[index]);
+      const tag = createDOM(jobDTOList[index], { analysisConfig });
       dom.appendChild(tag);
     });
     hiddenLoadingDOM();

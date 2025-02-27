@@ -1,6 +1,6 @@
 import { PLATFORM_ZHILIAN } from "../../../../common";
 import { JobApi } from "../../../../common/api";
-import { getJobIds, saveBrowseJob } from "../../commonDataHandler";
+import { getJobIds, saveBrowseJob, getAnalysisConfig } from "../../commonDataHandler";
 import {
   createLoadingDOM,
   finalRender,
@@ -10,8 +10,8 @@ import {
   renderTimeTag,
   setupSortJobItem
 } from "../../commonRender";
-const DELAY_FETCH_TIME = 75; //ms
-const DELAY_FETCH_TIME_RANDOM_OFFSET = 50; //ms
+// const DELAY_FETCH_TIME = 75; //ms
+// const DELAY_FETCH_TIME_RANDOM_OFFSET = 50; //ms
 
 export function getZhiLianData(responseText) {
   try {
@@ -53,11 +53,11 @@ function mutationContainer() {
 
 // 解析数据，插入时间标签
 export async function parseZhilianData(list, getListItem) {
-  let apiUrlList = [];
+  const apiUrlList = [];
   list.forEach((item, index) => {
     const dom = getListItem(index);
     const { companyName, positionUrl } = item;
-    let loadingLastModifyTimeTag = createLoadingDOM(
+    const loadingLastModifyTimeTag = createLoadingDOM(
       companyName,
       "__zhilian_time_tag"
     );
@@ -68,12 +68,13 @@ export async function parseZhilianData(list, getListItem) {
     ));
   });
   await saveBrowseJob(list, PLATFORM_ZHILIAN);
-  let jobDTOList = await JobApi.getJobBrowseInfoByIds(
+  const jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(list, PLATFORM_ZHILIAN)
   );
+  const analysisConfig = await getAnalysisConfig();
   list.forEach((item, index) => {
     const dom = getListItem(index);
-    let tag = createDOM(jobDTOList[index]);
+    const tag = createDOM(jobDTOList[index], { analysisConfig });
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
@@ -147,9 +148,9 @@ export async function parseZhilianData(list, getListItem) {
   //   });
 }
 
-export function createDOM(jobDTO) {
+export function createDOM(jobDTO, { analysisConfig } = {}) {
   const div = document.createElement("div");
   div.classList.add("__zhilian_time_tag");
-  renderTimeTag(div, jobDTO);
+  renderTimeTag(div, jobDTO, { analysisConfig });
   return div;
 }

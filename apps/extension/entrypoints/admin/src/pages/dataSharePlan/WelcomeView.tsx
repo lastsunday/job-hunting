@@ -1,7 +1,7 @@
 import { Icon } from "@iconify/react";
 import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadFull } from "tsparticles";
-import { Option } from "./data/tsparticlesOption";
+import { Option } from "../../components/data/tsparticlesOption";
 import styles from "./WelcomeView.module.css";
 import useDataSharePlanStore from "../../store/DataSharePlanStore";
 import { useShallow } from "zustand/shallow";

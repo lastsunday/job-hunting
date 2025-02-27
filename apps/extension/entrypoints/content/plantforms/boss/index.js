@@ -16,7 +16,7 @@ import {
   JOB_STATUS_DESC_UNKNOW,
 } from "../../common";
 import { PLATFORM_BOSS } from "../../../../common";
-import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { saveBrowseJob, getJobIds, getAnalysisConfig } from "../../commonDataHandler";
 import { JobApi } from "../../../../common/api";
 
 const DELAY_FETCH_TIME = 75; //ms
@@ -95,17 +95,17 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
     const { brandName, securityId } = item;
     const dom = getListItem(index);
     //cardApiUrl
-    let pureJobItemCardApiUrl =
+    const pureJobItemCardApiUrl =
       "https://www.zhipin.com/wapi/zpgeek/job/card.json?securityId=" +
       securityId;
     cardApiUrlList.push(pureJobItemCardApiUrl);
     //jobUrl
     const jobItemDetailUrl = getJobItemDetailUrlFunction(dom);
     const url = new URL(jobItemDetailUrl);
-    let pureJobItemDetailUrl = url.origin + url.pathname;
+    const pureJobItemDetailUrl = url.origin + url.pathname;
     urlList.push(pureJobItemDetailUrl);
 
-    let loadingLastModifyTimeTag = createLoadingDOM(
+    const loadingLastModifyTimeTag = createLoadingDOM(
       brandName,
       "__boss_time_tag"
     );
@@ -145,14 +145,14 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
         jobDTOList[
           index
         ].jobCompanyApiUrl = `https://www.zhipin.com/gongsi/${item.encryptBrandId}.html`;
-        let hrActiveTimeDesc = item.activeTimeDesc;
+        const hrActiveTimeDesc = item.activeTimeDesc;
         //额外针对BOSS平台，为后面的排序做准备
         jobDTOList[index].hrActiveTimeDesc = hrActiveTimeDesc;
       });
-
+      const analysisConfig = await getAnalysisConfig();
       list.forEach((item, index) => {
         const dom = getListItem(index);
-        let tag = createDOM(jobDTOList[index], jobStatusDescList[index]);
+        const tag = createDOM(jobDTOList[index], jobStatusDescList[index], { analysisConfig });
         dom.appendChild(tag);
       });
       hiddenLoadingDOM();
@@ -179,12 +179,13 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
     });
 }
 
-function createDOM(jobDTO, jobStatusDesc) {
+function createDOM(jobDTO, jobStatusDesc, { analysisConfig }) {
   const div = document.createElement("div");
   div.classList.add("__boss_time_tag");
   renderTimeTag(div, jobDTO, {
     jobStatusDesc: jobStatusDesc,
     platform: PLATFORM_BOSS,
+    analysisConfig
   });
   return div;
 }

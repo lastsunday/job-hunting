@@ -9,7 +9,7 @@ import {
 } from "../../commonRender";
 import { randomDelay } from "../../../../common/utils";
 import { PLATFORM_JOBSDB } from "../../../../common";
-import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { saveBrowseJob, getJobIds, getAnalysisConfig } from "../../commonDataHandler";
 import { JobApi } from "../../../../common/api";
 
 const DELAY_FETCH_TIME = 75; //ms
@@ -32,7 +32,7 @@ export function getJobsdbData(responseText) {
 function getListByNode(node) {
   const children = node?.children;
   return function getListItem(index) {
-    let targetNode = children?.[index].childNodes[0].childNodes[0];
+    const targetNode = children?.[index];
     return targetNode;
   };
 }
@@ -46,7 +46,7 @@ function mutationContainer() {
       try {
         targetNode = document.querySelector(
           "section[data-automation='related-searches-splitview']"
-        ).parentNode.childNodes[1].childNodes[0].childNodes[2];
+        ).parentNode.childNodes[1].childNodes[1].childNodes[1];
       } catch (e) {
         //skip
       }
@@ -71,13 +71,14 @@ function parseData(list, getListItem) {
     const { id } = item;
     const { description: companyName } = item.advertiser;
     const dom = getListItem(index);
+    dom.style.flexDirection = "column";
     //apiUrl
-    let pureJobItemDetailHtmlUrl = "https://hk.jobsdb.com/job/" + id;
+    const pureJobItemDetailHtmlUrl = "https://hk.jobsdb.com/job/" + id;
     detailHtmlUrlList.push(pureJobItemDetailHtmlUrl);
     //jobUrl
     urlList.push("https://hk.jobsdb.com/job/" + id);
 
-    let loadingLastModifyTimeTag = createLoadingDOM(
+    const loadingLastModifyTimeTag = createLoadingDOM(
       companyName,
       "__jobsdb_time_tag"
     );
@@ -93,15 +94,15 @@ function parseData(list, getListItem) {
     .then(async (htmlList) => {
       let jobDTOList = [];
       htmlList.forEach((item, index) => {
-        let htmlString = item.value;
-        let matchContent = htmlString.match("window.SEEK_REDUX_DATA = .*");
+        const htmlString = item.value;
+        const matchContent = htmlString.match("window.SEEK_REDUX_DATA = .*");
         if (matchContent && matchContent.length > 0) {
-          let configJsonString = matchContent[0]
+          const configJsonString = matchContent[0]
             .replaceAll("window.SEEK_REDUX_DATA = ", "")
             .replace(/.$/, "")
             .replaceAll("undefined", '""');
-          let json = JSON.parse(configJsonString);
-          let content = json.jobdetails.result.job.content;
+          const json = JSON.parse(configJsonString);
+          const content = json.jobdetails.result.job.content;
           list[index].jobDetail = content;
         }
         list[index].jobUrl = urlList[index];
@@ -110,9 +111,10 @@ function parseData(list, getListItem) {
       jobDTOList = await JobApi.getJobBrowseInfoByIds(
         getJobIds(list, PLATFORM_JOBSDB)
       );
+      const analysisConfig = await getAnalysisConfig();
       jobDTOList.forEach((item, index) => {
         const dom = getListItem(index);
-        let tag = createDOM(jobDTOList[index]);
+        const tag = createDOM(jobDTOList[index], { analysisConfig });
         dom.appendChild(tag);
       });
       hiddenLoadingDOM();
@@ -132,9 +134,9 @@ function parseData(list, getListItem) {
     });
 }
 
-function createDOM(jobDTO) {
+function createDOM(jobDTO, { analysisConfig }) {
   const div = document.createElement("div");
   div.classList.add("__jobsdb_time_tag");
-  renderTimeTag(div, jobDTO);
+  renderTimeTag(div, jobDTO, { analysisConfig });
   return div;
 }

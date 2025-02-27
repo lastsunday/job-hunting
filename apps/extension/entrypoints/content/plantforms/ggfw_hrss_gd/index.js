@@ -1,5 +1,5 @@
 import { PLATFORM_GGFW_HRSS_GD } from "../../../../common";
-import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { saveBrowseJob, getJobIds, getAnalysisConfig } from "../../commonDataHandler";
 import { JobApi } from "../../../../common/api";
 import {
     renderTimeTag,
@@ -66,7 +66,7 @@ async function handleData(list, getListItem) {
 
         detailApiUrlList.push(`https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/internet/r/c/webpage/homepage/position/detail/${id}`);
 
-        let loadingLastModifyTimeTag = createLoadingDOM(
+        const loadingLastModifyTimeTag = createLoadingDOM(
             companyName,
             "__job_ggfw_hrss_gd_time_tag"
         );
@@ -84,12 +84,13 @@ async function handleData(list, getListItem) {
         .then(async (response) => {
             const jsonList = response.map(item => item.value);
             await saveBrowseJob(jsonList, PLATFORM_GGFW_HRSS_GD);
-            let jobDTOList = await JobApi.getJobBrowseInfoByIds(
+            const jobDTOList = await JobApi.getJobBrowseInfoByIds(
                 getJobIds(jsonList, PLATFORM_GGFW_HRSS_GD)
             );
+            const analysisConfig = await getAnalysisConfig();
             list.forEach((item, index) => {
                 const dom = getListItem(index);
-                let tag = createDOM(jobDTOList[index]);
+                const tag = createDOM(jobDTOList[index], { analysisConfig });
                 //delete before insert element
                 dom.querySelectorAll(`.__job_ggfw_hrss_gd_time_tag`).forEach(item => item.parentElement.removeChild(item));
                 dom.appendChild(tag);
@@ -104,9 +105,9 @@ async function handleData(list, getListItem) {
         });
 }
 
-export function createDOM(jobDTO) {
+export function createDOM(jobDTO, { analysisConfig }) {
     const div = document.createElement("div");
     div.classList.add("__job_ggfw_hrss_gd_time_tag");
-    renderTimeTag(div, jobDTO);
+    renderTimeTag(div, jobDTO, { analysisConfig });
     return div;
 }

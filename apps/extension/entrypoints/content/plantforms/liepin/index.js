@@ -1,5 +1,5 @@
 import { PLATFORM_LIEPIN } from "../../../../common";
-import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { saveBrowseJob, getJobIds, getAnalysisConfig } from "../../commonDataHandler";
 import { JobApi } from "../../../../common/api";
 import {
   renderTimeTag,
@@ -38,10 +38,10 @@ function mutationContainer() {
     let targetDeom = null;
     const observer = new MutationObserver(function (childList, obs) {
       const isAdd = (childList || []).some((item) => {
-        let nodes = item?.addedNodes;
+        const nodes = item?.addedNodes;
         if (nodes) {
           for (let i = 0; i < nodes.length; i++) {
-            let nodeItem = nodes[i];
+            const nodeItem = nodes[i];
             if (nodeItem.className == "job-list-box") {
               targetDeom = nodeItem;
               return nodeItem;
@@ -73,28 +73,29 @@ async function parseData(list, getListItem) {
 
     dom.classList.add("__LIEPIN_job_item");
     //某些职位不知什么原因不显示，现在把其显示出来
-    let jobCard = dom.querySelector(".job-card-pc-container");
+    const jobCard = dom.querySelector(".job-card-pc-container");
     if (jobCard.style.display == "none") {
       jobCard.style.display = "flex";
     }
     const { compName } = item.comp;
-    let loadingLastModifyTimeTag = createLoadingDOM(
+    const loadingLastModifyTimeTag = createLoadingDOM(
       compName,
       "__liepin_time_tag"
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
   await saveBrowseJob(list, PLATFORM_LIEPIN);
-  let jobDTOList = await JobApi.getJobBrowseInfoByIds(
+  const jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(list, PLATFORM_LIEPIN)
   );
+  const analysisConfig = await getAnalysisConfig();
   list.forEach((item, index) => {
     const { compId } = item.comp;
     jobDTOList[
       index
     ].jobCompanyApiUrl = `https://www.liepin.com/company/${compId}`;
     const dom = getListItem(index);
-    let tag = createDOM(jobDTOList[index]);
+    const tag = createDOM(jobDTOList[index], { analysisConfig });
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
@@ -106,7 +107,7 @@ async function parseData(list, getListItem) {
       const jobResponse = await fetch(item.jobUrl);
       const jobResult = await jobResponse.text();
       let jobDesc = null;
-      let jobDescFilterTextList = jobResult.match(
+      const jobDescFilterTextList = jobResult.match(
         /<dd data-selector="job-intro-content">[\s\S]*?<\/dd>/g
       );
       if (jobDescFilterTextList && jobDescFilterTextList.length > 0) {
@@ -125,7 +126,7 @@ async function parseData(list, getListItem) {
       const response = await fetch(url);
       const result = await response.text();
       //eg: ["企业全称</span></p><pclass=\"text\">长沙裕邦软件开发有限公司</p>"]
-      let firstFilterTextList = result
+      const firstFilterTextList = result
         .replaceAll("\n", "")
         .replaceAll(" ", "")
         .match(/企业全称<\/span><\/p>.*?\/p>/g);
@@ -144,9 +145,9 @@ async function parseData(list, getListItem) {
   finalRender(jobDTOList, { platform: PLATFORM_LIEPIN });
 }
 
-export function createDOM(jobDTO) {
+export function createDOM(jobDTO, { analysisConfig }) {
   const div = document.createElement("div");
   div.classList.add("__liepin_time_tag");
-  renderTimeTag(div, jobDTO, { platform: PLATFORM_LIEPIN });
+  renderTimeTag(div, jobDTO, { platform: PLATFORM_LIEPIN, analysisConfig });
   return div;
 }

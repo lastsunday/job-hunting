@@ -1,5 +1,5 @@
 import { PLATFORM_51JOB } from "../../../../common";
-import { saveBrowseJob, getJobIds } from "../../commonDataHandler";
+import { saveBrowseJob, getJobIds, getAnalysisConfig } from "../../commonDataHandler";
 import { JobApi } from "../../../../common/api";
 import {
   renderTimeTag,
@@ -54,19 +54,20 @@ async function parseData(list, getListItem) {
   list.forEach((item, index) => {
     const dom = getListItem(index);
     const { companyName } = item;
-    let loadingLastModifyTimeTag = createLoadingDOM(
+    const loadingLastModifyTimeTag = createLoadingDOM(
       companyName,
       "__job51_time_tag"
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
   await saveBrowseJob(list, PLATFORM_51JOB);
-  let jobDTOList = await JobApi.getJobBrowseInfoByIds(
+  const jobDTOList = await JobApi.getJobBrowseInfoByIds(
     getJobIds(list, PLATFORM_51JOB)
   );
+  const analysisConfig = await getAnalysisConfig();
   list.forEach((item, index) => {
     const dom = getListItem(index);
-    let tag = createDOM(jobDTOList[index]);
+    const tag = createDOM(jobDTOList[index], { analysisConfig });
     dom.appendChild(tag);
   });
   hiddenLoadingDOM();
@@ -75,9 +76,9 @@ async function parseData(list, getListItem) {
   finalRender(jobDTOList, { platform: PLATFORM_51JOB });
 }
 
-export function createDOM(jobDTO) {
+export function createDOM(jobDTO, { analysisConfig }) {
   const div = document.createElement("div");
   div.classList.add("__job51_time_tag");
-  renderTimeTag(div, jobDTO);
+  renderTimeTag(div, jobDTO, { analysisConfig });
   return div;
 }

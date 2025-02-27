@@ -11,7 +11,7 @@ import {
   PLATFORM_JOBONLINE,
   PLATFORM_GGFW_HRSS_GD,
 } from "../../common";
-import { CompanyApi, JobApi } from "../../common/api";
+import { CompanyApi, JobApi, ConfigApi } from "../../common/api";
 import { httpFetchGetText } from "../../common/api/common";
 import { CompanyTagBO } from "../../common/data/bo/companyTagBO";
 import { Company } from "../../common/data/domain/company";
@@ -23,8 +23,10 @@ import {
   isNotEmpty
 } from "../../common/utils";
 import {
-  JOB_STATUS_DESC_NEWEST
+  JOB_STATUS_DESC_NEWEST,
 } from "./common";
+import { AnalysisConfigDTO } from "../../common/data/dto/analysisConfigDTO";
+import { CONFIG_KEY_ANALYSIS } from "../../common/config";
 
 const SALARY_MATCH = /(?<min>[0-9\.]*)(?<minUnit>\D*)(?<max>[0-9\.]*)(?<maxUnit>\D*)(?<month>\d*)/;
 const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
@@ -33,7 +35,7 @@ const AIQICHA_PAGE_DATA_MATCH = /window.pageData = (?<data>\{.*\})/;
 import { bd09ToWgs84, gcj02ToWgs84 } from '@pansy/lnglat-transform';
 
 //请求中断列表
-let abortFunctionHandlerMap = new Map();
+const abortFunctionHandlerMap = new Map();
 
 export function stopAndCleanAbortFunctionHandler() {
   if (abortFunctionHandlerMap && abortFunctionHandlerMap.size > 0) {
@@ -96,9 +98,9 @@ function genId(id, platform) {
 }
 
 export function getJobIds(list, platform) {
-  let result = [];
+  const result = [];
   for (let i = 0; i < list.length; i++) {
-    let item = list[i];
+    const item = list[i];
     let jobId;
     if (PLATFORM_51JOB == platform) {
       jobId = item.jobId;
@@ -125,25 +127,25 @@ export function getJobIds(list, platform) {
 }
 
 function handleGgfwHrssGd(list) {
-  let jobs = [];
+  const jobs = [];
   for (let i = 0; i < list.length; i++) {
-    let job = new Job();
-    let item = list[i];
+    const job = new Job();
+    const item = list[i];
     const {
-      bcb009:id,
-      bce055:jobName,
-      aab004:companyName,
-      acb204Name:cityName,
-      acc530:address,
-      aac011Name:eduDegree,
-      aae162Name:jobAge,
-      bdb286:publishTime,
-      acb241:lowSalaryOrigin,
-      acb242:highSalaryOrigin,
-      acb22a:description,
-      bcb034:longitude,
-      bcb035:latitude,
-      bcb182Name:welfare,
+      bcb009: id,
+      bce055: jobName,
+      aab004: companyName,
+      acb204Name: cityName,
+      acc530: address,
+      aac011Name: eduDegree,
+      aae162Name: jobAge,
+      bdb286: publishTime,
+      acb241: lowSalaryOrigin,
+      acb242: highSalaryOrigin,
+      acb22a: description,
+      bcb034: longitude,
+      bcb035: latitude,
+      bcb182Name: welfare,
     } = item;
     job.jobId = genId(id, PLATFORM_GGFW_HRSS_GD);
     job.jobPlatform = PLATFORM_GGFW_HRSS_GD;
@@ -155,7 +157,7 @@ function handleGgfwHrssGd(list) {
     job.jobLongitude = longitude;
     job.jobLatitude = latitude;
     if (job.jobLongitude && job.jobLatitude) {
-      let wgs84 = bd09ToWgs84(job.jobLongitude, job.jobLatitude);
+      const wgs84 = bd09ToWgs84(job.jobLongitude, job.jobLatitude);
       job.jobLongitude = wgs84[0];
       job.jobLatitude = wgs84[1];
     }
@@ -165,7 +167,7 @@ function handleGgfwHrssGd(list) {
       if (jobAge == '经验不限') {
         job.jobYear = 0;
       } else {
-        let groups = jobAge.match(/(?<min>[0-9\.]*)/)?.groups;
+        const groups = jobAge.match(/(?<min>[0-9\.]*)/)?.groups;
         job.jobYear = groups.min;
       }
     }
@@ -185,10 +187,10 @@ function handleGgfwHrssGd(list) {
 }
 
 function handleJobOnline(list) {
-  let jobs = [];
+  const jobs = [];
   for (let i = 0; i < list.length; i++) {
-    let job = new Job();
-    let item = list[i];
+    const job = new Job();
+    const item = list[i];
     const {
       id,
       positionName,
@@ -216,7 +218,7 @@ function handleJobOnline(list) {
     job.jobLongitude = locationArray[0];
     job.jobLatitude = locationArray[1];
     if (job.jobLongitude && job.jobLatitude) {
-      let wgs84 = bd09ToWgs84(job.jobLongitude, job.jobLatitude);
+      const wgs84 = bd09ToWgs84(job.jobLongitude, job.jobLatitude);
       job.jobLongitude = wgs84[0];
       job.jobLatitude = wgs84[1];
     }
@@ -226,7 +228,7 @@ function handleJobOnline(list) {
       if (jobAge == '经验不限') {
         job.jobYear = 0;
       } else {
-        let groups = jobAge.match(/(?<min>[0-9\.]*)/)?.groups;
+        const groups = jobAge.match(/(?<min>[0-9\.]*)/)?.groups;
         job.jobYear = groups.min;
       }
     }
@@ -246,10 +248,10 @@ function handleJobOnline(list) {
 }
 
 function handleLiepin(list) {
-  let jobs = [];
+  const jobs = [];
   for (let i = 0; i < list.length; i++) {
-    let job = new Job();
-    let item = list[i];
+    const job = new Job();
+    const item = list[i];
     const {
       jobId,
       link,
@@ -275,7 +277,7 @@ function handleLiepin(list) {
     job.jobDescription = jobDesc;
     job.jobDegreeName = requireEduLevel;
     //handle job year
-    let jobYearGroups = requireWorkYears?.match(JOB_YEAR_MATCH)?.groups;
+    const jobYearGroups = requireWorkYears?.match(JOB_YEAR_MATCH)?.groups;
     if (jobYearGroups) {
       job.jobYear = jobYearGroups.min;
     } else {
@@ -284,8 +286,8 @@ function handleLiepin(list) {
     //handle salary
     //TODO salary content was complex,not handle all situation
     if (salary) {
-      let targetSalary = salary.replaceAll(",", "").replaceAll("$", "");
-      let groups = targetSalary.match(SALARY_MATCH)?.groups;
+      const targetSalary = salary.replaceAll(",", "").replaceAll("$", "");
+      const groups = targetSalary.match(SALARY_MATCH)?.groups;
       if (groups) {
         let coefficient;
         let minUnitCoefficient;
@@ -319,7 +321,7 @@ function handleLiepin(list) {
       }
     }
     if (salary.endsWith("薪")) {
-      let groups = salary.match(SALARY_MATCH)?.groups;
+      const groups = salary.match(SALARY_MATCH)?.groups;
       job.jobSalaryTotalMonth = groups.month;
     } else {
       job.jobSalaryTotalMonth = "";
@@ -336,13 +338,13 @@ function handleLiepin(list) {
 }
 
 function handleJobsdb(list) {
-  let jobs = [];
+  const jobs = [];
   for (let i = 0; i < list.length; i++) {
-    let job = new Job();
-    let item = list[i];
-    const { id, jobUrl, title, jobDetail, listingDate, salary } = item;
+    const job = new Job();
+    const item = list[i];
+    const { id, jobUrl, title, jobDetail, listingDate, salaryLabel:salary } = item;
     const { description: companyFullName } = item.advertiser;
-    const { countryCode: city, label: positionAddress } = item.jobLocation;
+    const { countryCode: city, label: positionAddress } = item.locations;
     job.jobId = genId(id, PLATFORM_JOBSDB);
     job.jobPlatform = PLATFORM_JOBSDB;
     job.jobUrl = convertPureJobDetailUrl(jobUrl);
@@ -357,8 +359,8 @@ function handleJobsdb(list) {
     job.jobYear = "";
     //handle salary
     //TODO salary content was complex,not handle all situation
-    let targetSalary = salary.replaceAll(",", "").replaceAll("$", "");
-    let groups = targetSalary.match(SALARY_MATCH)?.groups;
+    const targetSalary = salary.replaceAll(",", "").replaceAll("$", "");
+    const groups = targetSalary.match(SALARY_MATCH)?.groups;
     if (groups) {
       let coefficient;
       let minUnitCoefficient;
@@ -398,10 +400,10 @@ function handleJobsdb(list) {
 }
 
 function handleLagouData(list) {
-  let jobs = [];
+  const jobs = [];
   for (let i = 0; i < list.length; i++) {
-    let job = new Job();
-    let item = list[i];
+    const job = new Job();
+    const item = list[i];
     const {
       positionId,
       positionName,
@@ -429,21 +431,21 @@ function handleLagouData(list) {
     job.jobLongitude = longitude;
     job.jobLatitude = latitude;
     if (job.jobLongitude && job.jobLatitude) {
-      let wgs84 = gcj02ToWgs84(Number.parseFloat(job.jobLongitude), Number.parseFloat(job.jobLatitude));
+      const wgs84 = gcj02ToWgs84(Number.parseFloat(job.jobLongitude), Number.parseFloat(job.jobLatitude));
       job.jobLongitude = wgs84[0];
       job.jobLatitude = wgs84[1];
     }
     job.jobDescription = positionDetail;
     job.jobDegreeName = education;
     //handle job year
-    let jobYearGroups = workYear.match(JOB_YEAR_MATCH)?.groups;
+    const jobYearGroups = workYear.match(JOB_YEAR_MATCH)?.groups;
     if (jobYearGroups) {
       job.jobYear = jobYearGroups.min;
     } else {
       //skip
     }
     //handle salary
-    let groups = salary.match(SALARY_MATCH)?.groups;
+    const groups = salary.match(SALARY_MATCH)?.groups;
     if (groups) {
       //unit is K,1K = 1000
       job.jobSalaryMin = Number.parseInt(groups?.min) * 1000;
@@ -465,10 +467,10 @@ function handleLagouData(list) {
 }
 
 function handleZhilianData(list) {
-  let jobs = [];
+  const jobs = [];
   for (let i = 0; i < list.length; i++) {
-    let job = new Job();
-    let item = list[i];
+    const job = new Job();
+    const item = list[i];
     const {
       jobId,
       positionUrl,
@@ -501,21 +503,21 @@ function handleZhilianData(list) {
     job.jobLongitude = longitude;
     job.jobLatitude = latitude;
     if (job.jobLongitude && job.jobLatitude) {
-      let wgs84 = gcj02ToWgs84(Number.parseFloat(job.jobLongitude), Number.parseFloat(job.jobLatitude));
+      const wgs84 = gcj02ToWgs84(Number.parseFloat(job.jobLongitude), Number.parseFloat(job.jobLatitude));
       job.jobLongitude = wgs84[0];
       job.jobLatitude = wgs84[1];
     }
     job.jobDescription = jobSummary;
     job.jobDegreeName = education;
     //handle job year
-    let jobYearGroups = workingExp.match(JOB_YEAR_MATCH)?.groups;
+    const jobYearGroups = workingExp.match(JOB_YEAR_MATCH)?.groups;
     if (jobYearGroups) {
       job.jobYear = jobYearGroups.min;
     } else {
       //skip
     }
     //handle salary
-    let groups = salaryReal.match(SALARY_MATCH)?.groups;
+    const groups = salaryReal.match(SALARY_MATCH)?.groups;
     if (groups) {
       job.jobSalaryMin = Number.parseInt(groups?.min);
       job.jobSalaryMax = Number.parseInt(groups?.max);
@@ -523,7 +525,7 @@ function handleZhilianData(list) {
       //skip
     }
     //handle salary month
-    let groupsSalaryCount = salaryCount.match(/(?<count>\d*)/)?.groups;
+    const groupsSalaryCount = salaryCount.match(/(?<count>\d*)/)?.groups;
     job.jobSalaryTotalMonth = groupsSalaryCount.count;
     job.jobFirstPublishDatetime = convertDateStringToDateObject(
       firstPublishTime
@@ -540,10 +542,10 @@ function handleZhilianData(list) {
 }
 
 function handleBossData(list) {
-  let jobs = [];
+  const jobs = [];
   for (let i = 0; i < list.length; i++) {
-    let job = new Job();
-    let item = list[i];
+    const job = new Job();
+    const item = list[i];
     const { encryptJobId, jobUrl, jobName,
       brandName, cityName, areaDistrict, businessDistrict, address,
       postDescription, jobDegree, jobExperience,
@@ -562,21 +564,21 @@ function handleBossData(list) {
     job.jobLongitude = longitude;
     job.jobLatitude = latitude;
     if (job.jobLongitude && job.jobLatitude) {
-      let wgs84 = gcj02ToWgs84(job.jobLongitude, job.jobLatitude);
+      const wgs84 = gcj02ToWgs84(job.jobLongitude, job.jobLatitude);
       job.jobLongitude = wgs84[0];
       job.jobLatitude = wgs84[1];
     }
     job.jobDescription = postDescription;
     job.jobDegreeName = jobDegree;
     //handle job year
-    let jobYearGroups = jobExperience.match(JOB_YEAR_MATCH)?.groups;
+    const jobYearGroups = jobExperience.match(JOB_YEAR_MATCH)?.groups;
     if (jobYearGroups) {
       job.jobYear = jobYearGroups.min;
     } else {
       //skip
     }
     //handle salary
-    let groups = salaryDesc.match(SALARY_MATCH)?.groups;
+    const groups = salaryDesc.match(SALARY_MATCH)?.groups;
     if (groups) {
       let coefficient;
       if (salaryDesc.includes("元") && salaryDesc.includes("天")) {
@@ -613,10 +615,10 @@ function handleBossData(list) {
 }
 
 function handle51JobData(list) {
-  let jobs = [];
+  const jobs = [];
   for (let i = 0; i < list.length; i++) {
-    let job = new Job();
-    let item = list[i];
+    const job = new Job();
+    const item = list[i];
     const {
       jobId,
       jobHref,
@@ -647,7 +649,7 @@ function handle51JobData(list) {
     job.jobLongitude = lon;
     job.jobLatitude = lat;
     if (job.jobLongitude && job.jobLatitude) {
-      let wgs84 = bd09ToWgs84(job.jobLongitude, job.jobLatitude);
+      const wgs84 = bd09ToWgs84(job.jobLongitude, job.jobLatitude);
       job.jobLongitude = wgs84[0];
       job.jobLatitude = wgs84[1];
     }
@@ -656,13 +658,13 @@ function handle51JobData(list) {
     if (workYearString.endsWith("无需经验")) {
       job.jobYear = 0;
     } else {
-      let groups = workYearString.match(/(?<min>[0-9\.]*)/)?.groups;
+      const groups = workYearString.match(/(?<min>[0-9\.]*)/)?.groups;
       job.jobYear = groups.min;
     }
     job.jobSalaryMin = jobSalaryMin;
     job.jobSalaryMax = jobSalaryMax;
     if (provideSalaryString.endsWith("薪")) {
-      let groups = provideSalaryString.match(SALARY_MATCH)?.groups;
+      const groups = provideSalaryString.match(SALARY_MATCH)?.groups;
       job.jobSalaryTotalMonth = groups.month;
     } else {
       job.jobSalaryTotalMonth = "";
@@ -694,7 +696,7 @@ export async function saveCompany(source, platform) {
 }
 
 function handleAiqichaData(source) {
-  let company = new Company();
+  const company = new Company();
   company.companyId = genSha256(companyNameConvert(source.entName)) + "";
   company.companyName = companyNameConvert(source.entName);
   company.companyDesc = source.describe;
@@ -716,7 +718,7 @@ function handleAiqichaData(source) {
   //原始数据为百度坐标
   if (company.companyLongitude && company.companyLatitude) {
     //TODO 转换后仍有偏移
-    let wgs84 = bd09ToWgs84(company.companyLongitude, company.companyLatitude);
+    const wgs84 = bd09ToWgs84(company.companyLongitude, company.companyLatitude);
     company.companyLongitude = wgs84[0];
     company.companyLatitude = wgs84[1];
   }
@@ -730,15 +732,15 @@ function handleAiqichaData(source) {
 }
 
 export async function getCompanyFromCompanyInfo(companyInfo, convertedCompanyName) {
-  let companyInfoDetail = await getCompanyInfoDetailByAiqicha(
+  const companyInfoDetail = await getCompanyInfoDetailByAiqicha(
     companyInfo.pid
   );
-  let companyDetail = companyInfoDetail;
+  const companyDetail = companyInfoDetail;
   companyDetail.selfRiskTotal = companyInfo?.risk?.selfRiskTotal;
   companyDetail.unionRiskTotal = companyInfo?.risk?.unionRiskTotal;
   companyDetail.sourceUrl = `https://aiqicha.baidu.com/company_detail_${companyDetail.pid}`;
   await saveCompany(companyDetail, PLATFORM_AIQICHA);
-  let company = await CompanyApi.getCompanyById(
+  const company = await CompanyApi.getCompanyById(
     genSha256(convertedCompanyName) + ""
   );
   return company;
@@ -754,8 +756,8 @@ async function getCompanyInfoDetailByAiqicha(pid) {
   });
   //请求正常结束，从手动中断列表中移除
   abortFunctionHandlerMap.delete(abortFunctionHandler);
-  let data = JSON.parse(result.match(AIQICHA_PAGE_DATA_MATCH).groups["data"]);
-  let companyInfoDetail = data.result;
+  const data = JSON.parse(result.match(AIQICHA_PAGE_DATA_MATCH).groups["data"]);
+  const companyInfoDetail = data.result;
   return companyInfoDetail;
 }
 
@@ -770,10 +772,10 @@ export async function getCompanyInfoByAiqicha(keyword) {
   });
   //请求正常结束，从手动中断列表中移除
   abortFunctionHandlerMap.delete(abortFunctionHandler);
-  let data = JSON.parse(result.match(AIQICHA_PAGE_DATA_MATCH).groups["data"]);
-  let resultList = data.result.resultList;
+  const data = JSON.parse(result.match(AIQICHA_PAGE_DATA_MATCH).groups["data"]);
+  const resultList = data.result.resultList;
   for (let i = 0; i < resultList.length; i++) {
-    let companyInfo = resultList[i];
+    const companyInfo = resultList[i];
     if (isCompanyNameSame(companyInfo.titleName, keyword)) {
       return companyInfo;
     }
@@ -783,14 +785,14 @@ export async function getCompanyInfoByAiqicha(keyword) {
 
 export async function addCompanyTagNotExists(companyName, tags) {
   let addResult = false;
-  let companyId = genSha256(companyNameConvert(companyName)) + "";
-  let currentCompanyTagList = await CompanyApi.getAllCompanyTagDTOByCompanyId(companyId);
+  const companyId = genSha256(companyNameConvert(companyName)) + "";
+  const currentCompanyTagList = await CompanyApi.getAllCompanyTagDTOByCompanyId(companyId);
   let currentCompanyTagListCount = 0;
-  let targetTagsArray = [];
-  let currentTagsMap = new Map();
+  const targetTagsArray = [];
+  const currentTagsMap = new Map();
   if (currentCompanyTagList && currentCompanyTagList.length > 0) {
     currentCompanyTagListCount = currentCompanyTagList.length;
-    let tagArray = currentCompanyTagList.flatMap(item => item.tagName);
+    const tagArray = currentCompanyTagList.flatMap(item => item.tagName);
     tagArray.forEach(item => {
       currentTagsMap.set(item, null);
     });
@@ -804,7 +806,7 @@ export async function addCompanyTagNotExists(companyName, tags) {
   })
   if (targetTagsArray.length > currentCompanyTagListCount) {
     infoLog("addCompanyTagNotExists");
-    let companyTagBO = new CompanyTagBO();
+    const companyTagBO = new CompanyTagBO();
     companyTagBO.companyName = companyName;
     companyTagBO.tags = targetTagsArray;
     await CompanyApi.addOrUpdateCompanyTag(companyTagBO);
@@ -840,4 +842,14 @@ function isCompanyNameSame(name1, name2) {
     name1.replaceAll("（", "(").replaceAll("）", ")") ==
     name2.replaceAll("（", "(").replaceAll("）", ")")
   );
+}
+
+export const getAnalysisConfig = async () => {
+  const configValue = await ConfigApi.getConfigByKey(CONFIG_KEY_ANALYSIS);
+  if (configValue && configValue.value) {
+    const config = JSON.parse(configValue.value);
+    return Object.assign(new AnalysisConfigDTO(), config);
+  } else {
+    return new AnalysisConfigDTO();
+  }
 }

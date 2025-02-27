@@ -8,21 +8,22 @@ import {
   RobotOutlined,
   SettingOutlined,
   ShareAltOutlined,
-} from "@ant-design/icons";
-import { Icon } from "@iconify/react";
-import { Button, Flex, Layout, Menu, theme } from "antd";
-import React, { useState } from "react";
-import { Outlet, useNavigate } from "react-router";
-import { useShallow } from "zustand/shallow";
-import logo from "../assets/logo.svg";
-import useDataSharePlanStore from "../store/DataSharePlanStore";
-import HeaderRight from "./HeaderRight";
+} from '@ant-design/icons';
+import { Icon } from '@iconify/react';
+import { Button, Flex, Layout, Menu, theme } from 'antd';
+import React, { useState } from 'react';
+import { Outlet, useNavigate } from 'react-router';
+import { useShallow } from 'zustand/shallow';
+import logo from '../assets/logo.svg';
+import useDataSharePlanStore from '../store/DataSharePlanStore';
+import useAnalysisStore from '../store/AnalysisStore';
+import HeaderRight from './HeaderRight';
 const { Header, Sider, Content } = Layout;
 
 const siderStyle: React.CSSProperties = {
-  overflow: "auto",
-  scrollbarWidth: "thin",
-  scrollbarGutter: "stable",
+  overflow: 'auto',
+  scrollbarWidth: 'thin',
+  scrollbarGutter: 'stable',
 };
 
 const RootLayout: React.FC = () => {
@@ -30,21 +31,35 @@ const RootLayout: React.FC = () => {
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
-  const [dataSharePlanEnable] = useDataSharePlanStore(useShallow(((state) => [
-    state.enable,
-  ])));
+  const [dataSharePlanEnable] = useDataSharePlanStore(
+    useShallow((state) => [state.enable])
+  );
+
+  const [analysisConfig] = useAnalysisStore(
+    useShallow((state) => [state.config])
+  );
 
   const genDataSharePlanMenu = () => {
     if (dataSharePlanEnable) {
-      return [{ key: "dataSharePlanStatistic", label: "统计" },
-      { key: "task", label: "任务" },
-      { key: "partner", label: "伙伴" },];
+      return [
+        { key: 'dataSharePlanStatistic', label: '统计' },
+        { key: 'task', label: '任务' },
+        { key: 'partner', label: '伙伴' },
+      ];
     } else {
-      return [{ key: "dataSharePlanWelcome", label: "欢迎使用" }];
+      return [{ key: 'dataSharePlanWelcome', label: '欢迎使用' }];
     }
-  }
+  };
+
+  const genAnalysisMenu = () => {
+    if (analysisConfig.enable) {
+      return [{ key: 'analysisSetting', label: '设置' }];
+    } else {
+      return [{ key: 'analysisWelcome', label: '欢迎使用' }];
+    }
+  };
 
   return (
     <Layout className="root" hasSider>
@@ -65,65 +80,69 @@ const RootLayout: React.FC = () => {
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={["1"]}
+          defaultSelectedKeys={['1']}
           onSelect={({ key }) => {
             navigate(`/${key}`);
           }}
           items={[
             {
-              key: "",
+              key: '',
               icon: <HomeOutlined />,
-              label: "首页",
+              label: '首页',
             },
             {
-              key: "assistant",
+              key: 'assistant',
               icon: <RobotOutlined />,
-              label: "个人助理",
+              label: '个人助理',
               children: [
-                { key: "favoriteJob", label: "职位偏好" },
-                { key: "historyJob", label: "浏览历史" },
-                { key: "automate", label: "自动化" },
-              ]
+                { key: 'favoriteJob', label: '职位偏好' },
+                { key: 'historyJob', label: '浏览历史' },
+                { key: 'automate', label: '自动化' },
+              ],
             },
             {
-              key: "bbs",
+              key: 'bbs',
               icon: <CommentOutlined />,
-              label: "讨论区",
+              label: '讨论区',
             },
             {
-              key: "data",
+              key: 'data',
               icon: <DatabaseOutlined />,
-              label: "数据",
+              label: '数据',
               children: [
-                { key: "job", label: "职位" },
-                { key: "company", label: "公司" },
-                { key: "tag", label: "标签" },
-                { key: "companyTag", label: "公司标签" },
-                { key: "jobTag", label: "职位标签" },
+                { key: 'job', label: '职位' },
+                { key: 'company', label: '公司' },
+                { key: 'tag', label: '标签' },
+                { key: 'companyTag', label: '公司标签' },
+                { key: 'jobTag', label: '职位标签' },
               ],
             },
             {
-              key: "dataSharePlan",
+              key: 'analysisPlan',
+              icon: <Icon icon="mdi:think-outline" />,
+              label: '职位分析',
+              children: [...genAnalysisMenu()],
+            },
+            {
+              key: 'dataSharePlan',
               icon: <ShareAltOutlined />,
-              label: "数据共享计划",
-              children: [
-                ...genDataSharePlanMenu()
-              ],
+              label: '数据共享计划',
+              children: [...genDataSharePlanMenu()],
             },
             {
-              key: "file",
+              key: 'file',
               icon: <FileOutlined />,
-              label: "文件",
+              label: '文件',
             },
             {
-              key: "system",
+              key: 'system',
               icon: <Icon icon="icon-park-outline:system" />,
-              label: "系统",
+              label: '系统',
             },
             {
-              key: "setting",
+              key: 'setting',
               icon: <SettingOutlined />,
-              label: "设置",
+              label: '设置',
             },
           ]}
         />
@@ -136,7 +155,7 @@ const RootLayout: React.FC = () => {
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               onClick={() => setCollapsed(!collapsed)}
               style={{
-                fontSize: "16px",
+                fontSize: '16px',
                 width: 64,
                 height: 64,
               }}
@@ -148,14 +167,14 @@ const RootLayout: React.FC = () => {
         </Header>
         <Content
           style={{
-            margin: "24px 16px",
+            margin: '24px 16px',
             padding: 24,
             minHeight: 280,
             background: colorBgContainer,
             borderRadius: borderRadiusLG,
-            overflow: "auto",
-            scrollbarWidth: "thin",
-            scrollbarGutter: "stable",
+            overflow: 'auto',
+            scrollbarWidth: 'thin',
+            scrollbarGutter: 'stable',
           }}
         >
           <Outlet />

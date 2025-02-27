@@ -1,0 +1,97 @@
+import { page } from '@vitest/browser/context'
+import './analysis.js';
+
+const url = "http://localhost:11434";
+const model = "deepseek-r1:7b";
+const demand = `岗位职责：\n1、负责所在地的网络设备常规巡检。\n2、负责所在地的网路设备的应急报修、故障排除、备件更换。\n3、负责职场呼叫系统前端维护、需求收集。\n4、计算机相关设备维护。\n5、其它临时紧急任务处理。\n\n任职要求：\n1、较强的学习能力及强烈的责任心、有上进心。\n2、性格外向、温和、仪容整洁。\n3、熟悉Cisco、Brocade、H3C等主流网络厂商产品技术及产品架构；\n4、熟悉Linux操作系统的管理及常用工具的使用\n5、有思科华为网络产品的技术支持经验优先。\n7.大专以上学历，可以接受民本学历\n8. 2年以上IT桌面维护或技术支持经验\n9.精通台式电脑、笔记本电脑故障诊断\n10.精通Windows操作系统及常用办公软件`;
+const resume = `## 个人信息\n- 学历：本科\n- 工作经验：1年\n\n## 个人情况\n- 了解 Python、Linux/Shell  \n- 了解 Docker 的基本使用，能看懂 Dockerfile 文件  \n- 了解 网络、安全, MySQL   \n- 熟练运用 AI 工具与搜索引擎，提升工作效率  \n- 没有驾照  \n\n## 工作经验\n**阳光雨露信息技术服务（北京）有限公司**  2023.10-2024.11  \n**职位**：桌面运维工程师\n\n通过服务台系统处理用户提交的故障申报\n\n- AD域密码重置、账户解锁\n- 解决软件错误、蓝屏、系统空间不足等问题；重新安装或修复软件。\n- 配置打印机、扫描仪、投影仪等设备，解决连接或驱动问题。\n- 显示器、键盘鼠标等外设损坏；处理硬件故障（如硬盘损坏、内存更换）。为资产管理部门给员工更换设备给出依据\n\n与资产管理部门配合\n\n- 为离职员工/入库电脑进行低级格式化\n- 出库前，为新电脑/格式化后的电脑安装标准化镜像\n- 维护FAQ文档、记录常见问题解决方案\n\n\n## 补充经历`;
+
+const content = "<think>\n好，我现在需要分析这个职位需求和候选人的简历匹配度。首先看看职位要求。\n\n1. 巡检和维护网络设备：候选人有处理桌面运维的经验，特别是打印机制和外设问题，这可能与巡检相关。\n2. 应急修、故障排除和备件更换：他有过解决软件错误、系统空间不足等经验，还有硬件故障处理，这部分很匹配。\n3. 维护呼叫系统前端和需求收集：简历中没有提到相关经验，但可以考虑在工作中的协助部分是否有类似的工作。\n4. 计算机设备维护：有经验处理打印机、扫描仪等问题，符合要求。\n5. 性能需求方面，候选人有IT桌面的经验，具备一定的技术能力。\n\n接下来是任职要求：\n1. 学习能力强和责任心：候选人的工作经验说明他能适应工作压力。\n2. 性格外向：简历中没有提到，但可能需要在团队合作中表现出来。\n3. 熟悉Cisco、Brocade等厂商产品：简历中没有相关经验。\n4. Linux操作系统和工具使用：具备。\n5. 技术优先：没有工作经验。\n6. 学历：大专以上，候选人为本科，符合。\n7. 工作经验：2年以上IT桌面维护，但候选人只有1年，略差。\n8. 熟通故障诊断：有相关工作中的处理经历。\n9. 熟悉Windows和办公软件：具备。\n\n综合来看，候选人部分匹配了职责中的巡检、应急修、设备维护等，但也有一些差距点。性格外向方面没有提到，技术经验不足，工作经验略少。在评分上，我会给65分，因为大部分要求基本满足，但有三个主要点需要改进。\n</think>\n\n```json\n{\n  \"matchValue\": 65,\n  \"rulesMatch\": [\n    {\n      \"demand\": \"岗位职责：负责所在地的网络设备常规巡检。\",\n      \"resume\": \"工作经历中处理用户提交的故障申报，包括显示器、键盘鼠标等外设损坏的问题。\"\n    },\n    {\n      \"demand\": \"岗位职责：负责所在地的网路设备的应急报修、故障排除、备件更换。\",\n      \"resume\": \"通过服务台系统处理用户提交的故障申报；解决软件错误、蓝屏等问题，重新安装或修复软件；配置打印机、扫描仪、投影仪等设备，解决连接或驱动问题。\"\n    },\n    {\n      \"demand\": \"岗位职责：负责职场呼叫系统前端维护、需求收集。\",\n      \"resume\": \"补充经历中没有明确提到相关内容，但可能在团队协作中涉及相关工作。\"\n    },\n    {\n      \"demand\": \"任职要求：计算机相关设备维护。\",\n      \"resume\": \"工作经历中处理了打印机、扫描仪等问题，具备一定的计算机设备维护经验。\"\n    },\n    {\n      \"demand\": \"任职要求：有思科华为网络产品的技术支持经验优先。\",\n      \"resume\": \"工作经历中没有提到思科或华为相关产品经验。\"\n    },\n    {\n      \"demand\": \"任职要求：2年以上IT桌面维护或技术支持经验。\",\n      \"resume\": \"工作经历为1年，符合部分要求。\"\n    },\n    {\n      \"demand\": \"任职要求：精通台式电脑、笔记本电脑故障诊断。\",\n      \"resume\": \"工作经历中处理了显示器、键盘鼠标等外设损坏的问题，具备一定的故障诊断能力。\"\n    },\n    {\n      \"demand\": \"任职要求：精通Windows操作系统及常用办公软件。\",\n      \"resume\": \"熟练运用Windows操作系统，并具备使用MySQL等工具的能力。\"\n    }\n  ],\n  \"thinking\": \"候选人的工作经历在网络设备维护和桌面运维方面有一定的经验，能够满足部分岗位需求，但缺乏思科华为技术支持经验和2年以上IT桌面维护经验。此外，他的性格外向要求未得到体现。\"\n}\n```";
+
+describe('analysis', () => {
+
+  afterEach(() => {
+    document.body.innerHTML = "";
+  })
+
+  it('should display success', async () => {
+    const element = document.createElement('job-analysis-element');
+    element.url = url;
+    element.model = model;
+    element.demand = demand;
+    element.resume = resume;
+    element.auto = true;
+    element.getResponse = async () => {
+      return {
+        json: () => {
+          return {
+            message: {
+              content
+            }
+          }
+        }
+      }
+    };
+    document.body.appendChild(element);
+    await expect.poll(() => {
+      try {
+        return page.getByText('职位分析中').element();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_) {
+        return page.getByText('匹配度').element();
+      }
+    }, { timeout: 1000 }).toBeVisible();
+    await expect.poll(() => page.getByText('匹配度').element(), { timeout: 1000 }).toBeVisible();
+    await expect.poll(() => page.getByTitle('候选人的工作经历在网络设备维护和桌面运维方面有一定的经验，能够满足部分岗位需求，但缺乏思科华为技术支持经验和2年以上IT桌面维护经验。此外，他的性格外向要求未得到体现。').element(), { timeout: 1000 }).toBeVisible();
+  })
+
+  it('should display error', async () => {
+    const element = document.createElement('job-analysis-element');
+    element.source = null;
+    element.auto = true;
+    document.body.appendChild(element);
+    await expect.poll(() => {
+      try {
+        return page.getByText('职位分析中').element();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_) {
+        return page.getByText('分析失败').element();
+      }
+    }, { timeout: 1000 }).toBeVisible();
+    await expect.poll(() => page.getByText('分析失败').element(), { timeout: 1000 }).toBeVisible();
+  })
+
+  it('should display need click to alalysis', async () => {
+    const element = document.createElement('job-analysis-element');
+    element.url = url;
+    element.model = model;
+    element.demand = demand;
+    element.resume = resume;
+    element.getResponse = async () => {
+      return {
+        json: () => {
+          return {
+            message: {
+              content
+            }
+          }
+        }
+      }
+    };
+    document.body.appendChild(element);
+    await expect.poll(() => page.getByText('点击职位分析').element(), { timeout: 1000 }).toBeVisible();
+    page.getByText('点击职位分析').element().click();
+    await expect.poll(() => {
+      try {
+        return page.getByText('职位分析中').element();
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (_) {
+        return page.getByText('匹配度').element();
+      }
+    }, { timeout: 1000 }).toBeVisible();
+    await expect.poll(() => page.getByText('匹配度').element(), { timeout: 1000 }).toBeVisible();
+    await expect.poll(() => page.getByTitle('候选人的工作经历在网络设备维护和桌面运维方面有一定的经验，能够满足部分岗位需求，但缺乏思科华为技术支持经验和2年以上IT桌面维护经验。此外，他的性格外向要求未得到体现。').element(), { timeout: 1000 }).toBeVisible();
+  })
+
+});
+
