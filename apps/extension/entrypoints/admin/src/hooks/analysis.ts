@@ -1,4 +1,5 @@
 export enum Source {
+    OPENAI = 'OPENAI',
     OLLAMA = 'OLLAMA',
     SILICONFLOW = 'SILICONFLOW',
 }
@@ -16,6 +17,8 @@ export function useAnalysis() {
         switch (source) {
             case Source.OLLAMA:
                 return `OLLAMA`;
+            case Source.OPENAI:
+                return `OpenAI兼容协议`;
             case Source.SILICONFLOW:
                 return `Siliconflow(硅基流动)`;
             default:

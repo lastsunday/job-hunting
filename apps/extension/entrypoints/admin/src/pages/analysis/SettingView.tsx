@@ -68,6 +68,43 @@ const SettingView: React.FC = () => {
   });
 
   const sourceData = {
+    OPENAI: {
+      url: {
+        rules: { required: false },
+        default: 'http://127.0.0.1:1234',
+      },
+      model: {
+        rules: { required: false },
+        default: 'mradermacher/DeepSeek-R1-Distill-Llama-8B-Abliterated-GGUF',
+      },
+      token: { rules: { required: false }, default: '' },
+      info: (
+        <Alert
+          message={getLabelBySource(source ?? Source.OPENAI)}
+          description=<Markdown>
+            {`OpenAI兼容协议，符合[OpenAI接口协议](https://platform.openai.com/docs/api-reference/chat)的都支持。
+### 注意事项
+
+- 可使用本地部署工具，如[LM Studio](https://lmstudio.ai/)
+
+- 使用外部服务时注意敏感信息的泄漏，如[OpenAI](https://openai.com/)
+
+LM Studio安装和使用请见 [LM Studio](https://lmstudio.ai/)，下面是简要步骤：
+
+- 从[LM Studio](https://lmstudio.ai/)下载lmstudio并安装
+- 打开后，在窗体最下面找到UI切换按钮，切换到Developer模式的UI
+- 切换到Discover菜单，查找并下载模型，如 **mradermacher/DeepSeek-R1-Distill-Llama-8B-Abliterated-GGUF**
+- 切换到Developer菜单，启动服务器（在上方的 **Status:** 字样旁边的按钮）
+- 点击 **Settings** 按钮 -> 打开 **Enable CORS** 选项 
+- 启动后可以看到右边的访问地址
+
+            `}
+          </Markdown>
+          type="warning"
+          showIcon
+        />
+      ),
+    },
     OLLAMA: {
       url: { rules: { required: false }, default: 'http://localhost:11434' },
       model: { rules: { required: false }, default: 'deepseek-r1:7b' },
@@ -76,7 +113,7 @@ const SettingView: React.FC = () => {
         <Alert
           message={getLabelBySource(source ?? Source.OLLAMA)}
           description=<Markdown>
-            {`（推荐）可本地部署的大模型工具。
+            {`可本地部署的大模型工具。
               
 安装详情请访问 [ollama官网](https://ollama.com/)
 
@@ -109,7 +146,7 @@ const SettingView: React.FC = () => {
       token: { rules: { required: true }, default: '' },
       info: (
         <Alert
-          message={getLabelBySource(source ?? Source.OLLAMA)}
+          message={getLabelBySource(source ?? Source.SILICONFLOW)}
           description=<Markdown>
             {`（注意敏感信息的泄漏）第三方大模型接口。
               
@@ -148,7 +185,7 @@ const SettingView: React.FC = () => {
         <Form.Item<FieldType>
           label="人工智能厂商"
           name="source"
-          initialValue={Source.OLLAMA}
+          initialValue={Source.OPENAI}
           rules={[{ required: true }]}
         >
           <Radio.Group optionType="button">
@@ -159,20 +196,20 @@ const SettingView: React.FC = () => {
             ))}
           </Radio.Group>
         </Form.Item>
-        {sourceData[source ?? Source.OLLAMA]['info']}
+        {sourceData[source ?? Source.OPENAI]['info']}
         <Form.Item<FieldType>
           label="访问地址"
           name="url"
           rules={[
             {
-              ...sourceData[source ?? Source.OLLAMA]['url'].rules,
+              ...sourceData[source ?? Source.OPENAI]['url'].rules,
               message: '请输入访问地址',
             },
           ]}
         >
           <Input
             allowClear
-            placeholder={sourceData[source ?? Source.OLLAMA]['url'].default}
+            placeholder={sourceData[source ?? Source.OPENAI]['url'].default}
           />
         </Form.Item>
         <Form.Item<FieldType>
@@ -180,14 +217,14 @@ const SettingView: React.FC = () => {
           name="model"
           rules={[
             {
-              ...sourceData[source ?? Source.OLLAMA]['model'].rules,
+              ...sourceData[source ?? Source.OPENAI]['model'].rules,
               message: '请输入模型名称',
             },
           ]}
         >
           <Input
             allowClear
-            placeholder={sourceData[source ?? Source.OLLAMA]['model'].default}
+            placeholder={sourceData[source ?? Source.OPENAI]['model'].default}
           />
         </Form.Item>
         <Form.Item<FieldType>
@@ -195,14 +232,14 @@ const SettingView: React.FC = () => {
           name="token"
           rules={[
             {
-              ...sourceData[source ?? Source.OLLAMA]['token'].rules,
+              ...sourceData[source ?? Source.OPENAI]['token'].rules,
               message: '请输入令牌',
             },
           ]}
         >
           <Input.Password
             allowClear
-            placeholder={sourceData[source ?? Source.OLLAMA]['token'].default}
+            placeholder={sourceData[source ?? Source.OPENAI]['token'].default}
           />
         </Form.Item>
       </Col>,

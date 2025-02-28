@@ -33,6 +33,38 @@ describe('analysis', () => {
     })
   });
 
+  it('should work openai', async () => {
+    const { analyze } = useAnalysis();
+    const result = await analyze({
+      source: Source.OPENAI, demand, resume, getResponse: async () => {
+        return {
+          json: () => {
+            return {
+              choices: [
+                {
+                  message: {
+                    content: "```json\n{\n    \"matchValue\": 60,\n    \"rulesMatch\": [\n        {\n            \"demand\": \"手脚麻利，能够听从领导安排\",\n            \"resume\": \"了解 Python、Linux/Shell,熟悉运用 AI 工具与搜索引擎，提升工作效率\"\n        }\n    ],\n    \"thinking\": \"虽然候选人具备了对AI工具和搜索引擎的掌握能力，但未提及具体的装配工作技能。因此，仅匹配了与工作要求相关的关键点。\"\n}\n```",
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    });
+    expect(result).not.toBeNull();
+    const { matchValue, rulesMatch, thinking } = result;
+    assert.isNumber(matchValue);
+    assert.equal(matchValue, 60);
+    assert.isArray(rulesMatch);
+    assert.isString(thinking);
+    rulesMatch.forEach(item => {
+      const { demand, resume } = item;
+      assert.isString(demand);
+      assert.isString(resume);
+    })
+  });
+
   it('should work siliconflow', async () => {
     const { analyze } = useAnalysis();
     const result = await analyze({

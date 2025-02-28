@@ -1,8 +1,10 @@
 import { MatchResult } from "./ai/index.js";
 import { useOllama } from "./ai/ollama.js";
+import { useOpenai } from "./ai/openai.js";
 import { useSiliconflow } from "./ai/siliconflow.js";
 
 export enum Source {
+  OPENAI = 'OPENAI',
   OLLAMA = 'OLLAMA',
   SILICONFLOW = 'SILICONFLOW',
 }
@@ -20,6 +22,7 @@ export function useAnalysis() {
   }) => Promise<MatchResult>>();
 
   sourceMap.set(Source.OLLAMA, useOllama().analyze);
+  sourceMap.set(Source.OPENAI, useOpenai().analyze);
   sourceMap.set(Source.SILICONFLOW, useSiliconflow().analyze);
 
   const analyze = async ({ source, url, token, model, hr, demand, resume, getResponse }: {
