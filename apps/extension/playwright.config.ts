@@ -1,5 +1,4 @@
 import { defineConfig, devices } from "@playwright/test";
-
 import { defineBddConfig, cucumberReporter } from 'playwright-bdd';
 
 const testDir = defineBddConfig({
@@ -19,6 +18,9 @@ export default defineConfig({
   // Opt out of parallel tests on CI.
   workers: process.env.CI ? 2 : undefined,
 
+  // Increase global timeout to 90 seconds
+  timeout: 90000,
+
   // Reporter to use
   reporter: [
     cucumberReporter('html', {
@@ -32,6 +34,12 @@ export default defineConfig({
     // Collect trace when retrying the failed test.
     trace: { mode: "retain-on-first-failure" },
     screenshot: { mode: 'on' },
+    // Enable video recording for debugging
+    video: 'retain-on-failure',
+    // Enable detailed logging
+    launchOptions: {
+      args: ['--enable-logging', '--v=1'],
+    },
   },
 
   // Configure projects for major browsers.

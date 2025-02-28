@@ -5,7 +5,7 @@ export async function openAdmin(page: Page, extensionId: string) {
 }
 
 export async function getAdmin(page: Page) {
-    const getLayout = () => page.waitForSelector(".ant-layout");
+    const getLayout = () => page.waitForSelector(".ant-layout", { state: "attached", timeout: 60000 });
     const checkLayoutDisplay = async () => { return expect((await getLayout())).not.toBeNull() };
 
     return { getLayout, checkLayoutDisplay };

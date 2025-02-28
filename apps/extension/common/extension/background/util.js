@@ -30,7 +30,7 @@ export function postSuccessMessage(message, data) {
         message.error +
         "]"
     );
-    let resultMessage = JSON.parse(JSON.stringify(message));
+    const resultMessage = JSON.parse(JSON.stringify(message));
     resultMessage.data = data;
     if (message.tabId) {
         //content script invoke
@@ -104,7 +104,7 @@ export const onMessageHandle = (message, sender, actionFunction) => {
                 message.error +
                 "]"
             );
-            let action = message.action;
+            const action = message.action;
             if (actionFunction.has(action)) {
                 debugLog("[background] invoke action = " + action);
                 actionFunction.get(action)(message, message.param);
@@ -173,13 +173,13 @@ export const onMessageHandle = (message, sender, actionFunction) => {
                 }
             } else if (invokeEnv == BACKGROUND) {
                 if (isDevEnv()) {
-                    let costTime = message.invokeTimeList.slice(-1)[0].time - message.invokeTimeList.slice(0, 1)[0].time;
+                    const costTime = message.invokeTimeList.slice(-1)[0].time - message.invokeTimeList.slice(0, 1)[0].time;
                     if (costTime > INVOKE_WARN_TIME_COST) {
                         //invoke > warnTimeCost to show warning
                         warnLog(`[${invokeEnv}][${message.invokeSeq}]Invoke [${message.action}] cost time = %c${costTime.toFixed(2)}ms`, `color:white;background-color:hsl(360 ${costTime / 100} 50%);`, message.invokeTimeList, message);
                     }
                 }
-                let promiseHook = getAndRemovePromiseHook(message.callbackId);
+                const promiseHook = getAndRemovePromiseHook(message.callbackId);
                 if (promiseHook) {
                     if (message.error) {
                         message.message = message.error;
@@ -188,7 +188,7 @@ export const onMessageHandle = (message, sender, actionFunction) => {
                         promiseHook.resolve(message);
                     }
                 } else {
-                    errorLog(
+                    debugLog(
                         `callbackId = ${message.callbackId} lost callback promiseHook`
                     );
                 }
@@ -208,7 +208,7 @@ export const onMessageHandle = (message, sender, actionFunction) => {
                     message.error +
                     "]"
                 );
-                let action = message.action;
+                const action = message.action;
                 debugLog("[background] invoke action = " + action);
                 actionFunction.get(action)(message, message.param);
             }

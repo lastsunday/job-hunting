@@ -22,40 +22,37 @@ export default defineContentScript({
     "https://ggfw.hrss.gd.gov.cn/*",
   ],
 
-  main(ctx) {
+  async main(ctx) {
     console.log(`[Inject] content js`);
-    (async () => {
-      window.addEventListener("firstOpen", async function (e) {
-        try {
-          if (location.host === "www.lagou.com") {
-            await initBridge();
-            // 拉勾首次打开
-            const data = e?.detail?.lagou?.initialState;
-            lagouFirstOpen(data || {});
-          }
 
-          if (location.host === "aiqicha.baidu.com") {
-            await initBridge();
-            // 爱企查首次打开
-            const data = e?.detail?.aiqicha?.initialState?.result?.resultList;
-            aiqichaHandle(data, true);
-          }
-
-          if (location.host === "www.zhaopin.com") {
-            await initBridge();
-            // 智联招聘首次打开
-            const data = e?.detail?.zhipin?.initialState;
-            zhilianFirstOpen(data || {});
-          }
-        } catch (e) {
-          console.log(e);
+    const handleFirstOpen = async (e) => {
+      try {
+        if (location.host === "www.lagou.com") {
+          // 拉勾首次打开
+          await initBridge();
+          const data = e?.detail?.lagou?.initialState;
+          lagouFirstOpen(data || {});
+        } else if (location.host === "aiqicha.baidu.com") {
+          // 爱企查首次打开
+          await initBridge();
+          const data = e?.detail?.aiqicha?.initialState?.result?.resultList;
+          aiqichaHandle(data, true);
+        } else if (location.host === "www.zhaopin.com") {
+          // 智联招聘首次打开
+          await initBridge();
+          const data = e?.detail?.zhipin?.initialState;
+          zhilianFirstOpen(data || {});
         }
-      });
+      } catch (error) {
+        console.error('Error handling firstOpen event:', error);
+      }
+    };
 
-      const script = document.createElement('script');
-      script.setAttribute('type', 'text/javascript');
-      script.setAttribute('src', chrome.runtime.getURL('firstOpen.js'));
-      document.body.appendChild(script);
-    })();
+    window.addEventListener("firstOpen", handleFirstOpen);
+
+    const script = document.createElement('script');
+    script.setAttribute('type', 'text/javascript');
+    script.setAttribute('src', chrome.runtime.getURL('firstOpen.js'));
+    document.body.appendChild(script);
   },
 });
