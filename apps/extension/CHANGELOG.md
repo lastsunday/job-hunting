@@ -1,3 +1,13 @@
+## 3.6.0 (2025-02-28)
+
+### 🚀 Features
+
+- 新增职位分析 - 人工智能厂商接口（OpenAI协议）
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.5.0 (2025-02-27)
 
 ### 🚀 Features
