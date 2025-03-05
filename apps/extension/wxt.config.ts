@@ -60,8 +60,8 @@ export default defineConfig({
   },
   hooks: {
     'build:done'(wxt, output) {
-      let srcDir = wxt.config.srcDir;
-      let outDir = wxt.config.outDir;
+      const srcDir = wxt.config.srcDir;
+      const outDir = wxt.config.outDir;
       const changelogName = "CHANGELOG.md";
       const packageName = "package.json";
       const licenseName = "LICENSE";

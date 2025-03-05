@@ -20,20 +20,20 @@ export function createLink(href) {
 }
 
 // 转换时间
-export function convertTimeToHumanReadable(dateTime) {
-  let date = dayjs(dateTime);
-  let curDate = dayjs();
+export function convertTimeToHumanReadable(dateTime, now) {
+  const date = dayjs(dateTime);
+  const curDate = now ?? dayjs();
 
   // 计算时间差共有多少个分钟
-  let minC = curDate.diff(date, "minute", true);
+  const minC = curDate.diff(date, "minute", true);
   // 计算时间差共有多少个小时
-  let hourC = curDate.diff(date, "hour", true);
+  const hourC = curDate.diff(date, "hour", true);
   // 计算时间差共有多少个天
-  let dayC = curDate.diff(date, "day", true);
+  const dayC = curDate.diff(date, "day", true);
   // 计算时间差共有多少个周
-  let weekC = curDate.diff(date, "week", true);
+  const weekC = curDate.diff(date, "week", true);
   // 计算时间差共有多少个月
-  let monthC = curDate.diff(date, "month", true);
+  const monthC = curDate.diff(date, "month", true);
 
   if (minC < 5) {
     return `刚刚`;
@@ -54,20 +54,20 @@ export function convertTimeToHumanReadable(dateTime) {
   }
 }
 
-export function convertTimeOffsetToHumanReadable(dateTime) {
-  let date = dayjs(dateTime);
-  let curDate = dayjs();
+export function convertTimeOffsetToHumanReadable(dateTime, now) {
+  const date = dayjs(dateTime);
+  const curDate = now ?? dayjs();
 
   // 计算时间差共有多少个分钟
-  let minC = curDate.diff(date, "minute", true);
+  const minC = curDate.diff(date, "minute", true);
   // 计算时间差共有多少个小时
-  let hourC = curDate.diff(date, "hour", true);
+  const hourC = curDate.diff(date, "hour", true);
   // 计算时间差共有多少个天
-  let dayC = curDate.diff(date, "day", true);
+  const dayC = curDate.diff(date, "day", true);
   // 计算时间差共有多少个月
-  let monthC = curDate.diff(date, "month", true);
+  const monthC = curDate.diff(date, "month", true);
   // 计算时间差共有多少个年
-  let yearC = curDate.diff(date, "year", true);
+  const yearC = curDate.diff(date, "year", true);
 
   if (minC < 1) {
     return `刚刚`;
@@ -117,10 +117,10 @@ export function toLine(name) {
  * @param {*} source 下划线参数的对象
  */
 export function parseToLineObjectToToHumpObject(target, source) {
-  let resultItem = Object.assign({}, target);
-  let keys = Object.keys(source);
+  const resultItem = Object.assign({}, target);
+  const keys = Object.keys(source);
   for (let n = 0; n < keys.length; n++) {
-    let key = keys[n];
+    const key = keys[n];
     resultItem[toHump(key)] = source[key];
   }
   return resultItem;
@@ -179,7 +179,7 @@ export function autoFillHttp(url) {
 
 export function getDomain(url) {
   if (url) {
-    return url.replace("http://", "").replace("https://", "").replace("www.", "").replace("/", "");
+    return new URL(url).host
   }
   return url;
 }
@@ -201,10 +201,10 @@ export function dateToStr(date, pattern) {
 }
 
 export function genRangeDate(startDatetime, endDatetime) {
-  let startDate = dayjs(startDatetime)
-  let endDate = dayjs(endDatetime);
-  let result = [];
-  let dayCount = endDate.diff(startDate, "day");
+  const startDate = dayjs(startDatetime)
+  const endDate = dayjs(endDatetime);
+  const result = [];
+  const dayCount = endDate.diff(startDate, "day");
   for (let i = 0; i <= dayCount; i++) {
     result.push(endDate.subtract(i, "day").format("YYYY-MM-DD"));
   }
@@ -212,7 +212,7 @@ export function genRangeDate(startDatetime, endDatetime) {
 }
 
 export function convertPureJobDetailUrl(link) {
-  let url = new URL(link);
+  const url = new URL(link);
   return url.origin + url.pathname;
 }
 

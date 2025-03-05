@@ -16,8 +16,9 @@
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
     "postinstall": "wxt prepare",
-    "e2e:install": "playwright install --with-deps",
-    "e2e": "bddgen && playwright test"
+    "test:e2e:install": "playwright install --with-deps",
+    "test:e2e": "bddgen && playwright test",
+    "test:unit": "vitest"
   },
   "nx": {
     "sourceRoot": "apps/extension/src",
@@ -91,6 +92,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^15.15.0",
+    "happy-dom": "^17.2.2",
     "lightningcss": "^1.29.1",
     "playwright-bdd": "^8.2.0",
     "rollup-plugin-copy": "^3.5.0",
@@ -102,6 +104,7 @@
     "vite": "^6.2.0",
     "vite-plugin-wasm": "^3.4.1",
     "vite-plugin-web-extension": "^4.4.3",
+    "vitest": "^3.0.7",
     "web-ext": "^8.4.0",
     "wxt": "^0.19.28"
   }
