@@ -135,3 +135,9 @@ export class JobAnalysisElement extends LitElement {
     }
   }
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'job-analysis-element': JobAnalysisElement;
+  }
+}

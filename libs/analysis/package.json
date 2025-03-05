@@ -31,6 +31,8 @@
     "vitest": "^3.0.7"
   },
   "dependencies": {
-    "lit": "3.2.1"
+    "@lit/react": "^1.0.7",
+    "lit": "3.2.1",
+    "react": "^19.0.0"
   }
 }

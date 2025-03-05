@@ -44,3 +44,6 @@ apps/extension/package-lock.json
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+
+
+storybook-static

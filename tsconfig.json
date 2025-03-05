@@ -9,5 +9,10 @@
     {
       "path": "./apps/extension"
     }
-  ]
+  ],
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  }
 }
