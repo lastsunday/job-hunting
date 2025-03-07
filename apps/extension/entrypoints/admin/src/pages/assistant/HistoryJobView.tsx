@@ -153,10 +153,14 @@ const HistoryJobView: React.FC = () => {
                         className={styles.item}
                         onCardClick={onCardClickHandle}
                         onLocate={onJobItemLocateHandle}
-                        analysisConfig={Object.assign(
-                          { demand: `${item.name}\n${item.desc}` },
+                        analysisConfig={
                           analysisConfig
-                        )}
+                            ? Object.assign(
+                                { demand: `${item.name}\n${item.desc}` },
+                                analysisConfig
+                              )
+                            : null
+                        }
                       ></JobItemCard>
                     ))
                   ) : (

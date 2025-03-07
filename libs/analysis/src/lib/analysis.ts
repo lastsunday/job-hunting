@@ -2,6 +2,7 @@ import { LitElement, css, html } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { Source, useAnalysis } from './hooks/analysis.js';
 import { styleMap } from 'lit/directives/style-map.js';
+import { convertEmptyStringToUndefined } from './utils.js';
 const { analyze } = useAnalysis();
 
 @customElement('job-analysis-element')
@@ -85,7 +86,7 @@ export class JobAnalysisElement extends LitElement {
     this._loading = true;
     this._error = false;
     try {
-      const result = await analyze({ source: this.source, url: this.url, token: this.token, model: this.model, demand: this.demand, resume: this.resume, getResponse: this.getResponse });
+      const result = await analyze({ source: this.source, url: convertEmptyStringToUndefined(this.url), token: convertEmptyStringToUndefined(this.token), model: convertEmptyStringToUndefined(this.model), demand: this.demand, resume: this.resume, getResponse: this.getResponse });
       const { matchValue, thinking } = result;
       this._matchValue = matchValue;
       this._thinking = thinking;
