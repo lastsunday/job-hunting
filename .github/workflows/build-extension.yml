@@ -65,7 +65,6 @@ jobs:
       - name: Setup e2e tests
         run: |
           pnpm exec nx run @job-hunting/extension:test:e2e:install
-        if: steps.e2e-tests-cache.outputs.cache-hit != 'true'
 
       - name: Run e2e tests
         run: |
