@@ -6,7 +6,6 @@
   font-size: 12px;
   overflow-x: clip;
   margin: 5px;
-
 }
 
 .item {
@@ -64,4 +63,10 @@
 .tag {
   display: flex;
   align-items: center;
+}
+
+.analysis {
+  display: flex;
+  align-items: start;
+  padding-bottom: 10px;
 }

@@ -1,23 +1,34 @@
-import { AssistantApi, TagApi } from "@/common/api";
-import { SearchFaviousJobBO } from "@/common/data/bo/searchFaviousJobBO";
-import { Empty, Flex, FloatButton, Modal, Pagination, Spin, Splitter } from "antd";
-import React from "react";
-import JobItemCard from "../../components/JobItemCard";
+import { AssistantApi, TagApi } from '@/common/api';
+import { SearchFaviousJobBO } from '@/common/data/bo/searchFaviousJobBO';
+import {
+  Empty,
+  Flex,
+  FloatButton,
+  Modal,
+  Pagination,
+  Spin,
+  Splitter,
+} from 'antd';
+import React, { use } from 'react';
+import JobItemCard from '../../components/JobItemCard';
 
-import { SearchOutlined } from "@ant-design/icons";
-import type { DraggableData, DraggableEvent } from "react-draggable";
-import Draggable from "react-draggable";
-import CompanyItemTable from "../../components/CompanyItemTable";
-import JobItemTable from "../../components/JobItemTable";
-import { CompanyData } from "../../data/CompanyData";
-import { FavoriteJobSettingData } from "../../data/FavoriteJobSettingData";
-import { JobData } from "../../data/JobData";
-import FavoriteJobSettingView from "./FavoriteJobSettingView";
-import "./FavoriteJobView.css";
-import styles from "./FavoriteJobView.module.css";
-import BasicMap from "../../components/BasicMap";
-import { useJob } from "../../hooks/job";
-import { toLine } from "@/common/utils";
+import { SearchOutlined } from '@ant-design/icons';
+import type { DraggableData, DraggableEvent } from 'react-draggable';
+import Draggable from 'react-draggable';
+import CompanyItemTable from '../../components/CompanyItemTable';
+import JobItemTable from '../../components/JobItemTable';
+import { CompanyData } from '../../data/CompanyData';
+import { FavoriteJobSettingData } from '../../data/FavoriteJobSettingData';
+import { JobData } from '../../data/JobData';
+import FavoriteJobSettingView from './FavoriteJobSettingView';
+import './FavoriteJobView.css';
+import styles from './FavoriteJobView.module.css';
+import BasicMap from '../../components/BasicMap';
+import { useJob } from '../../hooks/job';
+import { toLine } from '@/common/utils';
+import { Page, useAnalysis } from '../../hooks/analysis';
+const { queryAnalysisConfig } = useAnalysis();
+import { AnalysisConfigDTO } from '@/common/data/dto/analysisConfigDTO';
 
 const { convertToJobDataList, convertToJobData } = useJob();
 
@@ -50,6 +61,7 @@ const FavoriteJobView: React.FC = () => {
   const [locateJobItem, setLocateJobItem] = useState(null);
   const [initLocateItem, setInitLocateItem] = useState(null);
 
+  const [analysisConfig, setAnalysisConfig] = useState<AnalysisConfigDTO>(null);
 
   const onStart = (_event: DraggableEvent, uiData: DraggableData) => {
     const { clientWidth, clientHeight } = window.document.documentElement;
@@ -66,25 +78,48 @@ const FavoriteJobView: React.FC = () => {
   };
 
   const getSearchParam = () => {
-    let searchParam = new SearchFaviousJobBO();
+    const searchParam = new SearchFaviousJobBO();
     searchParam.pageNum = page;
     searchParam.pageSize = pageSize;
     Object.assign(searchParam, favoriteJobSetting);
     if (searchParam.sortMode == 1) {
-      searchParam.orderByColumn =
-        `${toLine('jobFirstPublishDatetime')} DESC, ${toLine('createDatetime')} DESC`;
+      searchParam.orderByColumn = `${toLine(
+        'jobFirstPublishDatetime'
+      )} DESC, ${toLine('createDatetime')} DESC`;
     } else {
-      searchParam.orderByColumn =
-        `${toLine('createDatetime')} DESC, ${toLine('jobFirstPublishDatetime')} DESC `;
+      searchParam.orderByColumn = `${toLine('createDatetime')} DESC, ${toLine(
+        'jobFirstPublishDatetime'
+      )} DESC `;
     }
-    searchParam.orderBy = "";
+    searchParam.orderBy = '';
     return searchParam;
   };
 
   useEffect(() => {
+    const getAnalysisConfig = async () => {
+      const config = await queryAnalysisConfig();
+      if (config && config.enable) {
+        setAnalysisConfig(
+          Object.assign(
+            {
+              auto: config.autoAnalysisPages
+                ? config.autoAnalysisPages.includes(Page.ADMIN_FAVORITE)
+                : false,
+            },
+            config
+          )
+        );
+      } else {
+        setAnalysisConfig(null);
+      }
+    };
+    getAnalysisConfig();
+  }, []);
+
+  useEffect(() => {
     const getWhitelist = async () => {
-      let allTags = await TagApi.getAllTag();
-      let tagItems = [];
+      const allTags = await TagApi.getAllTag();
+      const tagItems = [];
       allTags.forEach((item) => {
         tagItems.push({ value: item.tagName, code: item.tagId });
       });
@@ -95,7 +130,7 @@ const FavoriteJobView: React.FC = () => {
 
   useEffect(() => {
     const getSetting = async () => {
-      let favoriteJobSetting =
+      const favoriteJobSetting =
         await AssistantApi.assistantGetJobFaviousSetting();
       setFavoriteJobSetting(favoriteJobSetting);
     };
@@ -107,10 +142,12 @@ const FavoriteJobView: React.FC = () => {
     setLoading(true);
     const search = async () => {
       try {
-        let searchResult = await AssistantApi.assistantSearchFaviousJob(
+        const searchResult = await AssistantApi.assistantSearchFaviousJob(
           getSearchParam()
         );
-        const filter = data.filter(item => (item.longitude == null || item.latitude == null));
+        const filter = data.filter(
+          (item) => item.longitude == null || item.latitude == null
+        );
         if (filter != null && filter.length > 0) {
           setInitLocateItem(convertToJobData(filter[0]));
         } else {
@@ -123,7 +160,7 @@ const FavoriteJobView: React.FC = () => {
       }
     };
     search();
-    return () => { };
+    return () => {};
   }, [
     //这里的值改变时，会执行上面return的匿名函数
     page,
@@ -180,30 +217,47 @@ const FavoriteJobView: React.FC = () => {
           vertical={false}
           gap="small"
           wrap
-          style={{ overflow: "hidden" }}
+          style={{ overflow: 'hidden' }}
         >
-          <Splitter style={{ boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)" }}>
+          <Splitter style={{ boxShadow: '0 0 10px rgba(0, 0, 0, 0.1)' }}>
             <Splitter.Panel
               collapsible
               defaultSize={380}
               min={380}
-              style={{ overflow: "hidden" }}
+              style={{ overflow: 'hidden' }}
             >
-              <Flex wrap className={styles.itemList} align="center" justify="center">
+              <Flex
+                wrap
+                className={styles.itemList}
+                align="center"
+                justify="center"
+              >
                 <Spin
                   spinning={loading}
                   delay={100}
                   prefixCls="FavoriteJobView"
                 >
-                  {data && data.length > 0 ? data.map((item, index) => (
-                    <JobItemCard
-                      key={item.id}
-                      data={item}
-                      className={styles.item}
-                      onCardClick={onCardClickHandle}
-                      onLocate={onJobItemLocateHandle}
-                    ></JobItemCard>
-                  )) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />}
+                  {data && data.length > 0 ? (
+                    data.map((item, index) => (
+                      <JobItemCard
+                        key={item.id}
+                        data={item}
+                        className={styles.item}
+                        onCardClick={onCardClickHandle}
+                        onLocate={onJobItemLocateHandle}
+                        analysisConfig={
+                          analysisConfig
+                            ? Object.assign(
+                                { demand: `${item.name}\n${item.desc}` },
+                                analysisConfig
+                              )
+                            : null
+                        }
+                      ></JobItemCard>
+                    ))
+                  ) : (
+                    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+                  )}
                 </Spin>
               </Flex>
             </Splitter.Panel>
@@ -259,7 +313,7 @@ const FavoriteJobView: React.FC = () => {
       <Modal
         title={
           <div
-            style={{ width: "100%", cursor: "move" }}
+            style={{ width: '100%', cursor: 'move' }}
             onMouseOver={() => {
               if (disabled) {
                 setDisabled(false);
@@ -270,9 +324,9 @@ const FavoriteJobView: React.FC = () => {
             }}
             // fix eslintjsx-a11y/mouse-events-have-key-events
             // https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/master/docs/rules/mouse-events-have-key-events.md
-            onFocus={() => { }}
-            onBlur={() => { }}
-          // end
+            onFocus={() => {}}
+            onBlur={() => {}}
+            // end
           >
             职位偏好设置
           </div>
@@ -281,7 +335,7 @@ const FavoriteJobView: React.FC = () => {
         onCancel={handleFavoriteJobSettingModalCancel}
         footer={null}
         width="60%"
-        style={{ maxWidth: "700px" }}
+        style={{ maxWidth: '700px' }}
         mask={false}
         maskClosable={false}
         modalRender={(modal) => (
