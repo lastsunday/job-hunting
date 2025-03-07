@@ -10,14 +10,17 @@ import {
   message,
   Radio,
   Row,
+  Select,
+  SelectProps,
   Spin,
   Steps,
-  Switch,
 } from 'antd';
 import React, { useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 import SubmitButton from '../../components/SubmitButton';
-import { Source, useAnalysis } from '../../hooks/analysis';
+import { Page, Source, useAnalysis } from '../../hooks/analysis';
+
+const { getLabelBySource, getLableByPage } = useAnalysis();
 import useAnalysisStore from '../../store/AnalysisStore';
 import { errorLog } from '@/common/log';
 import Markdown from 'marked-react';
@@ -45,15 +48,13 @@ const SettingView: React.FC = () => {
     setCurrent(current - 1);
   };
 
-  const { getLabelBySource } = useAnalysis();
-
   type FieldType = {
     source: Source;
     url?: string;
     model?: string;
     token?: string;
     resume?: string;
-    autoAnalysisToSeachPage?: boolean;
+    autoAnalysisPages?: Array<Page>;
   };
 
   const SOURCE_OPTIONS = [];
@@ -179,6 +180,15 @@ LM Studio安装和使用请见 [LM Studio](https://lmstudio.ai/)，下面是简�
 - **职位猎人有限公司**  2019.11-2024.11
 - **职位**：高级Java工程师`;
 
+  const autoAnalysisPageOption: SelectProps['options'] = [];
+
+  Object.keys(Page).forEach((key: string) => {
+    autoAnalysisPageOption.push({
+      label: getLableByPage(key),
+      value: key,
+    });
+  });
+
   const steps = [
     [
       <Col key={0}>
@@ -269,13 +279,13 @@ LM Studio安装和使用请见 [LM Studio](https://lmstudio.ai/)，下面是简�
     ],
     [
       <Col key={2}>
-        <Form.Item<FieldType>
-          name="autoAnalysisToSeachPage"
-          label="招聘网站搜索页"
-        >
-          <Switch
-            checkedChildren="开启自动职位分析"
-            unCheckedChildren="关闭自动职位分析"
+        <Form.Item<FieldType> name="autoAnalysisPages" label="自动分析职位页面">
+          <Select
+            mode="tags"
+            allowClear
+            placeholder="请选择要开启自动分析的页面"
+            style={{ width: '100%' }}
+            options={autoAnalysisPageOption}
           />
         </Form.Item>
       </Col>,
@@ -340,7 +350,7 @@ LM Studio安装和使用请见 [LM Studio](https://lmstudio.ai/)，下面是简�
                 },
                 {
                   title: '页面配置',
-                  description: `进行插件运行页面配置，使职位分析在页面生效`,
+                  description: `进行插件运行页面配置，使职位分析设置在页面生效`,
                 },
                 {
                   title: '确认',

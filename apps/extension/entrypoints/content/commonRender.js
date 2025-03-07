@@ -53,6 +53,7 @@ import { JobTagBO } from "../../common/data/bo/jobTagBO";
 import { useTag } from "@/common/hooks/tag";
 import "iconify-icon";
 const { convertToTagData } = useTag();
+import { CONTENT_SEARCH } from "@/common/data/dto/analysisConfigDTO";
 
 export function renderTimeTag(
   divElement,
@@ -144,7 +145,7 @@ export function renderTimeTag(
     const url = analysisConfig.url;
     const model = analysisConfig.model;
     const token = analysisConfig.token;
-    const auto = analysisConfig.autoAnalysisToSeachPage;
+    const auto = analysisConfig.autoAnalysisPages ? analysisConfig.autoAnalysisPages.includes(CONTENT_SEARCH) : false;
     const demand = `${jobDTO.jobName}\n${jobDTO.jobDescription}`;
     const resume = analysisConfig.resume;
     const element = document.createElement('job-analysis-element');

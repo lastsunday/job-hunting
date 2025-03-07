@@ -33,6 +33,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@electric-sql/pglite": "^0.2.17",
     "@iconify/json": "^2.2.312",
+    "@lit/react": "^1.0.7",
     "@pansy/lnglat-transform": "^1.0.3",
     "@tsparticles/react": "^3.0.0",
     "@types/geojson": "^7946.0.16",

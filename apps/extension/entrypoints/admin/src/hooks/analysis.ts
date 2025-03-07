@@ -9,7 +9,19 @@ export enum Page {
      * 搜索页
      */
     CONTENT_SEARCH = 'CONTENT_SEARCH',
+    /**
+     * 职位偏好
+     */
+    ADMIN_FAVORITE = 'ADMIN_FAVORITE',
+    /**
+     * 浏览历史
+     */
+    ADMIN_HISTORY = 'ADMIN_HISTORY',
 }
+
+import { ConfigApi } from "@/common/api";
+import { CONFIG_KEY_ANALYSIS } from "@/common/config";
+import { AnalysisConfigDTO } from "@/common/data/dto/analysisConfigDTO";
 
 export function useAnalysis() {
 
@@ -29,11 +41,25 @@ export function useAnalysis() {
     const getLableByPage = (page: Page | string) => {
         switch (page) {
             case Page.CONTENT_SEARCH:
-                return `搜索页`;
+                return `职位搜索页`;
+            case Page.ADMIN_FAVORITE:
+                return `职位偏好页`;
+            case Page.ADMIN_HISTORY:
+                return `浏览历史页`;
             default:
                 throw `unknow source ${page}`;
         }
     }
 
-    return { getLabelBySource, getLableByPage };
+    const queryAnalysisConfig = async () => {
+        const configValue = await ConfigApi.getConfigByKey(CONFIG_KEY_ANALYSIS);
+        if (configValue && configValue.value) {
+            const config = JSON.parse(configValue.value);
+            return Object.assign(new AnalysisConfigDTO(), config);
+        } else {
+            return new AnalysisConfigDTO();
+        }
+    }
+
+    return { getLabelBySource, getLableByPage, queryAnalysisConfig };
 }

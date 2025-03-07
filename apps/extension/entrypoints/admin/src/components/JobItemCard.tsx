@@ -21,6 +21,9 @@ import { QuestionCircleOutlined } from '@ant-design/icons';
 import { JobData } from '../data/JobData';
 import CustomTag from './CustomTag';
 import './JobItemCard.css';
+//TODO 直接引用analysis包的JobAnalysisComponent会报错,这里使用的由项目重新lit react包装的组件，需要研究
+import { JobAnalysisComponent } from './JobAnalysisComponent';
+import { Source } from '../hooks/analysis';
 
 const { platformLogo, platformFormat } = useJob();
 const { convertToTagData } = useTag();
@@ -52,6 +55,15 @@ export type JobItemCardProps = {
   className?: string;
   onCardClick?: (data: JobData) => void;
   onLocate?: (data: JobData) => void;
+  analysisConfig?: {
+    url?: string;
+    model?: string;
+    token?: string;
+    demand?: string;
+    resume?: string;
+    source?: Source;
+    auto?: boolean;
+  };
 };
 const JobItemCard: React.FC<JobItemCardProps> = (props) => {
   const {
@@ -120,6 +132,29 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
           props.onCardClick(props.data);
         }}
       >
+        <Flex justify="space-between" align="center">
+          <Tag
+            icon={<Icon icon="formkit:datetime" />}
+            style={{
+              backgroundColor: getTimeColorByOffsetTimeDay(publishDatetime),
+              color: 'white',
+            }}
+          >
+            {publishDatetime
+              ? ` ${convertTimeOffsetToHumanReadable(publishDatetime)}发布`
+              : ` 发布时间未知`}
+          </Tag>
+          {props.analysisConfig ? (
+            <JobAnalysisComponent
+              {...props.analysisConfig}
+              className={styles.analysis}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+            />
+          ) : null}
+        </Flex>
         <Flex className={styles.item}>
           {isToday(createDatetime) ? (
             <div className={styles.newBadge}>
@@ -240,17 +275,6 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
           flex={1}
           style={{ alignItems: 'end' }}
         >
-          <Tag
-            icon={<Icon icon="formkit:datetime" />}
-            style={{
-              backgroundColor: getTimeColorByOffsetTimeDay(publishDatetime),
-              color: 'white',
-            }}
-          >
-            {publishDatetime
-              ? ` ${convertTimeOffsetToHumanReadable(publishDatetime)}发布`
-              : ` 发布时间未知`}
-          </Tag>
           <Flex
             flex={1}
             align="end"
