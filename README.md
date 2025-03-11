@@ -198,3 +198,45 @@
 <div style="margin-top:30px">
     <img src="docs\introduction\sidepanel_admin_setting.png" alt="sidepanel_admin_setting" width="1000px"/>
 </div>
+
+## Roadmap（饼）
+
+### Extension
+
+#### 个人助理模块
+
+- 简历编写
+- 助理提醒
+  - 今日感觉
+  - 查看新职位
+  - 简历投递
+  - 一日三餐
+  - 间歇提醒
+  - 外出/运动
+  - 社交互动
+- 薪酬查询？
+- 职业发展？
+
+#### 个人建设模块
+
+- 心理建设
+  - 书本推荐
+- 身体建设？
+  - 运动推荐
+- 待业期？
+- 职业之路？
+  - 学习路线【Roadmap】
+
+### Server & Server-UI
+
+#### 职位模块
+
+- 查询
+
+#### 公司模块
+
+- 查询
+
+#### 支撑模块
+
+- 数据同步
