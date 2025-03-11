@@ -42,18 +42,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Setup e2e tests from cache
-        uses: actions/cache@0c907a75c2c80ebcb7f088228285e798b750cf8f
-        id: e2e-tests-cache
-        with:
-          path: |
-            ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/playwright.config.ts') }}
-
       - name: Setup e2e tests
         run: |
           pnpm exec nx run analysis:e2e:install
-        if: steps.e2e-tests-cache.outputs.cache-hit != 'true'
 
       - name: Run e2e tests
         run: |
