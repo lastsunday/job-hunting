@@ -1,0 +1,63 @@
+name: build-server-ui
+run-name: ${{ github.actor }} server ui build
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+env:
+  ROOT_DIR: apps/server-ui/
+
+permissions:
+  contents: write
+
+jobs:
+  build-server-ui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+        name: Install pnpm
+        with:
+          version: 10.5.0
+          run_install: false
+
+      - name: Install Node.js
+        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run unit tests
+        run: |
+          pnpm exec nx run server-ui:test
+
+      - name: Build server ui
+        run: |
+          pnpm exec nx run server-ui:build
+
+      - name: Setup e2e tests from cache
+        uses: actions/cache@0c907a75c2c80ebcb7f088228285e798b750cf8f
+        id: e2e-tests-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/playwright.config.ts') }}
+
+      - name: Setup e2e tests
+        run: |
+          pnpm exec nx run server-ui-e2e:e2e:install
+        if: steps.e2e-tests-cache.outputs.cache-hit != 'true'
+
+      - name: Run e2e tests
+        run: |
+          pnpm exec nx run server-ui:start & pnpm exec nx run server-ui-e2e:e2e

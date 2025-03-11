@@ -237,7 +237,7 @@ export default function Index() {
             <div id="other-links">
               <a
                 id="nx-console"
-                className="button-pill rounded shadow"
+                className="rounded shadow button-pill"
                 href="https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console&utm_source=nx-project"
                 target="_blank"
                 rel="noreferrer"
@@ -258,7 +258,7 @@ export default function Index() {
               </a>
               <a
                 id="nx-console-jetbrains"
-                className="button-pill rounded shadow"
+                className="rounded shadow button-pill"
                 href="https://plugins.jetbrains.com/plugin/21060-nx-console"
                 target="_blank"
                 rel="noreferrer"
@@ -330,7 +330,7 @@ export default function Index() {
               </div>
               <a
                 id="nx-repo"
-                className="button-pill rounded shadow"
+                className="rounded shadow button-pill"
                 href="https://github.com/nrwl/nx?utm_source=nx-project"
                 target="_blank"
                 rel="noreferrer"

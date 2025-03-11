@@ -30,7 +30,7 @@
     "@swc-node/register": "~1.9.2",
     "@swc/core": "~1.5.29",
     "@swc/helpers": "~0.5.15",
-    "@testing-library/react": "15.0.6",
+    "@testing-library/react": "^16.2.0",
     "@types/jest": "^29.5.12",
     "@types/node": "18.16.9",
     "@types/react": "18.3.1",
@@ -62,8 +62,8 @@
     "vite-plugin-dts": "~3.8.3"
   },
   "dependencies": {
-    "next": "14.2.16",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "next": "^15.2.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   }
 }
