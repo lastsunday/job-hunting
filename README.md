@@ -6,6 +6,7 @@
 
 [![build-extension](https://github.com/lastsunday/job-hunting/actions/workflows/build-extension.yml/badge.svg)](https://github.com/lastsunday/job-hunting/actions/workflows/build-extension.yml)
 [![build-server](https://github.com/lastsunday/job-hunting/actions/workflows/build-server.yml/badge.svg)](https://github.com/lastsunday/job-hunting/actions/workflows/build-server.yml)
+[![build-server](https://github.com/lastsunday/job-hunting/actions/workflows/build-server-ui.yml/badge.svg)](https://github.com/lastsunday/job-hunting/actions/workflows/build-server-ui.yml)
 
 ## 为什么要做这个项目
 
