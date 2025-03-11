@@ -47,3 +47,8 @@ vitest.config.*.timestamp*
 
 
 storybook-static
+
+# Next.js
+.next
+out
+test-output
