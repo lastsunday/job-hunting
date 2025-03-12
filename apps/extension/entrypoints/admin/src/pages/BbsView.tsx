@@ -1,23 +1,32 @@
-import { ConfigApi } from "@/common/api";
-import { EXCEPTION, GithubApi } from "@/common/api/github";
-import { COMMENT_PAGE_SIZE } from "@/common/config";
-import { Config } from "@/common/data/domain/config";
-import { errorLog } from "@/common/log";
-import { randomDelay } from "@/common/utils";
+import { ConfigApi } from '@/common/api';
+import { EXCEPTION, GithubApi } from '@/common/api/github';
+import { COMMENT_PAGE_SIZE } from '@/common/config';
+import { Config } from '@/common/data/domain/config';
+import { errorLog } from '@/common/log';
+import { randomDelay, isNotEmpty } from '@/common/utils';
 import type { CascaderProps } from 'antd';
-import { Cascader, Empty, Flex, FloatButton, Modal, Pagination, Spin, message } from 'antd';
+import {
+  Cascader,
+  Empty,
+  Flex,
+  FloatButton,
+  Modal,
+  Pagination,
+  Spin,
+  message,
+} from 'antd';
 import React from 'react';
 import { IssueData } from '../data/IssueData';
-import { IssueEditData } from "../data/IssueEditData";
+import { IssueEditData } from '../data/IssueEditData';
 import { PageInfo } from '../data/PageInfo';
-import { useLocation } from "../hooks/location";
-import { BBSViewDTO } from "./bbs/BBSViewDTO";
+import { useLocation } from '../hooks/location';
+import { BBSViewDTO } from './bbs/BBSViewDTO';
 import Issue from './bbs/Issue';
-import IssueCommentView from "./bbs/IssueCommentView";
-import IssueEdit from "./bbs/IssueEdit";
+import IssueCommentView from './bbs/IssueCommentView';
+import IssueEdit from './bbs/IssueEdit';
 const { getAllData, getLocationId } = useLocation();
 
-const CONFIG_KEY_VIEW_BBS = "CONFIG_KEY_VIEW_BBS";
+const CONFIG_KEY_VIEW_BBS = 'CONFIG_KEY_VIEW_BBS';
 
 interface Option {
   name: string;
@@ -27,7 +36,7 @@ interface Option {
 const options: Option[] = [...getAllData()];
 
 const saveConfig = async (value: string[]) => {
-  let configFromStorage = await ConfigApi.getConfigByKey(CONFIG_KEY_VIEW_BBS);
+  const configFromStorage = await ConfigApi.getConfigByKey(CONFIG_KEY_VIEW_BBS);
   let bbsViewDTO = new BBSViewDTO();
   let configObject = configFromStorage;
   if (!configObject) {
@@ -45,10 +54,9 @@ const saveConfig = async (value: string[]) => {
   bbsViewDTO.location = value;
   configObject.value = JSON.stringify(bbsViewDTO);
   await ConfigApi.addOrUpdateConfig(configObject);
-}
+};
 
 const BbsView: React.FC = () => {
-
   const [pageSize, setPageSize] = useState(COMMENT_PAGE_SIZE);
 
   const [selection, setSelection] = useState([]);
@@ -58,7 +66,7 @@ const BbsView: React.FC = () => {
     after: null,
     last: null,
     before: null,
-    id: getLocationId([])
+    id: getLocationId([]),
   });
   const [data, setData] = useState<IssueData[]>();
   const [loading, setLoading] = React.useState<boolean>(false);
@@ -73,6 +81,7 @@ const BbsView: React.FC = () => {
 
   const [isIssueCommentModalOpen, setIsIssueCommentModalOpen] = useState(false);
   const [commentIssueData, setCommentIssueData] = useState<IssueData>();
+  const [init, setInit] = useState(false);
 
   const onChange: CascaderProps<Option>['onChange'] = (value: string[]) => {
     cascaderRef.current.blur();
@@ -84,19 +93,56 @@ const BbsView: React.FC = () => {
   useEffect(() => {
     const fetchConfig = async () => {
       try {
-        let configValue = await ConfigApi.getConfigByKey(CONFIG_KEY_VIEW_BBS);
+        const configValue = await ConfigApi.getConfigByKey(CONFIG_KEY_VIEW_BBS);
         if (configValue && configValue.value) {
-          let config = JSON.parse(configValue.value);
-          setSelection(config.location)
+          const config = JSON.parse(configValue.value);
+          if (isNotEmpty(config.location)) {
+            setSelection(config.location);
+          } else {
+            setSelection(['北京市']);
+          }
         } else {
-          setSelection(["北京市"])
+          setSelection(['北京市']);
         }
+        setInit(true);
       } catch (e) {
         errorLog(e);
       }
     };
     fetchConfig();
-  }, [])
+  }, []);
+
+  const search = async () => {
+    //scroll to top
+    scrollToTop();
+    setLoading(true);
+    try {
+      const result = await GithubApi.queryComment(searchParam);
+      setData(result.search.nodes);
+      setTotal(result.search.issueCount);
+      setPageInfo(result.search.pageInfo);
+    } catch (e) {
+      if (e == EXCEPTION.NO_LOGIN) {
+        messageApi.open({
+          type: 'warning',
+          content: `需要登录后查看`,
+        });
+      } else {
+        messageApi.open({
+          type: 'error',
+          content: `查询失败`,
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (init) {
+      search();
+    }
+  }, [searchParam, refresh]);
 
   useEffect(() => {
     setSearchParam({
@@ -104,44 +150,13 @@ const BbsView: React.FC = () => {
       after: null,
       last: null,
       before: null,
-      id: getLocationId(selection)
+      id: getLocationId(selection),
     });
-  }, [selection])
-
-  useEffect(() => {
-    const search = async () => {
-      //scroll to top
-      scrollToTop();
-      setLoading(true);
-      try {
-        let result = await GithubApi.queryComment(searchParam);
-        setData(result.search.nodes);
-        setTotal(result.search.issueCount);
-        setPageInfo(result.search.pageInfo);
-      } catch (e) {
-        if (e == EXCEPTION.NO_LOGIN) {
-          messageApi.open({
-            type: 'warning',
-            content: `需要登录后查看`,
-          });
-        } else {
-          messageApi.open({
-            type: 'error',
-            content: `查询失败`,
-          });
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    if (searchParam.id != "") {
-      search();
-    }
-  }, [searchParam, refresh]);
+  }, [selection]);
 
   const scrollToTop = () => {
     rootRef.current.scrollIntoView();
-  }
+  };
 
   const onPageChange = (page: number, pageSize: number) => {
     if (page > currentPage) {
@@ -159,12 +174,12 @@ const BbsView: React.FC = () => {
     }
     setPageSize(pageSize);
     setSearchParam(Object.assign({}, searchParam));
-  }
+  };
 
   const onIssueEditOpen = () => {
-    setEditData({ id: getLocationId(selection) })
+    setEditData({ id: getLocationId(selection) });
     setIsIssueModalOpen(true);
-  }
+  };
 
   const onIssueSave = async (data: IssueEditData) => {
     try {
@@ -176,76 +191,99 @@ const BbsView: React.FC = () => {
       //延迟，以便能刷新出新讨论
       await randomDelay(1000, 0);
       setIsIssueModalOpen(false);
-      setRefresh(!refresh)
+      setRefresh(!refresh);
     } catch (e) {
       messageApi.open({
         type: 'error',
         content: `新增讨论失败`,
       });
     }
-  }
+  };
 
   const onCommentOpen = (data: IssueData) => {
     setCommentIssueData(data);
     setIsIssueCommentModalOpen(true);
-  }
+  };
 
-  return <>
-    {contextHolder}
-    <FloatButton.Group
-      shape="circle"
-    >
-      <FloatButton type="primary" tooltip="新增讨论" onClick={onIssueEditOpen} />
-      <FloatButton.BackTop onClick={scrollToTop} visibilityHeight={0} />
-    </FloatButton.Group>
+  return (
+    <>
+      {contextHolder}
+      <FloatButton.Group shape="circle">
+        <FloatButton
+          type="primary"
+          tooltip="新增讨论"
+          onClick={onIssueEditOpen}
+        />
+        <FloatButton.BackTop onClick={scrollToTop} visibilityHeight={0} />
+      </FloatButton.Group>
 
-    <Flex ref={rootRef} gap="small" wrap vertical>
-      <Flex>
-        <Cascader ref={cascaderRef} value={selection} fieldNames={{ label: "name", value: "name", children: "children" }} options={options} onChange={onChange} changeOnSelect />
-      </Flex>
-      <Spin spinning={loading}>
-        <Flex vertical gap={20}>
-          {data && data.length > 0 ?
-            data.map((item, index) => (
-              <Issue onCommentOpen={onCommentOpen} key={item.id} data={item}></Issue>
-            )) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
-          }
-          <Flex>
-            <Pagination simple current={currentPage} total={total} pageSize={pageSize} onChange={onPageChange} />
-          </Flex>
+      <Flex ref={rootRef} gap="small" wrap vertical>
+        <Flex>
+          <Cascader
+            allowClear={false}
+            ref={cascaderRef}
+            value={selection}
+            fieldNames={{ label: 'name', value: 'name', children: 'children' }}
+            options={options}
+            onChange={onChange}
+            changeOnSelect
+          />
         </Flex>
-      </Spin>
-    </Flex>
-    <Modal
-      title={"新增讨论"}
-      open={isIssueModalOpen}
-      onCancel={() => {
-        setIsIssueModalOpen(false);
-      }}
-      maskClosable={false}
-      footer={null}
-      style={{ maxWidth: "1000px" }}
-      width="80%"
-      destroyOnClose
-    >
-      <IssueEdit data={editData} onSave={onIssueSave}></IssueEdit>
-    </Modal>
+        <Spin spinning={loading}>
+          <Flex vertical gap={20}>
+            {data && data.length > 0 ? (
+              data.map((item, index) => (
+                <Issue
+                  onCommentOpen={onCommentOpen}
+                  key={item.id}
+                  data={item}
+                ></Issue>
+              ))
+            ) : (
+              <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
+            )}
+            <Flex>
+              <Pagination
+                simple
+                current={currentPage}
+                total={total}
+                pageSize={pageSize}
+                onChange={onPageChange}
+              />
+            </Flex>
+          </Flex>
+        </Spin>
+      </Flex>
+      <Modal
+        title={'新增讨论'}
+        open={isIssueModalOpen}
+        onCancel={() => {
+          setIsIssueModalOpen(false);
+        }}
+        maskClosable={false}
+        footer={null}
+        style={{ maxWidth: '1000px' }}
+        width="80%"
+        destroyOnClose
+      >
+        <IssueEdit data={editData} onSave={onIssueSave}></IssueEdit>
+      </Modal>
 
-    <Modal
-      title={" "}
-      open={isIssueCommentModalOpen}
-      onCancel={() => {
-        setIsIssueCommentModalOpen(false);
-      }}
-      footer={null}
-      style={{ maxWidth: "1000px" }}
-      width="80%"
-      destroyOnClose
-    >
-      <IssueCommentView data={commentIssueData}></IssueCommentView>
-    </Modal>
-
-  </>
+      <Modal
+        title={' '}
+        open={isIssueCommentModalOpen}
+        onCancel={() => {
+          setIsIssueCommentModalOpen(false);
+        }}
+        footer={null}
+        style={{ maxWidth: '1000px' }}
+        width="80%"
+        destroyOnClose
+      >
+        <IssueCommentView data={commentIssueData}></IssueCommentView>
+      </Modal>
+    </>
+  );
 };
 
 export default BbsView;

@@ -5,14 +5,14 @@ import { genIdFromText } from "@/common/utils";
 export function useLocation() {
 
     const getLocationId = (value: string[]) => {
-        if (location) {
+        if (value && value.length > 0) {
             let id = "";
             value.forEach(item => {
                 id += `${genIdFromText(item)}-`;
             });
             return id.slice(0, -1);
         } else {
-            return null;
+            return "";
         }
     }
 
@@ -23,17 +23,17 @@ export function useLocation() {
     }
 
     const genHK_MO_TW_CodeName = (provinces) => {
-        let provincesList = [];
-        let provincesKeys = Object.keys(provinces);
+        const provincesList = [];
+        const provincesKeys = Object.keys(provinces);
         provincesKeys.forEach(element => {
-            let provincesResult = { code: element, name: element, children: [] };
-            let city = provinces[element];
-            let cityKeys = Object.keys(city);
+            const provincesResult = { code: element, name: element, children: [] };
+            const city = provinces[element];
+            const cityKeys = Object.keys(city);
             cityKeys.forEach(element => {
-                let cityResult = { code: element, name: element, children: [] };
-                let area = city[element];
+                const cityResult = { code: element, name: element, children: [] };
+                const area = city[element];
                 area.forEach(element => {
-                    let areaResult = { code: element, name: element };
+                    const areaResult = { code: element, name: element };
                     cityResult.children.push(areaResult)
                 })
                 provincesResult.children.push(cityResult);
