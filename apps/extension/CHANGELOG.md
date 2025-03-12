@@ -1,3 +1,14 @@
+## 3.7.1 (2025-03-12)
+
+### 🩹 Fixes
+
+- 修复讨论区的地区空白选项导致白屏的问题
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+- lsy632 @lsy632
+
 ## 3.7.0 (2025-03-07)
 
 ### 🚀 Features
