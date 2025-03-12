@@ -12,7 +12,8 @@ import { genIdFromText, genUniqueId, isBlank } from "@/common/utils";
 import dayjs from "dayjs";
 import { convertRows, getAll, getDb, getOne } from "../database";
 import { BaseService } from "./baseService";
-import { _addNotExistsTags, _searchWithTagInfo } from "./tagService";
+import { _addNotExistsTags, _searchWithTagInfo, _batchGetTagByIds } from "./tagService";
+import { PageBO } from "@/common/data/bo/pageBO";
 
 const COMPANY_ID_COLUMN = "company_id";
 
@@ -24,7 +25,7 @@ const SERVICE_INSTANCE = new BaseService("company_tag", "company_tag_id",
         return new SearchCompanyTagDTO();
     },
     (param) => {
-        let whereCondition = "";
+        const whereCondition = "";
         return whereCondition;
     }
 );
@@ -165,7 +166,7 @@ export const CompanyTagService = {
      */
     searchCompanyTag: async function (message, param) {
         try {
-            let result = await _searchWithTagInfo({
+            const result = await _searchWithTagInfo({
                 param,
                 cerateResultDTOFunction: () => {
                     return new SearchCompanyTagDTO()
@@ -235,18 +236,18 @@ export const CompanyTagService = {
    */
     statisticCompanyTag: async function (message, param) {
         try {
-            let result = new StatisticCompanyTagDTO();
-            let now = dayjs();
-            let todayStart = now.startOf("day").format();
-            let todayEnd = now
+            const result = new StatisticCompanyTagDTO();
+            const now = dayjs();
+            const todayStart = now.startOf("day").format();
+            const todayEnd = now
                 .startOf("day")
                 .add(1, "day")
                 .format();
-            let yesterdayStart = now
+            const yesterdayStart = now
                 .startOf("day")
                 .add(2, "day")
                 .format();
-            let yesterdayEnd = now
+            const yesterdayEnd = now
                 .startOf("day")
                 .add(1, "day")
                 .format();
@@ -295,6 +296,43 @@ export const CompanyTagService = {
             postErrorMessage(message, "[worker] companyTagExport error : " + e.message);
         }
     },
+    /**
+     *
+     * @param {Message} message
+     * @param {PageBO} param
+     *
+     * @returns Tag[]
+     */
+    companyTagGetRecentlyTag: async function (message, param) {
+        try {
+            let limit = '';
+            if (param.pageNum != null && param.pageSize != null) {
+                const limitStart = (param.pageNum - 1) * param.pageSize;
+                const limitEnd = param.pageSize;
+                limit = " limit " + limitEnd + " OFFSET " + limitStart;
+            }
+            const result = [];
+            const sqlQuery = `SELECT tag_id,MAX(update_datetime) update_datetime FROM company_tag WHERE source_type = 0 AND source IS NULL GROUP BY tag_id ORDER BY update_datetime DESC ${limit}`;
+            const { rows } = await (await getDb()).query(sqlQuery);
+            if (rows && rows.length > 0) {
+                const ids = rows.map(item => { return item.tag_id });
+                const tags = await _batchGetTagByIds(ids);
+                const tagsIdMap = new Map(tags.map(item => [item.tagId, item]))
+                ids.forEach(item => {
+                    const tag = tagsIdMap.get(item);
+                    if (tag) {
+                        result.push(tag);
+                    }
+                });
+            }
+            postSuccessMessage(message, result);
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] companyTagGetRecentlyTag error : " + e.message
+            );
+        }
+    }
 };
 
 /**
@@ -305,8 +343,8 @@ export async function _companyTagExport({ param = null, connection = null } = {}
     connection ??= await getDb();
     let limit = '';
     if (param.pageNum != null && param.pageSize != null) {
-        let limitStart = (param.pageNum - 1) * param.pageSize;
-        let limitEnd = param.pageSize;
+        const limitStart = (param.pageNum - 1) * param.pageSize;
+        const limitEnd = param.pageSize;
         limit = " limit " + limitEnd + " OFFSET " + limitStart;
     }
     let joinCondition = "";
@@ -323,7 +361,7 @@ export async function _companyTagExport({ param = null, connection = null } = {}
             "'";
     }
     if (param.companyIds) {
-        let idsString = "'" + param.companyIds.join("','") + "'";
+        const idsString = "'" + param.companyIds.join("','") + "'";
         joinCondition +=
             ` AND t1.company_id in (${idsString})`;
     }
@@ -340,10 +378,10 @@ export async function _companyTagExport({ param = null, connection = null } = {}
     if (param.isPublic != null) {
         whereCondition += ` AND t2.is_public = ${param.isPublic}`
     }
-    let sqlQuery = `SELECT t1.company_id AS company_id,t1.company_name AS company_name,STRING_AGG(DISTINCT t2.tag_name,',') AS tag_name_array,MAX(t1.create_datetime) AS create_datetime,MAX(t1.update_datetime) AS update_datetime FROM company_tag AS t1 LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id ${joinCondition} WHERE t1.source_type = 0 ${whereCondition} GROUP BY t1.company_id,t1.company_name ORDER BY update_datetime DESC`;
-    let querySql = sqlQuery + limit;
-    let countSql = `SELECT COUNT(*) AS total FROM (${sqlQuery}) AS t1`;
-    let result = {};
+    const sqlQuery = `SELECT t1.company_id AS company_id,t1.company_name AS company_name,STRING_AGG(DISTINCT t2.tag_name,',') AS tag_name_array,MAX(t1.create_datetime) AS create_datetime,MAX(t1.update_datetime) AS update_datetime FROM company_tag AS t1 LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id ${joinCondition} WHERE t1.source_type = 0 ${whereCondition} GROUP BY t1.company_id,t1.company_name ORDER BY update_datetime DESC`;
+    const querySql = sqlQuery + limit;
+    const countSql = `SELECT COUNT(*) AS total FROM (${sqlQuery}) AS t1`;
+    const result = {};
     const { rows: queryRows } = await connection.query(querySql);
     result.items = convertRows(queryRows);
     const { rows } = await connection.query(countSql);
@@ -356,17 +394,17 @@ export async function _companyTagExport({ param = null, connection = null } = {}
  * @param {CompanyTagBO[]} companyTagBOs 
  */
 export async function _batchAddOrUpdateCompanyTag({ companyTagBOs = null, overrideUpdateDatetime = null, connection = null } = {}) {
-    let allTags = [];
+    const allTags = [];
     companyTagBOs.map(item => { return item.tags }).forEach(items => {
         allTags.push(...items);
     })
     await _addNotExistsTags(allTags, { connection });
-    let sourceTypeSourceAndIdsMap = new Map();
-    let sourceTypeSourceAndSourceTypeMap = new Map();
-    let sourceTypeSourceAndSourceMap = new Map();
+    const sourceTypeSourceAndIdsMap = new Map();
+    const sourceTypeSourceAndSourceTypeMap = new Map();
+    const sourceTypeSourceAndSourceMap = new Map();
     for (let i = 0; i < companyTagBOs.length; i++) {
-        let item = companyTagBOs[i];
-        let key = item.sourceType + "_" + item.source;
+        const item = companyTagBOs[i];
+        const key = item.sourceType + "_" + item.source;
         if (!sourceTypeSourceAndIdsMap.has(key)) {
             sourceTypeSourceAndIdsMap.set(key, []);
             sourceTypeSourceAndSourceTypeMap.set(key, item.sourceType);
@@ -375,20 +413,20 @@ export async function _batchAddOrUpdateCompanyTag({ companyTagBOs = null, overri
         sourceTypeSourceAndIdsMap.get(key).push(genIdFromText(item.companyName));
     }
     sourceTypeSourceAndIdsMap.forEach(async (value, key, map) => {
-        let ids = sourceTypeSourceAndIdsMap.get(key);
-        let sourceType = sourceTypeSourceAndSourceTypeMap.get(key);
-        let source = sourceTypeSourceAndSourceMap.get(key);
+        const ids = sourceTypeSourceAndIdsMap.get(key);
+        const sourceType = sourceTypeSourceAndSourceTypeMap.get(key);
+        const source = sourceTypeSourceAndSourceMap.get(key);
         await SERVICE_INSTANCE._deleteByIds(ids, COMPANY_ID_COLUMN, { connection, otherCondition: `source_type=${sourceType} AND ${source ? "source = '" + source + "'" : "source IS NULL"}` });
     });
-    let companyTags = [];
+    const companyTags = [];
     for (let i = 0; i < companyTagBOs.length; i++) {
-        let item = companyTagBOs[i];
-        let companyName = item.companyName;
-        let companyId = genIdFromText(companyName);
+        const item = companyTagBOs[i];
+        const companyName = item.companyName;
+        const companyId = genIdFromText(companyName);
         for (let i = 0; i < item.tags.length; i++) {
-            let tagName = item.tags[i];
-            let tagId = genIdFromText(tagName);
-            let companyTag = new CompanyTag();
+            const tagName = item.tags[i];
+            const tagId = genIdFromText(tagName);
+            const companyTag = new CompanyTag();
             companyTag.companyTagId = genUniqueId();
             companyTag.companyId = companyId;
             companyTag.companyName = companyName;
@@ -409,14 +447,14 @@ export async function _batchAddOrUpdateCompanyTag({ companyTagBOs = null, overri
  */
 async function _addOrUpdateCompanyTag(param, overrideUpdateDatetime, { connection = null } = {}) {
     await _addNotExistsTags(param.tags, { connection });
-    let companyName = param.companyName;
-    let companyId = genIdFromText(companyName);
+    const companyName = param.companyName;
+    const companyId = genIdFromText(companyName);
     await SERVICE_INSTANCE._deleteById(companyId, COMPANY_ID_COLUMN, { connection, otherCondition: `source_type=${param.sourceType} AND ${param.source ? "source = '" + param.source + "'" : "source IS NULL"}` });
-    let companyTags = [];
+    const companyTags = [];
     for (let i = 0; i < param.tags.length; i++) {
-        let tagName = param.tags[i];
-        let tagId = genIdFromText(tagName);
-        let companyTag = new CompanyTag();
+        const tagName = param.tags[i];
+        const tagId = genIdFromText(tagName);
+        const companyTag = new CompanyTag();
         companyTag.companyTagId = genUniqueId();
         companyTag.companyId = companyId;
         companyTag.companyName = companyName;
@@ -437,19 +475,19 @@ async function _addOrUpdateCompanyTag(param, overrideUpdateDatetime, { connectio
  * @return CompanyTagDTO[]
  */
 export async function _getAllCompanyTagDTOByCompanyIds(param, { connection = null } = {}) {
-    let sqlSelectDTOByCompanyIds = genSqlSelectDTOByCompanyIds(param);
+    const sqlSelectDTOByCompanyIds = genSqlSelectDTOByCompanyIds(param);
     return await getAll(sqlSelectDTOByCompanyIds, [], new CompanyTagDTO(), { connection });
 }
 
 const getSqlDeleteByCompanyIds = (ids) => {
-    let idsString = "'" + ids.join("','") + "'";
+    const idsString = "'" + ids.join("','") + "'";
     return `
         DELETE FROM company_tag WHERE company_id in (${idsString})
     `;
 }
 
 function genSqlSelectDTOByCompanyIds(ids) {
-    let idsString = "'" + ids.join("','") + "'";
+    const idsString = "'" + ids.join("','") + "'";
     return `
     SELECT t1.company_tag_id, t1.company_id, t1.company_name,t1.tag_id, t2.tag_name,t1.seq ,t1.create_datetime, t1.update_datetime,t1.source_type,t1.source,t2.is_public FROM company_tag AS t1  LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id where company_id in (${idsString}) ORDER BY t1.seq ASC;
     `;

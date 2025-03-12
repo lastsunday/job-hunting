@@ -1,6 +1,5 @@
 import dayjs from "dayjs";
 import minMax from "dayjs/plugin/minMax";
-dayjs.extend(minMax);
 import {
   PLATFORM_BOSS,
   PLATFORM_JOBSDB,
@@ -35,12 +34,12 @@ import {
   getCompanyInfoByAiqicha,
   stopAndCleanAbortFunctionHandler,
 } from "./commonDataHandler";
+dayjs.extend(minMax);
 
 import $ from "jquery";
-import { AuthApi, CompanyApi, JobApi, TagApi, UserApi } from "../../common/api";
+import { AuthApi, CompanyApi, JobApi, UserApi } from "../../common/api";
 import { GithubApi } from "../../common/api/github";
 import { COMMENT_PAGE_SIZE, COMPANY_DATA_EXPRIE_DAY } from "../../common/config";
-import { Company } from "../../common/data/domain/company";
 import { errorLog, infoLog } from "../../common/log";
 import { logoResource } from "./assets/logo";
 
@@ -52,10 +51,10 @@ import { CompanyTagBO } from "../../common/data/bo/companyTagBO";
 
 import { JobTagBO } from "../../common/data/bo/jobTagBO";
 
+import { CONTENT_SEARCH } from "@/common/data/dto/analysisConfigDTO";
 import { useTag } from "@/common/hooks/tag";
 import "iconify-icon";
 const { convertToTagData } = useTag();
-import { CONTENT_SEARCH } from "@/common/data/dto/analysisConfigDTO";
 
 export function renderTimeTag(
   divElement,
@@ -768,6 +767,8 @@ function createMyJobTag(item, jobIdAndDTOMap) {
     param.jobId = item.jobId;
     param.tags = tags;
     return JobApi.jobTagAddOrUpdate(param);
+  }, async () => {
+    return await JobApi.jobTagGetRecentlyTag({})
   });
   return wrapper;
 }
@@ -1341,11 +1342,13 @@ function createMyCompanyTag(companyName) {
     param.companyName = companyName;
     param.tags = tags;
     return CompanyApi.addOrUpdateCompanyTag(param)
+  }, async () => {
+    return await CompanyApi.companyTagGetRecentlyTag({})
   });
   return root;
 }
 
-async function asyncRenderTag(div, title, getAllDTOFunction, saveTagFunction) {
+async function asyncRenderTag(div, title, getAllDTOFunction, saveTagFunction, getRecentlyTagFunction) {
   let inputReadOnly = true;
   const input = document.createElement("input");
   div.appendChild(input);
@@ -1401,7 +1404,7 @@ async function asyncRenderTag(div, title, getAllDTOFunction, saveTagFunction) {
       tagify.setReadonly(true);
       saving = false;
     } else {
-      const allTags = await TagApi.getAllTag();
+      const allTags = await getRecentlyTagFunction();
       const tagItems = [];
       allTags.forEach(item => {
         tagItems.push(item.tagName);
@@ -1524,6 +1527,7 @@ function genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
     companyTag,
     searchFunction,
     handleSearchCount,
+    platform: companyTag,
   });
   return result;
 }
@@ -1535,6 +1539,7 @@ async function asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback
   companyTag,
   searchFunction,
   handleSearchCount,
+  platform,
 }) {
   div.title = sourceTitle
   const loaddingTag = createATag(
@@ -1550,6 +1555,7 @@ async function asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback
         companyTag,
         searchFunction,
         handleSearchCount,
+        platform,
       });
     }
   );
@@ -1564,7 +1570,7 @@ async function asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback
       const tag = createATag("📡", sourceUrl, `${title}(疑似${count}条记录)`);
       div.appendChild(tag);
       renderCompanyReputationColor(tag, "red");
-      await addCompanyTagNotExists(keyword, [companyTag]);
+      await addCompanyTagNotExists(keyword, [companyTag], platform);
       companyTagUpdateCallback();
     } else {
       //不存在
@@ -1588,6 +1594,7 @@ async function asyncRenderCompanyChecking(div, keyword, companyTagUpdateCallback
           companyTag,
           searchFunction,
           handleSearchCount,
+          platform,
         });
       }
     );

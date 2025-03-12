@@ -14,7 +14,8 @@ import dayjs from "dayjs";
 import { convertRows, getAll, getDb } from "../database";
 import { BaseService } from "./baseService";
 import { _jobGetByIds } from "./jobService";
-import { _addNotExistsTags, _searchWithTagInfo } from "./tagService";
+import { _addNotExistsTags, _searchWithTagInfo, _batchGetTagByIds } from "./tagService";
+import { PageBO } from "@/common/data/bo/pageBO";
 
 const JOB_ID_COLUMN = "job_id";
 
@@ -26,7 +27,7 @@ const SERVICE_INSTANCE = new BaseService("job_tag", "id",
         return new JobTagSearchDTO();
     },
     (param) => {
-        let whereCondition = "";
+        const whereCondition = "";
         return whereCondition;
     }
 );
@@ -39,7 +40,7 @@ export const JobTagService = {
      */
     jobTagSearch: async function (message, param) {
         try {
-            let result = await _searchWithTagInfo({
+            const result = await _searchWithTagInfo({
                 param,
                 cerateResultDTOFunction: () => {
                     return new JobTagSearchDTO()
@@ -50,7 +51,7 @@ export const JobTagService = {
                 genSqlSearchQueryFunction: () => {
                     let whereCondition = "";
                     if (param.tagIds && param.tagIds.length > 0) {
-                        let ids = "'" + param.tagIds.join("','") + "'";
+                        const ids = "'" + param.tagIds.join("','") + "'";
                         whereCondition +=
                             ` AND t1.tag_id IN (${ids})`;
                     }
@@ -96,15 +97,15 @@ export const JobTagService = {
                     return _getAllJobTagDTOByJobIds(ids);
                 }
             });
-            let items = result.items;
+            const items = result.items;
             if (items && items.length > 0) {
-                let jobIds = [];
-                let jobIdAndItemMap = new Map();
+                const jobIds = [];
+                const jobIdAndItemMap = new Map();
                 items.forEach(item => {
                     jobIds.push(item.jobId);
                     jobIdAndItemMap.set(item.jobId, item);
                 });
-                let jobs = await _jobGetByIds({ param: jobIds });
+                const jobs = await _jobGetByIds({ param: jobIds });
                 if (jobs && jobs.length > 0) {
                     jobs.forEach(item => {
                         if (jobIdAndItemMap.has(item.jobId)) {
@@ -225,12 +226,12 @@ export const JobTagService = {
         try {
             let limit = '';
             if (param.pageNum != null && param.pageSize != null) {
-                let limitStart = (param.pageNum - 1) * param.pageSize;
-                let limitEnd = param.pageSize;
+                const limitStart = (param.pageNum - 1) * param.pageSize;
+                const limitEnd = param.pageSize;
                 limit = " limit " + limitEnd + " OFFSET " + limitStart;
             }
-            let result = new JobTagNameStatisticDTO();
-            let sqlTagNameTotal = `SELECT tag_name AS name,COUNT(t1.job_id) AS count FROM job_tag t1 LEFT JOIN tag t2 ON t1.tag_id = t2.tag_id GROUP BY name ORDER BY count DESC ${limit}`;
+            const result = new JobTagNameStatisticDTO();
+            const sqlTagNameTotal = `SELECT tag_name AS name,COUNT(t1.job_id) AS count FROM job_tag t1 LEFT JOIN tag t2 ON t1.tag_id = t2.tag_id GROUP BY name ORDER BY count DESC ${limit}`;
             const { rows: totalTagNameTotalQueryResult } = await (await getDb()).query(sqlTagNameTotal);
             const { rows: totalJobQueryResult } = await (await getDb()).query(`SELECT COUNT(*) total FROM (SELECT t1.job_id FROM job_tag t1 GROUP BY t1.job_id) t1`);
             result.items = totalTagNameTotalQueryResult;
@@ -243,6 +244,43 @@ export const JobTagService = {
             );
         }
     },
+    /**
+     *
+     * @param {Message} message
+     * @param {PageBO} param
+     *
+     * @returns Tag[]
+     */
+    jobTagGetRecentlyTag: async function (message, param) {
+        try {
+            let limit = '';
+            if (param.pageNum != null && param.pageSize != null) {
+                const limitStart = (param.pageNum - 1) * param.pageSize;
+                const limitEnd = param.pageSize;
+                limit = " limit " + limitEnd + " OFFSET " + limitStart;
+            }
+            const result = [];
+            const sqlQuery = `SELECT tag_id,MAX(update_datetime) update_datetime FROM job_tag WHERE source_type = 0 AND source IS NULL GROUP BY tag_id ORDER BY update_datetime DESC ${limit}`;
+            const { rows } = await (await getDb()).query(sqlQuery);
+            if (rows && rows.length > 0) {
+                const ids = rows.map(item => { return item.tag_id });
+                const tags = await _batchGetTagByIds(ids);
+                const tagsIdMap = new Map(tags.map(item => [item.tagId, item]))
+                ids.forEach(item => {
+                    const tag = tagsIdMap.get(item);
+                    if (tag) {
+                        result.push(tag);
+                    }
+                });
+            }
+            postSuccessMessage(message, result);
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] jobTagNameStatistic error : " + e.message
+            );
+        }
+    }
 };
 
 /**
@@ -253,8 +291,8 @@ export async function _jobTagExport({ param = null, connection = null } = {}) {
     connection ??= await getDb();
     let limit = '';
     if (param.pageNum != null && param.pageSize != null) {
-        let limitStart = (param.pageNum - 1) * param.pageSize;
-        let limitEnd = param.pageSize;
+        const limitStart = (param.pageNum - 1) * param.pageSize;
+        const limitEnd = param.pageSize;
         limit = " limit " + limitEnd + " OFFSET " + limitStart;
     }
     let joinCondition = "";
@@ -271,7 +309,7 @@ export async function _jobTagExport({ param = null, connection = null } = {}) {
             "'";
     }
     if (param.jobIds) {
-        let idsString = "'" + param.jobIds.join("','") + "'";
+        const idsString = "'" + param.jobIds.join("','") + "'";
         joinCondition +=
             ` AND t1.job_id in (${idsString})`;
     }
@@ -288,10 +326,10 @@ export async function _jobTagExport({ param = null, connection = null } = {}) {
     if (param.isPublic != null) {
         whereCondition += ` AND t2.is_public = ${param.isPublic}`
     }
-    let sqlQuery = `SELECT t1.job_id AS job_id,STRING_AGG(DISTINCT t2.tag_name,',') AS tag_name_array,MAX(t1.create_datetime) AS create_datetime,MAX(t1.update_datetime) AS update_datetime FROM job_tag AS t1 LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id ${joinCondition} WHERE t1.source_type = 0 ${whereCondition} GROUP BY t1.job_id ORDER BY update_datetime DESC`;
-    let querySql = sqlQuery + limit;
-    let countSql = `SELECT COUNT(*) AS total FROM (${sqlQuery}) AS t1`;
-    let result = {};
+    const sqlQuery = `SELECT t1.job_id AS job_id,STRING_AGG(DISTINCT t2.tag_name,',') AS tag_name_array,MAX(t1.create_datetime) AS create_datetime,MAX(t1.update_datetime) AS update_datetime FROM job_tag AS t1 LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id ${joinCondition} WHERE t1.source_type = 0 ${whereCondition} GROUP BY t1.job_id ORDER BY update_datetime DESC`;
+    const querySql = sqlQuery + limit;
+    const countSql = `SELECT COUNT(*) AS total FROM (${sqlQuery}) AS t1`;
+    const result = {};
     const { rows: queryRows } = await connection.query(querySql);
     result.items = convertRows(queryRows);
     const { rows } = await connection.query(countSql);
@@ -304,17 +342,17 @@ export async function _jobTagExport({ param = null, connection = null } = {}) {
  * @param {JobTagBO[]} jobTagBOs 
  */
 export async function _jobTagBatchAddOrUpdate(jobTagBOs, overrideUpdateDatetime, { connection = null } = {}) {
-    let allTags = [];
+    const allTags = [];
     jobTagBOs.map(item => { return item.tags }).forEach(items => {
         allTags.push(...items);
     })
     await _addNotExistsTags(allTags, { connection });
-    let sourceTypeSourceAndJobIdsMap = new Map();
-    let sourceTypeSourceAndSourceTypeMap = new Map();
-    let sourceTypeSourceAndSourceMap = new Map();
+    const sourceTypeSourceAndJobIdsMap = new Map();
+    const sourceTypeSourceAndSourceTypeMap = new Map();
+    const sourceTypeSourceAndSourceMap = new Map();
     for (let i = 0; i < jobTagBOs.length; i++) {
-        let item = jobTagBOs[i];
-        let key = item.sourceType + "_" + item.source;
+        const item = jobTagBOs[i];
+        const key = item.sourceType + "_" + item.source;
         if (!sourceTypeSourceAndJobIdsMap.has(key)) {
             sourceTypeSourceAndJobIdsMap.set(key, []);
             sourceTypeSourceAndSourceTypeMap.set(key, item.sourceType);
@@ -323,19 +361,19 @@ export async function _jobTagBatchAddOrUpdate(jobTagBOs, overrideUpdateDatetime,
         sourceTypeSourceAndJobIdsMap.get(key).push(item.jobId);
     }
     sourceTypeSourceAndJobIdsMap.forEach(async (value, key, map) => {
-        let ids = sourceTypeSourceAndJobIdsMap.get(key);
-        let sourceType = sourceTypeSourceAndSourceTypeMap.get(key);
-        let source = sourceTypeSourceAndSourceMap.get(key);
+        const ids = sourceTypeSourceAndJobIdsMap.get(key);
+        const sourceType = sourceTypeSourceAndSourceTypeMap.get(key);
+        const source = sourceTypeSourceAndSourceMap.get(key);
         await SERVICE_INSTANCE._deleteByIds(ids, JOB_ID_COLUMN, { connection, otherCondition: `source_type=${sourceType} AND ${source ? "source = '" + source + "'" : "source IS NULL"}` });
     });
-    let jobTags = [];
+    const jobTags = [];
     for (let i = 0; i < jobTagBOs.length; i++) {
-        let item = jobTagBOs[i];
-        let jobId = item.jobId;
+        const item = jobTagBOs[i];
+        const jobId = item.jobId;
         for (let i = 0; i < item.tags.length; i++) {
-            let tagName = item.tags[i];
-            let tagId = genIdFromText(tagName);
-            let jobTag = new JobTag();
+            const tagName = item.tags[i];
+            const tagId = genIdFromText(tagName);
+            const jobTag = new JobTag();
             jobTag.id = genUniqueId();
             jobTag.jobId = jobId;
             jobTag.tagId = tagId;
@@ -366,12 +404,12 @@ export async function _getAllJobTagDTOByJobId(param) {
  * @return JobTagDTO[]
  */
 export async function _getAllJobTagDTOByJobIds(param, { connection = null } = {}) {
-    let sql = genSqlSelectDTOByJobIds(param);
+    const sql = genSqlSelectDTOByJobIds(param);
     return await getAll(sql, [], new JobTagDTO(), { connection });
 }
 
 function genSqlSelectDTOByJobIds(ids) {
-    let idsString = "'" + ids.join("','") + "'";
+    const idsString = "'" + ids.join("','") + "'";
     return `
     SELECT t1.id, t1.job_id, t1.tag_id, t2.tag_name,t1.seq ,t1.create_datetime, t1.update_datetime,t1.source_type,t1.source,t2.is_public FROM job_tag AS t1  LEFT JOIN tag AS t2 ON t1.tag_id = t2.tag_id where job_id in (${idsString}) ORDER BY t1.seq ASC;
     `;
