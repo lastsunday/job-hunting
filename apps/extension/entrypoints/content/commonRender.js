@@ -1,4 +1,6 @@
 import dayjs from "dayjs";
+import minMax from "dayjs/plugin/minMax";
+dayjs.extend(minMax);
 import {
   PLATFORM_BOSS,
   PLATFORM_JOBSDB,
@@ -63,6 +65,18 @@ export function renderTimeTag(
   if (jobDTO == null || jobDTO == undefined) {
     throw new Error("jobDTO is required");
   }
+  //对初次发现时间的处理
+  const createDatetimeTagWrapper = document.createElement("span");
+  createDatetimeTagWrapper.classList.add("__time_tag_create_datetime");
+
+  const createDatetimeTag = document.createElement("div");
+  createDatetimeTag.textContent = `<初见 ${convertTimeOffsetToHumanReadable(jobDTO.createDatetime)}>`;
+  createDatetimeTag.classList.add("__time_tag_base_text_font");
+  createDatetimeTag.classList.add("__time_tag_create_datetime_text_font");
+
+  createDatetimeTagWrapper.appendChild(createDatetimeTag);
+  divElement.appendChild(createDatetimeTagWrapper);
+
   //对发布时间的处理
   if (platform && platform == PLATFORM_BOSS) {
     let statusTag = null;
@@ -123,20 +137,20 @@ export function renderTimeTag(
     divElement.appendChild(companyInfoTag);
   }
 
-  divElement.classList.add("__time_tag_base_text_font");
-
   //为time tag染色
   if (jobDTO.hrActiveTimeDesc && platform == PLATFORM_BOSS) {
-    //根据hr活跃时间为JobItem染色
+    //根据hr活跃时间和职位发现时间中更早的时间为JobItem染色
     const now = dayjs();
     const hrActiveDatetime = now.subtract(
       convertHrActiveTimeDescToOffsetTime(jobDTO.hrActiveTimeDesc),
       "millisecond"
     );
-    divElement.style = getRenderTimeStyle(hrActiveDatetime);
+    const minDatetime = dayjs.min(dayjs(hrActiveDatetime), dayjs(jobDTO.createDatetime));
+    divElement.style = getRenderTimeStyle(minDatetime);
   } else {
+    const minDatetime = dayjs.min(dayjs(jobDTO.jobFirstPublishDatetime), dayjs(jobDTO.createDatetime));
     divElement.style = getRenderTimeStyle(
-      jobDTO.jobFirstPublishDatetime ?? null,
+      minDatetime ?? null,
       jobStatusDesc
     );
   }
@@ -163,6 +177,8 @@ export function renderTimeTag(
     })
     divElement.appendChild(element);
   }
+
+  divElement.classList.add("__time_tag_base_text_font");
 }
 
 export function finalRender(jobDTOList, { platform }) {
@@ -564,30 +580,30 @@ export function renderSortJobItem(list, getListItem, { platform, orderStartIndex
   });
   //handle hr active time
   if (platform == PLATFORM_BOSS || platform == PLATFORM_LIEPIN) {
-    sortList.forEach((item) => {
-      const hrActiveTimeOffsetTime = convertHrActiveTimeDescToOffsetTime(
-        item.hrActiveTimeDesc
-      );
-      item.hrActiveTimeOffsetTime = hrActiveTimeOffsetTime;
-    });
-    sortList.sort((o1, o2) => {
-      return o1.hrActiveTimeOffsetTime - o2.hrActiveTimeOffsetTime;
-    });
-  }
-  if (platform == PLATFORM_BOSS) {
-    sortList.sort((o1, o2) => {
-      if (o2.jobStatusDesc && o1.jobStatusDesc) {
-        return o1.jobStatusDesc.order - o2.jobStatusDesc.order;
-      } else {
-        return 0;
-      }
-    });
-  } else {
-    //sort firstPublishTime
+    //先排列createDatetime，再排列hrActiveTime
     sortList.sort((o1, o2) => {
       return (
-        dayjs(o2.jobFirstPublishDatetime ?? null).valueOf() -
-        dayjs(o1.jobFirstPublishDatetime ?? null).valueOf()
+        dayjs(o2.createDatetime).valueOf() -
+        dayjs(o1.createDatetime).valueOf()
+      );
+    });
+    sortList.sort((o1, o2) => {
+      return convertHrActiveTimeDescToOffsetTime(
+        o1.hrActiveTimeDesc
+      ) - convertHrActiveTimeDescToOffsetTime(
+        o2.hrActiveTimeDesc
+      );
+    });
+  }
+  if (platform != PLATFORM_BOSS) {
+    //sort createDatetime and firstPublishTime
+    const getMinDatetime = (jobDTO) => {
+      return dayjs.min(dayjs(jobDTO.jobFirstPublishDatetime), dayjs(jobDTO.createDatetime));
+    }
+    sortList.sort((o1, o2) => {
+      return (
+        dayjs(getMinDatetime(o2)).valueOf() -
+        dayjs(getMinDatetime(o1)).valueOf()
       );
     });
   }
@@ -664,8 +680,6 @@ function convertHrActiveTimeDescToOffsetTime(hrActiveTimeDesc) {
   }
   return offsetTime;
 }
-
-
 
 export async function renderFunctionPanel(
   list,
@@ -770,7 +784,7 @@ function createCommentWrapper(jobDTO) {
   const commentWrapperDiv = document.createElement("div");
   commentWrapperDiv.id = "wrapper" + jobId;
   commentWrapperDiv.appendChild(createBrowseDetail(jobDTO));
-  commentWrapperDiv.appendChild(createFirstBrowse(jobDTO));
+  commentWrapperDiv.appendChild(createBrowse(jobDTO));
   return commentWrapperDiv;
 }
 
@@ -781,19 +795,11 @@ function createBrowseDetail(jobDTO) {
   return browseDetailTag;
 }
 
-function createFirstBrowse(jobDTO) {
-  const firstBrowseTimeTag = document.createElement("div");
-  const firstBrowseTimeHumanReadable = convertTimeOffsetToHumanReadable(
-    jobDTO.createDatetime
-  );
-  firstBrowseTimeTag.textContent +=
-    "【" +
-    firstBrowseTimeHumanReadable +
-    "展示过(共" +
-    jobDTO.browseCount +
-    "次)】";
-  firstBrowseTimeTag.classList.add("__first_browse_time");
-  return firstBrowseTimeTag;
+function createBrowse(jobDTO) {
+  const browseTag = document.createElement("div");
+  browseTag.textContent = `<共展示过${jobDTO.browseCount ?? 0}次>`;
+  browseTag.classList.add("__browse_time");
+  return browseTag;
 }
 
 function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButtonTitle, jobCardItemDom } = {}) {

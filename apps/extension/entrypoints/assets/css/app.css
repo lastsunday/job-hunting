@@ -96,7 +96,10 @@
 .__boss_time_tag,
 .__zhipin_time_tag,
 .__zhilian_time_tag,
-.__liepin_time_tag {
+.__liepin_time_tag,
+.__job51_time_tag,
+.__job_online_time_tag,
+.__job_ggfw_hrss_gd_time_tag {
   position: absolute;
   right: 0;
   top: 0;
@@ -106,30 +109,7 @@
   font-size: 14px;
   border-radius: 0 0 0 4px;
   text-align: right;
-}
-
-/* 
-.__zhipin_time_tag {
-    position: absolute;
-    right: 0;
-    top: 0;
-    background: #426eff;
-    color: white;
-    padding: 0 8px;
-    font-size: 14px;
-    border-radius: 0 0 0 4px;
-} */
-
-.__job51_time_tag {
-  position: absolute;
-  right: 0;
-  top: 0;
-  background: rgba(229, 248, 248);
-  color: #00a6a7;
-  padding: 0 8px;
-  font-size: 14px;
-  border-radius: 0 0 0 4px;
-  text-align: right;
+  border-radius: 5px;
 }
 
 .__jobsdb_time_tag {
@@ -143,18 +123,7 @@
   text-align: right;
   margin-right: 57px;
   margin-top: 10px;
-}
-
-.__job_online_time_tag {
-  position: absolute;
-  right: 0;
-  top: 0;
-  background: rgba(229, 248, 248);
-  color: #00a6a7;
-  padding: 0 8px;
-  font-size: 14px;
-  border-radius: 0 0 0 4px;
-  text-align: right;
+  border-radius: 5px;
 }
 
 .position-wrap {
@@ -173,18 +142,6 @@
   background-color: white;
 }
 
-.__job_ggfw_hrss_gd_time_tag {
-  position: absolute;
-  right: 0;
-  top: 0;
-  background: rgba(229, 248, 248);
-  color: #00a6a7;
-  padding: 0 8px;
-  font-size: 14px;
-  border-radius: 0 0 0 4px;
-  text-align: right;
-}
-
 /*for ggfw_hrss_gd*/
 .ant-list-item {
   display: flex;
@@ -192,7 +149,7 @@
   position: relative;
 }
 
-.card-item-bottom{
+.card-item-bottom {
   height: auto !important;
 }
 
@@ -232,10 +189,12 @@ div[data-search-sol-meta] {
   line-height: 18px;
 }
 
-.echo-like .echo-like__icon {
+.__time_tag_create_datetime {
+  display: inline-flex;
 }
 
-.echo-like__count {
+.__time_tag_create_datetime_text_font {
+  font-size: 11px !important;
 }
 
 .__company_info_search {
@@ -394,7 +353,7 @@ div[data-search-sol-meta] {
   width: 20px;
 }
 
-.__first_browse_time {
+.__browse_time {
   font-size: 14px;
   color: #414a60;
 }
@@ -625,6 +584,7 @@ div[data-search-sol-meta] {
   height: 40px;
 }
 
-.__job_analysis{
+.__job_analysis {
   display: inline-block;
+  padding-left: 10px;
 }
