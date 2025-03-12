@@ -10,6 +10,7 @@ import {
   PLATFORM_ZHILIAN,
   PLATFORM_JOBONLINE,
   PLATFORM_GGFW_HRSS_GD,
+  TAG_SOURCE_TYPE_PLATFORM,
 } from "../../common";
 import { CompanyApi, JobApi, ConfigApi } from "../../common/api";
 import { httpFetchGetText } from "../../common/api/common";
@@ -342,7 +343,7 @@ function handleJobsdb(list) {
   for (let i = 0; i < list.length; i++) {
     const job = new Job();
     const item = list[i];
-    const { id, jobUrl, title, jobDetail, listingDate, salaryLabel:salary } = item;
+    const { id, jobUrl, title, jobDetail, listingDate, salaryLabel: salary } = item;
     const { description: companyFullName } = item.advertiser;
     const { countryCode: city, label: positionAddress } = item.locations;
     job.jobId = genId(id, PLATFORM_JOBSDB);
@@ -783,7 +784,7 @@ export async function getCompanyInfoByAiqicha(keyword) {
   return null;
 }
 
-export async function addCompanyTagNotExists(companyName, tags) {
+export async function addCompanyTagNotExists(companyName, tags, platform) {
   let addResult = false;
   const companyId = genSha256(companyNameConvert(companyName)) + "";
   const currentCompanyTagList = await CompanyApi.getAllCompanyTagDTOByCompanyId(companyId);
@@ -809,6 +810,8 @@ export async function addCompanyTagNotExists(companyName, tags) {
     const companyTagBO = new CompanyTagBO();
     companyTagBO.companyName = companyName;
     companyTagBO.tags = targetTagsArray;
+    companyTagBO.sourceType = TAG_SOURCE_TYPE_PLATFORM;
+    companyTagBO.source = platform;
     await CompanyApi.addOrUpdateCompanyTag(companyTagBO);
     infoLog("addCompanyTagNotExists success");
     addResult = true;

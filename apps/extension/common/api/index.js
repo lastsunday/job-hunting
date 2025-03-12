@@ -35,6 +35,7 @@ import { SearchTaskDataMergeDTO } from "../data/dto/searchTaskDataMergeDTO";
 import { SearchTaskDataUploadDTO } from "../data/dto/searchTaskDataUploadDTO";
 import { SearchTaskDTO } from "../data/dto/searchTaskDTO";
 import { StatisticJobBrowseDTO } from "../data/dto/statisticJobBrowseDTO";
+import { PageBO } from "../data/bo/pageBO";
 import { invoke } from "./bridge";
 
 export const JobApi = {
@@ -61,7 +62,7 @@ export const JobApi = {
    * @returns SearchJobDTO[]
    */
   searchJob: async function (param) {
-    let result = await invoke(this.searchJob.name, param);
+    const result = await invoke(this.searchJob.name, param);
     return result.data;
   },
 
@@ -72,7 +73,7 @@ export const JobApi = {
    * @returns JobDTO[]
    */
   getJobBrowseInfoByIds: async function (ids) {
-    let result = await invoke(this.getJobBrowseInfoByIds.name, ids);
+    const result = await invoke(this.getJobBrowseInfoByIds.name, ids);
     return result.data;
   },
 
@@ -81,7 +82,7 @@ export const JobApi = {
    * @returns {StatisticJobBrowseDTO}
    */
   statisticJobBrowse: async function () {
-    let result = await invoke(this.statisticJobBrowse.name, {});
+    const result = await invoke(this.statisticJobBrowse.name, {});
     return result.data;
   },
 
@@ -92,7 +93,7 @@ export const JobApi = {
    * @returns StatisticJobSearchGroupByAvgSalaryDTO
    */
   statisticJobSearchGroupByAvgSalary: async function (param) {
-    let result = await invoke(
+    const result = await invoke(
       this.statisticJobSearchGroupByAvgSalary.name,
       param
     );
@@ -106,7 +107,7 @@ export const JobApi = {
    * @returns Job
    */
   getJobByDetailUrl: async function (param) {
-    let result = await invoke(this.getJobByDetailUrl.name, param);
+    const result = await invoke(this.getJobByDetailUrl.name, param);
     return result.data;
   },
   /**
@@ -123,7 +124,7 @@ export const JobApi = {
    * @returns Job[]
    */
   jobGetByIds: async function (param) {
-    let result = await invoke(this.jobGetByIds.name, param);
+    const result = await invoke(this.jobGetByIds.name, param);
     return result.data;
   },
 
@@ -148,7 +149,7 @@ export const JobApi = {
   * @param {string} param jobId
   */
   jobTagGetAllDTOByJobId: async function (param) {
-    let result = await invoke(this.jobTagGetAllDTOByJobId.name, param);
+    const result = await invoke(this.jobTagGetAllDTOByJobId.name, param);
     return result.data;
   },
 
@@ -157,7 +158,7 @@ export const JobApi = {
   * @param {string[]} param jobId
   */
   jobTagGetAllDTOByJobIds: async function (param) {
-    let result = await invoke(this.jobTagGetAllDTOByJobIds.name, param);
+    const result = await invoke(this.jobTagGetAllDTOByJobIds.name, param);
     return result.data;
   },
 
@@ -168,7 +169,7 @@ export const JobApi = {
  * @returns JobTagSearchDTO[]
  */
   jobTagSearch: async function (param) {
-    let result = await invoke(this.jobTagSearch.name, param);
+    const result = await invoke(this.jobTagSearch.name, param);
     return result.data;
   },
 
@@ -185,7 +186,17 @@ export const JobApi = {
    * @returns JobTagNameStatisticDTO
    */
   jobTagNameStatistic: async function (param) {
-    let result = await invoke(this.jobTagNameStatistic.name, param);
+    const result = await invoke(this.jobTagNameStatistic.name, param);
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {PageBO} param 
+   * @returns Tag[]
+   */
+  jobTagGetRecentlyTag: async function (param) {
+    const result = await invoke(this.jobTagGetRecentlyTag.name, param);
     return result.data;
   },
 
@@ -195,7 +206,7 @@ export const JobApi = {
   * @returns []
   */
   jobStatisticGroupByPublishDate: async function (param) {
-    let result = await invoke(this.jobStatisticGroupByPublishDate.name, param);
+    const result = await invoke(this.jobStatisticGroupByPublishDate.name, param);
     return result.data;
   },
 
@@ -205,7 +216,7 @@ export const JobApi = {
   * @returns []
   */
   jobStatisticGroupByPlatform: async function (param) {
-    let result = await invoke(this.jobStatisticGroupByPlatform.name, param);
+    const result = await invoke(this.jobStatisticGroupByPlatform.name, param);
     return result.data;
   },
 
@@ -215,7 +226,7 @@ export const JobApi = {
   * @returns []
   */
   jobTagExport: async function (param) {
-    let result = await invoke(this.jobTagExport.name, param);
+    const result = await invoke(this.jobTagExport.name, param);
     return result.data;
   },
 
@@ -225,7 +236,7 @@ export const JobApi = {
   * @returns []
   */
   jobStatisticJobCompanyTagGroupByPlatform: async function (param) {
-    let result = await invoke(this.jobStatisticJobCompanyTagGroupByPlatform.name, param);
+    const result = await invoke(this.jobStatisticJobCompanyTagGroupByPlatform.name, param);
     return result.data;
   },
 
@@ -235,7 +246,7 @@ export const JobApi = {
   * @returns []
   */
   jobStatisticJobCompanyTagGroupByCompany: async function (param) {
-    let result = await invoke(this.jobStatisticJobCompanyTagGroupByCompany.name, param);
+    const result = await invoke(this.jobStatisticJobCompanyTagGroupByCompany.name, param);
     return result.data;
   },
 
@@ -247,7 +258,7 @@ export const CompanyApi = {
    * @param {string} id
    */
   getCompanyById: async function (id) {
-    let result = await invoke(this.getCompanyById.name, id);
+    const result = await invoke(this.getCompanyById.name, id);
     return result.data;
   },
 
@@ -257,7 +268,7 @@ export const CompanyApi = {
  * @returns CompanyDTO[]
  */
   getCompanyDTOByIds: async function (ids) {
-    let result = await invoke(this.getCompanyDTOByIds.name, ids);
+    const result = await invoke(this.getCompanyDTOByIds.name, ids);
     return result.data;
   },
 
@@ -268,7 +279,7 @@ export const CompanyApi = {
    * @returns Company[]
    */
   companyGetByIds: async function (param) {
-    let result = await invoke(this.companyGetByIds.name, param);
+    const result = await invoke(this.companyGetByIds.name, param);
     return result.data;
   },
 
@@ -277,7 +288,7 @@ export const CompanyApi = {
    * @returns StatisticCompanyDTO
    */
   statisticCompany: async function () {
-    let result = await invoke(this.statisticCompany.name, {});
+    const result = await invoke(this.statisticCompany.name, {});
     return result.data;
   },
 
@@ -287,7 +298,7 @@ export const CompanyApi = {
    * @returns SearchCompanyDTO
    */
   searchCompany: async function (param) {
-    let result = await invoke(this.searchCompany.name, param);
+    const result = await invoke(this.searchCompany.name, param);
     return result.data;
   },
 
@@ -328,7 +339,7 @@ export const CompanyApi = {
    * @returns CompanyTagDTO[]
    */
   getAllCompanyTagDTOByCompanyId: async function (id) {
-    let result = await invoke(this.getAllCompanyTagDTOByCompanyId.name, id);
+    const result = await invoke(this.getAllCompanyTagDTOByCompanyId.name, id);
     return result.data;
   },
 
@@ -338,7 +349,7 @@ export const CompanyApi = {
    * @returns CompanyTagDTO[]
    */
   getAllCompanyTagDTOByCompanyIds: async function (ids,) {
-    let result = await invoke(this.getAllCompanyTagDTOByCompanyIds.name, ids,);
+    const result = await invoke(this.getAllCompanyTagDTOByCompanyIds.name, ids,);
     return result.data;
   },
 
@@ -348,7 +359,7 @@ export const CompanyApi = {
    * @returns SearchCompanyTagDTO
    */
   searchCompanyTag: async function (param) {
-    let result = await invoke(this.searchCompanyTag.name, param);
+    const result = await invoke(this.searchCompanyTag.name, param);
     return result.data;
   },
 
@@ -357,7 +368,7 @@ export const CompanyApi = {
    * @returns StatisticCompanyTagDTO
    */
   statisticCompanyTag: async function () {
-    let result = await invoke(this.statisticCompanyTag.name, {});
+    const result = await invoke(this.statisticCompanyTag.name, {});
     return result.data;
   },
 
@@ -376,7 +387,7 @@ export const CompanyApi = {
   * @returns []
   */
   companyStatisticGroupByStartDate: async function (param) {
-    let result = await invoke(this.companyStatisticGroupByStartDate.name, param);
+    const result = await invoke(this.companyStatisticGroupByStartDate.name, param);
     return result.data;
   },
 
@@ -386,7 +397,7 @@ export const CompanyApi = {
   * @returns []
   */
   companyStatisticGroupByInsurance: async function (param) {
-    let result = await invoke(this.companyStatisticGroupByInsurance.name, param);
+    const result = await invoke(this.companyStatisticGroupByInsurance.name, param);
     return result.data;
   },
 
@@ -396,7 +407,17 @@ export const CompanyApi = {
   * @returns []
   */
   companyTagExport: async function (param) {
-    let result = await invoke(this.companyTagExport.name, param);
+    const result = await invoke(this.companyTagExport.name, param);
+    return result.data;
+  },
+  
+  /**
+   * 
+   * @param {PageBO} param 
+   * @returns Tag[]
+   */
+  companyTagGetRecentlyTag: async function (param) {
+    const result = await invoke(this.companyTagGetRecentlyTag.name, param);
     return result.data;
   },
 };
@@ -408,7 +429,7 @@ export const TagApi = {
    * @returns Tag[]
    */
   getAllTag: async function () {
-    let result = await invoke(this.getAllTag.name, {});
+    const result = await invoke(this.getAllTag.name, {});
     return result.data;
   },
 
@@ -418,7 +439,7 @@ export const TagApi = {
    * @returns TagSearchDTO
    */
   tagSearch: async function (param) {
-    let result = await invoke(this.tagSearch.name, param);
+    const result = await invoke(this.tagSearch.name, param);
     return result.data;
   },
 
@@ -455,7 +476,7 @@ export const TagApi = {
      * @param {string} param tagName
      */
   tagGetByName: async function (param) {
-    let result = await invoke(this.tagGetByName.name, param);
+    const result = await invoke(this.tagGetByName.name, param);
     return result.data;
   },
 
@@ -468,7 +489,7 @@ export const AuthApi = {
    * @returns OauthDTO
    */
   authOauth2Login: async function () {
-    let result = await invoke(this.authOauth2Login.name, {});
+    const result = await invoke(this.authOauth2Login.name, {});
     return result.data;
   },
 
@@ -477,7 +498,7 @@ export const AuthApi = {
    * @returns OauthDTO
    */
   authInstallAndLogin: async function () {
-    let result = await invoke(this.authInstallAndLogin.name, {});
+    const result = await invoke(this.authInstallAndLogin.name, {});
     return result.data;
   },
 
@@ -486,7 +507,7 @@ export const AuthApi = {
  * @returns OauthDTO
  */
   authGetToken: async function () {
-    let result = await invoke(this.authGetToken.name, null);
+    const result = await invoke(this.authGetToken.name, null);
     return result.data;
   },
 
@@ -506,7 +527,7 @@ export const UserApi = {
   * @returns UserDTO
   */
   userGet: async function () {
-    let result = await invoke(this.userGet.name, {});
+    const result = await invoke(this.userGet.name, {});
     return result.data;
   },
 
@@ -528,7 +549,7 @@ export const ConfigApi = {
    * @returns Config
    */
   getConfigByKey: async function (param) {
-    let result = await invoke(this.getConfigByKey.name, param);
+    const result = await invoke(this.getConfigByKey.name, param);
     return result.data;
   },
 
@@ -537,7 +558,7 @@ export const ConfigApi = {
    * @returns Config[]
    */
   getAllConfig: async function () {
-    let result = await invoke(this.getAllConfig.name, {});
+    const result = await invoke(this.getAllConfig.name, {});
     return result.data;
   },
 
@@ -561,7 +582,7 @@ export const AssistantApi = {
    * @returns SearchJobDTO[]
    */
   assistantSearchFaviousJob: async function (param) {
-    let result = await invoke(this.assistantSearchFaviousJob.name, param);
+    const result = await invoke(this.assistantSearchFaviousJob.name, param);
     return result.data;
   },
   /**
@@ -577,7 +598,7 @@ export const AssistantApi = {
    * @returns JobFaviousSettingDTO
    */
   assistantGetJobFaviousSetting: async function () {
-    let result = await invoke(this.assistantGetJobFaviousSetting.name, {});
+    const result = await invoke(this.assistantGetJobFaviousSetting.name, {});
     return result.data;
   },
 
@@ -598,7 +619,7 @@ export const DeveloperApi = {
    * @returns string
    */
   developerGetToken: async function () {
-    let result = await invoke(this.developerGetToken.name, {});
+    const result = await invoke(this.developerGetToken.name, {});
     return result.data;
   },
 
@@ -611,7 +632,7 @@ export const SystemApi = {
    * @returns 
    */
   systemTabCreate: async function (param) {
-    let result = await invoke(this.systemTabCreate.name, param);
+    const result = await invoke(this.systemTabCreate.name, param);
     return result.data;
   },
 }
@@ -623,7 +644,7 @@ export const AutomateApi = {
    * @returns 
    */
   automateFetchJobItemData: async function (param) {
-    let result = await invoke(this.automateFetchJobItemData.name, param);
+    const result = await invoke(this.automateFetchJobItemData.name, param);
     return result.data;
   },
 }
@@ -636,7 +657,7 @@ export const MissionApi = {
    * @returns Mission[]
    */
   missionGetAll: async function (param) {
-    let result = await invoke(this.missionGetAll.name, param);
+    const result = await invoke(this.missionGetAll.name, param);
     return result.data;
   },
 
@@ -646,7 +667,7 @@ export const MissionApi = {
    * @returns 
    */
   missionAddOrUpdate: async function (param) {
-    let result = await invoke(this.missionAddOrUpdate.name, param);
+    const result = await invoke(this.missionAddOrUpdate.name, param);
     return result.data;
   },
 
@@ -656,7 +677,7 @@ export const MissionApi = {
    * @returns 
    */
   missionDeleteById: async function (param) {
-    let result = await invoke(this.missionDeleteById.name, param);
+    const result = await invoke(this.missionDeleteById.name, param);
     return result.data;
   },
 
@@ -670,7 +691,7 @@ export const MissionLogApi = {
    * @returns {SearchMissionLogDTO}
    */
   searchMissionLog: async function (param) {
-    let result = await invoke(this.searchMissionLog.name, param);
+    const result = await invoke(this.searchMissionLog.name, param);
     return result.data;
   },
 
@@ -680,7 +701,7 @@ export const MissionLogApi = {
    * @returns 
    */
   missionLogAddOrUpdate: async function (param) {
-    let result = await invoke(this.missionLogAddOrUpdate.name, param);
+    const result = await invoke(this.missionLogAddOrUpdate.name, param);
     return result.data;
   },
 
@@ -690,7 +711,7 @@ export const MissionLogApi = {
    * @returns 
    */
   missionLogDeleteById: async function (param) {
-    let result = await invoke(this.missionLogDeleteById.name, param);
+    const result = await invoke(this.missionLogDeleteById.name, param);
     return result.data;
   },
 
@@ -700,7 +721,7 @@ export const MissionLogApi = {
  * @returns 
  */
   missionLogDeleteByIds: async function (param) {
-    let result = await invoke(this.missionLogDeleteByIds.name, param);
+    const result = await invoke(this.missionLogDeleteByIds.name, param);
     return result.data;
   },
 
@@ -710,7 +731,7 @@ export const MissionLogApi = {
    * @returns 
    */
   missionSort: async function (param) {
-    let result = await invoke(this.missionSort.name, param);
+    const result = await invoke(this.missionSort.name, param);
     return result.data;
   },
 
@@ -724,7 +745,7 @@ export const TaskApi = {
    * @returns {SearchTaskDTO}
    */
   searchTask: async function (param) {
-    let result = await invoke(this.searchTask.name, param);
+    const result = await invoke(this.searchTask.name, param);
     return result.data;
   },
 
@@ -734,7 +755,7 @@ export const TaskApi = {
    * @returns {SearchTaskDTO}
    */
   searchTaskWithDetail: async function (param) {
-    let result = await invoke(this.searchTaskWithDetail.name, param);
+    const result = await invoke(this.searchTaskWithDetail.name, param);
     return result.data;
   },
 
@@ -744,7 +765,7 @@ export const TaskApi = {
    * @returns Task
    */
   taskAddOrUpdate: async function (param) {
-    let result = await invoke(this.taskAddOrUpdate.name, param);
+    const result = await invoke(this.taskAddOrUpdate.name, param);
     return result.data;
   },
 
@@ -754,7 +775,7 @@ export const TaskApi = {
    * @returns 
    */
   taskDeleteById: async function (param) {
-    let result = await invoke(this.taskDeleteById.name, param);
+    const result = await invoke(this.taskDeleteById.name, param);
     return result.data;
   },
 
@@ -764,7 +785,7 @@ export const TaskApi = {
  * @returns 
  */
   taskDeleteByIds: async function (param) {
-    let result = await invoke(this.taskDeleteByIds.name, param);
+    const result = await invoke(this.taskDeleteByIds.name, param);
     return result.data;
   },
   /**
@@ -773,7 +794,7 @@ export const TaskApi = {
    * @returns StatisticTaskDTO
    */
   statisticTask: async function (param) {
-    let result = await invoke(this.statisticTask.name, param);
+    const result = await invoke(this.statisticTask.name, param);
     return result.data;
   },
   /**
@@ -782,7 +803,7 @@ export const TaskApi = {
    * @returns []
    */
   taskStatisticUpload: async function (param) {
-    let result = await invoke(this.taskStatisticUpload.name, param);
+    const result = await invoke(this.taskStatisticUpload.name, param);
     return result.data;
   },
   /**
@@ -791,7 +812,7 @@ export const TaskApi = {
    * @returns []
    */
   taskStatisticDownload: async function (param) {
-    let result = await invoke(this.taskStatisticDownload.name, param);
+    const result = await invoke(this.taskStatisticDownload.name, param);
     return result.data;
   },
   /**
@@ -800,7 +821,7 @@ export const TaskApi = {
   * @returns []
   */
   taskStatisticMerge: async function (param) {
-    let result = await invoke(this.taskStatisticMerge.name, param);
+    const result = await invoke(this.taskStatisticMerge.name, param);
     return result.data;
   },
   /**
@@ -809,7 +830,7 @@ export const TaskApi = {
   * @returns []
   */
   taskStatisticStatus: async function (param) {
-    let result = await invoke(this.taskStatisticStatus.name, param);
+    const result = await invoke(this.taskStatisticStatus.name, param);
     return result.data;
   },
 
@@ -823,7 +844,7 @@ export const TaskDataUploadApi = {
    * @returns {SearchTaskDataUploadDTO}
    */
   searchTaskDataUpload: async function (param) {
-    let result = await invoke(this.searchTaskDataUpload.name, param);
+    const result = await invoke(this.searchTaskDataUpload.name, param);
     return result.data;
   },
 
@@ -833,7 +854,7 @@ export const TaskDataUploadApi = {
    * @returns {TaskDataUpload}
    */
   taskDataUploadGetById: async function (param) {
-    let result = await invoke(this.taskDataUploadGetById.name, param);
+    const result = await invoke(this.taskDataUploadGetById.name, param);
     return result.data;
   },
 
@@ -843,7 +864,7 @@ export const TaskDataUploadApi = {
    * @returns TaskDataUpload
    */
   taskDataUploadAddOrUpdate: async function (param) {
-    let result = await invoke(this.taskDataUploadAddOrUpdate.name, param);
+    const result = await invoke(this.taskDataUploadAddOrUpdate.name, param);
     return result.data;
   },
 
@@ -853,7 +874,7 @@ export const TaskDataUploadApi = {
    * @returns 
    */
   taskDataUploadDeleteById: async function (param) {
-    let result = await invoke(this.taskDataUploadDeleteById.name, param);
+    const result = await invoke(this.taskDataUploadDeleteById.name, param);
     return result.data;
   },
 
@@ -863,7 +884,7 @@ export const TaskDataUploadApi = {
  * @returns 
  */
   taskDataUploadDeleteByIds: async function (param) {
-    let result = await invoke(this.taskDataUploadDeleteByIds.name, param);
+    const result = await invoke(this.taskDataUploadDeleteByIds.name, param);
     return result.data;
   },
 
@@ -873,7 +894,7 @@ export const TaskDataUploadApi = {
   * @returns string
   */
   taskDataUploadGetMaxEndDatetime: async function (param) {
-    let result = await invoke(this.taskDataUploadGetMaxEndDatetime.name, param);
+    const result = await invoke(this.taskDataUploadGetMaxEndDatetime.name, param);
     return result.data;
   },
 
@@ -887,7 +908,7 @@ export const TaskDataDownloadApi = {
    * @returns {SearchTaskDataDownloadDTO}
    */
   searchTaskDataDownload: async function (param) {
-    let result = await invoke(this.searchTaskDataDownload.name, param);
+    const result = await invoke(this.searchTaskDataDownload.name, param);
     return result.data;
   },
 
@@ -897,7 +918,7 @@ export const TaskDataDownloadApi = {
    * @returns {TaskDataDownload}
    */
   taskDataDownloadGetById: async function (param) {
-    let result = await invoke(this.taskDataDownloadGetById.name, param);
+    const result = await invoke(this.taskDataDownloadGetById.name, param);
     return result.data;
   },
 
@@ -907,7 +928,7 @@ export const TaskDataDownloadApi = {
    * @returns TaskDataDownload
    */
   taskDataDownloadAddOrUpdate: async function (param) {
-    let result = await invoke(this.taskDataDownloadAddOrUpdate.name, param);
+    const result = await invoke(this.taskDataDownloadAddOrUpdate.name, param);
     return result.data;
   },
 
@@ -917,7 +938,7 @@ export const TaskDataDownloadApi = {
    * @returns 
    */
   taskDataDownloadDeleteById: async function (param) {
-    let result = await invoke(this.taskDataDownloadDeleteById.name, param);
+    const result = await invoke(this.taskDataDownloadDeleteById.name, param);
     return result.data;
   },
 
@@ -927,7 +948,7 @@ export const TaskDataDownloadApi = {
  * @returns 
  */
   taskDataDownloadDeleteByIds: async function (param) {
-    let result = await invoke(this.taskDataDownloadDeleteByIds.name, param);
+    const result = await invoke(this.taskDataDownloadDeleteByIds.name, param);
     return result.data;
   },
 
@@ -941,7 +962,7 @@ export const FileApi = {
    * @returns {SearchFileDTO}
    */
   searchFile: async function (param) {
-    let result = await invoke(this.searchFile.name, param);
+    const result = await invoke(this.searchFile.name, param);
     return result.data;
   },
 
@@ -951,7 +972,7 @@ export const FileApi = {
    * @returns {File}
    */
   fileGetById: async function (param) {
-    let result = await invoke(this.fileGetById.name, param);
+    const result = await invoke(this.fileGetById.name, param);
     return result.data;
   },
 
@@ -961,7 +982,7 @@ export const FileApi = {
    * @returns File
    */
   fileAddOrUpdate: async function (param) {
-    let result = await invoke(this.fileAddOrUpdate.name, param);
+    const result = await invoke(this.fileAddOrUpdate.name, param);
     return result.data;
   },
 
@@ -971,7 +992,7 @@ export const FileApi = {
    * @returns 
    */
   fileDeleteById: async function (param) {
-    let result = await invoke(this.fileDeleteById.name, param);
+    const result = await invoke(this.fileDeleteById.name, param);
     return result.data;
   },
 
@@ -981,7 +1002,7 @@ export const FileApi = {
    * @returns 
    */
   fileDeleteByIds: async function (param) {
-    let result = await invoke(this.fileDeleteByIds.name, param);
+    const result = await invoke(this.fileDeleteByIds.name, param);
     return result.data;
   },
 
@@ -991,7 +1012,7 @@ export const FileApi = {
    * @returns 
    */
   fileLogicDeleteByIds: async function (param) {
-    let result = await invoke(this.fileLogicDeleteByIds.name, param);
+    const result = await invoke(this.fileLogicDeleteByIds.name, param);
     return result.data;
   },
 
@@ -1001,7 +1022,7 @@ export const FileApi = {
    * @returns FileDTO[]
    */
   fileGetAllMergedNotDeleteFile: async function (param) {
-    let result = await invoke(this.fileGetAllMergedNotDeleteFile.name, param);
+    const result = await invoke(this.fileGetAllMergedNotDeleteFile.name, param);
     return result.data;
   },
 
@@ -1011,7 +1032,7 @@ export const FileApi = {
    * @returns FileStatisticDTO[]
    */
   fileStatistic: async function (param) {
-    let result = await invoke(this.fileStatistic.name, param);
+    const result = await invoke(this.fileStatistic.name, param);
     return result.data;
   },
 
@@ -1025,7 +1046,7 @@ export const TaskDataMergeApi = {
    * @returns {SearchTaskDataMergeDTO}
    */
   searchTaskDataMerge: async function (param) {
-    let result = await invoke(this.searchTaskDataMerge.name, param);
+    const result = await invoke(this.searchTaskDataMerge.name, param);
     return result.data;
   },
 
@@ -1035,7 +1056,7 @@ export const TaskDataMergeApi = {
    * @returns {TaskDataMerge}
    */
   taskDataMergeGetById: async function (param) {
-    let result = await invoke(this.taskDataMergeGetById.name, param);
+    const result = await invoke(this.taskDataMergeGetById.name, param);
     return result.data;
   },
 
@@ -1045,7 +1066,7 @@ export const TaskDataMergeApi = {
    * @returns TaskDataMerge
    */
   taskDataMergeAddOrUpdate: async function (param) {
-    let result = await invoke(this.taskDataMergeAddOrUpdate.name, param);
+    const result = await invoke(this.taskDataMergeAddOrUpdate.name, param);
     return result.data;
   },
 
@@ -1055,7 +1076,7 @@ export const TaskDataMergeApi = {
    * @returns 
    */
   taskDataMergeDeleteById: async function (param) {
-    let result = await invoke(this.taskDataMergeDeleteById.name, param);
+    const result = await invoke(this.taskDataMergeDeleteById.name, param);
     return result.data;
   },
 
@@ -1065,7 +1086,7 @@ export const TaskDataMergeApi = {
  * @returns 
  */
   taskDataMergeDeleteByIds: async function (param) {
-    let result = await invoke(this.taskDataMergeDeleteByIds.name, param);
+    const result = await invoke(this.taskDataMergeDeleteByIds.name, param);
     return result.data;
   },
 
@@ -1079,7 +1100,7 @@ export const DataSharePartnerApi = {
    * @returns {SearchDataSharePartnerDTO}
    */
   searchDataSharePartner: async function (param) {
-    let result = await invoke(this.searchDataSharePartner.name, param);
+    const result = await invoke(this.searchDataSharePartner.name, param);
     return result.data;
   },
 
@@ -1089,7 +1110,7 @@ export const DataSharePartnerApi = {
    * @returns {DataSharePartner}
    */
   dataSharePartnerGetById: async function (param) {
-    let result = await invoke(this.dataSharePartnerGetById.name, param);
+    const result = await invoke(this.dataSharePartnerGetById.name, param);
     return result.data;
   },
 
@@ -1099,7 +1120,7 @@ export const DataSharePartnerApi = {
    * @returns DataSharePartner
    */
   dataSharePartnerAddOrUpdate: async function (param) {
-    let result = await invoke(this.dataSharePartnerAddOrUpdate.name, param);
+    const result = await invoke(this.dataSharePartnerAddOrUpdate.name, param);
     return result.data;
   },
 
@@ -1109,7 +1130,7 @@ export const DataSharePartnerApi = {
    * @returns DataSharePartner[]
    */
   dataSharePartnerBatchAddOrUpdate: async function (param) {
-    let result = await invoke(this.dataSharePartnerBatchAddOrUpdate.name, param);
+    const result = await invoke(this.dataSharePartnerBatchAddOrUpdate.name, param);
     return result.data;
   },
 
@@ -1119,7 +1140,7 @@ export const DataSharePartnerApi = {
    * @returns 
    */
   dataSharePartnerDeleteById: async function (param) {
-    let result = await invoke(this.dataSharePartnerDeleteById.name, param);
+    const result = await invoke(this.dataSharePartnerDeleteById.name, param);
     return result.data;
   },
 
@@ -1129,7 +1150,7 @@ export const DataSharePartnerApi = {
  * @returns 
  */
   dataSharePartnerDeleteByIds: async function (param) {
-    let result = await invoke(this.dataSharePartnerDeleteByIds.name, param);
+    const result = await invoke(this.dataSharePartnerDeleteByIds.name, param);
     return result.data;
   },
 
@@ -1139,7 +1160,7 @@ export const DataSharePartnerApi = {
    * @returns StatisticDataSharePartnerDTO
    */
   statisticDataSharePartner: async function (param) {
-    let result = await invoke(this.statisticDataSharePartner.name, param);
+    const result = await invoke(this.statisticDataSharePartner.name, param);
     return result.data;
   },
 
@@ -1148,7 +1169,7 @@ export const DataSharePartnerApi = {
 export const AppApi = {
 
   appBackgroundTaskRun: async function (param) {
-    let result = await invoke(this.appBackgroundTaskRun.name, param);
+    const result = await invoke(this.appBackgroundTaskRun.name, param);
     return result.data;
   },
 }
@@ -1156,7 +1177,7 @@ export const AppApi = {
 export const EmitterApi = {
 
   emitterEmit: async function (param) {
-    let result = await invoke(this.emitterEmit.name, param);
+    const result = await invoke(this.emitterEmit.name, param);
     return result.data;
   },
 }
