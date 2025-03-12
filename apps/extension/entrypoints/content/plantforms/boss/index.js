@@ -1,33 +1,24 @@
-import dayjs from "dayjs";
+import { PLATFORM_BOSS } from "../../../../common";
+import { JobApi } from "../../../../common/api";
+import { getAnalysisConfig, getJobIds, saveBrowseJob } from "../../commonDataHandler";
 import {
+  createLoadingDOM,
+  finalRender,
+  hiddenLoadingDOM,
+  renderFunctionPanel,
+  renderSortJobItem,
   renderTimeTag,
   setupSortJobItem,
-  renderSortJobItem,
-  createLoadingDOM,
-  hiddenLoadingDOM,
-  finalRender,
-  renderFunctionPanel,
+  setErrorLoadingDOM,
 } from "../../commonRender";
-import { randomDelay } from "../../../../common/utils";
 import onlineFilter from "./onlineFilter";
-import {
-  JOB_STATUS_DESC_NEWEST,
-  JOB_STATUS_DESC_RECRUITING,
-  JOB_STATUS_DESC_UNKNOW,
-} from "../../common";
-import { PLATFORM_BOSS } from "../../../../common";
-import { saveBrowseJob, getJobIds, getAnalysisConfig } from "../../commonDataHandler";
-import { JobApi } from "../../../../common/api";
-
-const DELAY_FETCH_TIME = 75; //ms
-const DELAY_FETCH_TIME_RANDOM_OFFSET = 50; //ms
 
 export function getBossData(responseText) {
   try {
     const data = JSON.parse(responseText);
-    mutationContainer().then((node) => {
+    mutationContainer().then(async (node) => {
       setupSortJobItem(node);
-      handleData(data?.zpData?.jobList || [], getListByNode(node), getJobItemDetailUrlFunction, 0);
+      await handleData(data?.zpData?.jobList || [], getListByNode(node), getJobItemDetailUrlFunction, 0);
       onlineFilter();
     });
     return;
@@ -71,16 +62,6 @@ function mutationContainer() {
   });
 }
 
-function convertJobStatusDesc(statusText) {
-  if (statusText == JOB_STATUS_DESC_NEWEST.key) {
-    return JOB_STATUS_DESC_NEWEST;
-  } else if (statusText == JOB_STATUS_DESC_RECRUITING.key) {
-    return JOB_STATUS_DESC_RECRUITING;
-  } else {
-    return JOB_STATUS_DESC_UNKNOW;
-  }
-}
-
 function getJobItemDetailUrlFunction(dom) {
   return dom
     .querySelector(".job-card-body")
@@ -88,10 +69,10 @@ function getJobItemDetailUrlFunction(dom) {
 }
 
 // 解析数据，插入时间标签
-export function handleData(list, getListItem, getJobItemDetailUrlFunction, orderStartIndex) {
+export async function handleData(list, getListItem, getJobItemDetailUrlFunction, orderStartIndex) {
   const cardApiUrlList = [];
   const urlList = [];
-  list.forEach((item, index) => {
+  list.forEach(async (item, index) => {
     const { brandName, securityId } = item;
     const dom = getListItem(index);
     //cardApiUrl
@@ -111,72 +92,42 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
-  const promiseList = cardApiUrlList.map(async (url, index) => {
-    await randomDelay(DELAY_FETCH_TIME * index, DELAY_FETCH_TIME_RANDOM_OFFSET); // 避免频繁请求触发风控
-    const response = await fetch(url);
-    const result = await response.json();
-    return Object.assign(result.zpData.jobCard, list[index]);
-  });
-  Promise.allSettled(promiseList)
-    .then(async (response) => {
-      const jsonList = response.map(item => item.value);
-      let jobDTOList = [];
-      jsonList.forEach((item, index) => {
-        item.jobUrl = urlList[index];
-      });
-      await saveBrowseJob(jsonList, PLATFORM_BOSS);
-      jobDTOList = await JobApi.getJobBrowseInfoByIds(
-        getJobIds(jsonList, PLATFORM_BOSS)
-      );
-      // const lastModifyTimeList = [];
-      const jobStatusDescList = [];
-      jsonList.forEach((item, index) => {
-        //TODO 字段接口被删除
-        // lastModifyTimeList.push(
-        //   dayjs(item.value?.zpData?.brandComInfo?.activeTime)
-        // );
-        //TODO json.detail接口限流窗口过小
-        // let jobStatus = convertJobStatusDesc(
-        //   item.value?.zpData?.jobInfo?.jobStatusDesc
-        // );
-        jobStatusDescList.push(null);
-        // 额外针对BOSS平台，为后面的排序做准备
-        // jobDTOList[index].jobStatusDesc = null;
-        jobDTOList[
-          index
-        ].jobCompanyApiUrl = `https://www.zhipin.com/gongsi/${item.encryptBrandId}.html`;
-        const hrActiveTimeDesc = item.activeTimeDesc;
-        //额外针对BOSS平台，为后面的排序做准备
-        jobDTOList[index].hrActiveTimeDesc = hrActiveTimeDesc;
-      });
-      const analysisConfig = await getAnalysisConfig();
-      list.forEach((item, index) => {
-        const dom = getListItem(index);
-        const tag = createDOM(jobDTOList[index], jobStatusDescList[index], { analysisConfig });
-        dom.appendChild(tag);
-      });
-      hiddenLoadingDOM();
-      renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_BOSS, orderStartIndex });
-      await renderFunctionPanel(jobDTOList, getListItem, {
-        platform: PLATFORM_BOSS,
-        getCompanyInfoFunction: async function (url) {
-          const response = await fetch(url);
-          const result = await response.text();
-          const MATCH_COMPANY = /企业名称：<\/span>(?<data>.*)<\/li>/;
-          const groups = result.match(MATCH_COMPANY)?.groups;
-          if (groups) {
-            return groups["data"];
-          } else {
-            return null;
-          }
-        },
-      });
-      finalRender(jobDTOList, { platform: PLATFORM_BOSS });
-    })
-    .catch((error) => {
-      console.log(error);
-      hiddenLoadingDOM();
+  try {
+    list.forEach((item, index) => {
+      item.jobUrl = urlList[index];
     });
+    await saveBrowseJob(list, PLATFORM_BOSS);
+    let jobDTOList = [];
+    jobDTOList = await JobApi.getJobBrowseInfoByIds(
+      getJobIds(list, PLATFORM_BOSS)
+    );
+    const analysisConfig = await getAnalysisConfig();
+    list.forEach((item, index) => {
+      const dom = getListItem(index);
+      const tag = createDOM(jobDTOList[index], null, { analysisConfig });
+      dom.appendChild(tag);
+    });
+    hiddenLoadingDOM();
+    renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_BOSS, orderStartIndex });
+    await renderFunctionPanel(jobDTOList, getListItem, {
+      platform: PLATFORM_BOSS,
+      getCompanyInfoFunction: async function (url) {
+        const response = await fetch(url);
+        const result = await response.text();
+        const MATCH_COMPANY = /企业名称：<\/span>(?<data>.*)<\/li>/;
+        const groups = result.match(MATCH_COMPANY)?.groups;
+        if (groups) {
+          return groups["data"];
+        } else {
+          return null;
+        }
+      },
+    });
+    finalRender(jobDTOList, { platform: PLATFORM_BOSS });
+  } catch (error) {
+    console.log(error);
+    setErrorLoadingDOM(error)
+  }
 }
 
 function createDOM(jobDTO, jobStatusDesc, { analysisConfig }) {

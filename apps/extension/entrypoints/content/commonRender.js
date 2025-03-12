@@ -21,6 +21,7 @@ import {
   genIdFromText,
   genUniqueId,
   getDomain,
+  isValidDate,
 } from "../../common/utils";
 import {
   JOB_STATUS_DESC_NEWEST
@@ -136,7 +137,6 @@ export function renderTimeTag(
     companyInfoTag.classList.add("__time_tag_base_text_font");
     divElement.appendChild(companyInfoTag);
   }
-
   //为time tag染色
   if (jobDTO.hrActiveTimeDesc && platform == PLATFORM_BOSS) {
     //根据hr活跃时间和职位发现时间中更早的时间为JobItem染色
@@ -148,7 +148,7 @@ export function renderTimeTag(
     const minDatetime = dayjs.min(dayjs(hrActiveDatetime), dayjs(jobDTO.createDatetime));
     divElement.style = getRenderTimeStyle(minDatetime);
   } else {
-    const minDatetime = dayjs.min(dayjs(jobDTO.jobFirstPublishDatetime), dayjs(jobDTO.createDatetime));
+    const minDatetime = dayjs.min(isValidDate(jobDTO.jobFirstPublishDatetime) ? dayjs(jobDTO.jobFirstPublishDatetime) : null, dayjs(jobDTO.createDatetime));
     divElement.style = getRenderTimeStyle(
       minDatetime ?? null,
       jobStatusDesc
