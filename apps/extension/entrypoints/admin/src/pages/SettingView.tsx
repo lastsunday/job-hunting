@@ -1,7 +1,16 @@
 import { APP_ID } from '@/common/config';
 import { CheckCard } from '@ant-design/pro-components';
 import { Icon } from '@iconify/react';
-import { Button, Card, Flex, Modal, Tooltip, Typography, message } from 'antd';
+import {
+  Button,
+  Card,
+  Flex,
+  Modal,
+  Tooltip,
+  Typography,
+  message,
+  Switch,
+} from 'antd';
 import Markdown from 'marked-react';
 import React from 'react';
 import { useShallow } from 'zustand/shallow';
@@ -56,7 +65,10 @@ const SettingView: React.FC = () => {
   const [isVersionDescModalOpen, setIsVersionDescModalOpen] = useState(false);
   const [changelogContent, setChangelogContent] = useState('');
   const [isLicenseModalOpen, setIsLicenseModalOpen] = useState(false);
+  const [isStatementOfTermsModalOpen, setIsStatementOfTermsModalOpen] =
+    useState(false);
   const [licenseContent, setLicenseContent] = useState('');
+  const [statementOfTerms, setStatementOfTerms] = useState('');
   const [versionChecking, setVersionChecking] = useState(false);
   const [checkingVersionText, setCheckingVersionText] = useState('');
   const [
@@ -88,6 +100,9 @@ const SettingView: React.FC = () => {
   useEffect(() => {
     setDataSharePlanEnable(enable);
     setAnalysisEnable(analysisConfig.enable);
+    if (enable) {
+      setIsDangerDataShareMenuOpen(true);
+    }
   }, []);
 
   useEffect(() => {
@@ -103,6 +118,17 @@ const SettingView: React.FC = () => {
       setVersionChecking(false);
     } catch (e) {
       setCheckingVersionText('版本检查失败，请点击再次检查');
+    }
+  };
+
+  const [isDangerDataShareMenuOpen, setIsDangerDataShareMenuOpen] =
+    useState(false);
+
+  const getSwitchStyle = () => {
+    if (isDangerDataShareMenuOpen) {
+      return { backgroundColor: 'red' };
+    } else {
+      return null;
     }
   };
 
@@ -186,6 +212,34 @@ const SettingView: React.FC = () => {
                 }}
               >
                 许可证
+              </Button>
+              <Button
+                onClick={async () => {
+                  setStatementOfTerms(`
+# 免责声明
+
+## 1. 项目目的与性质
+本项目（以下简称“本项目”）是作为一个技术研究与学习工具而创建的，旨在探索和学习网络数据采集技术。本项目专注于招聘平台的数据爬取与分析技术研究，旨在提供给学习者和研究者作为技术交流之用。
+
+## 2. 法律合规性声明
+本项目开发者（以下简称“开发者”）郑重提醒用户在下载、安装和使用本项目时，严格遵守中华人民共和国相关法律法规，包括但不限于《中华人民共和国网络安全法》、《中华人民共和国反间谍法》等所有适用的国家法律和政策。用户应自行承担一切因使用本项目而可能引起的法律责任。
+
+## 3. 使用目的限制
+本项目严禁用于任何非法目的或非学习、非研究的商业行为。本项目不得用于任何形式的非法侵入他人计算机系统，不得用于任何侵犯他人知识产权或其他合法权益的行为。用户应保证其使用本项目的目的纯属个人学习和技术研究，不得用于任何形式的非法活动。
+
+## 4. 免责声明
+开发者已尽最大努力确保本项目的正当性及安全性，但不对用户使用本项目可能引起的任何形式的直接或间接损失承担责任。包括但不限于由于使用本项目而导致的任何数据丢失、设备损坏、法律诉讼等。
+
+## 5. 知识产权声明
+本项目的知识产权归开发者所有。本项目受到著作权法和国际著作权条约以及其他知识产权法律和条约的保护。用户在遵守本声明及相关法律法规的前提下，可以下载和使用本项目。
+
+## 6. 最终解释权
+关于本项目的最终解释权归开发者所有。开发者保留随时更改或更新本免责声明的权利，恕不另行通知。
+                    `);
+                  setIsStatementOfTermsModalOpen(true);
+                }}
+              >
+                免责声明
               </Button>
               <Button
                 onClick={async () => {
@@ -274,30 +328,48 @@ const SettingView: React.FC = () => {
             <CheckCard title="关闭" description="关闭职位分析" value={false} />
           </CheckCard.Group>
         </Card>
-        <Card title="数据共享计划" bordered={false} size="small">
-          <CheckCard.Group
-            onChange={async (value) => {
-              if (value) {
-                await change(true);
-                setDataSharePlanEnable(true);
-              } else {
-                await change(false);
-                setDataSharePlanEnable(false);
-              }
-            }}
-            value={dataSharePlanEnable}
-          >
-            <CheckCard
-              title="开启"
-              description="开启数据共享计划"
-              value={true}
-            />
-            <CheckCard
-              title="关闭"
-              description="关闭数据共享计划"
-              value={false}
-            />
-          </CheckCard.Group>
+        <Card
+          title=<Flex align="center" gap={5}>
+            <Text>数据共享计划</Text>
+            <Switch
+              style={getSwitchStyle()}
+              checkedChildren="风险操作开启"
+              unCheckedChildren="风险操作关闭"
+              size="small"
+              checked={isDangerDataShareMenuOpen}
+              onChange={(checked) => {
+                setIsDangerDataShareMenuOpen(checked);
+              }}
+            ></Switch>
+          </Flex>
+          bordered={false}
+          size="small"
+        >
+          {isDangerDataShareMenuOpen ? (
+            <CheckCard.Group
+              onChange={async (value) => {
+                if (value) {
+                  await change(true);
+                  setDataSharePlanEnable(true);
+                } else {
+                  await change(false);
+                  setDataSharePlanEnable(false);
+                }
+              }}
+              value={dataSharePlanEnable}
+            >
+              <CheckCard
+                title="开启"
+                description="开启数据共享计划，请遵守相关法律法规"
+                value={true}
+              />
+              <CheckCard
+                title="关闭"
+                description="关闭数据共享计划"
+                value={false}
+              />
+            </CheckCard.Group>
+          ) : null}
         </Card>
         <Card title="数据管理" bordered={false} size="small">
           <Flex vertical gap={5}>
@@ -357,13 +429,11 @@ const SettingView: React.FC = () => {
       >
         <Flex vertical>
           <Text>1.下载新版本程序安装文件（zip格式文件）</Text>
-          <Text>2.解压程序安装文件</Text>
           <Text>
-            3.访问 chrome://extensions/
-            地址，点击加载已解压的扩展程序，选择解压后 manifest.json
-            文件所在的目录
+            2.访问 chrome://extensions/
+            地址，打开开发者模式，将zip文件拖进页面里
           </Text>
-          <Text>4.ID为【{APP_ID}】的程序版本为新版本，即更新成功</Text>
+          <Text>3.ID为【{APP_ID}】的程序版本为新版本，即更新成功</Text>
         </Flex>
       </Modal>
       <Modal
@@ -389,6 +459,18 @@ const SettingView: React.FC = () => {
         footer={null}
       >
         <Markdown>{licenseContent}</Markdown>
+      </Modal>
+      <Modal
+        title="免责声明"
+        width="80%"
+        destroyOnClose
+        open={isStatementOfTermsModalOpen}
+        onCancel={() => {
+          setIsStatementOfTermsModalOpen(false);
+        }}
+        footer={null}
+      >
+        <Markdown>{statementOfTerms}</Markdown>
       </Modal>
       <Modal
         title="新版本详情"
