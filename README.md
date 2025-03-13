@@ -158,24 +158,6 @@
     <img src="docs\introduction\sidepanel_admin_analysis_setting.png" alt="sidepanel_admin_analysis_setting" width="1000px"/>
 </div>
 
-### 数据共享计划
-
-<div style="margin-top:30px">
-    <img src="docs\introduction\chrome_extension_data_share_introduction.png" alt="chrome_extension_data_share_introduction" width="1000px"/>
-</div>
-
-<div style="margin-top:30px">
-    <img src="docs\introduction\chrome_extension_data_share_statistic.png" alt="chrome_extension_data_share_statistic" width="1000px"/>
-</div>
-
-<div style="margin-top:30px">
-    <img src="docs\introduction\chrome_extension_data_share_task.png" alt="chrome_extension_data_share_task" width="1000px"/>
-</div>
-
-<div style="margin-top:30px">
-    <img src="docs\introduction\chrome_extension_data_share_partner.png" alt="chrome_extension_data_share_partner" width="1000px"/>
-</div>
-
 #### 个人助理
 
 <div style="margin-top:30px">
