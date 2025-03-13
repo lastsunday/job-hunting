@@ -123,12 +123,14 @@ const RootLayout: React.FC = () => {
               label: '职位分析',
               children: [...genAnalysisMenu()],
             },
-            {
-              key: 'dataSharePlan',
-              icon: <ShareAltOutlined />,
-              label: '数据共享计划',
-              children: [...genDataSharePlanMenu()],
-            },
+            dataSharePlanEnable
+              ? {
+                  key: 'dataSharePlan',
+                  icon: <ShareAltOutlined />,
+                  label: '数据共享计划',
+                  children: [...genDataSharePlanMenu()],
+                }
+              : null,
             {
               key: 'file',
               icon: <FileOutlined />,
