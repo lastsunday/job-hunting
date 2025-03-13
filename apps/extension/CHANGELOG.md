@@ -1,3 +1,17 @@
+## 3.7.4 (2025-03-13)
+
+### ⚠️ Noteworthy
+
+- 为了避免违反相关法律法规，请关闭数据共享计划，并将相关的job-hunting-data仓库关闭（或删除）
+
+### 🩹 Fixes
+
+- 补充免责声明和风险操作提示
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.7.3 (2025-03-13)
 
 ### 🩹 Fixes

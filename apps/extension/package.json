@@ -1,7 +1,7 @@
 {
   "name": "@job-hunting/extension",
   "private": true,
-  "version": "3.7.3",
+  "version": "3.7.4",
   "description": "职位猎人-协助找工作",
   "type": "module",
   "homepage": "https://github.com/lastsunday/job-hunting",
