@@ -189,6 +189,19 @@ div[data-search-sol-meta] {
   line-height: 18px;
 }
 
+.__time_tag_age_limit {
+  display: inline-flex;
+  padding-left: 3px;
+  padding-left: 3px;
+  background-color: orange;
+  box-shadow: 0px 0px 11px 2px orange;
+}
+
+.__time_tag_age_limit_35 {
+  background-color: red;
+  box-shadow: 0px 0px 11px 2px red;
+}
+
 .__time_tag_create_datetime {
   display: inline-flex;
 }

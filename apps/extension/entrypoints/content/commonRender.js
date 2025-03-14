@@ -56,6 +56,9 @@ import { useTag } from "@/common/hooks/tag";
 import "iconify-icon";
 const { convertToTagData } = useTag();
 
+import { useJob } from "@/common/hooks/job";
+const { isAgeLimitFromDescription, isAgeLimitFromDescriptionBy35 } = useJob();
+
 export function renderTimeTag(
   divElement,
   jobDTO,
@@ -64,6 +67,27 @@ export function renderTimeTag(
   if (jobDTO == null || jobDTO == undefined) {
     throw new Error("jobDTO is required");
   }
+  //进行年龄限制的检测
+  const ageCheckCondition = `${jobDTO.jobName}${jobDTO.jobDescription}`;
+  const isAgeLimit = isAgeLimitFromDescription(ageCheckCondition);
+  const isAgeLimitBy35 = isAgeLimitFromDescriptionBy35(ageCheckCondition);
+  if (isAgeLimit || isAgeLimitBy35) {
+    const ageLimitCheckTagWrapper = document.createElement("span");
+    ageLimitCheckTagWrapper.classList.add("__time_tag_age_limit");
+
+    const ageLimitCheckTag = document.createElement("div");
+    if (isAgeLimitBy35) {
+      ageLimitCheckTag.textContent = `【35岁门槛】`;
+      ageLimitCheckTagWrapper.classList.add("__time_tag_age_limit_35");
+    } else {
+      ageLimitCheckTag.textContent = `【年龄限制】`;
+    }
+    ageLimitCheckTag.classList.add("__time_tag_base_text_font");
+
+    ageLimitCheckTagWrapper.appendChild(ageLimitCheckTag);
+    divElement.appendChild(ageLimitCheckTagWrapper);
+  }
+
   //对初次发现时间的处理
   const createDatetimeTagWrapper = document.createElement("span");
   createDatetimeTagWrapper.classList.add("__time_tag_create_datetime");
