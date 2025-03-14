@@ -1,3 +1,13 @@
+## 3.8.0 (2025-03-14)
+
+### 🚀 Features
+
+- 职位年龄限制检测（突出35岁门槛）
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.7.4 (2025-03-13)
 
 ### ⚠️ Noteworthy
