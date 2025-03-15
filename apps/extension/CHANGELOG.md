@@ -1,3 +1,13 @@
+## 3.8.1 (2025-03-15)
+
+### 🩹 Fixes
+
+- 优化数据库调试编辑器
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.8.0 (2025-03-14)
 
 ### 🚀 Features
