@@ -1,3 +1,13 @@
+## 3.8.2 (2025-03-17)
+
+### 🩹 Fixes
+
+- 修复职位年龄限制检测
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.8.1 (2025-03-15)
 
 ### 🩹 Fixes
