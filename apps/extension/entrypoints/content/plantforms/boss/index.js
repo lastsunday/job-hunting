@@ -20,8 +20,10 @@ import { saveBrowseJob, getJobIds, getAnalysisConfig } from "../../commonDataHan
 import { JobApi } from "../../../../common/api";
 
 const DELAY_FETCH_TIME = 1000; //ms
+const DELAY_FETCH_TIME_NO_LOGIN = 75; //ms
 const DELAY_FETCH_TIME_RANDOM_OFFSET = 50; //ms
 const BATCH_SIZE = 3; // 每批请求的数量
+const BATCH_SIZE_NO_LOGIN = 1000; // 每批请求的数量
 
 export function getBossData(responseText) {
   try {
@@ -90,8 +92,11 @@ function getJobItemDetailUrlFunction(dom) {
 
 // 解析数据，插入时间标签
 export function handleData(list, getListItem, getJobItemDetailUrlFunction, orderStartIndex) {
+  const isBossLogin = isLoggedIn();
   const cardApiUrlList = [];
   const urlList = [];
+  const delayFetchTime = isBossLogin ? DELAY_FETCH_TIME : DELAY_FETCH_TIME_NO_LOGIN;
+  const batchSize = isBossLogin ? BATCH_SIZE : BATCH_SIZE_NO_LOGIN;
   list.forEach((item, index) => {
     const { brandName, securityId } = item;
     const dom = getListItem(index);
@@ -116,12 +121,12 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
 
   // 分批请求数据
   const fetchBatchData = async (batchIndex) => {
-    const start = batchIndex * BATCH_SIZE;
-    const end = Math.min(start + BATCH_SIZE, cardApiUrlList.length);
+    const start = batchIndex * batchSize;
+    const end = Math.min(start + batchSize, cardApiUrlList.length);
     const batchUrls = cardApiUrlList.slice(start, end);
 
     const promiseList = batchUrls.map(async (url, index) => {
-      await randomDelay(DELAY_FETCH_TIME * index, DELAY_FETCH_TIME_RANDOM_OFFSET); // 避免频繁请求触发风控
+      await randomDelay(delayFetchTime * index, DELAY_FETCH_TIME_RANDOM_OFFSET); // 避免频繁请求触发风控
       const response = await fetch(url);
       const result = await response.json();
       return Object.assign(result.zpData.jobCard, list[start + index]);
@@ -189,7 +194,7 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
   };
 
   // 逐批请求并处理数据
-  const totalBatches = Math.ceil(cardApiUrlList.length / BATCH_SIZE);
+  const totalBatches = Math.ceil(cardApiUrlList.length / batchSize);
   (async () => {
     for (let i = 0; i < totalBatches; i++) {
       await fetchBatchData(i);
@@ -212,4 +217,21 @@ function createDOM(jobDTO, jobStatusDesc, { analysisConfig }) {
     analysisConfig
   });
   return div;
+}
+
+function isLoggedInByCookie(cookieName) {
+  let cookies = document.cookie;
+  let cookieArray = cookies.split(';');
+  for (let i = 0; i < cookieArray.length; i++) {
+    let cookie = cookieArray[i].trim();
+    if (cookie.startsWith(cookieName + '=')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isLoggedIn() {
+  const cookieCheck = isLoggedInByCookie('bst'); // 猜测为 boss token
+  return cookieCheck;
 }
