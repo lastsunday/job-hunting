@@ -16,10 +16,16 @@ test("isAgeLimitFromDescription should return true for descriptions containing a
     const description1 = "适合30岁以下的人群";
     const description2 = "年龄在25岁之间的申请者";
     const description3 = "50岁以上勿打扰";
+    const description4 = "年龄25-31";
+    const description5 = "年龄25到31";
+    const description6 = "年龄25 - 31";
 
     expect(isAgeLimitFromDescription(description1)).toBe(true);
     expect(isAgeLimitFromDescription(description2)).toBe(true);
     expect(isAgeLimitFromDescription(description3)).toBe(true);
+    expect(isAgeLimitFromDescription(description4)).toBe(true);
+    expect(isAgeLimitFromDescription(description5)).toBe(true);
+    expect(isAgeLimitFromDescription(description6)).toBe(true);
 });
 
 test("isAgeLimitFromDescription should return false for descriptions containing ignore list keywords", () => {
