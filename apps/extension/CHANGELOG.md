@@ -1,3 +1,14 @@
+## 3.8.3 (2025-03-18)
+
+### 🩹 Fixes
+
+- 添加避免招聘平台限流的处理逻辑（BOSS直聘）
+
+### ❤️ Thank You
+
+- kakuuuu @kakuuuu
+- lastsunday @lastsunday
+
 ## 3.8.2 (2025-03-17)
 
 ### 🩹 Fixes
