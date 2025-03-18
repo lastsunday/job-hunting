@@ -1,23 +1,17 @@
-import dayjs from "dayjs";
+import { PLATFORM_BOSS } from "../../../../common";
+import { JobApi } from "../../../../common/api";
+import { randomDelay } from "../../../../common/utils";
+import { getAnalysisConfig, getJobIds, saveBrowseJob } from "../../commonDataHandler";
 import {
+  createLoadingDOM,
+  finalRender,
+  hiddenLoadingDOM,
+  renderFunctionPanel,
+  renderSortJobItem,
   renderTimeTag,
   setupSortJobItem,
-  renderSortJobItem,
-  createLoadingDOM,
-  hiddenLoadingDOM,
-  finalRender,
-  renderFunctionPanel,
 } from "../../commonRender";
-import { randomDelay } from "../../../../common/utils";
 import onlineFilter from "./onlineFilter";
-import {
-  JOB_STATUS_DESC_NEWEST,
-  JOB_STATUS_DESC_RECRUITING,
-  JOB_STATUS_DESC_UNKNOW,
-} from "../../common";
-import { PLATFORM_BOSS } from "../../../../common";
-import { saveBrowseJob, getJobIds, getAnalysisConfig } from "../../commonDataHandler";
-import { JobApi } from "../../../../common/api";
 
 const DELAY_FETCH_TIME = 1000; //ms
 const DELAY_FETCH_TIME_NO_LOGIN = 75; //ms
@@ -74,16 +68,6 @@ function mutationContainer() {
   });
 }
 
-function convertJobStatusDesc(statusText) {
-  if (statusText == JOB_STATUS_DESC_NEWEST.key) {
-    return JOB_STATUS_DESC_NEWEST;
-  } else if (statusText == JOB_STATUS_DESC_RECRUITING.key) {
-    return JOB_STATUS_DESC_RECRUITING;
-  } else {
-    return JOB_STATUS_DESC_UNKNOW;
-  }
-}
-
 function getJobItemDetailUrlFunction(dom) {
   return dom
     .querySelector(".job-card-body")
@@ -117,10 +101,10 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
-  let toalJobDTOList = [];
+  let totalJobDTOList = [];
 
   // 分批请求数据
-  const fetchBatchData = async (batchIndex) => {
+  const fetchBatchData = async (batchIndex, isFinalFetch) => {
     const start = batchIndex * batchSize;
     const end = Math.min(start + batchSize, cardApiUrlList.length);
     const batchUrls = cardApiUrlList.slice(start, end);
@@ -145,17 +129,17 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
     // const lastModifyTimeList = [];
     const jobStatusDescList = [];
     jsonList.forEach((item, index) => {
-       //TODO 字段接口被删除
-        // lastModifyTimeList.push(
-        //   dayjs(item.value?.zpData?.brandComInfo?.activeTime)
-        // );
-        //TODO json.detail接口限流窗口过小
-        // let jobStatus = convertJobStatusDesc(
-        //   item.value?.zpData?.jobInfo?.jobStatusDesc
-        // );
+      //TODO 字段接口被删除
+      // lastModifyTimeList.push(
+      //   dayjs(item.value?.zpData?.brandComInfo?.activeTime)
+      // );
+      //TODO json.detail接口限流窗口过小
+      // let jobStatus = convertJobStatusDesc(
+      //   item.value?.zpData?.jobInfo?.jobStatusDesc
+      // );
       jobStatusDescList.push(null);
       // 额外针对BOSS平台，为后面的排序做准备
-        // jobDTOList[index].jobStatusDesc = null;
+      // jobDTOList[index].jobStatusDesc = null;
       jobDTOList[
         index
       ].jobCompanyApiUrl = `https://www.zhipin.com/gongsi/${item.encryptBrandId}.html`;
@@ -189,18 +173,18 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
         },
       }
     );
-    finalRender(jobDTOList, { platform: PLATFORM_BOSS });
-    toalJobDTOList = toalJobDTOList.concat(jobDTOList);
+    finalRender(jobDTOList, { platform: PLATFORM_BOSS, isFinalRender: isFinalFetch });
+    totalJobDTOList = totalJobDTOList.concat(jobDTOList);
   };
 
   // 逐批请求并处理数据
   const totalBatches = Math.ceil(cardApiUrlList.length / batchSize);
   (async () => {
     for (let i = 0; i < totalBatches; i++) {
-      await fetchBatchData(i);
+      await fetchBatchData(i, i === totalBatches - 1);
     }
     // 重新排序,页面会闪烁
-    renderSortJobItem(toalJobDTOList, getListItem, { platform: PLATFORM_BOSS, orderStartIndex });
+    renderSortJobItem(totalJobDTOList, getListItem, { platform: PLATFORM_BOSS, orderStartIndex });
     hiddenLoadingDOM();
   })().catch((error) => {
     console.log(error);
@@ -220,10 +204,10 @@ function createDOM(jobDTO, jobStatusDesc, { analysisConfig }) {
 }
 
 function isLoggedInByCookie(cookieName) {
-  let cookies = document.cookie;
-  let cookieArray = cookies.split(';');
+  const cookies = document.cookie;
+  const cookieArray = cookies.split(';');
   for (let i = 0; i < cookieArray.length; i++) {
-    let cookie = cookieArray[i].trim();
+    const cookie = cookieArray[i].trim();
     if (cookie.startsWith(cookieName + '=')) {
       return true;
     }

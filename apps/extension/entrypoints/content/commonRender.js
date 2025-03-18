@@ -204,7 +204,7 @@ export function renderTimeTag(
   divElement.classList.add("__time_tag_base_text_font");
 }
 
-export function finalRender(jobDTOList, { platform }) {
+export function finalRender(jobDTOList, { platform, isFinalRender = true }) {
   for (let i = 0; i < jobDTOList.length; i++) {
     const item = jobDTOList[i];
     const jobId = item.jobId;
@@ -219,7 +219,7 @@ export function finalRender(jobDTOList, { platform }) {
       jobItemIdSha256
     );
     commentWrapperDiv.append(jobItemCommentButton);
-    if (i == jobDTOList.length - 1) {
+    if (isFinalRender && i == jobDTOList.length - 1) {
       commentWrapperDiv.appendChild($(`<div class="__status_job_render_finish"></div>`)[0]);
     }
     const jobCardItem = commentWrapperDiv.parentElement.parentElement;
