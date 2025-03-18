@@ -4,12 +4,12 @@ import { JobData } from '../data/JobData';
 import CompanyItemTable from './CompanyItemTable';
 import JobItemTable from './JobItemTable';
 
-interface JobModelProps {
+interface JobModalProps {
   data: JobData;
   refresh?: boolean;
 }
 
-const JobModel: React.FC<JobModelProps> = ({ data, refresh }) => {
+const JobModal: React.FC<JobModalProps> = ({ data, refresh }) => {
   const [companyModalData, setCompanyModalData] = useState<CompanyData>();
   const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
   const [isJobModalOpen, setIsJobModalOpen] = useState(true);
@@ -57,4 +57,4 @@ const JobModel: React.FC<JobModelProps> = ({ data, refresh }) => {
   ) : null;
 };
 
-export default JobModel;
+export default JobModal;

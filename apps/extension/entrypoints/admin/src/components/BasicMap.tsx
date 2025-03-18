@@ -20,7 +20,7 @@ import { GeoJSONSource } from 'maplibre-gl';
 import { useJob } from '../hooks/job';
 import { useUtil } from '../hooks/util';
 import JobItemCard from './JobItemCard';
-import JobModel from './JobModel';
+import JobModal from './JobModal';
 
 const { convertJobDataToGeojson } = useJob();
 
@@ -287,7 +287,7 @@ const BasicMap: React.FC<BasicMapProps> = ({
               })}
           </div>
         </div>
-        <JobModel data={jobModalData} refresh={refresh}></JobModel>
+        <JobModal data={jobModalData} refresh={refresh}></JobModal>
       </div>
     </>
   );

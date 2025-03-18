@@ -17,7 +17,7 @@ import { SearchOutlined } from '@ant-design/icons';
 import type { DraggableData, DraggableEvent } from 'react-draggable';
 import Draggable from 'react-draggable';
 import BasicMap from '../../components/BasicMap';
-import JobModel from '../../components/JobModel';
+import JobModal from '../../components/JobModal';
 import { FavoriteJobSettingData } from '../../data/FavoriteJobSettingData';
 import { JobData } from '../../data/JobData';
 import { Page, useAnalysis } from '../../hooks/analysis';
@@ -268,7 +268,7 @@ const FavoriteJobView: React.FC = () => {
           </Spin>
         </Flex>
       </Flex>
-      <JobModel data={jobModalData} refresh={refresh}></JobModel>
+      <JobModal data={jobModalData} refresh={refresh}></JobModal>
       <Modal
         title={
           <div

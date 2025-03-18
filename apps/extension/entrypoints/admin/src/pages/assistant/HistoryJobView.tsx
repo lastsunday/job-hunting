@@ -5,7 +5,7 @@ import { Empty, Flex, Pagination, Spin, Splitter } from 'antd';
 import React from 'react';
 import BasicMap from '../../components/BasicMap';
 import JobItemCard from '../../components/JobItemCard';
-import JobModel from '../../components/JobModel';
+import JobModal from '../../components/JobModal';
 import { JobData } from '../../data/JobData';
 import { Page, useAnalysis } from '../../hooks/analysis';
 import { useJob } from '../../hooks/job';
@@ -178,7 +178,7 @@ const HistoryJobView: React.FC = () => {
           </Spin>
         </Flex>
       </Flex>
-      <JobModel data={jobModalData} refresh={refresh}></JobModel>
+      <JobModal data={jobModalData} refresh={refresh}></JobModal>
     </>
   );
 };
