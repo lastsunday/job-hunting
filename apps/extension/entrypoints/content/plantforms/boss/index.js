@@ -19,8 +19,11 @@ import { PLATFORM_BOSS } from "../../../../common";
 import { saveBrowseJob, getJobIds, getAnalysisConfig } from "../../commonDataHandler";
 import { JobApi } from "../../../../common/api";
 
-const DELAY_FETCH_TIME = 75; //ms
+const DELAY_FETCH_TIME = 1000; //ms
+const DELAY_FETCH_TIME_NO_LOGIN = 75; //ms
 const DELAY_FETCH_TIME_RANDOM_OFFSET = 50; //ms
+const BATCH_SIZE = 3; // 每批请求的数量
+const BATCH_SIZE_NO_LOGIN = 1000; // 每批请求的数量
 
 export function getBossData(responseText) {
   try {
@@ -89,8 +92,11 @@ function getJobItemDetailUrlFunction(dom) {
 
 // 解析数据，插入时间标签
 export function handleData(list, getListItem, getJobItemDetailUrlFunction, orderStartIndex) {
+  const isBossLogin = isLoggedIn();
   const cardApiUrlList = [];
   const urlList = [];
+  const delayFetchTime = isBossLogin ? DELAY_FETCH_TIME : DELAY_FETCH_TIME_NO_LOGIN;
+  const batchSize = isBossLogin ? BATCH_SIZE : BATCH_SIZE_NO_LOGIN;
   list.forEach((item, index) => {
     const { brandName, securityId } = item;
     const dom = getListItem(index);
@@ -111,27 +117,35 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
-  const promiseList = cardApiUrlList.map(async (url, index) => {
-    await randomDelay(DELAY_FETCH_TIME * index, DELAY_FETCH_TIME_RANDOM_OFFSET); // 避免频繁请求触发风控
-    const response = await fetch(url);
-    const result = await response.json();
-    return Object.assign(result.zpData.jobCard, list[index]);
-  });
-  Promise.allSettled(promiseList)
-    .then(async (response) => {
-      const jsonList = response.map(item => item.value);
-      let jobDTOList = [];
-      jsonList.forEach((item, index) => {
-        item.jobUrl = urlList[index];
-      });
-      await saveBrowseJob(jsonList, PLATFORM_BOSS);
-      jobDTOList = await JobApi.getJobBrowseInfoByIds(
-        getJobIds(jsonList, PLATFORM_BOSS)
-      );
-      // const lastModifyTimeList = [];
-      const jobStatusDescList = [];
-      jsonList.forEach((item, index) => {
-        //TODO 字段接口被删除
+  let toalJobDTOList = [];
+
+  // 分批请求数据
+  const fetchBatchData = async (batchIndex) => {
+    const start = batchIndex * batchSize;
+    const end = Math.min(start + batchSize, cardApiUrlList.length);
+    const batchUrls = cardApiUrlList.slice(start, end);
+
+    const promiseList = batchUrls.map(async (url, index) => {
+      await randomDelay(delayFetchTime * index, DELAY_FETCH_TIME_RANDOM_OFFSET); // 避免频繁请求触发风控
+      const response = await fetch(url);
+      const result = await response.json();
+      return Object.assign(result.zpData.jobCard, list[start + index]);
+    });
+
+    const response = await Promise.allSettled(promiseList);
+    const jsonList = response.map(item => item.value);
+    let jobDTOList = [];
+    jsonList.forEach((item, index) => {
+      item.jobUrl = urlList[start + index];
+    });
+    await saveBrowseJob(jsonList, PLATFORM_BOSS);
+    jobDTOList = await JobApi.getJobBrowseInfoByIds(
+      getJobIds(jsonList, PLATFORM_BOSS)
+    );
+    // const lastModifyTimeList = [];
+    const jobStatusDescList = [];
+    jsonList.forEach((item, index) => {
+       //TODO 字段接口被删除
         // lastModifyTimeList.push(
         //   dayjs(item.value?.zpData?.brandComInfo?.activeTime)
         // );
@@ -139,25 +153,28 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
         // let jobStatus = convertJobStatusDesc(
         //   item.value?.zpData?.jobInfo?.jobStatusDesc
         // );
-        jobStatusDescList.push(null);
-        // 额外针对BOSS平台，为后面的排序做准备
+      jobStatusDescList.push(null);
+      // 额外针对BOSS平台，为后面的排序做准备
         // jobDTOList[index].jobStatusDesc = null;
-        jobDTOList[
-          index
-        ].jobCompanyApiUrl = `https://www.zhipin.com/gongsi/${item.encryptBrandId}.html`;
-        const hrActiveTimeDesc = item.activeTimeDesc;
-        //额外针对BOSS平台，为后面的排序做准备
-        jobDTOList[index].hrActiveTimeDesc = hrActiveTimeDesc;
-      });
-      const analysisConfig = await getAnalysisConfig();
-      list.forEach((item, index) => {
-        const dom = getListItem(index);
-        const tag = createDOM(jobDTOList[index], jobStatusDescList[index], { analysisConfig });
-        dom.appendChild(tag);
-      });
-      hiddenLoadingDOM();
-      renderSortJobItem(jobDTOList, getListItem, { platform: PLATFORM_BOSS, orderStartIndex });
-      await renderFunctionPanel(jobDTOList, getListItem, {
+      jobDTOList[
+        index
+      ].jobCompanyApiUrl = `https://www.zhipin.com/gongsi/${item.encryptBrandId}.html`;
+      const hrActiveTimeDesc = item.activeTimeDesc;
+      //额外针对BOSS平台，为后面的排序做准备
+      jobDTOList[index].hrActiveTimeDesc = hrActiveTimeDesc;
+    });
+
+    const analysisConfig = await getAnalysisConfig();
+    jsonList.forEach((item, index) => {
+      const dom = getListItem(start + index);
+      const tag = createDOM(jobDTOList[index], jobStatusDescList[index], { analysisConfig });
+      dom.appendChild(tag);
+    });
+
+    await renderFunctionPanel(
+      jobDTOList,
+      (index) => getListItem(start + index),
+      {
         platform: PLATFORM_BOSS,
         getCompanyInfoFunction: async function (url) {
           const response = await fetch(url);
@@ -170,13 +187,25 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
             return null;
           }
         },
-      });
-      finalRender(jobDTOList, { platform: PLATFORM_BOSS });
-    })
-    .catch((error) => {
-      console.log(error);
-      hiddenLoadingDOM();
-    });
+      }
+    );
+    finalRender(jobDTOList, { platform: PLATFORM_BOSS });
+    toalJobDTOList = toalJobDTOList.concat(jobDTOList);
+  };
+
+  // 逐批请求并处理数据
+  const totalBatches = Math.ceil(cardApiUrlList.length / batchSize);
+  (async () => {
+    for (let i = 0; i < totalBatches; i++) {
+      await fetchBatchData(i);
+    }
+    // 重新排序,页面会闪烁
+    renderSortJobItem(toalJobDTOList, getListItem, { platform: PLATFORM_BOSS, orderStartIndex });
+    hiddenLoadingDOM();
+  })().catch((error) => {
+    console.log(error);
+    hiddenLoadingDOM();
+  });
 }
 
 function createDOM(jobDTO, jobStatusDesc, { analysisConfig }) {
@@ -188,4 +217,21 @@ function createDOM(jobDTO, jobStatusDesc, { analysisConfig }) {
     analysisConfig
   });
   return div;
+}
+
+function isLoggedInByCookie(cookieName) {
+  let cookies = document.cookie;
+  let cookieArray = cookies.split(';');
+  for (let i = 0; i < cookieArray.length; i++) {
+    let cookie = cookieArray[i].trim();
+    if (cookie.startsWith(cookieName + '=')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isLoggedIn() {
+  const cookieCheck = isLoggedInByCookie('bst'); // 猜测为 boss token
+  return cookieCheck;
 }
