@@ -1,3 +1,13 @@
+## 3.9.0 (2025-03-19)
+
+### 🚀 Features
+
+- 新增地图职位群组的显示
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.8.3 (2025-03-18)
 
 ### 🩹 Fixes
