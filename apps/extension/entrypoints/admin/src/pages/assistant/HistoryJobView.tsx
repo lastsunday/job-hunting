@@ -1,30 +1,25 @@
 import { JobApi } from '@/common/api';
 import { SearchJobBO } from '@/common/data/bo/searchJobBO';
-import { Empty, Flex, Modal, Pagination, Spin, Splitter } from 'antd';
+import { AnalysisConfigDTO } from '@/common/data/dto/analysisConfigDTO';
+import { Empty, Flex, Pagination, Spin, Splitter } from 'antd';
 import React from 'react';
-import JobItemCard from '../../components/JobItemCard';
-
 import BasicMap from '../../components/BasicMap';
-import CompanyItemTable from '../../components/CompanyItemTable';
-import JobItemTable from '../../components/JobItemTable';
-import { CompanyData } from '../../data/CompanyData';
+import JobItemCard from '../../components/JobItemCard';
+import JobModal from '../../components/JobModal';
 import { JobData } from '../../data/JobData';
+import { Page, useAnalysis } from '../../hooks/analysis';
 import { useJob } from '../../hooks/job';
 import './FavoriteJobView.css';
 import styles from './FavoriteJobView.module.css';
-import { Page, useAnalysis } from '../../hooks/analysis';
 const { queryAnalysisConfig } = useAnalysis();
-import { AnalysisConfigDTO } from '@/common/data/dto/analysisConfigDTO';
 
 const { convertToJobDataList, convertToJobData } = useJob();
 
 const HistoryJobView: React.FC = () => {
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
-  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [jobModalData, setJobModalData] = useState<JobData>();
-  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
-  const [companyModalData, setCompanyModalData] = useState<CompanyData>();
+  const [refresh, setRefresh] = useState(false);
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
@@ -95,26 +90,11 @@ const HistoryJobView: React.FC = () => {
 
   const onCardClickHandle = (data: JobData) => {
     setJobModalData(data);
-    setIsJobModalOpen(true);
+    setRefresh(!refresh);
   };
 
   const onJobItemLocateHandle = (data: JobData) => {
     setLocateJobItem(data);
-  };
-
-  const handleJobModalCancel = () => {
-    setIsJobModalOpen(false);
-    setJobModalData(null);
-  };
-
-  const onCompanyClickHandle = (data: CompanyData) => {
-    setCompanyModalData(data);
-    setIsCompanyModalOpen(true);
-  };
-
-  const handleCompanyModalCancel = () => {
-    setIsCompanyModalOpen(false);
-    setCompanyModalData(null);
   };
 
   return (
@@ -198,26 +178,7 @@ const HistoryJobView: React.FC = () => {
           </Spin>
         </Flex>
       </Flex>
-      <Modal
-        open={isJobModalOpen}
-        onCancel={handleJobModalCancel}
-        footer={null}
-        width="80%"
-      >
-        <JobItemTable
-          data={jobModalData}
-          onCompanyClick={onCompanyClickHandle}
-        ></JobItemTable>
-      </Modal>
-
-      <Modal
-        open={isCompanyModalOpen}
-        onCancel={handleCompanyModalCancel}
-        footer={null}
-        width="80%"
-      >
-        <CompanyItemTable data={companyModalData}></CompanyItemTable>
-      </Modal>
+      <JobModal data={jobModalData} refresh={refresh}></JobModal>
     </>
   );
 };

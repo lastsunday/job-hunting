@@ -9,36 +9,31 @@ import {
   Spin,
   Splitter,
 } from 'antd';
-import React, { use } from 'react';
+import React from 'react';
 import JobItemCard from '../../components/JobItemCard';
-
+import { AnalysisConfigDTO } from '@/common/data/dto/analysisConfigDTO';
+import { toLine } from '@/common/utils';
 import { SearchOutlined } from '@ant-design/icons';
 import type { DraggableData, DraggableEvent } from 'react-draggable';
 import Draggable from 'react-draggable';
-import CompanyItemTable from '../../components/CompanyItemTable';
-import JobItemTable from '../../components/JobItemTable';
-import { CompanyData } from '../../data/CompanyData';
+import BasicMap from '../../components/BasicMap';
+import JobModal from '../../components/JobModal';
 import { FavoriteJobSettingData } from '../../data/FavoriteJobSettingData';
 import { JobData } from '../../data/JobData';
+import { Page, useAnalysis } from '../../hooks/analysis';
+import { useJob } from '../../hooks/job';
 import FavoriteJobSettingView from './FavoriteJobSettingView';
 import './FavoriteJobView.css';
 import styles from './FavoriteJobView.module.css';
-import BasicMap from '../../components/BasicMap';
-import { useJob } from '../../hooks/job';
-import { toLine } from '@/common/utils';
-import { Page, useAnalysis } from '../../hooks/analysis';
 const { queryAnalysisConfig } = useAnalysis();
-import { AnalysisConfigDTO } from '@/common/data/dto/analysisConfigDTO';
 
 const { convertToJobDataList, convertToJobData } = useJob();
 
 const FavoriteJobView: React.FC = () => {
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
-  const [isJobModalOpen, setIsJobModalOpen] = useState(false);
   const [jobModalData, setJobModalData] = useState<JobData>();
-  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
-  const [companyModalData, setCompanyModalData] = useState<CompanyData>();
+  const [refresh, setRefresh] = useState(false);
   const [isFavoriteJobSettingModalOpen, setIsFavoriteJobSettingModalOpen] =
     useState(false);
   const [favoriteJobSetting, setFavoriteJobSetting] =
@@ -170,36 +165,19 @@ const FavoriteJobView: React.FC = () => {
 
   const onCardClickHandle = (data: JobData) => {
     setJobModalData(data);
-    setIsJobModalOpen(true);
+    setRefresh(!refresh);
   };
 
   const onJobItemLocateHandle = (data: JobData) => {
     setLocateJobItem(data);
   };
 
-  const handleJobModalCancel = () => {
-    setIsJobModalOpen(false);
-    setJobModalData(null);
-  };
-
-  const onCompanyClickHandle = (data: CompanyData) => {
-    setCompanyModalData(data);
-    setIsCompanyModalOpen(true);
-  };
-
-  const handleCompanyModalCancel = () => {
-    setIsCompanyModalOpen(false);
-    setCompanyModalData(null);
-  };
-
-  const onFavoriteJobSettingClickHandle = (data: any) => {
-    setCompanyModalData(data);
+  const onFavoriteJobSettingClickHandle = () => {
     setIsFavoriteJobSettingModalOpen(true);
   };
 
   const handleFavoriteJobSettingModalCancel = () => {
     setIsFavoriteJobSettingModalOpen(false);
-    setCompanyModalData(null);
   };
 
   return (
@@ -208,7 +186,7 @@ const FavoriteJobView: React.FC = () => {
         type="primary"
         icon={<SearchOutlined />}
         onClick={() => {
-          onFavoriteJobSettingClickHandle(null);
+          onFavoriteJobSettingClickHandle();
         }}
       ></FloatButton>
       <Flex vertical className={styles.main}>
@@ -290,26 +268,7 @@ const FavoriteJobView: React.FC = () => {
           </Spin>
         </Flex>
       </Flex>
-      <Modal
-        open={isJobModalOpen}
-        onCancel={handleJobModalCancel}
-        footer={null}
-        width="80%"
-      >
-        <JobItemTable
-          data={jobModalData}
-          onCompanyClick={onCompanyClickHandle}
-        ></JobItemTable>
-      </Modal>
-
-      <Modal
-        open={isCompanyModalOpen}
-        onCancel={handleCompanyModalCancel}
-        footer={null}
-        width="80%"
-      >
-        <CompanyItemTable data={companyModalData}></CompanyItemTable>
-      </Modal>
+      <JobModal data={jobModalData} refresh={refresh}></JobModal>
       <Modal
         title={
           <div
