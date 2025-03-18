@@ -59,6 +59,7 @@ const BasicMap: React.FC<BasicMapProps> = ({
     });
     setItemIdMap(itemMap);
     setGeojsonData(convertJobDataToGeojson(data));
+    setClusterData([]);
   }, [data]);
 
   useEffect(() => {

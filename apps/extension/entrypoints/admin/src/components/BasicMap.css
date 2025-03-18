@@ -15,14 +15,14 @@
   top: 0;
   height: 100%;
   overflow: hidden;
+  padding: 10px;
 }
 
 .selectCluster {
-  margin: 20px;
-  background-color: white;
-  overflow: scroll;
+  overflow: auto;
   height: 100%;
   scrollbar-width: thin;
+  background-color: rgba(0, 0, 0, 0.1);
 }
 
 .item {
