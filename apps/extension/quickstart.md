@@ -12,7 +12,7 @@ Refer to [wxt-project-structure](https://wxt.dev/guide/essentials/project-struct
 2. Open [chrome://extensions](chrome://extensions).
 3. Enable developer mode (top right of page).
 4. Click "Load unpacked extension" (top left page).
-5. Select .output/chrome-mv3 directory.
+5. Select .output/chrome-mv3-dev directory.
 
 ## Bundle the extension
 
