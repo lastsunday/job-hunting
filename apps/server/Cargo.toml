@@ -16,9 +16,12 @@ mime = "0.3"
 sea-orm = { version = "1.1.4", features = [ "sqlx-postgres","sqlx-sqlite", "runtime-tokio-rustls", "macros","debug-print" ] }
 chrono = "0.4.39"
 migration={path="migration"}
-testcontainers = "0.23.1"
-testcontainers-modules = { version = "0.11.5",features = ["postgres"] }
-uuid = { version = "1.11.1",features = ["v4"]}
+testcontainers = "0.23.3"
+testcontainers-modules = { version = "0.11.6",features = ["postgres","gitea"] }
+uuid = { version = "1.11.1", features = ["v4"] }
+git2 = "0.20.1"
+reqwest = "0.12.15"
+ssh-key = {version="0.6.7",features=["getrandom","ed25519"]}
 
 [dev-dependencies]
 tower = { version = "0.5.2", features = ["util"] }
