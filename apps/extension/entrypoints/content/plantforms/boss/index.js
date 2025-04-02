@@ -10,6 +10,7 @@ import {
   renderSortJobItem,
   renderTimeTag,
   setupSortJobItem,
+  sortJobList,
 } from "../../commonRender";
 import onlineFilter from "./onlineFilter";
 
@@ -22,9 +23,9 @@ const BATCH_SIZE_NO_LOGIN = 1000; // 每批请求的数量
 export function getBossData(responseText) {
   try {
     const data = JSON.parse(responseText);
-    mutationContainer().then((node) => {
+    mutationContainer().then(async (node) => {
       setupSortJobItem(node);
-      handleData(data?.zpData?.jobList || [], getListByNode(node), getJobItemDetailUrlFunction, 0);
+      await handleData(data?.zpData?.jobList || [], getListByNode(node), getJobItemDetailUrlFunction, 0);
       onlineFilter();
     });
     return;
@@ -75,34 +76,46 @@ function getJobItemDetailUrlFunction(dom) {
 }
 
 // 解析数据，插入时间标签
-export function handleData(list, getListItem, getJobItemDetailUrlFunction, orderStartIndex) {
+export async function handleData(list, getListItem, getJobItemDetailUrlFunction, orderStartIndex) {
   const isBossLogin = isLoggedIn();
-  const cardApiUrlList = [];
-  const urlList = [];
   const delayFetchTime = isBossLogin ? DELAY_FETCH_TIME : DELAY_FETCH_TIME_NO_LOGIN;
   const batchSize = isBossLogin ? BATCH_SIZE : BATCH_SIZE_NO_LOGIN;
   list.forEach((item, index) => {
     const { brandName, securityId } = item;
     const dom = getListItem(index);
+    item.dom = dom;
     //cardApiUrl
     const pureJobItemCardApiUrl =
       "https://www.zhipin.com/wapi/zpgeek/job/card.json?securityId=" +
       securityId;
-    cardApiUrlList.push(pureJobItemCardApiUrl);
+    item.cardApiUrl = pureJobItemCardApiUrl;
     //jobUrl
     const jobItemDetailUrl = getJobItemDetailUrlFunction(dom);
     const url = new URL(jobItemDetailUrl);
     const pureJobItemDetailUrl = url.origin + url.pathname;
-    urlList.push(pureJobItemDetailUrl);
-
+    item.jobUrl = pureJobItemDetailUrl;
     const loadingLastModifyTimeTag = createLoadingDOM(
       brandName,
       "__boss_time_tag"
     );
     dom.appendChild(loadingLastModifyTimeTag);
   });
+  if (isBossLogin) {
+    await saveBrowseJob(list, PLATFORM_BOSS);
+    const jobDTOList = await JobApi.getJobBrowseInfoByIds(
+      getJobIds(list, PLATFORM_BOSS)
+    );
+    list.forEach((item, index) => {
+      if (item.bossOnline) {
+        item.hrActiveTimeDesc = "刚刚活跃";
+      }
+      item.createDatetime = jobDTOList[index].createDatetime;
+    });
+    renderSortJobItem(list, getListItem, { platform: PLATFORM_BOSS });
+    list = sortJobList(list, { platform: PLATFORM_BOSS });
+  }
   let totalJobDTOList = [];
-
+  const cardApiUrlList = list.map(item => item.cardApiUrl);
   // 分批请求数据
   const fetchBatchData = async (batchIndex, isFinalFetch) => {
     const start = batchIndex * batchSize;
@@ -119,9 +132,6 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
     const response = await Promise.allSettled(promiseList);
     const jsonList = response.map(item => item.value);
     let jobDTOList = [];
-    jsonList.forEach((item, index) => {
-      item.jobUrl = urlList[start + index];
-    });
     await saveBrowseJob(jsonList, PLATFORM_BOSS);
     jobDTOList = await JobApi.getJobBrowseInfoByIds(
       getJobIds(jsonList, PLATFORM_BOSS)
@@ -146,18 +156,19 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
       const hrActiveTimeDesc = item.activeTimeDesc;
       //额外针对BOSS平台，为后面的排序做准备
       jobDTOList[index].hrActiveTimeDesc = hrActiveTimeDesc;
+      jobDTOList[index].dom = item.dom;
     });
 
     const analysisConfig = await getAnalysisConfig();
     jsonList.forEach((item, index) => {
-      const dom = getListItem(start + index);
+      const dom = item.dom;
       const tag = createDOM(jobDTOList[index], jobStatusDescList[index], { analysisConfig });
       dom.appendChild(tag);
     });
 
     await renderFunctionPanel(
       jobDTOList,
-      (index) => getListItem(start + index),
+      (index, item) => item.dom,
       {
         platform: PLATFORM_BOSS,
         getCompanyInfoFunction: async function (url) {
@@ -183,8 +194,9 @@ export function handleData(list, getListItem, getJobItemDetailUrlFunction, order
     for (let i = 0; i < totalBatches; i++) {
       await fetchBatchData(i, i === totalBatches - 1);
     }
-    // 重新排序,页面会闪烁
-    renderSortJobItem(totalJobDTOList, getListItem, { platform: PLATFORM_BOSS, orderStartIndex });
+    if (!isBossLogin) {
+      renderSortJobItem(totalJobDTOList, getListItem, { platform: PLATFORM_BOSS, orderStartIndex });
+    }
     hiddenLoadingDOM();
   })().catch((error) => {
     console.log(error);

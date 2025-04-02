@@ -1,3 +1,14 @@
+## 3.9.1 (2025-04-02)
+
+### 🩹 Fixes
+
+- 调整职位卡片的渲染逻辑和排序逻辑（BOSS直聘）
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+- FocusSweetwater @FocusSweetwater
+
 ## 3.9.0 (2025-03-19)
 
 ### 🚀 Features
