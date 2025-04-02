@@ -161,14 +161,17 @@ export function renderTimeTag(
   }
 
   //为time tag染色
-  if (jobDTO.hrActiveTimeDesc && platform == PLATFORM_BOSS) {
+  if (platform == PLATFORM_BOSS) {
     //根据hr活跃时间和职位发现时间中更早的时间为JobItem染色
     const now = dayjs();
-    const hrActiveDatetime = now.subtract(
-      convertHrActiveTimeDescToOffsetTime(jobDTO.hrActiveTimeDesc),
-      "millisecond"
-    );
-    const minDatetime = dayjs.min(dayjs(hrActiveDatetime), dayjs(jobDTO.createDatetime));
+    let minDatetime = jobDTO.createDatetime;
+    if (jobDTO.hrActiveTimeDesc) {
+      const hrActiveDatetime = now.subtract(
+        convertHrActiveTimeDescToOffsetTime(jobDTO.hrActiveTimeDesc),
+        "millisecond"
+      );
+      minDatetime = dayjs.min(dayjs(hrActiveDatetime), dayjs(jobDTO.createDatetime));
+    }
     divElement.style = getRenderTimeStyle(minDatetime);
   } else {
     const minDatetime = dayjs.min(dayjs(jobDTO.jobFirstPublishDatetime), dayjs(jobDTO.createDatetime));
@@ -593,43 +596,7 @@ export function renderSortJobItem(list, getListItem, { platform, orderStartIndex
   list.forEach((item, index) => {
     item.renderSortCustomId = index;
   });
-  const sortList = JSON.parse(JSON.stringify(list));
-  //sort firstBrowseDatetime
-  sortList.sort((o1, o2) => {
-    return (
-      dayjs(o2.firstBrowseDatetime ?? null).valueOf() -
-      dayjs(o1.firstBrowseDatetime ?? null).valueOf()
-    );
-  });
-  //handle hr active time
-  if (platform == PLATFORM_BOSS || platform == PLATFORM_LIEPIN) {
-    //先排列createDatetime，再排列hrActiveTime
-    sortList.sort((o1, o2) => {
-      return (
-        dayjs(o2.createDatetime).valueOf() -
-        dayjs(o1.createDatetime).valueOf()
-      );
-    });
-    sortList.sort((o1, o2) => {
-      return convertHrActiveTimeDescToOffsetTime(
-        o1.hrActiveTimeDesc
-      ) - convertHrActiveTimeDescToOffsetTime(
-        o2.hrActiveTimeDesc
-      );
-    });
-  }
-  if (platform != PLATFORM_BOSS) {
-    //sort createDatetime and firstPublishTime
-    const getMinDatetime = (jobDTO) => {
-      return dayjs.min(dayjs(jobDTO.jobFirstPublishDatetime), dayjs(jobDTO.createDatetime));
-    }
-    sortList.sort((o1, o2) => {
-      return (
-        dayjs(getMinDatetime(o2)).valueOf() -
-        dayjs(getMinDatetime(o1)).valueOf()
-      );
-    });
-  }
+  const sortList = sortJobList(JSON.parse(JSON.stringify(list)), { platform });
   sortList.forEach((item, index) => {
     idAndSortIndexMap.set(item.renderSortCustomId, index);
   });
@@ -649,6 +616,47 @@ export function renderSortJobItem(list, getListItem, { platform, orderStartIndex
       "order:" + (idAndSortIndexMap.get(item.renderSortCustomId) + orderStartIndex) + ";";
     targetDom.style = styleString;
   });
+}
+
+export function sortJobList(list, { platform }) {
+  const sortList = list;
+  //sort firstBrowseDatetime
+  sortList.sort((o1, o2) => {
+    return (
+      dayjs(o2.firstBrowseDatetime ?? null).valueOf() -
+      dayjs(o1.firstBrowseDatetime ?? null).valueOf()
+    );
+  });
+  //handle hr active time
+  if (platform == PLATFORM_BOSS || platform == PLATFORM_LIEPIN) {
+    //先排列hrActiveTime,再排列createDatetime，
+    sortList.sort((o1, o2) => {
+      return convertHrActiveTimeDescToOffsetTime(
+        o1.hrActiveTimeDesc
+      ) - convertHrActiveTimeDescToOffsetTime(
+        o2.hrActiveTimeDesc
+      );
+    });
+    sortList.sort((o1, o2) => {
+      return (
+        dayjs(o2.createDatetime).valueOf() -
+        dayjs(o1.createDatetime).valueOf()
+      );
+    });
+  }
+  if (platform != PLATFORM_BOSS) {
+    //sort createDatetime and firstPublishTime
+    const getMinDatetime = (jobDTO) => {
+      return dayjs.min(dayjs(jobDTO.jobFirstPublishDatetime), dayjs(jobDTO.createDatetime));
+    }
+    sortList.sort((o1, o2) => {
+      return (
+        dayjs(getMinDatetime(o2)).valueOf() -
+        dayjs(getMinDatetime(o1)).valueOf()
+      );
+    });
+  }
+  return sortList;
 }
 
 function convertHrActiveTimeDescToOffsetTime(hrActiveTimeDesc) {
@@ -720,7 +728,7 @@ export async function renderFunctionPanel(
     jobIdAndDTOMap.get(jobId).push(item);
   });
   list.forEach((item, index) => {
-    const dom = getListItem(index);
+    const dom = getListItem(index, item);
     const targetDom = dom;
     const functionPanelDiv = document.createElement("div");
     functionPanelDiv.classList.add(`__${platform}_function_panel`);
