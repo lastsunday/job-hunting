@@ -70,6 +70,7 @@
     "react-draggable": "^4.4.6",
     "react-router": "^7.4.0",
     "semver": "^7.7.1",
+    "single-file-core": "^1.5.48",
     "swiper": "^11.2.6",
     "tsparticles": "^3.8.1",
     "uuid": "^11.1.0",

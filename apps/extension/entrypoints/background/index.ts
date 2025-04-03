@@ -1,9 +1,6 @@
 import { onMessageHandle, postErrorMessage, postSuccessMessage } from "@/common/extension/background/util";
 import useService from "@/common/extension/hooks/service";
 import { AppApi, JobApi } from "../../common/api";
-import {
-  BACKGROUND
-} from "../../common/api/bridgeCommon";
 import { httpFetchGetText, httpFetchJson } from "../../common/api/common";
 import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_APP_INSTALL_CALLBACK_URL, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_URL_GET_USER, TASK_LOOP_DELAY } from "../../common/config";
 import { OauthDTO } from "../../common/data/dto/oauthDTO";
@@ -15,6 +12,7 @@ import { AutomateService } from "./service/automateService";
 import { EmitterService } from "./service/emitterService";
 import { SystemService } from "./service/systemService";
 import { setUser, UserService } from "./service/userService";
+import "@/lib/single-file/background.js";
 
 export default defineBackground(() => {
   debugLog("background ready");
@@ -61,11 +59,11 @@ export default defineBackground(() => {
 
   //detect job detail access
   chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-    let urlText = tab.url;
+    const urlText = tab.url;
     if (urlText?.startsWith(GITHUB_APP_INSTALL_CALLBACK_URL) && !isSavedByInstallUrl(urlText)) {
-      let oauth2LoginMessageMap = getOauth2LoginMessageMap();
+      const oauth2LoginMessageMap = getOauth2LoginMessageMap();
       recordSavedInstallUrl(urlText);
-      let url = new URL(urlText);
+      const url = new URL(urlText);
       let result = "";
       if (url.searchParams.has("error")) {
         //错误，如果有error
@@ -76,27 +74,27 @@ export default defineBackground(() => {
         oauth2LoginMessageMap.clear();
       } else {
         //获取到code，访问https://github.com/login/oauth/access_token获取access_token和refresh_token
-        let code = url.searchParams.get("code");
+        const code = url.searchParams.get("code");
         try {
           const searchParams = new URLSearchParams({
             client_id: GITHUB_APP_CLIENT_ID,
             client_secret: GITHUB_APP_CLIENT_SECRET,
             code,
           });
-          let urlWithParam = `${GITHUB_URL_GET_ACCESS_TOKEN}?${searchParams.toString()}`;
-          let tokenText = await httpFetchGetText(urlWithParam, (abortFunction) => { })
-          let tokenURLSearchParam = new URLSearchParams(tokenText);
+          const urlWithParam = `${GITHUB_URL_GET_ACCESS_TOKEN}?${searchParams.toString()}`;
+          const tokenText = await httpFetchGetText(urlWithParam, (abortFunction) => { })
+          const tokenURLSearchParam = new URLSearchParams(tokenText);
           const tokenObject = paramsToObject(tokenURLSearchParam);
-          let oauthDTO = parseToLineObjectToToHumpObject(new OauthDTO(), tokenObject);
+          const oauthDTO = parseToLineObjectToToHumpObject(new OauthDTO(), tokenObject);
           await setToken(oauthDTO);
-          let userResultJson = await httpFetchJson({
+          const userResultJson = await httpFetchJson({
             url: GITHUB_URL_GET_USER, headers: {
               "Authorization": `Bearer ${oauthDTO.accessToken}`,
             }
           }, (abortFunction) => { });
-          let userDTO = parseToLineObjectToToHumpObject(new UserDTO(), userResultJson);
+          const userDTO = parseToLineObjectToToHumpObject(new UserDTO(), userResultJson);
           await setUser(userDTO);
-          let targetToken = await getToken();
+          const targetToken = await getToken();
           oauth2LoginMessageMap.keys().forEach(message => {
             postSuccessMessage(message, targetToken);
           });
@@ -113,8 +111,8 @@ export default defineBackground(() => {
     }
     if (changeInfo?.status == "complete" && !isSavedByTabId(tab.id)) {
       if (tab.url) {
-        let pureUrl = convertPureJobDetailUrl(tab.url);
-        let job = await JobApi.getJobByDetailUrl(pureUrl);
+        const pureUrl = convertPureJobDetailUrl(tab.url);
+        const job = await JobApi.getJobByDetailUrl(pureUrl);
         if (job) {
           infoLog(`save jobBrowseDetailHistory start jobId = ${job.jobId}`);
           await JobApi.addJobBrowseDetailHistory(job.jobId);
