@@ -12,7 +12,7 @@ import { AutomateService } from "./service/automateService";
 import { EmitterService } from "./service/emitterService";
 import { SystemService } from "./service/systemService";
 import { setUser, UserService } from "./service/userService";
-import "@/lib/single-file/background.js";
+import { onMessageHandle as onSingleFileMessageHandle } from "@/lib/single-file/background.js";
 
 export default defineBackground(() => {
   debugLog("background ready");
@@ -194,7 +194,11 @@ export default defineBackground(() => {
       sender,
       sendResponse
     ) {
-      onMessageHandle(message, sender, ACTION_FUNCTION);
+      if (message.method && message.method.startsWith("singlefile.")) {
+        onSingleFileMessageHandle(message, sender);
+      } else {
+        onMessageHandle(message, sender, ACTION_FUNCTION);
+      }
     });
   }
 
