@@ -1181,3 +1181,48 @@ export const EmitterApi = {
     return result.data;
   },
 }
+
+
+export const JobSnapshotApi = {
+
+  /**
+   * 
+   * @param {SearchJobSnapshotBO} param 
+   * @returns {JobSnapshotSearchDTO}
+   */
+  jobSnapshotSearch: async function (param) {
+    const result = await invoke(this.jobSnapshotSearch.name, param);
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {JobSnapshot} param 
+   * @returns 
+   */
+  jobSnapshotAddOrUpdate: async function (param) {
+    const result = await invoke(this.jobSnapshotAddOrUpdate.name, param);
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id
+   * @returns 
+   */
+  jobSnapshotDeleteById: async function (param) {
+    const result = await invoke(this.jobSnapshotDeleteById.name, param);
+    return result.data;
+  },
+
+  /**
+ * 
+ * @param {string[]} param ids
+ * @returns 
+ */
+  jobSnapshotDeleteByIds: async function (param) {
+    const result = await invoke(this.jobSnapshotDeleteByIds.name, param);
+    return result.data;
+  },
+
+}
