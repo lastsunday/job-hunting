@@ -1,9 +1,13 @@
 import "single-file-core/single-file-bootstrap.js";
-import { getPageData } from "single-file-core/single-file.js";
-import { initBridge } from "../../common/api/common.js";
-import { getInfoFromJobDetailUrl, PLATFORM_JOBONLINE } from "../../common";
-import { JobSnapshotApi } from "../../common/api";
-import { JobSnapshot } from "../../common/data/domain/jobSnapshot";
+import { getPageData } from "single-file-core/single-file";
+import { initBridge } from "@/common/api/common.js";
+import { getInfoFromJobDetailUrl, PLATFORM_JOBONLINE } from "@/common";
+import { JOB_SNAPSHOT_DATA_EXPRIE_DAY } from "@/common/config";
+import { JobSnapshotApi } from "@/common/api";
+import { JobSnapshot } from "@/common/data/domain/jobSnapshot";
+import { JobSnapshotSearchBO } from "@/common/data/bo/jobSnapshotSearchBO";
+import { infoLog } from "@/common/log";
+import dayjs from "dayjs";
 
 export default defineContentScript({
     // Set manifest options
@@ -50,18 +54,51 @@ export default defineContentScript({
                 blockScripts: true,
             };
         }
-        //TODO check job data save timing
-        //TODO > 7 days to save?
+        //check job data save timing
+        //> x days to save
         //TODO [UI] show saving procecss bar?
         //TODO [UI] show immediately save job snapshot button?
         //TODO [UI] show history job snapshot by timeline?
-        const data = await getPageData(getPageDataConfig);
-        const jobSnapshot = new JobSnapshot();
-        jobSnapshot.jobId = jobId;
-        jobSnapshot.url = url;
-        jobSnapshot.platform = platform;
-        jobSnapshot.content = data.content;
-        await JobSnapshotApi.jobSnapshotAddOrUpdate(jobSnapshot);
+        const latestJobSnapshot = await getLatestJobSnapshot(jobId);
+        if (checkIsSaveJobSnapshot(latestJobSnapshot)) {
+            infoLog("[Job Snapshot] job snapshot save")
+            const data = await getPageData(getPageDataConfig);
+            const jobSnapshot = new JobSnapshot();
+            jobSnapshot.jobId = jobId;
+            jobSnapshot.url = url;
+            jobSnapshot.platform = platform;
+            jobSnapshot.content = data.content;
+            await JobSnapshotApi.jobSnapshotAddOrUpdate(jobSnapshot);
+        } else {
+            infoLog("[Job Snapshot] job snapshot not save")
+        }
     },
 })
 
+function checkIsSaveJobSnapshot(jobSnapshot: JobSnapshot): boolean {
+    if (jobSnapshot) {
+        const now = dayjs();
+        if (now.isBefore(dayjs(jobSnapshot.updateDatetime).add(JOB_SNAPSHOT_DATA_EXPRIE_DAY, "day"))) {
+            return false;
+        } else {
+            return true;
+        }
+    } else {
+        return true;
+    }
+}
+
+async function getLatestJobSnapshot(jobId: string) {
+    const jobSnapshotSearchBO = new JobSnapshotSearchBO();
+    jobSnapshotSearchBO.pageNum = 1;
+    jobSnapshotSearchBO.pageSize = 1;
+    jobSnapshotSearchBO.orderByColumn = "updateDatetime";
+    jobSnapshotSearchBO.orderBy = "DESC";
+    jobSnapshotSearchBO.jobId = jobId;
+    const { items } = await JobSnapshotApi.jobSnapshotSearch(jobSnapshotSearchBO);
+    if (items.length > 0) {
+        return items[0];
+    } else {
+        return null;
+    }
+}

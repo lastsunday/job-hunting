@@ -12,7 +12,7 @@ const SERVICE_INSTANCE = new BaseService(TABLE_NAME, TABLE_ID_COLUMN,
         return new JobSnapshot();
     },
     () => {
-        return new SearchJobSnapshotBO();
+        return new JobSnapshotSearchBO();
     },
     (param) => {
         let whereCondition = "";

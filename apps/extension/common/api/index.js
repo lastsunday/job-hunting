@@ -1187,7 +1187,7 @@ export const JobSnapshotApi = {
 
   /**
    * 
-   * @param {SearchJobSnapshotBO} param 
+   * @param {JobSnapshotSearchBO} param 
    * @returns {JobSnapshotSearchDTO}
    */
   jobSnapshotSearch: async function (param) {
