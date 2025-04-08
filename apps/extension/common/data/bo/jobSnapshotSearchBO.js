@@ -7,4 +7,5 @@ export class JobSnapshotSearchBO extends PageBO {
      * ASC,DESC
      */
     orderBy;
+    skipContent;
 }

@@ -410,7 +410,7 @@ export const CompanyApi = {
     const result = await invoke(this.companyTagExport.name, param);
     return result.data;
   },
-  
+
   /**
    * 
    * @param {PageBO} param 
@@ -1202,6 +1202,16 @@ export const JobSnapshotApi = {
    */
   jobSnapshotAddOrUpdate: async function (param) {
     const result = await invoke(this.jobSnapshotAddOrUpdate.name, param);
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {string} param id
+   * @returns 
+   */
+  jobSnapshotGetById: async function (param) {
+    const result = await invoke(this.jobSnapshotGetById.name, param);
     return result.data;
   },
 

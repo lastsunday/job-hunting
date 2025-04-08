@@ -32,7 +32,15 @@ export const JobSnapshotService = {
      * @returns JobSnapshotSearchDTO
      */
     jobSnapshotSearch: async function (message, param) {
-        SERVICE_INSTANCE.search(message, param);
+        SERVICE_INSTANCE.search(message, param, {
+            entityClassCreateFunction: () => {
+                const obj = new JobSnapshot();
+                if (param.skipContent) {
+                    delete obj.content;
+                }
+                return obj;
+            }
+        });
     },
     /**
      *
@@ -49,6 +57,14 @@ export const JobSnapshotService = {
                 "[worker] jobSnapshotAddOrUpdate error : " + e.message
             );
         }
+    },
+    /**
+     *
+     * @param {Message} message
+     * @param {string} param id
+     */
+    jobSnapshotGetById: async function (message, param) {
+        SERVICE_INSTANCE.getById(message, param);
     },
     /**
      *

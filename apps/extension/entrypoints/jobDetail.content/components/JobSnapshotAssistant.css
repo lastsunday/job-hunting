@@ -1,0 +1,18 @@
+.ant-tabs {
+  flex: 0;
+}
+.ant-tabs-dropdown {
+  z-index: 9999 !important;
+}
+.ant-tabs-content-holder {
+  display: flex;
+  flex: 1;
+  display: none;
+}
+.ant-tabs-content {
+  display: flex;
+  flex: 1;
+}
+.ant-tabs-tabpane {
+  flex: 1;
+}
