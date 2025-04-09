@@ -13,6 +13,7 @@ import { dateToStr } from '@/common/utils';
 
 type Props = {
   className?: string;
+  style?: React.CSSProperties;
 };
 
 const JobSnapshotAssistant: React.FC<Props> = (props) => {
@@ -112,7 +113,7 @@ const JobSnapshotAssistant: React.FC<Props> = (props) => {
       );
       setSnapshotTotal(total);
       if (force || checkIsSaveJobSnapshot(latestJobSnapshot)) {
-        infoLog('[Job Snapshot] job snapshot save');
+        infoLog('[Job Snapshot] job snapshot save start');
         const data = await getPageData(getPageDataConfig);
         const jobSnapshot = new JobSnapshot();
         jobSnapshot.jobId = jobId;
@@ -122,6 +123,7 @@ const JobSnapshotAssistant: React.FC<Props> = (props) => {
         await JobSnapshotApi.jobSnapshotAddOrUpdate(jobSnapshot);
         setSnapshotState(SNAPSHOT_STATE_SAVED);
         setSnapshotTotal(total + 1);
+        infoLog('[Job Snapshot] job snapshot save end');
       } else {
         infoLog('[Job Snapshot] job snapshot not save');
         setSnapshotState(SNAPSHOT_STATE_NOT_SAVE);
@@ -225,7 +227,7 @@ const JobSnapshotAssistant: React.FC<Props> = (props) => {
   }, []);
 
   return (
-    <div className={props.className}>
+    <div className={props.className} style={props.style}>
       <div className="flex flex-col items-center gap-3">
         <div className="relative flex justify-center">
           <div>
