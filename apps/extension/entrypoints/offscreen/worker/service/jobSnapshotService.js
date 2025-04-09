@@ -16,8 +16,10 @@ const SERVICE_INSTANCE = new BaseService(TABLE_NAME, TABLE_ID_COLUMN,
     },
     (param) => {
         let whereCondition = "";
-        if (param.jobId) {
-            whereCondition += ` AND job_id = '${param.jobId}' `;
+        if (param.jobIds && param.jobIds.length > 0) {
+            const arraySplitString = "'" + param.jobIds.join("','") + "'";
+            whereCondition +=
+                ` AND job_id IN (${arraySplitString})`;
         }
         return whereCondition;
     }

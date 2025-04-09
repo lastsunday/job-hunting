@@ -1,15 +1,14 @@
-import { Icon } from '@iconify/react';
 import { getInfoFromJobDetailUrl, PLATFORM_JOBONLINE } from '@/common';
 import { JobSnapshotApi } from '@/common/api';
 import { JOB_SNAPSHOT_DATA_EXPRIE_DAY } from '@/common/config';
 import { JobSnapshotSearchBO } from '@/common/data/bo/jobSnapshotSearchBO';
 import { JobSnapshot } from '@/common/data/domain/jobSnapshot';
-import { infoLog, errorLog } from '@/common/log';
+import { errorLog, infoLog } from '@/common/log';
+import JobSnapshotHistory from '@/entrypoints/components/JobSnapshotHistory';
+import { Icon } from '@iconify/react';
 import dayjs from 'dayjs';
 import { getPageData } from 'single-file-core/single-file';
-import { Button, Tabs } from 'antd';
 import './JobSnapshotAssistant.css';
-import { dateToStr } from '@/common/utils';
 
 type Props = {
   className?: string;
@@ -23,12 +22,8 @@ const JobSnapshotAssistant: React.FC<Props> = (props) => {
   const SNAPSHOT_STATE_NOT_ERROR = 'ERROR';
 
   const [snapshotState, setSnapshotState] = useState(SNAPSHOT_STATE_LOADING);
-  const [snapshotTotal, setSnapshotTotal] = useState(0);
-  const [historyModalOpen, setHistoryModalOpen] = useState(false);
+  const [snapshotTotal, setSnapshotTotal] = useState(null);
   const [jobId, setJobId] = useState();
-  const [historyItems, setHistoryItems] = useState([]);
-  const [currentSnapshotContent, setCurrentSnapshotContent] = useState();
-  const [activeSnapshotId, setActiveSnapshotId] = useState(``);
 
   const checkIsSaveJobSnapshot = (jobSnapshot: JobSnapshot): boolean => {
     if (jobSnapshot) {
@@ -55,7 +50,7 @@ const JobSnapshotAssistant: React.FC<Props> = (props) => {
     jobSnapshotSearchBO.pageSize = 1;
     jobSnapshotSearchBO.orderByColumn = 'updateDatetime';
     jobSnapshotSearchBO.orderBy = 'DESC';
-    jobSnapshotSearchBO.jobId = jobId;
+    jobSnapshotSearchBO.jobIds = [jobId];
     jobSnapshotSearchBO.skipContent = true;
     const { items, total } = await JobSnapshotApi.jobSnapshotSearch(
       jobSnapshotSearchBO
@@ -186,40 +181,20 @@ const JobSnapshotAssistant: React.FC<Props> = (props) => {
     }
   };
 
-  const getHistoryButtonDisabledByHistoryTotal = () => {
-    if (snapshotTotal > 0) {
-      return false;
-    } else {
-      return true;
-    }
+  const getSnapshotItemsByJobIdCallback = async (jobId: string) => {
+    const jobSnapshotSearchBO = new JobSnapshotSearchBO();
+    jobSnapshotSearchBO.orderByColumn = 'updateDatetime';
+    jobSnapshotSearchBO.orderBy = 'DESC';
+    jobSnapshotSearchBO.jobIds = [jobId];
+    jobSnapshotSearchBO.skipContent = true;
+    const { items } = await JobSnapshotApi.jobSnapshotSearch(
+      jobSnapshotSearchBO
+    );
+    return items;
   };
 
-  const showHistoryModal = async () => {
-    if (snapshotTotal) {
-      setHistoryModalOpen(true);
-      const jobSnapshotSearchBO = new JobSnapshotSearchBO();
-      jobSnapshotSearchBO.orderByColumn = 'updateDatetime';
-      jobSnapshotSearchBO.orderBy = 'DESC';
-      jobSnapshotSearchBO.jobId = jobId;
-      jobSnapshotSearchBO.skipContent = true;
-      const { items } = await JobSnapshotApi.jobSnapshotSearch(
-        jobSnapshotSearchBO
-      );
-      setHistoryItems(items);
-      await displayJobHistorySnapshot(items[0].id);
-    }
-  };
-
-  const closeHistoryModal = async () => {
-    setTimeout(() => {
-      setHistoryModalOpen(false);
-    }, 0);
-  };
-
-  const displayJobHistorySnapshot = async (id: string) => {
-    const result = await JobSnapshotApi.jobSnapshotGetById(id);
-    setActiveSnapshotId(id);
-    setCurrentSnapshotContent(result.content);
+  const getSnapshotItemByIdCallback = async (id: string) => {
+    return await JobSnapshotApi.jobSnapshotGetById(id);
   };
 
   useEffect(() => {
@@ -252,65 +227,17 @@ const JobSnapshotAssistant: React.FC<Props> = (props) => {
             </span>
           </div>
         </div>
-        <div className="relative flex justify-center">
-          <div
-            onClick={() => {
-              showHistoryModal();
+        {snapshotTotal != null ? (
+          <JobSnapshotHistory
+            key={snapshotTotal}
+            jobId={jobId}
+            getSnapshotTotalCallback={async () => {
+              return snapshotTotal;
             }}
-          >
-            <button
-              disabled={getHistoryButtonDisabledByHistoryTotal()}
-              className="inline-grid place-items-center border align-middle select-none font-sans font-medium text-center transition-all duration-300 ease-in disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-sm min-w-[38px] min-h-[38px] rounded-md shadow-sm hover:shadow-md bg-stone-200 border-stone-200 text-stone-800 hover:bg-stone-100"
-            >
-              <Icon icon="ix:history-list" width="32" height="32" />
-            </button>
-            {snapshotTotal > 0 ? (
-              <span
-                className={`absolute -top-2 -right-2 px-0.5 py-0.5 text-xs border leading-none grid place-items-center rounded-full min-w-3 min-h-3 text-stone-50 border-white bg-red-600`}
-              >
-                <div>{snapshotTotal > 99 ? `99+` : snapshotTotal}</div>
-              </span>
-            ) : null}
-            {historyModalOpen ? (
-              <div className="fixed inset-0 z-[999] grid h-screen w-screen place-items-center bg-black bg-opacity-60 backdrop-blur-sm transition-opacity duration-300">
-                <div className="relative flex flex-col m-4 p-4 w-1 min-w-[90%] max-w-[90%] min-h-[90%] max-h-[90%] rounded-lg bg-white shadow-sm">
-                  <iframe
-                    className="flex-auto"
-                    srcDoc={currentSnapshotContent}
-                  ></iframe>
-                  <Tabs
-                    activeKey={activeSnapshotId}
-                    tabBarExtraContent={
-                      <Button
-                        type="primary"
-                        danger
-                        onClick={() => {
-                          closeHistoryModal();
-                        }}
-                      >
-                        关闭
-                      </Button>
-                    }
-                    tabPosition="bottom"
-                    onChange={(key: string) => {
-                      displayJobHistorySnapshot(key);
-                    }}
-                    items={historyItems.map((item) => {
-                      return {
-                        label: `${dateToStr(
-                          item.updateDatetime,
-                          'YYYY-MM-DD HH:mm:ss'
-                        )}`,
-                        key: item.id,
-                        children: ``,
-                      };
-                    })}
-                  />
-                </div>
-              </div>
-            ) : null}
-          </div>
-        </div>
+            getSnapshotItemsByJobIdCallback={getSnapshotItemsByJobIdCallback}
+            getSnapshotItemByIdCallback={getSnapshotItemByIdCallback}
+          />
+        ) : null}
       </div>
     </div>
   );

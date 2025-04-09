@@ -1,4 +1,4 @@
-import { JobApi } from '@/common/api';
+import { JobApi, JobSnapshotApi } from '@/common/api';
 import { SearchJobBO } from '@/common/data/bo/searchJobBO';
 import { AnalysisConfigDTO } from '@/common/data/dto/analysisConfigDTO';
 import { Empty, Flex, Pagination, Spin, Splitter } from 'antd';
@@ -11,6 +11,10 @@ import { Page, useAnalysis } from '../../hooks/analysis';
 import { useJob } from '../../hooks/job';
 import './FavoriteJobView.css';
 import styles from './FavoriteJobView.module.css';
+import JobSnapshotHistory from '@/entrypoints/components/JobSnapshotHistory';
+import { Icon } from '@iconify/react';
+import { JobSnapshotSearchBO } from '@/common/data/bo/jobSnapshotSearchBO';
+import { JobSnapshot } from '@/common/data/domain/jobSnapshot';
 const { queryAnalysisConfig } = useAnalysis();
 
 const { convertToJobDataList, convertToJobData } = useJob();
@@ -29,6 +33,7 @@ const HistoryJobView: React.FC = () => {
   const [initLocateItem, setInitLocateItem] = useState(null);
 
   const [analysisConfig, setAnalysisConfig] = useState<AnalysisConfigDTO>(null);
+  const [snapshotItems, setSnapshotItems] = useState<JobSnapshot>([]);
 
   const getSearchParam = () => {
     const searchParam = new SearchJobBO();
@@ -76,6 +81,10 @@ const HistoryJobView: React.FC = () => {
         }
         setTotal(parseInt(searchResult.total));
         setData(convertToJobDataList(searchResult.items));
+        const result = await getSnapshotItemsByJobIds(
+          searchResult.items.map((item) => item.jobId)
+        );
+        setSnapshotItems(result);
       } finally {
         setLoading(false);
       }
@@ -95,6 +104,26 @@ const HistoryJobView: React.FC = () => {
 
   const onJobItemLocateHandle = (data: JobData) => {
     setLocateJobItem(data);
+  };
+
+  const getSnapshotItemsByJobIds = async (jobIds: string[]) => {
+    const jobSnapshotSearchBO = new JobSnapshotSearchBO();
+    jobSnapshotSearchBO.orderByColumn = 'updateDatetime';
+    jobSnapshotSearchBO.orderBy = 'DESC';
+    jobSnapshotSearchBO.jobIds = jobIds;
+    jobSnapshotSearchBO.skipContent = true;
+    const { items } = await JobSnapshotApi.jobSnapshotSearch(
+      jobSnapshotSearchBO
+    );
+    return items;
+  };
+
+  const getSnapshotItemsByJobIdCallback = async (jobId: string) => {
+    return await getSnapshotItemsByJobIds([jobId]);
+  };
+
+  const getSnapshotItemByIdCallback = async (id: string) => {
+    return await JobSnapshotApi.jobSnapshotGetById(id);
   };
 
   return (
@@ -140,6 +169,30 @@ const HistoryJobView: React.FC = () => {
                                 analysisConfig
                               )
                             : null
+                        }
+                        historyElement={
+                          <JobSnapshotHistory
+                            key={snapshotItems.length}
+                            jobId={item.id}
+                            getSnapshotTotalCallback={async () => {
+                              return snapshotItems.filter(
+                                (snapshot) => snapshot.jobId == item.id
+                              ).length;
+                            }}
+                            getSnapshotItemsByJobIdCallback={
+                              getSnapshotItemsByJobIdCallback
+                            }
+                            getSnapshotItemByIdCallback={
+                              getSnapshotItemByIdCallback
+                            }
+                            icon={
+                              <Icon
+                                icon="ix:history-list"
+                                width="18"
+                                height="18"
+                              />
+                            }
+                          />
                         }
                       ></JobItemCard>
                     ))
