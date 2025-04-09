@@ -63,9 +63,9 @@ export function getInfoFromJobDetailUrl(url) {
             jobId,
             url: url.origin + url.pathname,
         };
-    } else if (url.href.startsWith("https://www.liepin.com/lptjob/")) {
+    } else if (url.href.match(/https:\/\/www.liepin.com\/(lptjob|a|job)\//)) {
         const platform = PLATFORM_LIEPIN;
-        const jobId = genId(url.href.match(/https:\/\/www.liepin.com\/lptjob\/(?<id>.*)\?/).groups.id, platform);
+        const jobId = genId(url.href.match(/https:\/\/www.liepin.com\/(a|job|lptjob)\/(?<id>[0-9]*)/).groups.id, platform);
         return {
             platform,
             jobId,

@@ -11,6 +11,8 @@ export default defineContentScript({
     'https://jobs.51job.com/*',
     'https://www.zhaopin.com/jobdetail/*',
     'https://www.liepin.com/lptjob/*',
+    'https://www.liepin.com/a/*',
+    'https://www.liepin.com/job/*',
     'https://www.lagou.com/wn/jobs/*',
     'https://www.jobonline.cn/positionDetail*',
   ],

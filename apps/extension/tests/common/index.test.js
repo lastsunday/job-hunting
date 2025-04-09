@@ -34,6 +34,18 @@ test('getInfoFromJobDetailUrl return correct info from job detail url', () => {
             url: "https://www.liepin.com/lptjob/73639847"
         },
         {
+            urlObject: new URL("https://www.liepin.com/a/61276643.shtml?pgRef=&d_sfrom=search_prime"),
+            platform: PLATFORM_LIEPIN,
+            jobId: "LIEPIN_61276643",
+            url: "https://www.liepin.com/a/61276643.shtml"
+        },
+        {
+            urlObject: new URL("https://www.liepin.com/job/1973048483.shtml?pgRef=c_pc_search_page"),
+            platform: PLATFORM_LIEPIN,
+            jobId: "LIEPIN_1973048483",
+            url: "https://www.liepin.com/job/1973048483.shtml"
+        },
+        {
             urlObject: new URL("https://www.jobonline.cn/positionDetail?id=1562687668897464321&live=0&posiOriginate=3&type="),
             platform: PLATFORM_JOBONLINE,
             jobId: "JOBONLINE_1562687668897464321",
