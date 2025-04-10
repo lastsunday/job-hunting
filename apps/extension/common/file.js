@@ -10,16 +10,15 @@ export function getFileName(filename) {
 }
 
 export async function exportExcelFromBase64ZipFile(base64, fileName) {
-    var wb = read(await getExcelDataFromZipFile(base64, getFileName(fileName)), { cellDates: true });
+    const wb = read(await getExcelDataFromZipFile(base64, getFileName(fileName)), { cellDates: true });
     writeFileXLSX(wb, fileName);
 }
 
 export const downloadBlob = function (data, fileName, mimeType) {
-    let blob, url;
-    blob = new Blob([data], {
+    const blob = new Blob([data], {
         type: mimeType,
     });
-    url = window.URL.createObjectURL(blob);
+    const url = window.URL.createObjectURL(blob);
     downloadURL(url, fileName);
     setTimeout(function () {
         return window.URL.revokeObjectURL(url);
@@ -27,8 +26,7 @@ export const downloadBlob = function (data, fileName, mimeType) {
 };
 
 export const downloadURL = function (data, fileName) {
-    let a;
-    a = document.createElement("a");
+    const a = document.createElement("a");
     a.href = data;
     a.download = fileName;
     document.body.appendChild(a);

@@ -23,6 +23,7 @@ import { TaskDataDownloadService } from "./worker/service/taskDataDownloadServic
 import { TaskDataMergeService } from "./worker/service/taskDataMergeService";
 import { TaskDataUploadService } from "./worker/service/taskDataUploadService";
 import { TaskService } from "./worker/service/taskService";
+import { JobSnapshotService } from "./worker/service/jobSnapshotService";
 
 debugLog("worker ready");
 const ACTION_FUNCTION = new Map();
@@ -55,6 +56,7 @@ mergeServiceMethod(ACTION_FUNCTION, FileService);
 mergeServiceMethod(ACTION_FUNCTION, TaskDataMergeService);
 mergeServiceMethod(ACTION_FUNCTION, DataSharePartnerService);
 mergeServiceMethod(ACTION_FUNCTION, JobTagService);
+mergeServiceMethod(ACTION_FUNCTION, JobSnapshotService);
 
 onmessage = function (e) {
   onMessageHandle(e, ACTION_FUNCTION);

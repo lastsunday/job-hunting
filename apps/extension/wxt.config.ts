@@ -70,6 +70,8 @@ export default defineConfig({
       if (wxt.config.mode == 'production') {
         copyFileSync(resolve(srcDir, "node_modules", "@electric-sql", "pglite", "dist", "postgres.wasm"), resolve(outDir, "assets", "postgres.wasm"));
         copyFileSync(resolve(srcDir, "node_modules", "@electric-sql", "pglite", "dist", "postgres.data"), resolve(outDir, "assets", "postgres.data"));
+        copyFileSync(resolve(srcDir, "node_modules", "libarchive.js", "dist", "worker-bundle.js"), resolve(outDir, "worker-bundle.js"));
+        copyFileSync(resolve(srcDir, "node_modules", "libarchive.js", "dist", "libarchive.wasm"), resolve(outDir, "libarchive.wasm"));
       }
     },
   },
@@ -93,7 +95,7 @@ export default defineConfig({
         format: 'es',
       },
       optimizeDeps: {
-        exclude: ['@electric-sql/pglite']
+        exclude: ['@electric-sql/pglite', 'libarchive.js']
       }
     }
   }

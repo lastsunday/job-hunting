@@ -64,6 +64,7 @@ export type JobItemCardProps = {
     source?: Source;
     auto?: boolean;
   };
+  historyElement?: React.ReactNode;
 };
 const JobItemCard: React.FC<JobItemCardProps> = (props) => {
   const {
@@ -279,8 +280,11 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
             flex={1}
             align="end"
             justify="end"
-            style={{ overflow: 'hidden' }}
+            style={{ overflow: 'visible' }}
           >
+            <Flex flex={1}>
+              <div>{props.historyElement}</div>
+            </Flex>
             <Text ellipsis>{`${bossName ?? ''}【${bossPosition ?? ''}】`}</Text>
             <img
               className={styles.platformLogo}

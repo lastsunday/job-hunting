@@ -28,6 +28,8 @@ export const UI_DEFAULT_PAGE_SIZE = 20;
 
 //公司数据有效时间
 export const COMPANY_DATA_EXPRIE_DAY = 180;//day
+//职位快照有效时间
+export const JOB_SNAPSHOT_DATA_EXPRIE_DAY = 7;//day
 //最多重试60*24*2次，与TASK_LOOP_DELAY相关(一分钟任务最多会执行两次，执行一天都没完成，则不执行)
 export const TASK_STATUS_ERROR_MAX_RETRY_COUNT = 2880;
 export const TASK_DATA_DOWNLOAD_MAX_DAY = 365;//day
@@ -44,6 +46,7 @@ export const GLOBAL_STATISTIC_LOOP_DELAY = 30000;//ms
 
 export const CONFIG_KEY_DATA_SHARE_PLAN = "CONFIG_KEY_DATA_SHARE_PLAN";
 export const CONFIG_KEY_ANALYSIS = "CONFIG_KEY_ANALYSIS";
+export const CONFIG_KEY_JOB_SNAPSHOT = "CONFIG_KEY_JOB_SNAPSHOT";
 export const DEFAULT_REPO_TYPE = "GITHUB";
 
 export const INVOKE_WARN_TIME_COST = 1000; //1000ms
@@ -55,6 +58,9 @@ export const JOB_MAX_EXPORT_SIZE = 6000;
 export const COMPANY_MAX_EXPORT_SIZE = 6000;
 export const JOB_TAG_MAX_EXPORT_SIZE = 10000;
 export const COMPANY_TAG_MAX_EXPORT_SIZE = 10000;
+export const JOB_SNAPSHOT_MAX_EXPORT_SIZE = 100;
+//职位快照全数据数据库处理最大记录条数，如果处理的记录数过大（由于content字段尺寸较大导致的内存错误）程序会报错
+export const JOB_SNAPSHOT_FULL_FETCH_OR_INSERT_MAX_BATCH_SIZE = 10;
 
 // Dev Config
 export const ENABLE_SQL_AUTO_EXPLAIN = false;

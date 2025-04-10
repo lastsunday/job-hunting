@@ -34,6 +34,65 @@ export function getUrlByTagAndCompanyName(tagName, companyName) {
     }
 }
 
+export function genId(id, platform) {
+    return platform + "_" + id;
+}
+
+export function getInfoFromJobDetailUrl(url) {
+    if (url.href.startsWith("https://www.zhipin.com/job_detail/")) {
+        const platform = PLATFORM_BOSS;
+        const jobId = genId(url.href.match(/https:\/\/www.zhipin.com\/job_detail\/(?<id>.*)\.html/).groups.id, platform);
+        return {
+            platform,
+            jobId,
+            url: url.origin + url.pathname,
+        };
+    } else if (url.href.startsWith("https://jobs.51job.com/")) {
+        const platform = PLATFORM_51JOB;
+        const jobId = genId(url.href.match(/https:\/\/jobs.51job.com\/.*\/(?<id>.*)\.html/).groups.id, platform);
+        return {
+            platform,
+            jobId,
+            url: url.origin + url.pathname,
+        };
+    } else if (url.href.startsWith("https://www.zhaopin.com/jobdetail/")) {
+        const platform = PLATFORM_ZHILIAN;
+        const jobId = genId(url.href.match(/https:\/\/www.zhaopin.com\/jobdetail\/(?<id>.*)\.htm/).groups.id, platform);
+        return {
+            platform,
+            jobId,
+            url: url.origin + url.pathname,
+        };
+    } else if (url.href.match(/https:\/\/www.liepin.com\/(lptjob|a|job)\//)) {
+        const platform = PLATFORM_LIEPIN;
+        const jobId = genId(url.href.match(/https:\/\/www.liepin.com\/(a|job|lptjob)\/(?<id>[0-9]*)/).groups.id, platform);
+        return {
+            platform,
+            jobId,
+            url: url.origin + url.pathname,
+        };
+    } else if (url.href.startsWith("https://www.lagou.com/wn/jobs/")) {
+        const platform = PLATFORM_LAGOU;
+        const jobId = genId(url.href.match(/https:\/\/www.lagou.com\/wn\/jobs\/(?<id>.*)\.html/).groups.id, platform);
+        return {
+            platform,
+            jobId,
+            url: url.origin + url.pathname,
+        };
+    } else if (url.href.startsWith("https://www.jobonline.cn/positionDetail")) {
+        const platform = PLATFORM_JOBONLINE;
+        const regexContent = url.href.match(/https:\/\/www.jobonline.cn\/positionDetail\?id=(?<id>[0-9]*)/);
+        const jobId = genId(regexContent.groups.id, platform);
+        return {
+            platform,
+            jobId,
+            url: regexContent[0]
+        };
+    } else {
+        throw `not supported url = ${url}`;
+    }
+}
+
 export const MISSION_AUTO_BROWSE_JOB_SEARCH_PAGE = "MISSION_AUTO_BROWSE_JOB_SEARCH_PAGE";
 
 export const MISSION_STATUS_SUCCESS = "MISSION_STATUS_SUCCESS";
@@ -58,6 +117,8 @@ export const TASK_TYPE_JOB_TAG_DATA_UPLOAD = "JOB_TAG_DATA_UPLOAD";
 export const TASK_TYPE_JOB_TAG_DATA_DOWNLOAD = "JOB_TAG_DATA_DOWNLOAD";
 export const TASK_TYPE_JOB_TAG_DATA_MERGE = "JOB_TAG_DATA_MERGE";
 export const DATA_TYPE_NAME_JOB_TAG = "job_tag";
+
+export const DATA_TYPE_NAME_JOB_SNAPSHOT = "job_snapshot";
 
 export const isDownloadType = (value) => {
     return value == TASK_TYPE_JOB_DATA_DOWNLOAD || value == TASK_TYPE_COMPANY_DATA_DOWNLOAD || value == TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD || value == TASK_TYPE_JOB_TAG_DATA_DOWNLOAD;

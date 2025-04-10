@@ -29,6 +29,9 @@ import useApiStore from './store/ApiStore';
 import useAuthStore from './store/AuthStore';
 import useDataSharePlanStore from './store/DataSharePlanStore';
 import useAnalysisStore from './store/AnalysisStore';
+import JobSnapshotView from './pages/data/JobSnapshotView';
+import JobSnapshotWelcomeView from './pages/jobSnapshot/WelcomeView';
+import useJobSnapshotStore from './store/JobSnapshotStore';
 const App: React.FC = () => {
   const [init, setInit] = useState(false);
 
@@ -40,12 +43,15 @@ const App: React.FC = () => {
     useShallow((state) => [state.init])
   );
   const [updateApiInfo] = useApiStore(useShallow((state) => [state.update]));
-
+  const [jobSnapshotStoreInit] = useJobSnapshotStore(
+    useShallow((state) => [state.init])
+  );
   useEffect(() => {
     const initStore = async () => {
       await authStoreInit();
       await dataSharePlanStoreInit();
       await analysisStoreInit();
+      await jobSnapshotStoreInit();
       setInit(true);
       document.getElementById('loading')?.remove();
     };
@@ -75,6 +81,7 @@ const App: React.FC = () => {
           <Route path="automate" element={<AutomateView />} />
           <Route path="bbs" element={<BbsView />} />
           <Route path="job" element={<JobView />} />
+          <Route path="jobSnapshot" element={<JobSnapshotView />} />
           <Route path="company" element={<CompanyView />} />
           <Route path="tag" element={<TagView />} />
           <Route path="jobTag" element={<JobTagView />} />
@@ -88,6 +95,10 @@ const App: React.FC = () => {
           <Route
             path="dataSharePlanStatistic"
             element={<DataSharePlanStatisticView />}
+          />
+          <Route
+            path="jobSnapshotSetting"
+            element={<JobSnapshotWelcomeView />}
           />
           <Route path="task" element={<TaskView />} />
           <Route path="partner" element={<PartnerView />} />

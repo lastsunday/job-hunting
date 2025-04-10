@@ -2,7 +2,8 @@ import { CompanyBO } from "./data/bo/companyBO";
 import { CompanyTagBO } from "./data/bo/companyTagBO";
 import { JobTagBO } from "./data/bo/jobTagBO";
 import { Job } from "./data/domain/job";
-import { convertDateStringToDateObject, genIdFromText, dateToStr } from "./utils";
+import { JobSnapshot } from "./data/domain/jobSnapshot";
+import { convertDateStringToDateObject, dateToStr, genIdFromText } from "./utils";
 
 const HEADER_VERSION_PREFIX = "__VERSION_";
 
@@ -10,12 +11,12 @@ export const validImportData = (data, allVersionValidArray) => {
     let dataVersion = 0;
     //查找数据文件版本，找不到则按初版处理
     if (data.length > 0) {
-        let headerRowArray = data[0];
+        const headerRowArray = data[0];
         for (let i = 0; i < headerRowArray.length; i++) {
-            let header = headerRowArray[i];
+            const header = headerRowArray[i];
             if (header.startsWith(HEADER_VERSION_PREFIX)) {
-                let numberString = header.replaceAll(HEADER_VERSION_PREFIX, "");
-                let number = Number.parseInt(numberString);
+                const numberString = header.replaceAll(HEADER_VERSION_PREFIX, "");
+                const number = Number.parseInt(numberString);
                 if (Number.isInteger(number)) {
                     dataVersion = number;
                     break;
@@ -27,16 +28,16 @@ export const validImportData = (data, allVersionValidArray) => {
     if (dataVersion > allVersionValidArray.length) {
         dataVersion = 0;
     }
-    let validArray = allVersionValidArray[dataVersion];
+    const validArray = allVersionValidArray[dataVersion];
     let colCount = 0;
-    let lackColumnMap = new Map();
+    const lackColumnMap = new Map();
     for (let i = 0; i < validArray.length; i++) {
         lackColumnMap.set(validArray[i], null);
     }
     if (data.length > 0) {
-        let headerRowArray = data[0];
+        const headerRowArray = data[0];
         for (let i = 0; i < headerRowArray.length; i++) {
-            let header = headerRowArray[i];
+            const header = headerRowArray[i];
             if (lackColumnMap.has(header)) {
                 colCount++;
                 lackColumnMap.delete(header);
@@ -102,10 +103,10 @@ export const JOB_FILE_HEADER = [
 ];
 
 export const jobDataToExcelJSONArray = (list) => {
-    let result = [];
+    const result = [];
     for (let i = 0; i < list.length; i++) {
-        let item = list[i];
-        let obj = {
+        const item = list[i];
+        const obj = {
             职位自编号: item.jobId,
             发布平台: item.jobPlatform,
             职位访问地址: item.jobUrl,
@@ -138,10 +139,10 @@ export const jobDataToExcelJSONArray = (list) => {
 }
 
 export const jobExcelDataToObjectArray = (data) => {
-    let jobList = [];
+    const jobList = [];
     for (let i = 0; i < data.length; i++) {
-        let dataItem = data[i];
-        let item = new Job();
+        const dataItem = data[i];
+        const item = new Job();
         item.jobId = dataItem['职位自编号'];
         item.jobPlatform = dataItem['发布平台'];
         item.jobUrl = dataItem['职位访问地址'];
@@ -222,10 +223,10 @@ export const COMPANY_FILE_HEADER = [
 ];
 
 export const companyDataToExcelJSONArray = (list) => {
-    let result = [];
+    const result = [];
     for (let i = 0; i < list.length; i++) {
-        let item = list[i];
-        let obj = {
+        const item = list[i];
+        const obj = {
             公司: item.companyName,
             公司描述: item.companyDesc,
             成立时间: dateToStr(item.companyStartDate),
@@ -257,10 +258,10 @@ export const companyDataToExcelJSONArray = (list) => {
 }
 
 export const companyExcelDataToObjectArray = (data, datetime) => {
-    let companyBOList = [];
+    const companyBOList = [];
     for (let i = 0; i < data.length; i++) {
-        let dataItem = data[i];
-        let item = new CompanyBO();
+        const dataItem = data[i];
+        const item = new CompanyBO();
         item.companyId = genIdFromText(dataItem['公司']);
         item.companyName = dataItem['公司'];
         item.companyDesc = dataItem['公司描述'];
@@ -303,10 +304,10 @@ export const COMPANY_TAG_FILE_HEADER = [
 ];
 
 export const companyTagDataToExcelJSONArrayForView = (list) => {
-    let result = [];
+    const result = [];
     for (let i = 0; i < list.length; i++) {
-        let item = list[i];
-        let obj = {
+        const item = list[i];
+        const obj = {
             公司: item.companyName,
             标签: Array.from(new Set(item.tagNameArray)).join(","),
             记录更新日期: dateToStr(item.updateDatetime),
@@ -318,10 +319,10 @@ export const companyTagDataToExcelJSONArrayForView = (list) => {
 }
 
 export const companyTagDataToExcelJSONArray = (list) => {
-    let result = [];
+    const result = [];
     for (let i = 0; i < list.length; i++) {
-        let item = list[i];
-        let obj = {
+        const item = list[i];
+        const obj = {
             公司: item.companyName,
             标签: item.tagNameArray,
             记录更新日期: dateToStr(item.updateDatetime),
@@ -333,10 +334,10 @@ export const companyTagDataToExcelJSONArray = (list) => {
 }
 
 export const companyTagExcelDataToObjectArray = (data, datetime) => {
-    let companyTagBOList = [];
+    const companyTagBOList = [];
     for (let i = 0; i < data.length; i++) {
-        let dataItem = data[i];
-        let item = new CompanyTagBO();
+        const dataItem = data[i];
+        const item = new CompanyTagBO();
         item.companyName = dataItem['公司'];
         item.tags = dataItem['标签'].split(",");
         item.updateDatetime = convertDateStringToDateObject(dataItem['记录更新日期']) ?? convertDateStringToDateObject(datetime);
@@ -358,10 +359,10 @@ export const JOB_TAG_FILE_HEADER = [
 ];
 
 export const jobTagDataToExcelJSONArrayForView = (list) => {
-    let result = [];
+    const result = [];
     for (let i = 0; i < list.length; i++) {
-        let item = list[i];
-        let obj = {
+        const item = list[i];
+        const obj = {
             职位编号: item.jobId,
             标签: Array.from(new Set(item.tagNameArray)).join(","),
             记录更新日期: dateToStr(item.updateDatetime),
@@ -373,10 +374,10 @@ export const jobTagDataToExcelJSONArrayForView = (list) => {
 }
 
 export const jobTagDataToExcelJSONArray = (list) => {
-    let result = [];
+    const result = [];
     for (let i = 0; i < list.length; i++) {
-        let item = list[i];
-        let obj = {
+        const item = list[i];
+        const obj = {
             职位编号: item.jobId,
             标签: item.tagNameArray,
             记录更新日期: dateToStr(item.updateDatetime),
@@ -388,13 +389,63 @@ export const jobTagDataToExcelJSONArray = (list) => {
 }
 
 export const jobTagExcelDataToObjectArray = (data, datetime) => {
-    let result = [];
+    const result = [];
     for (let i = 0; i < data.length; i++) {
-        let dataItem = data[i];
-        let item = new JobTagBO();
+        const dataItem = data[i];
+        const item = new JobTagBO();
         item.jobId = dataItem['职位编号'];
         item.tags = dataItem['标签'].split(",");
         item.updateDatetime = convertDateStringToDateObject(dataItem['记录更新日期']) ?? convertDateStringToDateObject(datetime);
+        result.push(item);
+    }
+    return result;
+}
+
+
+export const JOB_SNAPSHOT_FILE_HEADER = [
+    [
+        "编号",
+        "职位编号",
+        "职位链接",
+        "内容",
+        "招聘平台",
+        "创建日期",
+        "更新日期",
+    ]
+];
+
+
+export const jobSnapshotDataToJSONArray = (list) => {
+    const result = [];
+    for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        const obj = {
+            编号: item.id,
+            职位编号: item.jobId,
+            职位链接: item.url,
+            内容: item.content,
+            招聘平台: item.platform,
+            创建日期: item.createDatetime,
+            更新日期: item.updateDatetime,
+        }
+        fillDataVersion(obj, JOB_SNAPSHOT_FILE_HEADER);
+        result.push(obj);
+    }
+    return result;
+}
+
+export const jobSnapshotDataToObjectArray = (data, datetime) => {
+    const result = [];
+    for (let i = 0; i < data.length; i++) {
+        const dataItem = data[i];
+        const item = new JobSnapshot();
+        item.id = dataItem['编号'];
+        item.jobId = dataItem['职位编号'];
+        item.url = dataItem['职位链接'];
+        item.content = dataItem['内容'];
+        item.platform = dataItem['招聘平台'];
+        item.createDatetime = dataItem['创建日期'];
+        item.updateDatetime = dataItem['更新日期'];
         result.push(item);
     }
     return result;
