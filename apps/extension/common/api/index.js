@@ -2,11 +2,13 @@ import { CompanyBO } from "../data/bo/companyBO";
 import { CompanyTagBatchAddOrUpdateBO } from "../data/bo/companyTagBatchAddOrUpdateBO";
 import { CompanyTagBO } from "../data/bo/companyTagBO";
 import { CompanyTagExportBO } from "../data/bo/companyTagExportBO";
+import { JobSnapshotBatchAddOrUpdateBO } from "../data/bo/jobSnapshotBatchAddOrUpdateBO";
 import { JobStatisticJobCompanyTagGroupByCompanyBO } from "../data/bo/jobStatisticJobCompanyTagGroupByCompanyBO";
 import { JobStatisticJobCompanyTagGroupByPlatformBO } from "../data/bo/jobStatisticJobCompanyTagGroupByPlatformBO";
 import { JobTagExportBO } from "../data/bo/jobTagExportBO";
 import { JobTagNameStatisticBO } from "../data/bo/jobTagNameStatisticBO";
 import { JobTagSearchBO } from "../data/bo/jobTagSearchBO";
+import { PageBO } from "../data/bo/pageBO";
 import { SearchCompanyBO } from "../data/bo/searchCompanyBO";
 import { SearchCompanyTagBO } from "../data/bo/searchCompanyTagBO";
 import { SearchDataSharePartnerBO } from "../data/bo/searchDataSharePartnerBO";
@@ -35,7 +37,6 @@ import { SearchTaskDataMergeDTO } from "../data/dto/searchTaskDataMergeDTO";
 import { SearchTaskDataUploadDTO } from "../data/dto/searchTaskDataUploadDTO";
 import { SearchTaskDTO } from "../data/dto/searchTaskDTO";
 import { StatisticJobBrowseDTO } from "../data/dto/statisticJobBrowseDTO";
-import { PageBO } from "../data/bo/pageBO";
 import { invoke } from "./bridge";
 
 export const JobApi = {
@@ -1202,6 +1203,16 @@ export const JobSnapshotApi = {
    */
   jobSnapshotAddOrUpdate: async function (param) {
     const result = await invoke(this.jobSnapshotAddOrUpdate.name, param);
+    return result.data;
+  },
+
+  /**
+   * 
+   * @param {JobSnapshotBatchAddOrUpdateBO} param 
+   * @returns 
+   */
+  jobSnapshotBatchAddOrUpdate: async function (param) {
+    const result = await invoke(this.jobSnapshotBatchAddOrUpdate.name, param);
     return result.data;
   },
 

@@ -21,7 +21,7 @@ import { useJobSnapshot } from '../../hooks/jobSnapshot';
 const { platformFormat } = useJob();
 
 const { convertSortField, convertToDataList } = useJobSnapshot();
-import { jobSnapshotDataToExcelJSONArray } from '@/common/excel';
+import { jobSnapshotDataToJSONArray } from '@/common/excel';
 
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
@@ -30,6 +30,10 @@ dayjs.extend(duration);
 import { errorLog } from '@/common/log';
 import { downloadBlob } from '@/common/file';
 import styles from './JobSnapshotView.module.css';
+import { DATA_TYPE_NAME_JOB_SNAPSHOT } from '@/common';
+import { useJobSnapshot as commonUseJobSnapshot } from '@/common/hooks/jobSnapshot';
+
+const { getFullData } = commonUseJobSnapshot();
 
 const fillSearchParam = (searchParam, values) => {
   const { createDatetimeRange, updateDatetimeRange, jobId } = values;
@@ -173,18 +177,7 @@ const JobSnapshotView: React.FC = () => {
   };
 
   const getFullDataFunction = async (originData: JobSnapshot[]) => {
-    const result = [];
-    const batchSize = 10;
-    const ids = originData.map((item) => item.id);
-    const totalBatches = Math.ceil(ids.length / batchSize);
-    for (let i = 0; i < totalBatches; i++) {
-      const start = i * batchSize;
-      const end = Math.min(start + batchSize, ids.length);
-      const rangeIds = ids.slice(start, end);
-      const items = await JobSnapshotApi.jobSnapshotGetByIds(rangeIds);
-      result.push(...items);
-    }
-    return result;
+    return await getFullData(originData);
   };
 
   return (
@@ -211,11 +204,12 @@ const JobSnapshotView: React.FC = () => {
           return record.id;
         }}
         exportProps={{
-          dataToExcelJSONArray: jobSnapshotDataToExcelJSONArray,
+          dataToExcelJSONArray: jobSnapshotDataToJSONArray,
           title: '职位快照',
           getFullDataFunction,
           format: 'json',
           zipFormat: 'tar.xz',
+          dataFileName: DATA_TYPE_NAME_JOB_SNAPSHOT,
         }}
       ></BasicTable>
       <Modal

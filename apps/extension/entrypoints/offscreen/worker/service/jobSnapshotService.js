@@ -1,9 +1,11 @@
 import { Message } from "@/common/api/message";
+import { JobSnapshotBatchAddOrUpdateBO } from "@/common/data/bo/jobSnapshotBatchAddOrUpdateBO";
 import { JobSnapshotSearchBO } from "@/common/data/bo/jobSnapshotSearchBO";
 import { JobSnapshot } from "@/common/data/domain/jobSnapshot";
 import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
-import { BaseService } from "../service/baseService";
 import dayjs from "dayjs";
+import { getDb } from "../database";
+import { BaseService } from "../service/baseService";
 const TABLE_NAME = "job_snapshot";
 const TABLE_ID_COLUMN = "id";
 
@@ -16,6 +18,11 @@ const SERVICE_INSTANCE = new BaseService(TABLE_NAME, TABLE_ID_COLUMN,
     },
     (param) => {
         let whereCondition = "";
+        if (param.ids && param.ids.length > 0) {
+            const arraySplitString = "'" + param.ids.join("','") + "'";
+            whereCondition +=
+                ` AND id IN (${arraySplitString})`;
+        }
         if (param.jobIds && param.jobIds.length > 0) {
             const arraySplitString = "'" + param.jobIds.join("','") + "'";
             whereCondition +=
@@ -81,6 +88,24 @@ export const JobSnapshotService = {
             postErrorMessage(
                 message,
                 "[worker] jobSnapshotAddOrUpdate error : " + e.message
+            );
+        }
+    },
+    /**
+     * 
+     * @param {Message} message 
+     * @param {JobSnapshotBatchAddOrUpdateBO} param 
+     */
+    jobSnapshotBatchAddOrUpdate: async function (message, param) {
+        try {
+            await (await getDb()).transaction(async (tx) => {
+                await SERVICE_INSTANCE._batchAddOrUpdate(param.items, { overrideUpdateDatetime: param.overrideUpdateDatetime, connection: tx })
+                postSuccessMessage(message, {});
+            });
+        } catch (e) {
+            postErrorMessage(
+                message,
+                "[worker] jobSnapshotBatchAddOrUpdate error : " + e.message
             );
         }
     },

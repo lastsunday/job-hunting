@@ -118,6 +118,8 @@ export const TASK_TYPE_JOB_TAG_DATA_DOWNLOAD = "JOB_TAG_DATA_DOWNLOAD";
 export const TASK_TYPE_JOB_TAG_DATA_MERGE = "JOB_TAG_DATA_MERGE";
 export const DATA_TYPE_NAME_JOB_TAG = "job_tag";
 
+export const DATA_TYPE_NAME_JOB_SNAPSHOT = "job_snapshot";
+
 export const isDownloadType = (value) => {
     return value == TASK_TYPE_JOB_DATA_DOWNLOAD || value == TASK_TYPE_COMPANY_DATA_DOWNLOAD || value == TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD || value == TASK_TYPE_JOB_TAG_DATA_DOWNLOAD;
 }

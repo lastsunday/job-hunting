@@ -54,3 +54,28 @@ export async function zipAdvanceFileToBlob({ fileName, blobData, compression = A
     });
     return promise;
 }
+
+export async function unzipAdvanceFileToJson({ fileName, file }) {
+    const promise = new Promise((resolve, reject) => {
+        const run = async () => {
+            try {
+                const openFile = await Archive.open(file);
+                const data = await openFile.extractFiles();
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    const text = reader.result;
+                    try {
+                        resolve(JSON.parse(text));
+                    } catch (e) {
+                        reject(e);
+                    }
+                };
+                reader.readAsText(data[`${fileName}`]);
+            } catch (e) {
+                reject(e);
+            }
+        }
+        run();
+    });
+    return promise;
+}

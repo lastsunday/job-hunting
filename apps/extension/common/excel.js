@@ -2,7 +2,8 @@ import { CompanyBO } from "./data/bo/companyBO";
 import { CompanyTagBO } from "./data/bo/companyTagBO";
 import { JobTagBO } from "./data/bo/jobTagBO";
 import { Job } from "./data/domain/job";
-import { convertDateStringToDateObject, genIdFromText, dateToStr } from "./utils";
+import { JobSnapshot } from "./data/domain/jobSnapshot";
+import { convertDateStringToDateObject, dateToStr, genIdFromText } from "./utils";
 
 const HEADER_VERSION_PREFIX = "__VERSION_";
 
@@ -414,7 +415,7 @@ export const JOB_SNAPSHOT_FILE_HEADER = [
 ];
 
 
-export const jobSnapshotDataToExcelJSONArray = (list) => {
+export const jobSnapshotDataToJSONArray = (list) => {
     const result = [];
     for (let i = 0; i < list.length; i++) {
         const item = list[i];
@@ -433,16 +434,19 @@ export const jobSnapshotDataToExcelJSONArray = (list) => {
     return result;
 }
 
-export const jobSnapshotExcelDataToObjectArray = (data, datetime) => {
-    //TODO
+export const jobSnapshotDataToObjectArray = (data, datetime) => {
     const result = [];
-    // for (let i = 0; i < data.length; i++) {
-    //     let dataItem = data[i];
-    //     let item = new JobTagBO();
-    //     item.jobId = dataItem['职位编号'];
-    //     item.tags = dataItem['标签'].split(",");
-    //     item.updateDatetime = convertDateStringToDateObject(dataItem['记录更新日期']) ?? convertDateStringToDateObject(datetime);
-    //     result.push(item);
-    // }
+    for (let i = 0; i < data.length; i++) {
+        const dataItem = data[i];
+        const item = new JobSnapshot();
+        item.id = dataItem['编号'];
+        item.jobId = dataItem['职位编号'];
+        item.url = dataItem['职位链接'];
+        item.content = dataItem['内容'];
+        item.platform = dataItem['招聘平台'];
+        item.createDatetime = dataItem['创建日期'];
+        item.updateDatetime = dataItem['更新日期'];
+        result.push(item);
+    }
     return result;
 }
