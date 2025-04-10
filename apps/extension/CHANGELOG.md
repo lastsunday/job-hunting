@@ -1,3 +1,13 @@
+## 3.10.0 (2025-04-10)
+
+### 🚀 Features
+
+- 新增职位详情快照
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.9.1 (2025-04-02)
 
 ### 🩹 Fixes
