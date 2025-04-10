@@ -3,6 +3,9 @@ import { createRoot } from 'react-dom/client';
 import 'single-file-core/single-file-bootstrap.js';
 import 'uno.css';
 import App from './App.tsx';
+import useConfig from '@/common/extension/hooks/config';
+import { infoLog } from '@/common/log';
+const { getJobSnapshotConfig } = useConfig();
 
 export default defineContentScript({
   // Set manifest options
@@ -18,10 +21,17 @@ export default defineContentScript({
   ],
   async main() {
     await initBridge();
-    const rootElement = document.createElement(`div`);
-    rootElement.style = 'z-index:9999;position:relative;';
-    window.document.body.appendChild(rootElement);
-    const root = createRoot(rootElement);
-    root.render(<App />);
+    const jobSnapshotConfig = await getJobSnapshotConfig();
+    const jobSnapshotEnable = jobSnapshotConfig && jobSnapshotConfig.enable;
+    infoLog(
+      `[Content Script] [Job Detail] jobSnapshot.enable = ${jobSnapshotEnable}`
+    );
+    if (jobSnapshotEnable) {
+      const rootElement = document.createElement(`div`);
+      rootElement.style = 'z-index:9999;position:relative;';
+      window.document.body.appendChild(rootElement);
+      const root = createRoot(rootElement);
+      root.render(<App />);
+    }
   },
 });

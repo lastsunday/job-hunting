@@ -1,7 +1,9 @@
 import {
   CommentOutlined,
   DatabaseOutlined,
+  DesktopOutlined,
   FileOutlined,
+  HistoryOutlined,
   HomeOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -17,6 +19,7 @@ import { useShallow } from 'zustand/shallow';
 import logo from '../assets/logo.svg';
 import useDataSharePlanStore from '../store/DataSharePlanStore';
 import useAnalysisStore from '../store/AnalysisStore';
+import useJobSnapshotStore from '../store/JobSnapshotStore';
 import HeaderRight from './HeaderRight';
 const { Header, Sider, Content } = Layout;
 
@@ -60,6 +63,10 @@ const RootLayout: React.FC = () => {
       return [{ key: 'analysisWelcome', label: '欢迎使用' }];
     }
   };
+
+  const [jobSnapshotConfig] = useJobSnapshotStore(
+    useShallow((state) => [state.config])
+  );
 
   return (
     <Layout className="root" hasSider>
@@ -111,7 +118,9 @@ const RootLayout: React.FC = () => {
               label: '数据',
               children: [
                 { key: 'job', label: '职位' },
-                { key: 'jobSnapshot', label: '职位快照' },
+                jobSnapshotConfig.enable
+                  ? { key: 'jobSnapshot', label: '职位快照' }
+                  : null,
                 { key: 'company', label: '公司' },
                 { key: 'tag', label: '标签' },
                 { key: 'companyTag', label: '公司标签' },
@@ -132,6 +141,13 @@ const RootLayout: React.FC = () => {
                   children: [...genDataSharePlanMenu()],
                 }
               : null,
+            jobSnapshotConfig.enable
+              ? null
+              : {
+                  key: 'jobSnapshotSetting',
+                  icon: <HistoryOutlined />,
+                  label: '职位快照',
+                },
             {
               key: 'file',
               icon: <FileOutlined />,
@@ -139,7 +155,7 @@ const RootLayout: React.FC = () => {
             },
             {
               key: 'system',
-              icon: <Icon icon="icon-park-outline:system" />,
+              icon: <DesktopOutlined />,
               label: '系统',
             },
             {

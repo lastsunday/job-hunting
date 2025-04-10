@@ -15,6 +15,8 @@ import JobSnapshotHistory from '@/entrypoints/components/JobSnapshotHistory';
 import { Icon } from '@iconify/react';
 import { JobSnapshotSearchBO } from '@/common/data/bo/jobSnapshotSearchBO';
 import { JobSnapshot } from '@/common/data/domain/jobSnapshot';
+import useJobSnapshotStore from '../../store/JobSnapshotStore';
+import { useShallow } from 'zustand/shallow';
 const { queryAnalysisConfig } = useAnalysis();
 
 const { convertToJobDataList, convertToJobData } = useJob();
@@ -34,6 +36,9 @@ const HistoryJobView: React.FC = () => {
 
   const [analysisConfig, setAnalysisConfig] = useState<AnalysisConfigDTO>(null);
   const [snapshotItems, setSnapshotItems] = useState<JobSnapshot>([]);
+  const [jobSnapshotConfig] = useJobSnapshotStore(
+    useShallow((state) => [state.config])
+  );
 
   const getSearchParam = () => {
     const searchParam = new SearchJobBO();
@@ -81,10 +86,12 @@ const HistoryJobView: React.FC = () => {
         }
         setTotal(parseInt(searchResult.total));
         setData(convertToJobDataList(searchResult.items));
-        const result = await getSnapshotItemsByJobIds(
-          searchResult.items.map((item) => item.jobId)
-        );
-        setSnapshotItems(result);
+        if (jobSnapshotConfig.enable) {
+          const result = await getSnapshotItemsByJobIds(
+            searchResult.items.map((item) => item.jobId)
+          );
+          setSnapshotItems(result);
+        }
       } finally {
         setLoading(false);
       }
@@ -171,28 +178,30 @@ const HistoryJobView: React.FC = () => {
                             : null
                         }
                         historyElement={
-                          <JobSnapshotHistory
-                            key={snapshotItems.length}
-                            jobId={item.id}
-                            getSnapshotTotalCallback={async () => {
-                              return snapshotItems.filter(
-                                (snapshot) => snapshot.jobId == item.id
-                              ).length;
-                            }}
-                            getSnapshotItemsByJobIdCallback={
-                              getSnapshotItemsByJobIdCallback
-                            }
-                            getSnapshotItemByIdCallback={
-                              getSnapshotItemByIdCallback
-                            }
-                            icon={
-                              <Icon
-                                icon="ix:history-list"
-                                width="18"
-                                height="18"
-                              />
-                            }
-                          />
+                          jobSnapshotConfig.enable ? (
+                            <JobSnapshotHistory
+                              key={snapshotItems.length}
+                              jobId={item.id}
+                              getSnapshotTotalCallback={async () => {
+                                return snapshotItems.filter(
+                                  (snapshot) => snapshot.jobId == item.id
+                                ).length;
+                              }}
+                              getSnapshotItemsByJobIdCallback={
+                                getSnapshotItemsByJobIdCallback
+                              }
+                              getSnapshotItemByIdCallback={
+                                getSnapshotItemByIdCallback
+                              }
+                              icon={
+                                <Icon
+                                  icon="ix:history-list"
+                                  width="18"
+                                  height="18"
+                                />
+                              }
+                            />
+                          ) : null
                         }
                       ></JobItemCard>
                     ))

@@ -26,6 +26,8 @@ import { useJob } from '../hooks/job';
 import { useUtil } from '../hooks/util';
 import JobItemCard from './JobItemCard';
 import JobModal from './JobModal';
+import useJobSnapshotStore from '../store/JobSnapshotStore';
+import { useShallow } from 'zustand/shallow';
 
 const { convertJobDataToGeojson } = useJob();
 
@@ -56,6 +58,9 @@ const BasicMap: React.FC<BasicMapProps> = ({
   const [jobModalData, setJobModalData] = useState<JobData>();
   const [refresh, setRefresh] = useState(false);
   const [snapshotItems, setSnapshotItems] = useState<JobSnapshot>([]);
+  const [jobSnapshotConfig] = useJobSnapshotStore(
+    useShallow((state) => [state.config])
+  );
 
   const resetData = async () => {
     setPopupInfo(null);
@@ -66,8 +71,12 @@ const BasicMap: React.FC<BasicMapProps> = ({
     setItemIdMap(itemMap);
     setGeojsonData(convertJobDataToGeojson(data));
     setClusterData([]);
-    const result = await getSnapshotItemsByJobIds(data.map((item) => item.id));
-    setSnapshotItems(result);
+    if (jobSnapshotConfig.enable) {
+      const result = await getSnapshotItemsByJobIds(
+        data.map((item) => item.id)
+      );
+      setSnapshotItems(result);
+    }
   };
 
   useEffect(() => {
@@ -315,24 +324,30 @@ const BasicMap: React.FC<BasicMapProps> = ({
                     onCardClick={onCardClickHandle}
                     onLocate={locate}
                     historyElement={
-                      <JobSnapshotHistory
-                        key={snapshotItems.length}
-                        jobId={item.id}
-                        getSnapshotTotalCallback={async () => {
-                          return snapshotItems.filter(
-                            (snapshot) => snapshot.jobId == item.id
-                          ).length;
-                        }}
-                        getSnapshotItemsByJobIdCallback={
-                          getSnapshotItemsByJobIdCallback
-                        }
-                        getSnapshotItemByIdCallback={
-                          getSnapshotItemByIdCallback
-                        }
-                        icon={
-                          <Icon icon="ix:history-list" width="18" height="18" />
-                        }
-                      />
+                      jobSnapshotConfig.enable ? (
+                        <JobSnapshotHistory
+                          key={snapshotItems.length}
+                          jobId={item.id}
+                          getSnapshotTotalCallback={async () => {
+                            return snapshotItems.filter(
+                              (snapshot) => snapshot.jobId == item.id
+                            ).length;
+                          }}
+                          getSnapshotItemsByJobIdCallback={
+                            getSnapshotItemsByJobIdCallback
+                          }
+                          getSnapshotItemByIdCallback={
+                            getSnapshotItemByIdCallback
+                          }
+                          icon={
+                            <Icon
+                              icon="ix:history-list"
+                              width="18"
+                              height="18"
+                            />
+                          }
+                        />
+                      ) : null
                     }
                   ></JobItemCard>
                 );

@@ -29,6 +29,7 @@ import useDataSharePlanStore from '../store/DataSharePlanStore';
 import useSystemStore from '../store/SystemStore';
 import DataBackupRestore from './setting/DataBackupRestore';
 import DatabaseBackupRestore from './setting/DatabaseBackupRestore';
+import useJobSnapshotStore from '../store/JobSnapshotStore';
 const { Text, Link } = Typography;
 
 const version = __APP_VERSION__;
@@ -45,6 +46,10 @@ const SettingView: React.FC = () => {
   );
   const [dataSharePlanEnable, setDataSharePlanEnable] = useState(false);
   const [analysisEnable, setAnalysisEnable] = useState(false);
+  const [jobSnapshotEnable, setJobSnapshotEnable] = useState(false);
+  const [jobSnapshotConfig, updateJobSnapshotConfig] = useJobSnapshotStore(
+    useShallow((state) => [state.config, state.update])
+  );
   const {
     getJobDataToExcelJsonArray,
     getJobDataTotal,
@@ -106,6 +111,7 @@ const SettingView: React.FC = () => {
   useEffect(() => {
     setDataSharePlanEnable(enable);
     setAnalysisEnable(analysisConfig.enable);
+    setJobSnapshotEnable(jobSnapshotConfig.enable);
     if (enable) {
       setIsDangerDataShareMenuOpen(true);
     }
@@ -315,7 +321,7 @@ const SettingView: React.FC = () => {
             </Flex>
           </Flex>
         </Card>
-        <Card title="职位分析" bordered={false} size="small">
+        <Card title="职位分析" variant="borderless" size="small">
           <CheckCard.Group
             onChange={async (value) => {
               if (value) {
@@ -334,6 +340,25 @@ const SettingView: React.FC = () => {
             <CheckCard title="关闭" description="关闭职位分析" value={false} />
           </CheckCard.Group>
         </Card>
+        <Card title="职位快照" variant="borderless" size="small">
+          <CheckCard.Group
+            onChange={async (value) => {
+              if (value) {
+                jobSnapshotConfig.enable = true;
+                await updateJobSnapshotConfig(jobSnapshotConfig);
+                setJobSnapshotEnable(true);
+              } else {
+                jobSnapshotConfig.enable = false;
+                await updateJobSnapshotConfig(jobSnapshotConfig);
+                setJobSnapshotEnable(false);
+              }
+            }}
+            value={jobSnapshotEnable}
+          >
+            <CheckCard title="开启" description="开启职位快照" value={true} />
+            <CheckCard title="关闭" description="关闭职位快照" value={false} />
+          </CheckCard.Group>
+        </Card>
         <Card
           title=<Flex align="center" gap={5}>
             <Text>数据共享计划</Text>
@@ -348,7 +373,7 @@ const SettingView: React.FC = () => {
               }}
             ></Switch>
           </Flex>
-          bordered={false}
+          variant="borderless"
           size="small"
         >
           {isDangerDataShareMenuOpen ? (
