@@ -1,13 +1,56 @@
+import { Archive, ArchiveCompression, ArchiveFormat } from 'libarchive.js';
 import JSZip from "jszip";
 
 export async function getExcelDataFromZipFile(base64Content, dataTypeName) {
-    let promise = new Promise((resolve, reject) => {
+    const promise = new Promise((resolve, reject) => {
         JSZip.loadAsync(base64Content, { base64: true }).then(async zip => {
-            let zipFile = zip.file(`${dataTypeName}.xlsx`);
+            const zipFile = zip.file(`${dataTypeName}.xlsx`);
             resolve(await zipFile.async("arraybuffer"));
         }).catch(e => {
             reject(e);
         })
+    });
+    return promise;
+}
+
+export async function zipFileToBlob(fileName, blobData) {
+    const promise = new Promise((resolve, reject) => {
+        const zip = new JSZip();
+        zip.file(`${fileName}`, blobData);
+        zip
+            .generateAsync({
+                compression: "DEFLATE",
+                compressionOptions: { level: 9 },
+                type: "blob",
+            })
+            .then(function (content) {
+                resolve(content);
+            }).catch((e) => {
+                reject(e);
+            });
+    });
+    return promise;
+}
+
+export async function zipAdvanceFileToBlob({ fileName, blobData, compression = ArchiveCompression.XZ, format = ArchiveFormat.USTAR }) {
+    const promise = new Promise((resolve, reject) => {
+        const run = async () => {
+            try {
+                const archiveFile = await Archive.write({
+                    files: [
+                        { file: blobData, pathname: `${fileName}` }
+                    ],
+                    outputFileName: fileName,
+                    compression,
+                    format,
+                    passphrase: null,
+                });
+                resolve(archiveFile);
+            } catch (e) {
+                reject(e);
+            }
+        }
+        run();
     });
     return promise;
 }

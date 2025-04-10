@@ -1207,6 +1207,16 @@ export const JobSnapshotApi = {
 
   /**
    * 
+   * @param {string[]} param ids
+   * @returns 
+   */
+  jobSnapshotGetByIds: async function (param) {
+    const result = await invoke(this.jobSnapshotGetByIds.name, param);
+    return result.data;
+  },
+
+  /**
+   * 
    * @param {string} param id
    * @returns 
    */

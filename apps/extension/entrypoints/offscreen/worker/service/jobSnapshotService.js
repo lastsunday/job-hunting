@@ -3,7 +3,7 @@ import { JobSnapshotSearchBO } from "@/common/data/bo/jobSnapshotSearchBO";
 import { JobSnapshot } from "@/common/data/domain/jobSnapshot";
 import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
 import { BaseService } from "../service/baseService";
-
+import dayjs from "dayjs";
 const TABLE_NAME = "job_snapshot";
 const TABLE_ID_COLUMN = "id";
 
@@ -20,6 +20,30 @@ const SERVICE_INSTANCE = new BaseService(TABLE_NAME, TABLE_ID_COLUMN,
             const arraySplitString = "'" + param.jobIds.join("','") + "'";
             whereCondition +=
                 ` AND job_id IN (${arraySplitString})`;
+        }
+        if (param.startDatetimeForCreate) {
+            whereCondition +=
+                " AND create_datetime >= '" +
+                dayjs(param.startDatetimeForCreate).format() +
+                "'";
+        }
+        if (param.endDatetimeForCreate) {
+            whereCondition +=
+                " AND create_datetime < '" +
+                dayjs(param.endDatetimeForCreate).format() +
+                "'";
+        }
+        if (param.startDatetimeForUpdate) {
+            whereCondition +=
+                " AND update_datetime >= '" +
+                dayjs(param.startDatetimeForUpdate).format() +
+                "'";
+        }
+        if (param.endDatetimeForUpdate) {
+            whereCondition +=
+                " AND update_datetime < '" +
+                dayjs(param.endDatetimeForUpdate).format() +
+                "'";
         }
         return whereCondition;
     }
@@ -59,6 +83,14 @@ export const JobSnapshotService = {
                 "[worker] jobSnapshotAddOrUpdate error : " + e.message
             );
         }
+    },
+    /**
+     *
+     * @param {Message} message
+     * @param {string[]} param ids
+     */
+    jobSnapshotGetByIds: async function (message, param) {
+        SERVICE_INSTANCE.getByIds(message, param);
     },
     /**
      *
