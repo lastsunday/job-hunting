@@ -8,7 +8,6 @@ import {
 import { validImportData } from '@/common/excel';
 import { downloadBlob } from '@/common/file';
 import { zipAdvanceFileToBlob, unzipAdvanceFileToJson } from '@/common/zip';
-import { Icon } from '@iconify/react';
 import {
   Button,
   Flex,
@@ -300,7 +299,7 @@ const DataBackupRestore: React.FC<DataBackupRestoreProps> = ({
             cancelText="否"
           >
             <Button loading={exportLoading}>
-              <Icon icon="mdi:document" />
+              <div className="i-mdi:document" />
               全量{title}数据导出
             </Button>
           </Popconfirm>
@@ -310,7 +309,7 @@ const DataBackupRestore: React.FC<DataBackupRestoreProps> = ({
               setIsImportModalOpen(true);
             }}
           >
-            <Icon icon="mdi:file-document-box-plus" />
+            <div className="i-mdi:file-document-box-plus" />
             {title}数据导入
           </Button>
         </Flex>

@@ -1,7 +1,5 @@
 import { dbDelete, dbExport, dbImport } from "@/common/api/common";
 import { downloadURL } from "@/common/file";
-import { base64ToBytes, bytesToBase64 } from "@/common/utils/base64.js";
-import { Icon } from "@iconify/react";
 import { Button, Flex, Input, Modal, Popconfirm, Spin, Switch, Typography, message } from "antd";
 import dayjs from "dayjs";
 const { Text } = Typography;
@@ -51,7 +49,7 @@ const DatabaseBackupRestore: React.FC<DatabaseBackupRestoreProps> = ({ }) => {
             setImportLoading(true);
             setLoading(true);
             setTimeout(async () => {
-                let url = URL.createObjectURL(files[0]);
+                const url = URL.createObjectURL(files[0]);
                 try {
                     await dbImport(url);
                     setIsImportModalOpen(false);
@@ -119,12 +117,12 @@ const DatabaseBackupRestore: React.FC<DatabaseBackupRestoreProps> = ({ }) => {
                     okText="是"
                     cancelText="否"
                 >
-                    <Button loading={exportLoading}><Icon icon="mdi:document" />{title}导出</Button>
+                    <Button loading={exportLoading}><div className="i-mdi:document" />{title}导出</Button>
                 </Popconfirm>
                 <Button onClick={() => {
                     setImportLoading(false);
                     setIsImportModalOpen(true);
-                }}><Icon icon="mdi:file-document-box-plus" />{title}恢复</Button>
+                }}><div className="i-mdi:file-document-box-plus" />{title}恢复</Button>
                 {isDangerDatabaseMenuOpen ? <Popconfirm
                     title="删除"
                     description="确认删除数据库？"
@@ -132,7 +130,7 @@ const DatabaseBackupRestore: React.FC<DatabaseBackupRestoreProps> = ({ }) => {
                     okText="是"
                     cancelText="否"
                 >
-                    <Button style={{ backgroundColor: "red", color: "white" }} loading={deleteLoading}><Icon icon="mdi:document" />{title}删除</Button>
+                    <Button style={{ backgroundColor: "red", color: "white" }} loading={deleteLoading}><div className="i-mdi:delete" />{title}删除</Button>
                 </Popconfirm> : null}
 
             </Flex>

@@ -5,7 +5,6 @@ import { JobSnapshotSearchBO } from '@/common/data/bo/jobSnapshotSearchBO';
 import { JobSnapshot } from '@/common/data/domain/jobSnapshot';
 import { errorLog, infoLog } from '@/common/log';
 import JobSnapshotHistory from '@/entrypoints/components/JobSnapshotHistory';
-import { Icon } from '@iconify/react';
 import dayjs from 'dayjs';
 import { getPageData } from 'single-file-core/single-file';
 import './JobSnapshotAssistant.css';
@@ -132,15 +131,15 @@ const JobSnapshotAssistant: React.FC<Props> = (props) => {
   const getSnapshotStateElement = () => {
     if (snapshotState == SNAPSHOT_STATE_LOADING) {
       return (
-        <Icon icon="eos-icons:three-dots-loading" width="18" height="18" />
+        <div className="i-eos-icons:three-dots-loading w-4 h-4" />
       );
     } else if (snapshotState == SNAPSHOT_STATE_SAVED) {
-      return <Icon icon="ix:success" width="18" height="18" />;
+      return <div className="i-ix:success w-4 h-4" />;
     } else if (snapshotState == SNAPSHOT_STATE_NOT_SAVE) {
-      return <Icon icon="line-md:question" width="18" height="18" />;
+      return <div className="i-line-md:question w-4 h-4" />;
     } else {
       return (
-        <Icon icon="material-symbols:error-outline" width="18" height="18" />
+        <div className="i-material-symbols:error-outline w-4 h-4" />
       );
     }
   };
@@ -213,10 +212,8 @@ const JobSnapshotAssistant: React.FC<Props> = (props) => {
               disabled={getSnapshotButtonDisabledBySnapshotState()}
               className={`inline-grid place-items-center border align-middle select-none font-sans font-medium text-center transition-all duration-300 ease-in disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-sm min-w-[38px] min-h-[38px] rounded-md shadow-sm hover:shadow-md bg-stone-200 border-stone-200 text-stone-800 hover:bg-stone-100`}
             >
-              <Icon
-                icon="qlementine-icons:snapshot-16"
-                width="32"
-                height="32"
+              <div
+                className="i-qlementine-icons:snapshot-16 w-8 h-8"
               />
             </button>
             <span

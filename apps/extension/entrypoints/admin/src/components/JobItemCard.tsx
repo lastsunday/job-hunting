@@ -9,7 +9,6 @@ import {
 import Link from 'antd/es/typography/Link';
 import styles from './JobItemCard.module.css';
 
-import { Icon } from '@iconify/react';
 import Card from 'antd/es/card/Card';
 import Paragraph from 'antd/es/typography/Paragraph';
 import dayjs from 'dayjs';
@@ -135,7 +134,7 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
       >
         <Flex justify="space-between" align="center">
           <Tag
-            icon={<Icon icon="formkit:datetime" />}
+            icon={<div className="i-formkit:datetime inline-flex" />}
             style={{
               backgroundColor: getTimeColorByOffsetTimeDay(publishDatetime),
               color: 'white',
@@ -159,9 +158,8 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
         <Flex className={styles.item}>
           {isToday(createDatetime) ? (
             <div className={styles.newBadge}>
-              <Icon
-                className={styles.newBadgeIcon}
-                icon="foundation:burst-new"
+              <div
+                className={`${styles.newBadgeIcon} i-foundation:burst-new`}
               />
             </div>
           ) : null}
@@ -255,10 +253,10 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
           className={`${styles.marginTop} ${styles.item}`}
         >
           <Text ellipsis className={styles.address}>
-            <Icon icon="entypo:address" /> {address}
+            <div className="i-entypo:address inline-flex" /> {address}
           </Text>
           <Text style={{ color: '#1677ff' }}>
-            <Icon icon="mdi:location" />
+            <div className="i-mdi:location inline-flex" />
             定位
           </Text>
         </Flex>

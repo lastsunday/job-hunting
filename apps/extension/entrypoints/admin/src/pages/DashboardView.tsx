@@ -18,7 +18,6 @@ import {
   TYPE_ENUM_WEEK,
 } from '@/common/data/bo/jobStatisticGroupByPublishDateBO';
 import { SearchJobBO } from '@/common/data/bo/searchJobBO';
-import { Icon } from '@iconify/react';
 import { Card, Col, Flex, Row, Select, Typography } from 'antd';
 import ReactEChartsCore from 'echarts-for-react/lib/core';
 import { BarChart } from 'echarts/charts';
@@ -129,7 +128,7 @@ const BackgroundChart: React.FC<BackgroundChartProps> = ({
   loading = true,
 }) => {
   const { total, items } = data;
-  let sortItems = items.toReversed();
+  const sortItems = items.toReversed();
   const nameArray = sortItems.map((item) => item.name);
   const countArray = sortItems.map((item) => item.count);
   let calTotal = 0;
@@ -307,13 +306,13 @@ const companyWebsiteList = [
 ];
 
 const genNumberArray = (start, count) => {
-  let result = [];
+  const result = [];
   for (let i = start; i <= count; i++) {
     result.push(i.toString().padStart(2, '0'));
   }
   return result;
 };
-let MONTH_NAME_OBJECT = {
+const MONTH_NAME_OBJECT = {
   '01': '一月',
   '02': '二月',
   '03': '三月',
@@ -332,7 +331,7 @@ const convertMonthName = (name) => {
   return MONTH_NAME_OBJECT[name] ?? name;
 };
 
-let WEEK_NAME_OBJECT = {
+const WEEK_NAME_OBJECT = {
   '1': '星期一',
   '2': '星期二',
   '3': '星期三',
@@ -341,7 +340,7 @@ let WEEK_NAME_OBJECT = {
   '6': '星期六',
   '7': '星期日',
 };
-let WEEK_NAME_ARRAY = ['1', '2', '3', '4', '5', '6', '7'];
+const WEEK_NAME_ARRAY = ['1', '2', '3', '4', '5', '6', '7'];
 const convertWeekName = (name) => {
   return WEEK_NAME_OBJECT[name] ?? name;
 };
@@ -379,7 +378,7 @@ const COMPANY_INSURANCE_NAME_ARRAY = [
   '500-1000',
   '>1000',
 ];
-let COMPANY_INSURANCE_OBJECT = {
+const COMPANY_INSURANCE_OBJECT = {
   '-': '?',
 };
 const convertCompanyInsuranceName = (name) => {
@@ -406,9 +405,9 @@ const convertToChartData = ({
   countKey = 'total',
   fetchCountKey = 'total',
 }) => {
-  let result = [];
-  let nameArray = [];
-  let nameMap = new Map();
+  const result = [];
+  const nameArray = [];
+  const nameMap = new Map();
   if (defaultNameArray) {
     defaultNameArray.forEach((name) => {
       nameMap.set(name, null);
@@ -421,10 +420,10 @@ const convertToChartData = ({
     }
   });
   nameArray.forEach((name) => {
-    let filterItem = queryResult.filter((item) => {
+    const filterItem = queryResult.filter((item) => {
       return item.name == name;
     });
-    let obj = {};
+    const obj = {};
     obj[`name`] = convertNameFunction ? convertNameFunction(name) : name;
     obj[`${countKey}`] =
       filterItem.length > 0 ? filterItem[0][`${fetchCountKey}`] : 0;
@@ -477,8 +476,8 @@ const DashboardView: React.FC = () => {
 
   useEffect(() => {
     const getWhitelist = async () => {
-      let allTags = await TagApi.getAllTag();
-      let tagItems = [];
+      const allTags = await TagApi.getAllTag();
+      const tagItems = [];
       allTags.forEach((item) => {
         tagItems.push({ value: item.tagName, code: item.tagId });
       });
@@ -493,7 +492,7 @@ const DashboardView: React.FC = () => {
         const statisticJobBrowse = await JobApi.statisticJobBrowse();
         const statisticCompany = await CompanyApi.statisticCompany();
         const statisticCompanyTag = await CompanyApi.statisticCompanyTag();
-        let todayResult = [];
+        const todayResult = [];
         todayResult.push({
           name: '今天查看职位',
           count: statisticJobBrowse.todayBrowseDetailCount,
@@ -537,7 +536,7 @@ const DashboardView: React.FC = () => {
           unit: '个',
         });
         setTodayStatisticData(todayResult);
-        let chartResult = [];
+        const chartResult = [];
         const statisticJobSearchGroupByAvgSalaryParam = new SearchJobBO();
         const statisticJobSearchGroupByAvgSalaryResult =
           await JobApi.statisticJobSearchGroupByAvgSalary({
@@ -620,7 +619,7 @@ const DashboardView: React.FC = () => {
         try {
           setTagNameGroupDataLoading(true);
           setChartData(chartResult);
-          let tagNameGroupDataResult = await JobApi.jobTagNameStatistic({
+          const tagNameGroupDataResult = await JobApi.jobTagNameStatistic({
             pageNum: 1,
             pageSize: 15,
           });
@@ -644,13 +643,13 @@ const DashboardView: React.FC = () => {
   const queryJobStatisticJobTagGroupByPlatform = async () => {
     try {
       setJobStatisticJobCompanyTagGroupByPlatformLoading(true);
-      let jobStatisticJobCompanyTagGroupByPlatformResult =
+      const jobStatisticJobCompanyTagGroupByPlatformResult =
         await JobApi.jobStatisticJobCompanyTagGroupByPlatform({
           tagName: jobStatisticJobCompanyTagGroupByPlatformValue,
         });
-      let jobStatisticJobGroupByPlatformResult =
+      const jobStatisticJobGroupByPlatformResult =
         await JobApi.jobStatisticJobCompanyTagGroupByPlatform({});
-      let result = convertToChartData({
+      const result = convertToChartData({
         queryResult: jobStatisticJobCompanyTagGroupByPlatformResult,
         defaultNameArray: PLATFORM_NAME_ARRAY,
         countKey: 'count',
@@ -666,7 +665,7 @@ const DashboardView: React.FC = () => {
       >(jobStatisticJobGroupByPlatformResult.map((obj) => [obj.name, obj]));
       const items = [];
       PLATFORM_NAME_ARRAY.forEach((name) => {
-        let obj: any = Object.assign(
+        const obj: any = Object.assign(
           {},
           jobStatisticJobCompanyTagGroupByPlatformResultMap.get(name)
         );
@@ -680,8 +679,8 @@ const DashboardView: React.FC = () => {
           item.total == 0 ? 0 : ((item.count / item.total) * 100).toFixed(2);
       });
       items.sort((a, b) => {
-        let aValue = a.total == 0 ? 0 : a.count / a.total;
-        let bValue = b.total == 0 ? 0 : b.count / b.total;
+        const aValue = a.total == 0 ? 0 : a.count / a.total;
+        const bValue = b.total == 0 ? 0 : b.count / b.total;
         return -(aValue - bValue);
       });
       setJobStatisticJobCompanyTagGroupByPlatform({ items });
@@ -697,7 +696,7 @@ const DashboardView: React.FC = () => {
   const queryJobStatisticJobTagGroupByCompany = async () => {
     try {
       setJobStatisticJobCompanyTagGroupByCompanyLoading(true);
-      let jobStatisticJobCompanyTagGroupByCompanyResult =
+      const jobStatisticJobCompanyTagGroupByCompanyResult =
         await JobApi.jobStatisticJobCompanyTagGroupByCompany({
           pageNum: 1,
           pageSize: 15,
@@ -838,7 +837,7 @@ const DashboardView: React.FC = () => {
                   <Link href={item.url} target="_blank" className="flexCenter">
                     <Row>
                       <Col xs={24} className="flexCenter">
-                        <Icon className="companyLogo" icon="mdi:web" />
+                        <div className="i-mdi-web w-10 h-10" />
                       </Col>
                       <Col xs={24} className="cardLabel flexCenter">
                         <Flex>{item.label}</Flex>

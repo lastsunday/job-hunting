@@ -12,7 +12,6 @@ import { useJob } from '../../hooks/job';
 import './FavoriteJobView.css';
 import styles from './FavoriteJobView.module.css';
 import JobSnapshotHistory from '@/entrypoints/components/JobSnapshotHistory';
-import { Icon } from '@iconify/react';
 import { JobSnapshotSearchBO } from '@/common/data/bo/jobSnapshotSearchBO';
 import { JobSnapshot } from '@/common/data/domain/jobSnapshot';
 import useJobSnapshotStore from '../../store/JobSnapshotStore';
@@ -194,10 +193,8 @@ const HistoryJobView: React.FC = () => {
                                 getSnapshotItemByIdCallback
                               }
                               icon={
-                                <Icon
-                                  icon="ix:history-list"
-                                  width="18"
-                                  height="18"
+                                <div
+                                  className="i-ix:history-list w-3.5 h-3.5"
                                 />
                               }
                             />
