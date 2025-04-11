@@ -6,6 +6,7 @@ import { getChangeLogList, initChangeLog } from "./changeLog";
 import { ChangeLogV1 } from "./changeLog/changeLogV1";
 import { ChangeLogV10 } from './changeLog/changeLogV10';
 import { ChangeLogV11 } from './changeLog/changeLogV11';
+import { ChangeLogV12 } from './changeLog/changeLogV12';
 import { ChangeLogV2 } from "./changeLog/changeLogV2";
 import { ChangeLogV3 } from './changeLog/changeLogV3';
 import { ChangeLogV4 } from './changeLog/changeLogV4';
@@ -35,11 +36,11 @@ export async function getOne(sql, bind, obj, { connection = null } = {}) {
   let resultItem = null;
   const { rows } = await connection.query(sql, bind);
   if (rows.length > 0) {
-    let item = rows[0];
+    const item = rows[0];
     resultItem = obj;
-    let keys = Object.keys(item);
+    const keys = Object.keys(item);
     for (let n = 0; n < keys.length; n++) {
-      let key = keys[n];
+      const key = keys[n];
       resultItem[toHump(key)] = item[key];
     }
   }
@@ -49,14 +50,14 @@ export async function getOne(sql, bind, obj, { connection = null } = {}) {
 export async function getAll(sql, bind, obj, { connection = null } = {}) {
   connection ??= await getDb();
   const { rows } = await connection.query(sql, bind);
-  let result = [];
+  const result = [];
   if (rows.length > 0) {
     for (let i = 0; i < rows.length; i++) {
-      let item = rows[i];
-      let resultItem = Object.assign({}, obj);
-      let keys = Object.keys(item);
+      const item = rows[i];
+      const resultItem = Object.assign({}, obj);
+      const keys = Object.keys(item);
       for (let n = 0; n < keys.length; n++) {
-        let key = keys[n];
+        const key = keys[n];
         resultItem[toHump(key)] = item[key];
       }
       result.push(resultItem);
@@ -66,10 +67,10 @@ export async function getAll(sql, bind, obj, { connection = null } = {}) {
 }
 
 export function genFullSelectSQL(obj, tableName) {
-  let column = [];
-  let keys = Object.keys(obj);
+  const column = [];
+  const keys = Object.keys(obj);
   for (let n = 0; n < keys.length; n++) {
-    let key = keys[n];
+    const key = keys[n];
     column.push(toLine(key));
   }
   return `SELECT ${column.join(",")} FROM ${tableName}`;
@@ -90,50 +91,50 @@ export async function batchInsertOrReplace(obj, tableName, tableIdColumn, params
     //Maximum Number Of Host Parameters In A Single SQL Statement
     //To prevent excessive memory allocations, the maximum value of a host parameter number is SQLITE_MAX_VARIABLE_NUMBER, which defaults to 999 for SQLite versions prior to 3.32.0 (2020-05-22) or 32766 for SQLite versions after 3.32.0.
     //在PGlite里暂时先借用该规则，这数值不一定合理。
-    let maxVarLength = 32766;
-    let paramVarLength = Object.keys(obj).length;
-    let maxRecordCountForOneExec = Number.parseInt(maxVarLength / paramVarLength);
-    let recordTotal = params.length;
+    const maxVarLength = 32766;
+    const paramVarLength = Object.keys(obj).length;
+    const maxRecordCountForOneExec = Number.parseInt(maxVarLength / paramVarLength);
+    const recordTotal = params.length;
     let count = Number.parseInt(recordTotal / maxRecordCountForOneExec);
-    let modCount = recordTotal % maxRecordCountForOneExec;
+    const modCount = recordTotal % maxRecordCountForOneExec;
     if (modCount > 0) {
       count = count + 1;
     }
     for (let i = 0; i < count; i++) {
-      let start = i * maxRecordCountForOneExec;
+      const start = i * maxRecordCountForOneExec;
       let end = (i + 1) * maxRecordCountForOneExec;
       if (i == count.length - 1) {
         //last index
         end = recordTotal;
       }
-      let rangeParam = params.slice(start, end);
+      const rangeParam = params.slice(start, end);
       const batchInsertOrReplaceSQL = genRawBatchFullInsertOrReplaceSQL(obj, tableName, tableIdColumn, rangeParam, { replace, overrideCreateDatetime });
       if (isDebug()) {
         debugLog(`[database] [batchInsertOrReplace] batchInsertOrReplaceSQL = ${batchInsertOrReplaceSQL}`)
       }
-      let bindValue = genInsertValueBindValue(obj, rangeParam, { overrideCreateDatetime, overrideUpdateDatetime });
+      const bindValue = genInsertValueBindValue(obj, rangeParam, { overrideCreateDatetime, overrideUpdateDatetime });
       await connection.query(batchInsertOrReplaceSQL, bindValue);
     }
   }
 }
 
 export function genRawBatchFullInsertOrReplaceSQL(obj, tableName, tableIdColumn, params, { replace = true, overrideCreateDatetime = false } = {}) {
-  let column = [];
-  let keys = Object.keys(obj);
+  const column = [];
+  const keys = Object.keys(obj);
   for (let n = 0; n < keys.length; n++) {
-    let key = keys[n];
+    const key = keys[n];
     column.push(toLine(key));
   }
-  let valuesSql = genInsertValueSQL(obj, params);
-  let updateSql = replace ? genUpdateValueSQL(obj, tableIdColumn, { overrideCreateDatetime }) : '';
+  const valuesSql = genInsertValueSQL(obj, params);
+  const updateSql = replace ? genUpdateValueSQL(obj, tableIdColumn, { overrideCreateDatetime }) : '';
   return `INSERT INTO ${tableName} (${column.join(",")}) VALUES ${valuesSql} ${updateSql}`;
 }
 
 function genUpdateValueSQL(obj, tableIdColumn, { overrideCreateDatetime = false } = {}) {
-  let updateColumns = [];
-  let keys = Object.keys(obj);
+  const updateColumns = [];
+  const keys = Object.keys(obj);
   for (let i = 0; i < keys.length; i++) {
-    let key = toLine(keys[i]);
+    const key = toLine(keys[i]);
     if (key != "create_datetime" || overrideCreateDatetime) {
       updateColumns.push(`${toLine(key)} = EXCLUDED.${key}`);
     }
@@ -142,13 +143,13 @@ function genUpdateValueSQL(obj, tableIdColumn, { overrideCreateDatetime = false 
 }
 
 function genInsertValueBindValue(obj, params, { overrideCreateDatetime = false, overrideUpdateDatetime = false } = {}) {
-  let now = new Date();
-  let values = [];
-  let keys = Object.keys(obj);
+  const now = new Date();
+  const values = [];
+  const keys = Object.keys(obj);
   for (let i = 0; i < params.length; i++) {
-    let param = params[i];
+    const param = params[i];
     for (let n = 0; n < keys.length; n++) {
-      let key = keys[n];
+      const key = keys[n];
       if (key == "createDatetime") {
         if (overrideCreateDatetime) {
           values.push(`${dayjs(param[`${key}` ?? now]).format()}`);
@@ -162,7 +163,7 @@ function genInsertValueBindValue(obj, params, { overrideCreateDatetime = false, 
           values.push(`${dayjs(now).format()}`);
         }
       } else {
-        let value = convertEmptyStringToNull(param[`${key}`]);
+        const value = convertEmptyStringToNull(param[`${key}`]);
         values.push(value);
       }
     }
@@ -171,10 +172,10 @@ function genInsertValueBindValue(obj, params, { overrideCreateDatetime = false, 
 }
 
 function genInsertValueSQL(obj, params) {
-  let insertValues = [];
+  const insertValues = [];
   for (let i = 0; i < params.length; i++) {
-    let values = [];
-    let keys = Object.keys(obj);
+    const values = [];
+    const keys = Object.keys(obj);
     for (let n = 0; n < keys.length; n++) {
       values.push(`$${i * keys.length + n + 1}`);
     }
@@ -217,7 +218,7 @@ export async function batchGet(obj, tableName, idColumnName, ids, { connection =
 }
 
 export function genFullSelectByIdsSQL(obj, tableName, idColumnName, ids) {
-  let idsString = "'" + ids.join("','") + "'";
+  const idsString = "'" + ids.join("','") + "'";
   return `${genFullSelectSQL(obj, tableName)} WHERE ${idColumnName} in (${idsString})`;
 }
 
@@ -232,7 +233,7 @@ export async function del(tableName, idColumn, id, { otherCondition = null, conn
 
 export async function batchDel(tableName, idColumn, ids, { otherCondition = null, connection = null } = {}) {
   connection ??= await getDb();
-  let idsString = "'" + ids.join("','") + "'";
+  const idsString = "'" + ids.join("','") + "'";
   const deleteSql = `DELETE FROM ${tableName} WHERE ${idColumn} in (${idsString}) ${otherCondition ? "AND " + otherCondition : ""}`;
   if (isDebug()) {
     debugLog(`[database] [batchDel] deleteSql = ${deleteSql}`)
@@ -262,8 +263,8 @@ export async function search(entity, tableName, param, whereConditionFunction, {
   }
   let limit = '';
   if (param.pageNum != null && param.pageSize != null) {
-    let limitStart = (param.pageNum - 1) * param.pageSize;
-    let limitEnd = param.pageSize;
+    const limitStart = (param.pageNum - 1) * param.pageSize;
+    const limitEnd = param.pageSize;
     limit = " limit " + limitEnd + " OFFSET " + limitStart;
   }
   const sqlSearchQuery = genFullSelectSQL(Object.assign({}, entity), tableName);
@@ -271,14 +272,14 @@ export async function search(entity, tableName, param, whereConditionFunction, {
   sqlQuery += whereCondition;
   sqlQuery += orderBy;
   sqlQuery += limit;
-  let items = [];
+  const items = [];
   const { rows: queryRows } = await connection.query(sqlQuery);
   for (let i = 0; i < queryRows.length; i++) {
-    let resultItem = Object.assign({}, entity);
-    let item = queryRows[i];
-    let keys = Object.keys(item);
+    const resultItem = Object.assign({}, entity);
+    const item = queryRows[i];
+    const keys = Object.keys(item);
     for (let n = 0; n < keys.length; n++) {
-      let key = keys[n];
+      const key = keys[n];
       resultItem[toHump(key)] = item[key];
     }
     items.push(resultItem);
@@ -301,7 +302,7 @@ export async function searchCount(entity, tableName, param, whereConditionFuncti
   sqlCountSubTable += sqlSearchQuery;
   sqlCountSubTable += whereCondition;
   //count
-  let sqlCount = `SELECT COUNT(*) AS total FROM (${sqlCountSubTable}) AS t1`;
+  const sqlCount = `SELECT COUNT(*) AS total FROM (${sqlCountSubTable}) AS t1`;
   const { rows } = await connection.query(sqlCount);
   const total = rows[0].total;
   return total;
@@ -345,7 +346,7 @@ export const Database = {
       if (!initializing) {
         try {
           debugLog("Loading and initializing...");
-          let changelogList = [];
+          const changelogList = [];
           changelogList.push(new ChangeLogV1());
           changelogList.push(new ChangeLogV2());
           changelogList.push(new ChangeLogV3());
@@ -357,6 +358,7 @@ export const Database = {
           changelogList.push(new ChangeLogV9());
           changelogList.push(new ChangeLogV10());
           changelogList.push(new ChangeLogV11());
+          changelogList.push(new ChangeLogV12());
           initChangeLog(changelogList);
           initDb();
           initializing = true;
@@ -377,7 +379,7 @@ export const Database = {
    */
   dbExport: async function (message, param) {
     try {
-      let file = await db.dumpDataDir();
+      const file = await db.dumpDataDir();
       postSuccessMessage(message, URL.createObjectURL(file));
     } catch (e) {
       postErrorMessage(message, "[worker] dbExport error : " + e.message);
@@ -429,7 +431,7 @@ export const Database = {
   },
   dbSize: async function (message, param) {
     try {
-      let sql = `SELECT SUM(t1.pg_relation_size) AS total FROM (SELECT PG_RELATION_SIZE(relid) FROM pg_stat_user_tables) AS t1`;
+      const sql = `SELECT SUM(t1.pg_relation_size) AS total FROM (SELECT PG_RELATION_SIZE(relid) FROM pg_stat_user_tables) AS t1`;
       const { rows } = await (await getDb()).query(sql);
       const total = rows[0].total;
       postSuccessMessage(message, { total });
@@ -442,7 +444,7 @@ export const Database = {
   },
   dbSchemaVersion: async function (message, param) {
     try {
-      let sql = `SELECT num FROM version;`;
+      const sql = `SELECT num FROM version;`;
       const { rows } = await (await getDb()).query(sql);
       const version = rows[0].num;
       postSuccessMessage(message, { version });
@@ -455,7 +457,7 @@ export const Database = {
   },
   dbExec: async function (message, param) {
     try {
-      let sql = param.sql;
+      const sql = param.sql;
       const { rows, fields, affectedRows } = await (await getDb()).query(sql);
       postSuccessMessage(message, { result: { rows, fields, affectedRows } });
     } catch (e) {
@@ -467,7 +469,7 @@ export const Database = {
   },
   dbGetAllTableName: async function (message, param) {
     try {
-      let sql = `select tablename as name from pg_tables where schemaname = 'public'`;
+      const sql = `select tablename as name from pg_tables where schemaname = 'public'`;
       const { rows: result } = await (await getDb()).query(sql);
       postSuccessMessage(message, { result });
     } catch (e) {
@@ -507,9 +509,9 @@ const initDb = async function () {
     db = new PGlite(dataDir);
   }
   infoLog("[DB] schema checking...");
-  let changelogList = getChangeLogList();
+  const changelogList = getChangeLogList();
   let oldVersion = 0;
-  let newVersion = changelogList.length;
+  const newVersion = changelogList.length;
   try {
     await db.transaction(async (tx) => {
       const SQL_CREATE_TABLE_VERSION = `
@@ -519,8 +521,8 @@ const initDb = async function () {
       `;
       await tx.exec(SQL_CREATE_TABLE_VERSION);
       const SQL_QUERY_VERSION = "SELECT num FROM version";
-      let result = await tx.query(SQL_QUERY_VERSION);
-      let rows = result.rows;
+      const result = await tx.query(SQL_QUERY_VERSION);
+      const rows = result.rows;
       if (rows.length > 0) {
         oldVersion = rows[0].num;
       } else {
@@ -533,9 +535,9 @@ const initDb = async function () {
       if (newVersion > oldVersion) {
         infoLog("[DB] schema upgrade start");
         for (let i = oldVersion; i < newVersion; i++) {
-          let currentVersion = i + 1;
-          let changelog = changelogList[i];
-          let sqlList = changelog.getSqlList();
+          const currentVersion = i + 1;
+          const changelog = changelogList[i];
+          const sqlList = changelog.getSqlList();
           infoLog(
             "[DB] schema upgrade changelog version = " +
             currentVersion +
@@ -551,7 +553,7 @@ const initDb = async function () {
               "/" +
               sqlList.length
             );
-            let sql = sqlList[seq];
+            const sql = sqlList[seq];
             await tx.exec(sql);
           }
         }
@@ -570,11 +572,11 @@ const initDb = async function () {
 };
 
 export function convertRows(rows) {
-  let result = [];
+  const result = [];
   if (rows.length > 0) {
-    let keys = Object.keys(rows[0]);
+    const keys = Object.keys(rows[0]);
     rows.forEach(item => {
-      let obj = {};
+      const obj = {};
       keys.forEach(key => {
         obj[toHump(key)] = item[key]
       });

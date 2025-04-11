@@ -68,14 +68,19 @@
    9. 职位分析
    10. 职位年龄限制检测
 
-2. 爱企查公司卡片
+2. 招聘网站详情页
+
+   1. 保存职位快照
+   2. 历史职位快照
+
+3. 爱企查公司卡片
 
    1. 显示额外信息
    2. 保存公司数据到本地数据库
    3. 公司标签编辑
    4. 公司评论
 
-3. 管理页面
+4. 管理页面
 
    1. 首页展示招聘网站和企业搜索网站的快捷入口
    2. 数据统计图表
@@ -97,6 +102,7 @@
       3. 标签（增删查），标签私密性更改（备注：私有标签不会被上传）
       4. 公司标签（增删改查导）
       5. 职位标签（增删改查导）
+      6. 职位快照（删查导）
    4. 个人助理，设置职位偏好，快速找到感兴趣的职位
    5. 自动化任务，支持自动浏览职位搜索页。（前程无忧，BOSS直聘，智联招聘，拉勾网，猎聘网）
    6. 讨论区板块，根据省市区区分
@@ -127,6 +133,18 @@
 
 <div style="margin-top:30px">
     <img src="docs\introduction\job-recommend-boss.jpg" alt="51job" width="1000px"/>
+</div>
+
+### 详情页
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\job-snapshot-51job.jpg" alt="job-snapshot-51job" width="1000px"/>
+</div>
+
+### 职位快照
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\job-snapshot-history-51job.jpg" alt="job-snapshot-history-51job" width="1000px"/>
 </div>
 
 #### 爱企查
@@ -182,6 +200,12 @@
 
 <div style="margin-top:30px">
     <img src="docs\introduction\sidepanel_admin_job.png" alt="sidepanel_admin_job" width="1000px"/>
+</div>
+
+#### 职位快照
+
+<div style="margin-top:30px">
+    <img src="docs\introduction\sidepanel_admin_job_snapshot_setting.jpg" alt="sidepanel_admin_job_snapshot_setting" width="1000px"/>
 </div>
 
 #### 系统设置

@@ -15,12 +15,19 @@ import './BasicMap.css';
 import JobPin from './map/JobPin';
 import JobPopup from './map/JobPopup';
 
+import { JobSnapshotApi } from '@/common/api';
+import { JobSnapshotSearchBO } from '@/common/data/bo/jobSnapshotSearchBO';
+import { JobSnapshot } from '@/common/data/domain/jobSnapshot';
+import JobSnapshotHistory from '@/entrypoints/components/JobSnapshotHistory';
+import { Icon } from '@iconify/react';
 import { FeatureCollection } from 'geojson';
 import { GeoJSONSource } from 'maplibre-gl';
 import { useJob } from '../hooks/job';
 import { useUtil } from '../hooks/util';
 import JobItemCard from './JobItemCard';
 import JobModal from './JobModal';
+import useJobSnapshotStore from '../store/JobSnapshotStore';
+import { useShallow } from 'zustand/shallow';
 
 const { convertJobDataToGeojson } = useJob();
 
@@ -50,8 +57,12 @@ const BasicMap: React.FC<BasicMapProps> = ({
   const [clusterData, setClusterData] = useState([]);
   const [jobModalData, setJobModalData] = useState<JobData>();
   const [refresh, setRefresh] = useState(false);
+  const [snapshotItems, setSnapshotItems] = useState<JobSnapshot>([]);
+  const [jobSnapshotConfig] = useJobSnapshotStore(
+    useShallow((state) => [state.config])
+  );
 
-  useEffect(() => {
+  const resetData = async () => {
     setPopupInfo(null);
     const itemMap = createMap();
     data.forEach((item) => {
@@ -60,6 +71,16 @@ const BasicMap: React.FC<BasicMapProps> = ({
     setItemIdMap(itemMap);
     setGeojsonData(convertJobDataToGeojson(data));
     setClusterData([]);
+    if (jobSnapshotConfig.enable) {
+      const result = await getSnapshotItemsByJobIds(
+        data.map((item) => item.id)
+      );
+      setSnapshotItems(result);
+    }
+  };
+
+  useEffect(() => {
+    resetData();
   }, [data]);
 
   useEffect(() => {
@@ -151,6 +172,26 @@ const BasicMap: React.FC<BasicMapProps> = ({
   const onCardClickHandle = (data: JobData) => {
     setJobModalData(data);
     setRefresh(!refresh);
+  };
+
+  const getSnapshotItemsByJobIds = async (jobIds: string[]) => {
+    const jobSnapshotSearchBO = new JobSnapshotSearchBO();
+    jobSnapshotSearchBO.orderByColumn = 'updateDatetime';
+    jobSnapshotSearchBO.orderBy = 'DESC';
+    jobSnapshotSearchBO.jobIds = jobIds;
+    jobSnapshotSearchBO.skipContent = true;
+    const { items } = await JobSnapshotApi.jobSnapshotSearch(
+      jobSnapshotSearchBO
+    );
+    return items;
+  };
+
+  const getSnapshotItemsByJobIdCallback = async (jobId: string) => {
+    return await getSnapshotItemsByJobIds([jobId]);
+  };
+
+  const getSnapshotItemByIdCallback = async (id: string) => {
+    return await JobSnapshotApi.jobSnapshotGetById(id);
   };
 
   return (
@@ -282,6 +323,32 @@ const BasicMap: React.FC<BasicMapProps> = ({
                     data={item}
                     onCardClick={onCardClickHandle}
                     onLocate={locate}
+                    historyElement={
+                      jobSnapshotConfig.enable ? (
+                        <JobSnapshotHistory
+                          key={snapshotItems.length}
+                          jobId={item.id}
+                          getSnapshotTotalCallback={async () => {
+                            return snapshotItems.filter(
+                              (snapshot) => snapshot.jobId == item.id
+                            ).length;
+                          }}
+                          getSnapshotItemsByJobIdCallback={
+                            getSnapshotItemsByJobIdCallback
+                          }
+                          getSnapshotItemByIdCallback={
+                            getSnapshotItemByIdCallback
+                          }
+                          icon={
+                            <Icon
+                              icon="ix:history-list"
+                              width="18"
+                              height="18"
+                            />
+                          }
+                        />
+                      ) : null
+                    }
                   ></JobItemCard>
                 );
               })}

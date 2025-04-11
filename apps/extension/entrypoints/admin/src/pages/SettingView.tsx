@@ -1,33 +1,36 @@
-import { APP_ID } from '@/common/config';
+import { DATA_TYPE_NAME_JOB_SNAPSHOT } from '@/common';
+import {
+  APP_ID,
+  COMPANY_MAX_EXPORT_SIZE,
+  COMPANY_TAG_MAX_EXPORT_SIZE,
+  JOB_MAX_EXPORT_SIZE,
+  JOB_SNAPSHOT_MAX_EXPORT_SIZE,
+  JOB_TAG_MAX_EXPORT_SIZE,
+} from '@/common/config';
 import { CheckCard } from '@ant-design/pro-components';
 import { Icon } from '@iconify/react';
 import {
   Button,
   Card,
   Flex,
+  message,
   Modal,
+  Switch,
   Tooltip,
   Typography,
-  message,
-  Switch,
 } from 'antd';
 import Markdown from 'marked-react';
 import React from 'react';
 import { useShallow } from 'zustand/shallow';
 import { useData } from '../hooks/data';
+import useAnalysisStore from '../store/AnalysisStore';
 import useAuthStore from '../store/AuthStore';
 import useDataSharePlanStore from '../store/DataSharePlanStore';
 import useSystemStore from '../store/SystemStore';
 import DataBackupRestore from './setting/DataBackupRestore';
 import DatabaseBackupRestore from './setting/DatabaseBackupRestore';
+import useJobSnapshotStore from '../store/JobSnapshotStore';
 const { Text, Link } = Typography;
-import {
-  JOB_MAX_EXPORT_SIZE,
-  COMPANY_MAX_EXPORT_SIZE,
-  JOB_TAG_MAX_EXPORT_SIZE,
-  COMPANY_TAG_MAX_EXPORT_SIZE,
-} from '@/common/config';
-import useAnalysisStore from '../store/AnalysisStore';
 
 const version = __APP_VERSION__;
 
@@ -43,6 +46,10 @@ const SettingView: React.FC = () => {
   );
   const [dataSharePlanEnable, setDataSharePlanEnable] = useState(false);
   const [analysisEnable, setAnalysisEnable] = useState(false);
+  const [jobSnapshotEnable, setJobSnapshotEnable] = useState(false);
+  const [jobSnapshotConfig, updateJobSnapshotConfig] = useJobSnapshotStore(
+    useShallow((state) => [state.config, state.update])
+  );
   const {
     getJobDataToExcelJsonArray,
     getJobDataTotal,
@@ -60,6 +67,10 @@ const SettingView: React.FC = () => {
     COMPANY_FILE_HEADER,
     COMPANY_TAG_FILE_HEADER,
     JOB_TAG_FILE_HEADER,
+    JOB_SNAPSHOT_FILE_HEADER,
+    saveJobSnapshotData,
+    getJobSnapshotDataTotal,
+    getJobSnapshotDataToJsonArray,
   } = useData();
   const [isHowToUpdateModalOpen, setIsHowToUpdateModalOpen] = useState(false);
   const [isVersionDescModalOpen, setIsVersionDescModalOpen] = useState(false);
@@ -100,6 +111,7 @@ const SettingView: React.FC = () => {
   useEffect(() => {
     setDataSharePlanEnable(enable);
     setAnalysisEnable(analysisConfig.enable);
+    setJobSnapshotEnable(jobSnapshotConfig.enable);
     if (enable) {
       setIsDangerDataShareMenuOpen(true);
     }
@@ -309,7 +321,7 @@ const SettingView: React.FC = () => {
             </Flex>
           </Flex>
         </Card>
-        <Card title="职位分析" bordered={false} size="small">
+        <Card title="职位分析" variant="borderless" size="small">
           <CheckCard.Group
             onChange={async (value) => {
               if (value) {
@@ -328,6 +340,25 @@ const SettingView: React.FC = () => {
             <CheckCard title="关闭" description="关闭职位分析" value={false} />
           </CheckCard.Group>
         </Card>
+        <Card title="职位快照" variant="borderless" size="small">
+          <CheckCard.Group
+            onChange={async (value) => {
+              if (value) {
+                jobSnapshotConfig.enable = true;
+                await updateJobSnapshotConfig(jobSnapshotConfig);
+                setJobSnapshotEnable(true);
+              } else {
+                jobSnapshotConfig.enable = false;
+                await updateJobSnapshotConfig(jobSnapshotConfig);
+                setJobSnapshotEnable(false);
+              }
+            }}
+            value={jobSnapshotEnable}
+          >
+            <CheckCard title="开启" description="开启职位快照" value={true} />
+            <CheckCard title="关闭" description="关闭职位快照" value={false} />
+          </CheckCard.Group>
+        </Card>
         <Card
           title=<Flex align="center" gap={5}>
             <Text>数据共享计划</Text>
@@ -342,7 +373,7 @@ const SettingView: React.FC = () => {
               }}
             ></Switch>
           </Flex>
-          bordered={false}
+          variant="borderless"
           size="small"
         >
           {isDangerDataShareMenuOpen ? (
@@ -413,6 +444,19 @@ const SettingView: React.FC = () => {
               getMaxExportCount={async () => {
                 return COMPANY_TAG_MAX_EXPORT_SIZE;
               }}
+            />
+            <DataBackupRestore
+              title="职位快照"
+              getExcelJsonArrayFunction={getJobSnapshotDataToJsonArray}
+              fileHeader={JOB_SNAPSHOT_FILE_HEADER}
+              saveDataFunction={saveJobSnapshotData}
+              getDataTotalFunction={getJobSnapshotDataTotal}
+              getMaxExportCount={async () => {
+                return JOB_SNAPSHOT_MAX_EXPORT_SIZE;
+              }}
+              dataType={DATA_TYPE_NAME_JOB_SNAPSHOT}
+              format="json"
+              accept=".tar.xz"
             />
           </Flex>
         </Card>

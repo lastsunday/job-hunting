@@ -11,6 +11,7 @@ import {
   PLATFORM_JOBONLINE,
   PLATFORM_GGFW_HRSS_GD,
   TAG_SOURCE_TYPE_PLATFORM,
+  genId,
 } from "../../common";
 import { CompanyApi, JobApi, ConfigApi } from "../../common/api";
 import { httpFetchGetText } from "../../common/api/common";
@@ -92,10 +93,6 @@ export async function saveBrowseJob(list, platform) {
   }
   await JobApi.batchAddOrUpdateJobBrowse(jobs);
   infoLog("saveBrowseJob success,record size = " + list.length);
-}
-
-function genId(id, platform) {
-  return platform + "_" + id;
 }
 
 export function getJobIds(list, platform) {

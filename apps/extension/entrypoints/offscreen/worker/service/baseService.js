@@ -12,17 +12,17 @@ export class BaseService {
         this.whereConditionFunction = whereConditionFunction;
     }
 
-    async search(message, param, { detailInjectAsyncCallback = null } = {}) {
+    async search(message, param, { detailInjectAsyncCallback = null, entityClassCreateFunction = null } = {}) {
         try {
-            postSuccessMessage(message, await this._search(param, { detailInjectAsyncCallback }));
+            postSuccessMessage(message, await this._search(param, { detailInjectAsyncCallback, entityClassCreateFunction }));
         } catch (e) {
             postErrorMessage(message, `[worker] search error : ` + e.message);
         }
     }
 
-    async _search(param, { detailInjectAsyncCallback = null, connection = null } = {}) {
+    async _search(param, { detailInjectAsyncCallback = null, connection = null, entityClassCreateFunction = null } = {}) {
         let result = this.searchDTOCreateFunction();
-        result.items = await search(this.entityClassCreateFunction(), this.tableName, param, this.whereConditionFunction, { connection });
+        result.items = await search(entityClassCreateFunction ? entityClassCreateFunction() : this.entityClassCreateFunction(), this.tableName, param, this.whereConditionFunction, { connection });
         result.total = await searchCount(this.entityClassCreateFunction(), this.tableName, param, this.whereConditionFunction, { connection });
         if (detailInjectAsyncCallback) {
             result = await detailInjectAsyncCallback(result);
@@ -106,7 +106,7 @@ export class BaseService {
 
     async addOrUpdate(message, param) {
         try {
-            let result = await this._addOrUpdate(param);
+            const result = await this._addOrUpdate(param);
             postSuccessMessage(message, result);
         } catch (e) {
             postErrorMessage(
@@ -188,7 +188,7 @@ export class BaseService {
      * @param {*} param 
      */
     async _addOrUpdate(param, { overrideUpdateDatetime = false, connection = null } = {}) {
-        let idKey = toHump(this.tableIdColumn);
+        const idKey = toHump(this.tableIdColumn);
         if (param[idKey] == null) {
             param[idKey] = genUniqueId();
         }
@@ -202,8 +202,8 @@ export class BaseService {
      */
     async _batchAddOrUpdate(params, { connection = null, overrideCreateDatetime = false, overrideUpdateDatetime = false, genIdFunction = null, entityClassCreateFunction = null } = {}) {
         for (let i = 0; i < params.length; i++) {
-            let item = params[i];
-            let idKey = toHump(this.tableIdColumn);
+            const item = params[i];
+            const idKey = toHump(this.tableIdColumn);
             if (item[idKey] == null) {
                 if (genIdFunction) {
                     item[idKey] = genIdFunction(item);

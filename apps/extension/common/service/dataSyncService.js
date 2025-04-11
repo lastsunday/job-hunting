@@ -2,20 +2,20 @@ import dayjs from "dayjs";
 import { genIdFromText } from "../../common/utils";
 
 export async function getMergeDataList(items, idColumn, getByIdsCallback, customAddRecordLogic) {
-    let ids = items.flatMap(item => item[idColumn]);
-    let existsRecordList = await getByIdsCallback(ids);
-    let existsRecordIdAndObjectMap = new Map();
+    const ids = items.flatMap(item => item[idColumn]);
+    const existsRecordList = await getByIdsCallback(ids);
+    const existsRecordIdAndObjectMap = new Map();
     for (let i = 0; i < existsRecordList.length; i++) {
-        let existsRecord = existsRecordList[i];
+        const existsRecord = existsRecordList[i];
         existsRecordIdAndObjectMap.set(existsRecord[idColumn], existsRecord);
     }
-    let targetList = [];
+    const targetList = [];
     for (let i = 0; i < items.length; i++) {
-        let newRecord = items[i];
-        let existsRecord = existsRecordIdAndObjectMap.get(newRecord[idColumn]);
+        const newRecord = items[i];
+        const existsRecord = existsRecordIdAndObjectMap.get(newRecord[idColumn]);
         if (existsRecord) {
             if (customAddRecordLogic) {
-                let addItem = customAddRecordLogic(existsRecord, newRecord);
+                const addItem = customAddRecordLogic(existsRecord, newRecord);
                 if (addItem) {
                     targetList.push(addItem);
                 }
@@ -83,32 +83,32 @@ export const getValidJobData = (existsRecord, newRecord) => {
 }
 
 export async function getMergeDataListForCompanyTag(items, getByIdsCallback) {
-    let ids = items.flatMap(item => genIdFromText(item.companyName));
-    let targetList = [];
-    let existsRecordList = await getByIdsCallback(ids);
-    let companyAndTagArrayMap = new Map();
+    const ids = items.flatMap(item => genIdFromText(item.companyName));
+    const targetList = [];
+    const existsRecordList = await getByIdsCallback(ids);
+    const companyAndTagArrayMap = new Map();
     for (let i = 0; i < existsRecordList.length; i++) {
-        let existsRecord = existsRecordList[i];
-        let name = existsRecord.companyName;
+        const existsRecord = existsRecordList[i];
+        const name = existsRecord.companyName;
         if (!companyAndTagArrayMap.has(name)) {
             companyAndTagArrayMap.set(name, []);
         }
         companyAndTagArrayMap.get(name).push(existsRecord.tagName);
     }
     for (let i = 0; i < items.length; i++) {
-        let item = items[i]
-        let companyName = item.companyName;
+        const item = items[i]
+        const companyName = item.companyName;
         if (companyAndTagArrayMap.has(companyName)) {
-            let tags = item.tags;
-            let existsTags = companyAndTagArrayMap.get(companyName);
-            let existsTagsMap = new Map();
+            const tags = item.tags;
+            const existsTags = companyAndTagArrayMap.get(companyName);
+            const existsTagsMap = new Map();
             for (let n = 0; n < existsTags.length; n++) {
                 existsTagsMap.set(existsTags[n], null);
             }
-            let targetTags = [];
+            const targetTags = [];
             targetTags.push(...existsTags);
             for (let n = 0; n < tags.length; n++) {
-                let tag = tags[n];
+                const tag = tags[n];
                 if (!existsTagsMap.has(tag)) {
                     targetTags.push(tag);
                 }
@@ -121,6 +121,16 @@ export async function getMergeDataListForCompanyTag(items, getByIdsCallback) {
 }
 
 export async function getMergeDataListForTag(items, idColumn, getByIdsCallback) {
+    return await getMergeDataList(items, idColumn, getByIdsCallback, (existsRecord, newRecord) => {
+        if (dayjs(newRecord.updateDatetime).isAfter(dayjs(existsRecord.updateDatetime))) {
+            return newRecord;
+        } else {
+            //skip
+        }
+    });
+}
+
+export async function getMergeDataListForJobSnapshot(items, idColumn, getByIdsCallback) {
     return await getMergeDataList(items, idColumn, getByIdsCallback, (existsRecord, newRecord) => {
         if (dayjs(newRecord.updateDatetime).isAfter(dayjs(existsRecord.updateDatetime))) {
             return newRecord;
