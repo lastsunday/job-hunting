@@ -106,7 +106,7 @@ const TaskView: React.FC = () => {
         {
             title: '状态',
             dataIndex: 'status',
-            render: (value: string) => <Text style={{ color: getColorForStatus(value) }}><Icon icon={getIconStringForStatus(value)}></Icon>{statusFormat(value)}</Text>,
+            render: (value: string) => <Text style={{ color: getColorForStatus(value) }}><div className={`${getIconStringForStatus(value)} inline-flex`}/>{statusFormat(value)}</Text>,
             minWidth: 100,
         },
         {
@@ -115,49 +115,49 @@ const TaskView: React.FC = () => {
             render: (value: any) => <>
                 {isDownloadType(value.type) ? <Col>
                     <div>
-                        <div className="i-mdi:git-repository" />仓库：{value.username}/{
+                        <div className="i-mdi:git-repository inline-flex" />仓库：{value.username}/{
                             value.reponame
                         }
                     </div>
                     <div>
-                        <div className="i-fluent-mdl2:date-time" />日期：{dateToStr(
+                        <div className="i-fluent-mdl2:date-time inline-flex" />日期：{dateToStr(
                             value.datetime, "YYYY-MM-DD") ?? `N/A`}
                     </div>
                 </Col>
                     : null}
                 {isUploadType(value.type) ? <Col>
                     <div>
-                        <div className="i-mdi:git-repository" />仓库：{value.username}/{
+                        <div className="i-mdi:git-repository inline-flex" />仓库：{value.username}/{
                             value.reponame
                         }
                     </div>
                     <div>
-                        <div className="i-fluent-mdl2:date-time" />日期：{dateToStr(
+                        <div className="i-fluent-mdl2:date-time inline-flex" />日期：{dateToStr(
                             value.startDatetime, "YYYY-MM-DD") ?? `N/A`}-{dateToStr(
                                 value.endDatetime, "YYYY-MM-DD") ?? `N/A`}
                     </div>
                     <div>
-                        <div className="i-mdi:database-arrow-up" />数据量：{value.dataCount ?? 0
+                        <div className="i-mdi:database-arrow-up inline-flex" />数据量：{value.dataCount ?? 0
                         }
                     </div>
                 </Col>
                     : null}
                 {isMergeType(value.type) ? <Col>
                     <div>
-                        <div className="i-mdi:git-repository" />仓库：{value.username}/{
+                        <div className="i-mdi:git-repository inline-flex" />仓库：{value.username}/{
                             value.reponame
                         }
                     </div>
                     <div>
-                        <div className="i-stash:data-date" />日期：{
+                        <div className="i-stash:data-date inline-flex" />日期：{
                             dateToStr(
                                 value.datetime, "YYYY-MM-DD") ?? `N/A`}
                     </div>
                     <div>
-                        <div className="i-mdi:database-plus" />数据量：{value.dataCount ?? 0}
+                        <div className="i-mdi:database-plus inline-flex" />数据量：{value.dataCount ?? 0}
                     </div>
                     <div>
-                        <div className="i-mdi:file" />文件编号：<Text copyable>{value.dataId}</Text>
+                        <div className="i-mdi:file inline-flex" />文件编号：<Text copyable>{value.dataId}</Text>
                     </div>
                 </Col>
                     : null}
