@@ -1,18 +1,13 @@
 import react from "@vitejs/plugin-react-swc";
 import { copyFileSync } from "fs";
 import { resolve } from "path";
-import Icons from 'unplugin-icons/vite';
 import wasm from "vite-plugin-wasm";
 import { defineConfig } from 'wxt';
 
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   modules: ['@wxt-dev/unocss', '@wxt-dev/module-react'],
-  unocss: {
-    configOrPath: {
-      // mode: 'shadow-dom',
-    }
-  },
+  unocss: {},
   manifest: {
     name: "job-hunting",
     action: {
@@ -88,7 +83,7 @@ export default defineConfig({
         }
       },
       plugins: () => {
-        [react(), wasm(), Icons(),]
+        [react(), wasm()]
       },
       worker: {
         plugins: () => [wasm()],

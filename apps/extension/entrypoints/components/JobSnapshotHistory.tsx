@@ -1,6 +1,5 @@
 import { JobSnapshot } from '@/common/data/domain/jobSnapshot';
 import { dateToStr } from '@/common/utils';
-import { Icon } from '@iconify/react';
 import { Button, Tabs } from 'antd';
 import './JobSnapshotHistory.css';
 
@@ -75,7 +74,7 @@ const JobSnapshotHistory: React.FC<Props> = ({
           disabled={getHistoryButtonDisabledByHistoryTotal()}
           className="inline-grid place-items-center border align-middle select-none font-sans font-medium text-center transition-all duration-300 ease-in disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-sm  rounded-md shadow-sm hover:shadow-md bg-stone-200 border-stone-200 text-stone-800 hover:bg-stone-100"
         >
-          {icon ? icon : <Icon icon="ix:history-list" width="32" height="32" />}
+          {icon ? icon : <div className="i-ix:history-list w-8 h-8"/>}
         </button>
         {snapshotTotal > 0 ? (
           <span

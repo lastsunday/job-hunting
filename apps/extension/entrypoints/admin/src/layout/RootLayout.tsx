@@ -11,7 +11,6 @@ import {
   SettingOutlined,
   ShareAltOutlined,
 } from '@ant-design/icons';
-import { Icon } from '@iconify/react';
 import { Button, Flex, Layout, Menu, theme } from 'antd';
 import React, { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router';
@@ -129,7 +128,7 @@ const RootLayout: React.FC = () => {
             },
             {
               key: 'analysisPlan',
-              icon: <Icon icon="mdi:think-outline" />,
+              icon: <div className="i-mdi:think-outline" />,
               label: '职位分析',
               children: [...genAnalysisMenu()],
             },

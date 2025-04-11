@@ -8,7 +8,6 @@ import {
 import { FileStatisticDTO } from '@/common/data/dto/fileStatisticDTO';
 import { errorLog } from '@/common/log';
 import { convertToAbbreviation, isBlank } from '@/common/utils';
-import { Icon } from '@iconify/react';
 import {
   Alert,
   Button,
@@ -209,7 +208,7 @@ const SystemView: React.FC = () => {
             <StatisticCard
               name={
                 <Flex className={styles.title}>
-                  <Icon icon="material-symbols:database" />
+                  <div className="i-material-symbols:database" />
                   <Text>数据库大小</Text>
                 </Flex>
               }
@@ -221,7 +220,7 @@ const SystemView: React.FC = () => {
             <StatisticCard
               name={
                 <Flex className={styles.title}>
-                  <Icon icon="material-symbols:database" />
+                  <div className="i-material-symbols:database" />
                   <Text>数据库版本</Text>
                 </Flex>
               }
@@ -231,7 +230,7 @@ const SystemView: React.FC = () => {
             <StatisticCard
               name={
                 <Flex className={styles.title}>
-                  <Icon icon="material-symbols:table" />
+                  <div className="i-material-symbols:table" />
                   <Text>数据库表数量</Text>
                 </Flex>
               }
@@ -245,7 +244,7 @@ const SystemView: React.FC = () => {
             <StatisticCard
               name={
                 <Flex className={styles.title}>
-                  <Icon icon="mdi:file" />
+                  <div className="i-mdi:file" />
                   <Text>历史文件大小</Text>
                 </Flex>
               }
@@ -273,7 +272,7 @@ const SystemView: React.FC = () => {
             <StatisticCard
               name={
                 <Flex className={styles.title}>
-                  <Icon icon="mdi:file" />
+                  <div className="i-mdi:file" />
                   <Text>历史文件个数</Text>
                 </Flex>
               }
@@ -315,13 +314,13 @@ const SystemView: React.FC = () => {
                     fieldNames={{ label: 'name', value: 'name' }}
                     labelRender={({ label }) => (
                       <Flex align="center" gap={5}>
-                        <Icon icon="material-symbols:table" />
+                        <div className="i-material-symbols:table" />
                         <Text>{label}</Text>
                       </Flex>
                     )}
                     optionRender={(option) => (
                       <Flex align="center" gap={5}>
-                        <Icon icon="material-symbols:table" />
+                        <div className="i-material-symbols:table" />
                         <Text>{option.data.name}</Text>
                       </Flex>
                     )}
@@ -335,7 +334,7 @@ const SystemView: React.FC = () => {
                   }}
                   title="Alt+Enter"
                 >
-                  <Icon icon="mdi:play" />
+                  <div className="i-mdi:play" />
                   执行
                 </Button>
               </Flex>

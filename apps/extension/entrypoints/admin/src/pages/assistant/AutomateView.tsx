@@ -1,4 +1,3 @@
-import { Icon } from '@iconify/react';
 import {
   Button,
   Empty,
@@ -40,14 +39,14 @@ const { convertTaskList } = useTask();
 
 const automateFetchJobItemData = async (item: TaskData) => {
   try {
-    let result = await AutomateApi.automateFetchJobItemData({
+    const result = await AutomateApi.automateFetchJobItemData({
       url: item.url,
       platform: item.platform,
       delay: (item.delay ?? 0) * 1000,
       delayRandomRange: (item.delayRange ?? 0) * 1000,
       maxPage: item.maxPage ?? null,
     });
-    let missionLog = new MissionLog();
+    const missionLog = new MissionLog();
     missionLog.missionId = item.id;
     if (result.error) {
       missionLog.missionStatus = MISSION_STATUS_FAILURE;
@@ -55,7 +54,7 @@ const automateFetchJobItemData = async (item: TaskData) => {
     } else {
       missionLog.missionStatus = MISSION_STATUS_SUCCESS;
     }
-    let missionLogJobPageDetailDTO = new MissionLogJobPageDetailDTO();
+    const missionLogJobPageDetailDTO = new MissionLogJobPageDetailDTO();
     missionLogJobPageDetailDTO.logList = result.logList;
     missionLogJobPageDetailDTO.count = result.count;
     missionLogJobPageDetailDTO.startDatetime = result.startDatetime;
@@ -98,9 +97,9 @@ const AutomateView: React.FC<AutomateProps> = (props) => {
   useEffect(() => {
     const search = async () => {
       let result = [];
-      let query = await MissionApi.missionGetAll();
+      const query = await MissionApi.missionGetAll();
       query.forEach((item) => {
-        let targetItem = Object.assign({}, item);
+        const targetItem = Object.assign({}, item);
         targetItem.missionConfig = JSON.parse(targetItem.missionConfig);
         result.push(targetItem);
       });
@@ -129,12 +128,12 @@ const AutomateView: React.FC<AutomateProps> = (props) => {
 
   const onTaskSave = async (data: TaskData) => {
     try {
-      let mission = new Mission();
+      const mission = new Mission();
       mission.missionId = data.id;
       mission.missionName = data.name;
       mission.missionType = data.type;
       mission.missionPlatform = data.platform;
-      let missionConfig = new MissionConfigJobPageDTO();
+      const missionConfig = new MissionConfigJobPageDTO();
       missionConfig.url = data.url;
       missionConfig.delay = data.delay;
       missionConfig.delayRange = data.delayRange;
@@ -179,11 +178,11 @@ const AutomateView: React.FC<AutomateProps> = (props) => {
   };
 
   const play = async (item: TaskData) => {
-    let target = data.find((value) => value.id == item.id);
+    const target = data.find((value) => value.id == item.id);
     target.taskRunData.status = 'playing';
     setData(Object.assign([], data));
-    let newItem = await automateFetchJobItemData(item);
-    let index = data.findIndex((value) => value.id == newItem.id);
+    const newItem = await automateFetchJobItemData(item);
+    const index = data.findIndex((value) => value.id == newItem.id);
     data[index] = newItem;
     setData(Object.assign([], data));
   };
@@ -223,9 +222,9 @@ const AutomateView: React.FC<AutomateProps> = (props) => {
   };
 
   const onSortEnd = async ({ active, over }) => {
-    let ids = data.map((item) => item.id);
-    let oldIndex = ids.indexOf(active.id);
-    let newIndex = ids.indexOf(over.id);
+    const ids = data.map((item) => item.id);
+    const oldIndex = ids.indexOf(active.id);
+    const newIndex = ids.indexOf(over.id);
     const result = arrayMoveImmutable(data, oldIndex, newIndex);
     await MissionLogApi.missionSort(result.flatMap((item) => item.id));
     setData(result);
@@ -242,9 +241,8 @@ const AutomateView: React.FC<AutomateProps> = (props) => {
               type="primary"
               shape="circle"
               icon={
-                <Icon
-                  className={styles.menuButton}
-                  icon="material-symbols:double-arrow"
+                <div
+                  className={`${styles.menuButton} i-material-symbols:double-arrow`}
                 />
               }
             ></Button>
@@ -255,9 +253,8 @@ const AutomateView: React.FC<AutomateProps> = (props) => {
               type="primary"
               shape="circle"
               icon={
-                <Icon
-                  className={styles.menuButton}
-                  icon="material-symbols:play-arrow"
+                <div
+                  className={`${styles.menuButton} i-material-symbols:play-arrow`}
                 />
               }
             ></Button>
