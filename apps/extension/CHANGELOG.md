@@ -1,3 +1,13 @@
+## 3.10.1 (2025-04-11)
+
+### 🩹 Fixes
+
+- 在线加载的图标改为离线加载
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.10.0 (2025-04-10)
 
 ### 🚀 Features
