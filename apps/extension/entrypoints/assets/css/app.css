@@ -330,9 +330,39 @@ div[data-search-sol-meta] {
 .__comment_wrapper {
   display: flex;
   justify-content: end;
+  align-items: baseline;
   font-size: 14px;
   color: #414a60;
   padding-top: 5px;
+}
+
+.__comment_badge_wrapper {
+  display: inline-block;
+}
+
+.__comment_badge {
+  padding: 0px 10px;
+  border-radius: 10px;
+  color: white;
+  margin: 0 5px;
+}
+
+.__comment_badge_exists {
+  background-color: red;
+  box-shadow: red 0px 0px 11px 2px;
+}
+
+.__comment_badge_not_found {
+  background-color: yellowgreen;
+}
+
+.__comment_badge_loading {
+  background-color: black;
+  box-shadow: none;
+}
+
+.__comment_badge_error {
+  box-shadow: none;
 }
 
 .__BOSS_comment_wrapper {
@@ -471,10 +501,12 @@ div[data-search-sol-meta] {
 
 .__comment_button {
   cursor: pointer;
-  margin-left: 5px;
-  text-decoration: underline;
-  color: blue;
-  padding-right: 5px;
+  font-weight: bold;
+  padding: 3px 5px;
+  background-color: rgb(0 0 0 / 9%);
+  border-radius: 10px;
+  color: black;
+  text-decoration: none;
 }
 
 .__comment_empty_content {
