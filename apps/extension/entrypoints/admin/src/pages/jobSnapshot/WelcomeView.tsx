@@ -1,4 +1,3 @@
-import { Icon } from '@iconify/react';
 import Particles, { initParticlesEngine } from '@tsparticles/react';
 import { loadFull } from 'tsparticles';
 import { Option } from '../../components/data/tsparticlesOption';
@@ -39,21 +38,21 @@ const WelcomeView: React.FC = () => {
         <div className={styles.descWrapper}>
           <div className={styles.desc}>开启职位快照，拥有职位信息时光机。</div>
           <div className={styles.title}>
-            <Icon icon="mdi:think-outline" />
+            <div className="i-mdi:think-outline" />
             可协助你
           </div>
           <div className={styles.item}>
-            <Icon icon="material-symbols:counter-1" /> 离线浏览职位信息。
+            <div className="i-material-symbols:counter-1 inline-flex" /> 离线浏览职位信息。
           </div>
           <div className={styles.item}>
-            <Icon icon="material-symbols:counter-2" />{' '}
+            <div className="i-material-symbols:counter-2 inline-flex" />{' '}
             穿梭于不同时刻的职位信息。
           </div>
           <div className={styles.enable}>
             <button onClick={enable}>
               <div className={styles.title}>
                 现在开启
-                <Icon icon="material-symbols:electrical-services" />
+                <div className="i-material-symbols:electrical-services" />
               </div>
               <span></span>
             </button>

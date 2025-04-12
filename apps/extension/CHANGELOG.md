@@ -1,3 +1,33 @@
+## 3.11.0 (2025-04-12)
+
+### 🩹 Fixes
+
+- 新增职位（公司）评论数徽标
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
+## 3.10.2 (2025-04-11)
+
+### 🩹 Fixes
+
+- 修复任务列表白屏的问题
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
+## 3.10.1 (2025-04-11)
+
+### 🩹 Fixes
+
+- 在线加载的图标改为离线加载
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.10.0 (2025-04-10)
 
 ### 🚀 Features

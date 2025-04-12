@@ -25,7 +25,7 @@ import { SeriesData, StackBarData } from "../data/chart/StackBarData";
 
 export function useDataSharePlan() {
 
-    let STATUS_NAME_OBJECT = {
+    const STATUS_NAME_OBJECT = {
         "READY": "准备",
         "RUNNING": "运行中",
         "FINISHED": "完成",
@@ -34,7 +34,7 @@ export function useDataSharePlan() {
         "CANCEL": "取消",
     }
 
-    let STATUS_COLOR_OBJECT = {
+    const STATUS_COLOR_OBJECT = {
         "READY": "#73c0de",
         "RUNNING": "#5470c6",
         "FINISHED": "#91cc75",
@@ -43,7 +43,7 @@ export function useDataSharePlan() {
         "CANCEL": "#111111",
     }
 
-    let UPLOAD_NAME_OBJECT = {
+    const UPLOAD_NAME_OBJECT = {
         "JOB_DATA_UPLOAD": "职位数据",
         "COMPANY_DATA_UPLOAD": "公司数据",
         "COMPANY_TAG_DATA_UPLOAD": "公司标签数据",
@@ -59,10 +59,10 @@ export function useDataSharePlan() {
     }
 
     const convertToChartData = ({ startDate, endDate, queryResult, convertNameFunction = null, defaultNameArray = null, defaultColorObject = null }): StackBarData => {
-        let rangeDate = genRangeDate(startDate, endDate);
+        const rangeDate = genRangeDate(startDate, endDate);
         rangeDate.sort();
         let nameArray = null;
-        let nameMap = new Map();
+        const nameMap = new Map();
         if (defaultNameArray) {
             defaultNameArray.forEach(name => {
                 if (!nameMap.has(name)) {
@@ -76,19 +76,19 @@ export function useDataSharePlan() {
             }
         });
         nameArray = Array.from(nameMap.keys());
-        let seriesData: SeriesData[] = [];
-        let nameAndDateTotalMapMap = new Map();
+        const seriesData: SeriesData[] = [];
+        const nameAndDateTotalMapMap = new Map();
         nameArray.forEach(name => {
-            let map = new Map();
-            let filterItem = queryResult.filter(item => { return item.name == name });
+            const map = new Map();
+            const filterItem = queryResult.filter(item => { return item.name == name });
             filterItem.forEach(filterObj => {
                 map.set(filterObj.datetime, filterObj.total);
             });
             nameAndDateTotalMapMap.set(name, map)
         });
         nameArray.forEach(name => {
-            let data = [];
-            let dateTotalMap = nameAndDateTotalMapMap.get(name);
+            const data = [];
+            const dateTotalMap = nameAndDateTotalMapMap.get(name);
             rangeDate.forEach(date => {
                 data.push((dateTotalMap && dateTotalMap.has(date) ? dateTotalMap.get(date) : 0))
             });
@@ -170,15 +170,15 @@ export function useDataSharePlan() {
     const getIconStringForStatus = (value: string) => {
         switch (value) {
             case TASK_STATUS_READY:
-                return "arcticons:ready-for";
+                return "i-arcticons:ready-for";
             case TASK_STATUS_RUNNING:
-                return "mdi:play";
+                return "i-mdi:play";
             case TASK_STATUS_FINISHED:
-                return "mdi:success-circle";
+                return "i-mdi:success-circle";
             case TASK_STATUS_FINISHED_BUT_ERROR:
-                return "mdi:alert-circle-success";
+                return "i-mdi:alert-circle-success";
             case TASK_STATUS_ERROR:
-                return "ix:error-filled";
+                return "i-ix:error-filled";
             default:
                 return "";
         }

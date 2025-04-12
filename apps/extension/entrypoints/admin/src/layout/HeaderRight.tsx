@@ -5,7 +5,6 @@ import styles from "./HeaderRight.module.css";
 const { Text } = Typography;
 
 import { convertToAbbreviation, dateToStr } from "@/common/utils";
-import { Icon } from '@iconify/react';
 import Link from 'antd/es/typography/Link';
 import Markdown from 'marked-react';
 import { useShallow } from 'zustand/shallow';
@@ -72,14 +71,14 @@ const HeaderRight: React.FC = () => {
     }, [])
 
     const genApiProgress = () => {
-        let result = [];
+        const result = [];
         [{ title: "Core", value: core }, { title: "Graphql", value: graphql }].map(obj => {
             const item = obj.value;
             const title = obj.title;
             result.push(
                 <Flex align="center" key={obj.title}>
                     <Progress size={[170, 20]} percent={item.rateLimitRemaining / item.rateLimitLimit * 100} showInfo={true} percentPosition={{ align: 'center', type: 'inner' }} format={(percent) => {
-                        return <Text title={`将于${dateToStr(item.rateLimitReset,"YYYY-MM-DD") ?? "N/A"}重置`} className={styles.progressText}><Icon icon="mdi:github" />{title} API:{item.rateLimitRemaining}/{item.rateLimitLimit}</Text>
+                        return <Text title={`将于${dateToStr(item.rateLimitReset,"YYYY-MM-DD") ?? "N/A"}重置`} className={styles.progressText}><div className="i-mdi:github" />{title} API:{item.rateLimitRemaining}/{item.rateLimitLimit}</Text>
                     }} />
                 </Flex>
             );
@@ -94,7 +93,7 @@ const HeaderRight: React.FC = () => {
                 <Flex justify="end">
                     {newVersion ? <Tag style={{ cursor: "pointer" }} onClick={() => {
                         setIsLatestChangelogContentModalOpen(true);
-                    }} color="yellow"><Flex align="center"><Icon icon="mdi:arrow-up-bold-box"></Icon>发现新版本</Flex></Tag> : null}
+                    }} color="yellow"><Flex align="center"><div className="i-mdi:arrow-up-bold-box"></div>发现新版本</Flex></Tag> : null}
                     {auth ?
                         genApiProgress()
                         : null}
@@ -106,28 +105,28 @@ const HeaderRight: React.FC = () => {
                                 <Tooltip color="green" title="数据共享计划：开启"><ShareAltOutlined style={{ color: "green", fontSize: "18px" }} /></Tooltip>
                                 <Flex gap={5}>
                                     <Tooltip title="上传记录数[今天/总计]">
-                                        <Tag className={styles.tag} ><Icon icon="material-symbols:cloud-upload" /> {
+                                        <Tag className={styles.tag} ><div className="i-material-symbols:cloud-upload" /> {
                                             convertToAbbreviation(uploadRecordTotalCountToday) ?? '-'}/{
                                                 convertToAbbreviation(uploadRecordTotalCountAll) ?? '-'}
                                         </Tag>
                                     </Tooltip>
                                     <Tooltip title="下载文件数[今天/总计)]">
                                         <Tag className={styles.tag}>
-                                            <Icon icon="material-symbols:cloud-download" />{
+                                            <div className="i-material-symbols:cloud-download" />{
                                                 convertToAbbreviation(downloadFileTotalCountToday) ?? '-'}/{
                                                 convertToAbbreviation(downloadFileTotalCountAll) ?? '-'}
                                         </Tag>
                                     </Tooltip>
                                     <Tooltip title="合并记录数[今天/总计]">
                                         <Tag className={styles.tag}>
-                                            <Icon icon="material-symbols:merge" />{
+                                            <div className="i-material-symbols:merge" />{
                                                 convertToAbbreviation(mergeRecordTotalCountToday) ?? '-'}/{
                                                 convertToAbbreviation(mergeRecordTotalCountAll) ?? '-'}
                                         </Tag>
                                     </Tooltip>
                                     <Tooltip title="伙伴数">
                                         <Tag className={styles.tag}>
-                                            <Icon icon="carbon:partnership" />{dataSharePartnerCount}
+                                            <div className="i-carbon:partnership" />{dataSharePartnerCount}
                                         </Tag>
                                     </Tooltip>
                                 </Flex>

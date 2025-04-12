@@ -6,7 +6,6 @@ import { AnalysisConfigDTO } from '@/common/data/dto/analysisConfigDTO';
 import { toLine } from '@/common/utils';
 import JobSnapshotHistory from '@/entrypoints/components/JobSnapshotHistory';
 import { SearchOutlined } from '@ant-design/icons';
-import { Icon } from '@iconify/react';
 import {
   Empty,
   Flex,
@@ -284,10 +283,8 @@ const FavoriteJobView: React.FC = () => {
                                 getSnapshotItemByIdCallback
                               }
                               icon={
-                                <Icon
-                                  icon="ix:history-list"
-                                  width="18"
-                                  height="18"
+                                <div
+                                  className="i-ix:history-list w-3.5 h-3.5"
                                 />
                               }
                             />

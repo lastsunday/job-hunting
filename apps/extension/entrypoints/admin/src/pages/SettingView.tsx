@@ -8,7 +8,6 @@ import {
   JOB_TAG_MAX_EXPORT_SIZE,
 } from '@/common/config';
 import { CheckCard } from '@ant-design/pro-components';
-import { Icon } from '@iconify/react';
 import {
   Button,
   Card,
@@ -181,7 +180,7 @@ const SettingView: React.FC = () => {
                           }
                         }}
                       >
-                        <Icon icon="mdi:download" />
+                        <div className="i-mdi:download" />
                         下载新版本
                       </Button>
                     </Flex>
@@ -205,7 +204,7 @@ const SettingView: React.FC = () => {
                 }}
               >
                 如何更新程序版本
-                <Icon icon="ph:question" />
+                <div className="i-ph:question" />
               </Button>
               <Button
                 onClick={async () => {
@@ -282,7 +281,7 @@ const SettingView: React.FC = () => {
                   onClick={() => {
                     installAndLogin();
                   }}
-                  icon=<Icon icon="mdi:github" />
+                  icon=<div className="i-mdi:github" />
                 >
                   安装GitHubApp并登录
                 </Button>
@@ -295,28 +294,28 @@ const SettingView: React.FC = () => {
                 href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-administration"
               >
                 Administration
-                <Icon icon="mingcute:warning-line" />
+                <div className="i-mingcute:warning-line inline-flex" />
               </Link>
               <Link
                 target="_blank"
                 href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-issues"
               >
                 Issues
-                <Icon icon="mingcute:warning-line" />
+                <div className="i-mingcute:warning-line inline-flex" />
               </Link>
               <Link
                 target="_blank"
                 href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-contents"
               >
                 Contents
-                <Icon icon="mingcute:warning-line" />
+                <div className="i-mingcute:warning-line inline-flex" />
               </Link>
               <Link
                 target="_blank"
                 href="https://docs.github.com/rest/overview/permissions-required-for-github-apps#repository-permissions-for-metadata"
               >
                 Metadata
-                <Icon icon="mingcute:warning-line" />
+                <div className="i-mingcute:warning-line inline-flex" />
               </Link>
             </Flex>
           </Flex>

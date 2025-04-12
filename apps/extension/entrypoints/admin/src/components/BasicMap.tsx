@@ -19,7 +19,6 @@ import { JobSnapshotApi } from '@/common/api';
 import { JobSnapshotSearchBO } from '@/common/data/bo/jobSnapshotSearchBO';
 import { JobSnapshot } from '@/common/data/domain/jobSnapshot';
 import JobSnapshotHistory from '@/entrypoints/components/JobSnapshotHistory';
-import { Icon } from '@iconify/react';
 import { FeatureCollection } from 'geojson';
 import { GeoJSONSource } from 'maplibre-gl';
 import { useJob } from '../hooks/job';
@@ -340,11 +339,7 @@ const BasicMap: React.FC<BasicMapProps> = ({
                             getSnapshotItemByIdCallback
                           }
                           icon={
-                            <Icon
-                              icon="ix:history-list"
-                              width="18"
-                              height="18"
-                            />
+                            <div className="i-ix:history-list w-3.5 h-3.5" />
                           }
                         />
                       ) : null
