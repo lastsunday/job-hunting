@@ -20,6 +20,7 @@ import {
   genIdFromText,
   genUniqueId,
   getDomain,
+  dateToStr,
 } from "../../common/utils";
 import {
   JOB_STATUS_DESC_NEWEST
@@ -217,9 +218,10 @@ export function finalRender(jobDTOList, { platform, isFinalRender = true }) {
     commentWrapperDiv.classList.add("__" + platform + "_comment_wrapper");
     const jobItemCommentButton = genCommentTextButton(
       commentWrapperDiv,
-      "查看职位评论💬",
+      "职位评论",
       item.jobName + "-" + item.jobCompanyName,
-      jobItemIdSha256
+      jobItemIdSha256,
+      { autoLoad: true }
     );
     commentWrapperDiv.append(jobItemCommentButton);
     if (isFinalRender && i == jobDTOList.length - 1) {
@@ -232,7 +234,7 @@ export function finalRender(jobDTOList, { platform, isFinalRender = true }) {
   }
 }
 
-export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id) {
+export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id, { autoLoad = false } = {}) {
   const dialogDiv = document.createElement("div");
   dialogDiv.className = "__comment_dialog";
 
@@ -280,6 +282,43 @@ export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle
   const commentButtonDiv = document.createElement("div");
   commentButtonDiv.textContent = buttonLabel;
   commentButtonDiv.className = "__comment_button";
+
+  const loadComment = () => {
+    renderCommentContent({
+      first: COMMENT_PAGE_SIZE, id, getDataCallback: async ({ first, after, last, before, id }) => {
+        clearAllChildNode(commentBadgWrapper);
+        //LOADING
+        commentBadgWrapper.appendChild($(`<div class="__comment_badge __comment_badge_loading">⌛︎</div>`)[0]);
+        commentButtonDiv.title = "加载中";
+        try {
+          const data = await queryComment({ first, after, last, before, id });
+          clearAllChildNode(commentBadgWrapper);
+          if (data?.search?.issueCount && data?.search?.issueCount > 0) {
+            let summary = ``;
+            for (let i = 0; i < data.search.nodes.length; i++) {
+              const node = data.search.nodes[i];
+              const { author, createdAt, bodyText } = node;
+              summary += `${i + 1}: ${author.login}(${dateToStr(createdAt, "YYYY-MM-DD HH:mm:ss")}) >> ${bodyText}\n`
+            }
+            commentButtonDiv.title = summary;
+            commentBadgWrapper.appendChild($(`<div class="__comment_badge __comment_badge_exists">${data.search.issueCount}</div>`)[0]);
+          } else {
+            commentButtonDiv.title = "";
+            commentBadgWrapper.appendChild($(`<div class="__comment_badge __comment_badge_not_found">0</div>`)[0]);
+          }
+          return data;
+        } catch (e) {
+          //ERROR
+          clearAllChildNode(commentBadgWrapper);
+          commentButtonDiv.title = "访问异常";
+          commentBadgWrapper.appendChild($(`<div class="__comment_badge __comment_badge_error">❕</div>`)[0]);
+          throw e
+        }
+      }
+    }, contentDiv);
+  }
+  const commentBadgWrapper = $(`<div class="__comment_badge_wrapper"></div>`)[0];
+  commentButtonDiv.appendChild(commentBadgWrapper)
   commentButtonDiv.addEventListener("click", async (event) => {
     event.preventDefault();
     event.stopPropagation();
@@ -287,14 +326,15 @@ export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle
     dialogDiv.classList.add("__dialog_normal");
     clearAllChildNode(contentDiv);
     dialogDiv.append(contentDiv);
-
-    renderCommentContent({ first: COMMENT_PAGE_SIZE, id }, contentDiv);
-
+    loadComment();
   });
+  if (autoLoad) {
+    loadComment()
+  }
   return commentButtonDiv;
 }
 
-async function renderCommentContent({ first, after, last, before, id } = {}, contentDiv) {
+async function renderCommentContent({ first, after, last, before, id, getDataCallback } = {}, contentDiv) {
   const loadingLabel = $('<div>正加载评论⌛︎</div>')[0];
   const loadingDiv = $(`<div class="__comment_loading"></div>`)
     .append(loadingLabel)[0];
@@ -316,13 +356,13 @@ async function renderCommentContent({ first, after, last, before, id } = {}, con
         loadingLabel.textContent = "登录中⌛︎";
         loginInfo = await AuthApi.authOauth2Login();
         loadingLabel.textContent = "登录成功";
-        renderCommentContent({ first, after, last, before, id }, contentDiv);
+        renderCommentContent({ first, after, last, before, id, getDataCallback }, contentDiv);
       } catch (e) {
         errorLog(e);
         //TODO handle login failure
         loadingLabel.textContent = "登录失败，点击重新登录";
         loadingLabel.addEventListener("click", (event) => {
-          renderCommentContent({ first, after, last, before, id }, contentDiv);
+          renderCommentContent({ first, after, last, before, id, getDataCallback }, contentDiv);
         });
       }
     });
@@ -331,7 +371,7 @@ async function renderCommentContent({ first, after, last, before, id } = {}, con
   loadingLabel.textContent = "正加载评论⌛︎";
   let data = null;
   try {
-    data = await queryComment({ first, after, last, before, id });
+    data = await getDataCallback({ first, after, last, before, id });
     clearAllChildNode(contentDiv);
     const items = data?.search?.nodes;
     const pageInfo = data?.search?.pageInfo;
@@ -345,18 +385,18 @@ async function renderCommentContent({ first, after, last, before, id } = {}, con
         contentDiv.appendChild(createCommentRow(author.avatarUrl, author.login, item.createdAt, item.lastEditedAt, item.bodyText, item.bodyUrl));
       }
       contentDiv.appendChild(createCommonPageOperationMenu(pageInfo.hasPreviousPage, pageInfo.hasNextPage, pageInfo.startCursor, pageInfo.endCursor, total, async ({ first, after, last, before } = {}) => {
-        renderCommentContent({ first, after, last, before, id }, contentDiv)
+        renderCommentContent({ first, after, last, before, id, getDataCallback }, contentDiv)
       }));
     }
     const userDTO = await UserApi.userGet();
     contentDiv.appendChild(createAddCommentRow(contentDiv, loadingDiv, () => {
-      renderCommentContent({ first: COMMENT_PAGE_SIZE, id }, contentDiv)
+      renderCommentContent({ first: COMMENT_PAGE_SIZE, id, getDataCallback }, contentDiv)
     }, id, userDTO?.avatarUrl, userDTO?.login));
   } catch (e) {
     errorLog(e);
     loadingLabel.textContent = "加载评论失败，点击重新加载";
     loadingLabel.addEventListener("click", (event) => {
-      renderCommentContent({ first, after, last, before, id }, contentDiv);
+      renderCommentContent({ first, after, last, before, id, getDataCallback }, contentDiv);
     });
   }
 
@@ -927,9 +967,10 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
         commentWrapperDiv.className = `__comment_wrapper __${platform}_comment_wrapper`
         const companyCommentButton = genCommentTextButton(
           commentWrapperDiv,
-          "查看公司评论💬",
+          "公司评论",
           companyName,
-          companyIdSha256
+          companyIdSha256,
+          { autoLoad: true }
         );
         commentWrapperDiv.appendChild(companyCommentButton);
         otherChannelDiv.append(commentWrapperDiv);
