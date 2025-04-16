@@ -34,19 +34,24 @@ export default defineContentScript({
             // Executed when content script is loaded, can be async
             // 这里的 window 和页面的 window 不是同一个
             window.$ = window.jQuery = $;
+            const location = window.location;
+            const pathname = location.pathname;
             window.addEventListener("ajaxGetData", async function (e) {
                 const data = e?.detail;
                 if (!data) return;
                 const responseURL = data?.responseURL;
                 if (responseURL) {
                     // boss直聘接口
-                    if (responseURL.indexOf("/search/joblist.json") !== -1) {
+                    if (pathname == "/web/geek/job" && responseURL.indexOf("/search/joblist.json") !== -1) {
                         getBossData(data?.response);
                     }
 
                     // boss直聘推荐页接口
-                    if (responseURL.indexOf("/wapi/zpgeek/pc/recommend/job/list.json") !== -1) {
-                        handleBossRecommendData(JSON.parse(data?.response)?.zpData?.jobList);
+                    if ((pathname == "/web/geek/jobs" || pathname == "/web/geek/job-recommend") && (responseURL.indexOf("/wapi/zpgeek/pc/recommend/job/list.json") !== -1 || responseURL.indexOf("/search/joblist.json") !== -1)) {
+                        const url = new URL(responseURL);
+                        const page = Number.parseInt(url.searchParams.get("page"));
+                        const pageSize = Number.parseInt(url.searchParams.get("pageSize"));
+                        handleBossRecommendData(JSON.parse(data?.response)?.zpData?.jobList, page, pageSize);
                     }
 
                     // 智联招聘接口

@@ -176,8 +176,13 @@ div[data-search-sol-meta] {
   display: none;
 }
 
-.page-jobs-main .job-detail-container{
+.page-jobs-main .job-detail-container {
   position: static !important;
+}
+
+.job-recommend-main .job-detail-container {
+  width: auto !important;
+  max-width: 1366px;
 }
 
 .__is_outsourcing_or_training {
