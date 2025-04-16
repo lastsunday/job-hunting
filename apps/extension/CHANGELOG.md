@@ -1,3 +1,15 @@
+## 3.11.1 (2025-04-16)
+
+### 🩹 Fixes
+
+- 修复推荐页渲染异常的问题（BOSS直聘）
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+- FocusSweetwater @FocusSweetwater
+- SpadeKTLSG @SpadeKTLSG
+
 ## 3.11.0 (2025-04-12)
 
 ### 🩹 Fixes
