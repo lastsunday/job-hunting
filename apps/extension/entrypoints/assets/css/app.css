@@ -176,6 +176,10 @@ div[data-search-sol-meta] {
   display: none;
 }
 
+.page-jobs-main .job-detail-container{
+  position: static !important;
+}
+
 .__is_outsourcing_or_training {
 }
 
@@ -368,6 +372,7 @@ div[data-search-sol-meta] {
 .__BOSS_comment_wrapper {
   padding-right: 10px;
   padding-bottom: 10px;
+  flex-wrap: wrap;
 }
 
 .__51JOB_comment_wrapper {

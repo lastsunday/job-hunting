@@ -208,7 +208,7 @@ export function renderTimeTag(
   divElement.classList.add("__time_tag_base_text_font");
 }
 
-export function finalRender(jobDTOList, { platform, isFinalRender = true }) {
+export function finalRender(jobDTOList, { platform, isFinalRender = true, isRecommendPage }) {
   for (let i = 0; i < jobDTOList.length; i++) {
     const item = jobDTOList[i];
     const jobId = item.jobId;
@@ -221,7 +221,7 @@ export function finalRender(jobDTOList, { platform, isFinalRender = true }) {
       "职位评论",
       item.jobName + "-" + item.jobCompanyName,
       jobItemIdSha256,
-      { autoLoad: true }
+      { autoLoad: true, isRecommendPage, platform }
     );
     commentWrapperDiv.append(jobItemCommentButton);
     if (isFinalRender && i == jobDTOList.length - 1) {
@@ -234,10 +234,12 @@ export function finalRender(jobDTOList, { platform, isFinalRender = true }) {
   }
 }
 
-export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id, { autoLoad = false } = {}) {
+export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id, { autoLoad = false, platform, isRecommendPage } = {}) {
   const dialogDiv = document.createElement("div");
   dialogDiv.className = "__comment_dialog";
-
+  if (PLATFORM_BOSS == platform && isRecommendPage) {
+    dialogDiv.style = "position:relative;"
+  }
   const menuDiv = document.createElement("div");
   menuDiv.className = "__comment_menu";
 
@@ -627,7 +629,7 @@ export function setupSortJobItem(node) {
   }
 }
 
-export function renderSortJobItem(list, getListItem, { platform, orderStartIndex }) {
+export function renderSortJobItem(list, getListItem, { platform, orderStartIndex, isRecommendPage }) {
   if (orderStartIndex == undefined) {
     orderStartIndex = 0;
   }
@@ -645,6 +647,8 @@ export function renderSortJobItem(list, getListItem, { platform, orderStartIndex
     let targetDom;
     if (platform) {
       if (PLATFORM_JOBSDB == platform) {
+        targetDom = dom.parentNode.parentNode;
+      } else if (PLATFORM_BOSS == platform && isRecommendPage) {
         targetDom = dom.parentNode.parentNode;
       } else {
         targetDom = dom;
@@ -755,7 +759,7 @@ function convertHrActiveTimeDescToOffsetTime(hrActiveTimeDesc) {
 export async function renderFunctionPanel(
   list,
   getListItem,
-  { platform, getCompanyInfoFunction, searchButtonTitle } = {}
+  { platform, getCompanyInfoFunction, searchButtonTitle, isRecommendPage } = {}
 ) {
   stopAndCleanAbortFunctionHandler();
   const jobTagDTOArray = await JobApi.jobTagGetAllDTOByJobIds(list.map(item => item.jobId));
@@ -784,7 +788,8 @@ export async function renderFunctionPanel(
         getCompanyInfoFunction: getCompanyInfoFunction,
         platform,
         searchButtonTitle,
-        jobCardItemDom: targetDom
+        jobCardItemDom: targetDom,
+        isRecommendPage
       })
     );
     functionPanelDiv.appendChild(createOtherJobTag(item, jobIdAndDTOMap));
@@ -875,7 +880,7 @@ function createBrowse(jobDTO) {
   return browseTag;
 }
 
-function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButtonTitle, jobCardItemDom } = {}) {
+function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButtonTitle, jobCardItemDom, isRecommendPage } = {}) {
   const dom = document.createElement("div");
   dom.className = "__company_info_quick_search";
   const mainChannelDiv = document.createElement("div");
@@ -970,7 +975,7 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
           "公司评论",
           companyName,
           companyIdSha256,
-          { autoLoad: true }
+          { autoLoad: true, isRecommendPage, platform }
         );
         commentWrapperDiv.appendChild(companyCommentButton);
         otherChannelDiv.append(commentWrapperDiv);
