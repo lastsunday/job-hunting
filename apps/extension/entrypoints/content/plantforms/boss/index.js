@@ -25,7 +25,7 @@ export function getBossData(responseText) {
     const data = JSON.parse(responseText);
     mutationContainer().then(async (node) => {
       setupSortJobItem(node);
-      await handleData(data?.zpData?.jobList || [], getListByNode(node), getJobItemDetailUrlFunction, 0);
+      await handleData(data?.zpData?.jobList || [], getListByNode(node), getJobItemDetailUrlFunction, 0, {});
       onlineFilter();
     });
     return;
@@ -76,7 +76,7 @@ function getJobItemDetailUrlFunction(dom) {
 }
 
 // 解析数据，插入时间标签
-export async function handleData(list, getListItem, getJobItemDetailUrlFunction, orderStartIndex) {
+export async function handleData(list, getListItem, getJobItemDetailUrlFunction, orderStartIndex, { isRecommendPage }) {
   const isBossLogin = isLoggedIn();
   const delayFetchTime = isBossLogin ? DELAY_FETCH_TIME : DELAY_FETCH_TIME_NO_LOGIN;
   const batchSize = isBossLogin ? BATCH_SIZE : BATCH_SIZE_NO_LOGIN;
@@ -102,17 +102,18 @@ export async function handleData(list, getListItem, getJobItemDetailUrlFunction,
   });
   if (isBossLogin) {
     await saveBrowseJob(list, PLATFORM_BOSS);
-    const jobDTOList = await JobApi.getJobBrowseInfoByIds(
-      getJobIds(list, PLATFORM_BOSS)
-    );
-    list.forEach((item, index) => {
-      if (item.bossOnline) {
-        item.hrActiveTimeDesc = "刚刚活跃";
-      }
-      item.createDatetime = jobDTOList[index].createDatetime;
-    });
-    renderSortJobItem(list, getListItem, { platform: PLATFORM_BOSS });
-    list = sortJobList(list, { platform: PLATFORM_BOSS });
+    //TODO 登录状态下移除排序，避免一次性触发多次的数据分页拉取请求
+    // const jobDTOList = await JobApi.getJobBrowseInfoByIds(
+    //   getJobIds(list, PLATFORM_BOSS)
+    // );
+    // list.forEach((item, index) => {
+    //   if (item.bossOnline) {
+    //     item.hrActiveTimeDesc = "刚刚活跃";
+    //   }
+    //   item.createDatetime = jobDTOList[index].createDatetime;
+    // });
+    // renderSortJobItem(list, getListItem, { platform: PLATFORM_BOSS, isRecommendPage });
+    // list = sortJobList(list, { platform: PLATFORM_BOSS });
   }
   let totalJobDTOList = [];
   const cardApiUrlList = list.map(item => item.cardApiUrl);
@@ -182,9 +183,10 @@ export async function handleData(list, getListItem, getJobItemDetailUrlFunction,
             return null;
           }
         },
+        isRecommendPage
       }
     );
-    finalRender(jobDTOList, { platform: PLATFORM_BOSS, isFinalRender: isFinalFetch });
+    finalRender(jobDTOList, { platform: PLATFORM_BOSS, isFinalRender: isFinalFetch, isRecommendPage });
     totalJobDTOList = totalJobDTOList.concat(jobDTOList);
   };
 
@@ -194,8 +196,8 @@ export async function handleData(list, getListItem, getJobItemDetailUrlFunction,
     for (let i = 0; i < totalBatches; i++) {
       await fetchBatchData(i, i === totalBatches - 1);
     }
-    if (!isBossLogin) {
-      renderSortJobItem(totalJobDTOList, getListItem, { platform: PLATFORM_BOSS, orderStartIndex });
+    if (!isRecommendPage && !isBossLogin) {
+      renderSortJobItem(totalJobDTOList, getListItem, { platform: PLATFORM_BOSS, orderStartIndex, isRecommendPage });
     }
     hiddenLoadingDOM();
   })().catch((error) => {

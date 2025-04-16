@@ -1,3 +1,26 @@
+## 3.11.2 (2025-04-16)
+
+### 🩹 Fixes
+
+- 移除新版(20250416)BOSS直聘推荐/搜索页面的职位排序（避免一次性触发加载多页数据）
+- 适配新版(20250416)BOSS直聘推荐/搜索页面
+
+### ❤️ Thank You
+
+- lastsunday
+
+## 3.11.1 (2025-04-16)
+
+### 🩹 Fixes
+
+- 修复推荐页渲染异常的问题（BOSS直聘）
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+- FocusSweetwater @FocusSweetwater
+- SpadeKTLSG @SpadeKTLSG
+
 ## 3.11.0 (2025-04-12)
 
 ### 🩹 Fixes
