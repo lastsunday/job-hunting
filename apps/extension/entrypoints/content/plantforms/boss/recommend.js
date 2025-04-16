@@ -20,7 +20,7 @@ export async function handleBossRecommendData(data) {
             parentNode = node;
             setupSortJobItem(node);
             const wrapperInner = document.querySelector(".recommend-result-inner");
-            wrapperInner.style = "width:100%";
+            wrapperInner.style = "width: auto;max-width: 1366px;";
             const wrapper = document.querySelector(".recommend-result-job");
             wrapper.style = "display: flex;justify-content: center;"
             node.parentNode.style = "width:680px;padding-right:10px;"
