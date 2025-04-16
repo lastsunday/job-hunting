@@ -11,7 +11,7 @@ let previousChildLength = 0;
 export async function handleBossRecommendData(data) {
     if (init) {
         mutationJobContainerLoadingFinish(parentNode, previousChildLength + data.length, data).then(async (value) => {
-            await handleData(value.data || [], getListByNode(value.node, previousChildLength), getJobItemDetailUrlFunction, previousChildLength);
+            await handleData(value.data || [], getListByNode(value.node, previousChildLength), getJobItemDetailUrlFunction, previousChildLength, { isRecommendPage: true });
             previousChildLength += value.data.length;
         });
     } else {
@@ -19,12 +19,12 @@ export async function handleBossRecommendData(data) {
             init = true;
             parentNode = node;
             setupSortJobItem(node);
-            let wrapperInner = document.querySelector(".recommend-result-inner");
+            const wrapperInner = document.querySelector(".recommend-result-inner");
             wrapperInner.style = "width:100%";
-            let wrapper = document.querySelector(".recommend-result-job");
+            const wrapper = document.querySelector(".recommend-result-job");
             wrapper.style = "display: flex;justify-content: center;"
-            node.parentNode.style = "width:680px;overflow:hidden;padding-right:10px;"
-            await handleData(data || [], getListByNode(node, previousChildLength), getJobItemDetailUrlFunction, 0);
+            node.parentNode.style = "width:680px;padding-right:10px;"
+            await handleData(data || [], getListByNode(node, previousChildLength), getJobItemDetailUrlFunction, 0, { isRecommendPage: true });
             previousChildLength += data.length;
         });
         mutationJobContainerRemove();
