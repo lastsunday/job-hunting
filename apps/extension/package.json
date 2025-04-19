@@ -79,7 +79,7 @@
     "zustand": "^5.0.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.24.0",
+    "@eslint/js": "^9.25.0",
     "@playwright/test": "^1.52.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@types/chrome": "^0.0.299",
@@ -93,7 +93,7 @@
     "@wxt-dev/unocss": "^1.0.1",
     "allure-commandline": "^2.33.0",
     "allure-playwright": "^3.2.1",
-    "eslint": "^9.24.0",
+    "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",
     "globals": "^15.15.0",
@@ -110,6 +110,6 @@
     "vite-plugin-web-extension": "^4.4.3",
     "vitest": "^3.1.1",
     "web-ext": "^8.5.0",
-    "wxt": "^0.20.1"
+    "wxt": "^0.20.2"
   }
 }
