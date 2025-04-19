@@ -17,16 +17,11 @@ sea-orm = { version = "1.1.10", features = [ "sqlx-postgres","sqlx-sqlite", "run
 chrono = "0.4.40"
 migration={path="migration"}
 testcontainers = "0.23.3"
-<<<<<<< HEAD
 testcontainers-modules = { version = "0.11.6",features = ["postgres","gitea"] }
-uuid = { version = "1.11.1", features = ["v4"] }
+uuid = { version = "1.16.0", features = ["v4"] }
 git2 = "0.20.1"
 reqwest = "0.12.15"
 ssh-key = {version="0.6.7",features=["getrandom","ed25519"]}
-=======
-testcontainers-modules = { version = "0.11.6",features = ["postgres"] }
-uuid = { version = "1.16.0",features = ["v4"]}
->>>>>>> dev
 
 [dev-dependencies]
 tower = { version = "0.5.2", features = ["util"] }
