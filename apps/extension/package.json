@@ -110,6 +110,6 @@
     "vite-plugin-web-extension": "^4.4.3",
     "vitest": "^3.1.1",
     "web-ext": "^8.5.0",
-    "wxt": "^0.20.2"
+    "wxt": "^0.20.3"
   }
 }
