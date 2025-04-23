@@ -42,17 +42,17 @@ function getListByNode(node) {
   };
 }
 
-// 监听 search-job-result 节点，判断职位列表是否被挂载
+// 监听职位列表容器节点，判断职位列表是否被挂载
 function mutationContainer() {
   return new Promise((resolve, reject) => {
-    const dom = document.querySelector(".search-job-result");
+    const dom = document.body;
     const observer = new MutationObserver(function (childList, obs) {
       (childList || []).forEach((item) => {
         const { addedNodes } = item;
         if (addedNodes && addedNodes.length > 0) {
           addedNodes.forEach((node) => {
             const { className } = node;
-            if (className === "job-list-box") {
+            if (className === "rec-job-list") {
               observer.disconnect();
               resolve(node);
             }

@@ -38,7 +38,7 @@
 
 | 招聘平台  | 访问地址                            | 备注                   |
 | --------- | ----------------------------------- | ---------------------- |
-| BOSS 直聘 | <https://www.zhipin.com/web/geek/job> | 搜索页[账号未登录] |
+| BOSS 直聘 | <https://www.zhipin.com/web/geek/jobs> | 推荐页/搜索页[账号未登录] |
 |  | <https://www.zhipin.com/web/geek/jobs> | 推荐页/搜索页[账号已登录] |
 | 前程无忧  | <https://we.51job.com/pc/search>      | 搜索页 |
 | 智联招聘  | <https://sou.zhaopin.com/>            | 搜索页 |

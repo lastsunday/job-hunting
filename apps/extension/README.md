@@ -20,7 +20,7 @@
 2. 打开 chrome，选择加载已解压的扩展程序，选择当前项目的 .output/chrome-mv3 目录
 
 3. 打开页面
-   - boss 直聘： <https://www.zhipin.com/web/geek/job>
+   - boss 直聘： <https://www.zhipin.com/web/geek/jobs>
    - 51Job： <https://we.51job.com/pc/search>
    - 智联招聘： <https://sou.zhaopin.com/>
    - 拉钩网：<https://www.lagou.com/wn/zhaopin>

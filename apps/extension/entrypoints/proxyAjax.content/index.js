@@ -41,13 +41,8 @@ export default defineContentScript({
                 if (!data) return;
                 const responseURL = data?.responseURL;
                 if (responseURL) {
-                    // boss直聘接口
-                    if (pathname == "/web/geek/job" && responseURL.indexOf("/search/joblist.json") !== -1) {
-                        getBossData(data?.response);
-                    }
-
-                    // boss直聘推荐页接口
-                    if ((pathname == "/web/geek/jobs" || pathname == "/web/geek/job-recommend") && (responseURL.indexOf("/wapi/zpgeek/pc/recommend/job/list.json") !== -1 || responseURL.indexOf("/search/joblist.json") !== -1)) {
+                    // boss直聘推荐页/搜索页接口
+                    if ((pathname == "/web/geek/job" || pathname == "/web/geek/jobs" || pathname == "/web/geek/job-recommend") && (responseURL.indexOf("/wapi/zpgeek/pc/recommend/job/list.json") !== -1 || responseURL.indexOf("/search/joblist.json") !== -1)) {
                         const url = new URL(responseURL);
                         const page = Number.parseInt(url.searchParams.get("page"));
                         const pageSize = Number.parseInt(url.searchParams.get("pageSize"));

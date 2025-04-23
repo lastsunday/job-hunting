@@ -214,22 +214,24 @@ export function finalRender(jobDTOList, { platform, isFinalRender = true, isReco
     const jobId = item.jobId;
     const jobItemIdSha256 = genIdFromText(jobId);
     const commentWrapperDiv = document.getElementById("wrapper" + jobId);
-    commentWrapperDiv.classList.add("__comment_wrapper");
-    commentWrapperDiv.classList.add("__" + platform + "_comment_wrapper");
-    const jobItemCommentButton = genCommentTextButton(
-      commentWrapperDiv,
-      "职位评论",
-      item.jobName + "-" + item.jobCompanyName,
-      jobItemIdSha256,
-      { autoLoad: true, isRecommendPage, platform }
-    );
-    commentWrapperDiv.append(jobItemCommentButton);
-    if (isFinalRender && i == jobDTOList.length - 1) {
-      commentWrapperDiv.appendChild($(`<div class="__status_job_render_finish"></div>`)[0]);
-    }
-    const jobCardItem = commentWrapperDiv.parentElement.parentElement;
-    if (item.jobDescription) {
-      jobCardItem.title = item.jobDescription;
+    if (commentWrapperDiv) {
+      commentWrapperDiv.classList.add("__comment_wrapper");
+      commentWrapperDiv.classList.add("__" + platform + "_comment_wrapper");
+      const jobItemCommentButton = genCommentTextButton(
+        commentWrapperDiv,
+        "职位评论",
+        item.jobName + "-" + item.jobCompanyName,
+        jobItemIdSha256,
+        { autoLoad: true, isRecommendPage, platform }
+      );
+      commentWrapperDiv.append(jobItemCommentButton);
+      if (isFinalRender && i == jobDTOList.length - 1) {
+        commentWrapperDiv.appendChild($(`<div class="__status_job_render_finish"></div>`)[0]);
+      }
+      const jobCardItem = commentWrapperDiv.parentElement.parentElement;
+      if (item.jobDescription) {
+        jobCardItem.title = item.jobDescription;
+      }
     }
   }
 }
