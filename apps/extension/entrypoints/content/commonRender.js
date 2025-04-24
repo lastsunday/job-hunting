@@ -997,8 +997,16 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
   dom.appendChild(mainChannelDiv);
   dom.appendChild(otherChannelDiv);
   if (item.isFullCompanyName) {
-    //自动查询公司信息
-    quickSearchHandle(false);
+    (async () => {
+      //查询数据库是否有公司信息
+      const company = await CompanyApi.getCompanyById(
+        genSha256(item.jobCompanyName) + ""
+      );
+      if (company) {
+        //自动查询公司信息
+        quickSearchHandle(false);
+      }
+    })();
   }
   return dom;
 }
@@ -1169,7 +1177,7 @@ async function renderWebsiteIpc(element, website) {
     } else {
       let abortFunctionHandler = null;
       const url = `https://icp.aizhan.com/${encodeURIComponent(
-        getDomain(website)
+        getDomain(autoFillHttp(website))
       )}/`;
       const result = await httpFetchGetText(url, (abortFunction) => {
         abortFunctionHandler = abortFunction;
