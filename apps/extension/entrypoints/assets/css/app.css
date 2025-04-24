@@ -662,3 +662,28 @@ div[data-search-sol-meta] {
   display: inline-block;
   padding-left: 10px;
 }
+
+.__browse_chart_wrapper {
+  display: flex;
+  flex: 1;
+  margin-right: 10px;
+}
+
+/*trendchart-elements*/
+.__browse_chart_wrapper.has-shape-colors {
+  --shape-color-1: #597bfc;
+  --shape-color-2: #e2445c;
+  --shape-color-3: #9cd326;
+  --shape-color-4: #fdab3d;
+  --shape-color-5: #784bd1;
+  --shape-color-6: #f1de0f;
+  --shape-color-7: #c725d3;
+  --shape-color-8: #11a5db;
+  --shape-color-9: #7f5347;
+  --shape-color-10: #373737;
+}
+
+.__browse_chart {
+  flex: 1;
+  height: 14px;
+}

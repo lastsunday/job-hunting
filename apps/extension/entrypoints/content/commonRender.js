@@ -59,6 +59,7 @@ const { convertToTagData } = useTag();
 
 import { useJob } from "@/common/hooks/job";
 const { isAgeLimitFromDescription, isAgeLimitFromDescriptionBy35 } = useJob();
+import { TcBar } from "@weblogin/trendchart-elements";
 
 export function renderTimeTag(
   divElement,
@@ -869,23 +870,13 @@ function createCommentWrapper(jobDTO) {
   const jobId = jobDTO.jobId;
   const commentWrapperDiv = document.createElement("div");
   commentWrapperDiv.id = "wrapper" + jobId;
-  commentWrapperDiv.appendChild(createBrowseDetail(jobDTO));
-  commentWrapperDiv.appendChild(createBrowse(jobDTO));
+  const browseDetailCount = jobDTO.browseDetailCount ?? 0;
+  const browseCount = jobDTO.browseCount ?? 0;
+  // const total = browseDetailCount + browseCount;
+  const browseChart = $(`<div labels='["A","B"]' class="__browse_chart_wrapper has-shape-colors"><tc-bar horizontal class="__browse_chart" values="[${browseDetailCount},${browseCount}]" max="${20}"></tc-bar></div>`)[0];
+  browseChart.title = `职位查看次数: ${browseDetailCount}\n职位展示次数: ${browseCount}`;
+  commentWrapperDiv.appendChild(browseChart);
   return commentWrapperDiv;
-}
-
-function createBrowseDetail(jobDTO) {
-  const browseDetailTag = document.createElement("div");
-  browseDetailTag.textContent += `【查看过${jobDTO.browseDetailCount ?? 0}次】`;
-  browseDetailTag.classList.add("__first_browse_time");
-  return browseDetailTag;
-}
-
-function createBrowse(jobDTO) {
-  const browseTag = document.createElement("div");
-  browseTag.textContent = `<共展示过${jobDTO.browseCount ?? 0}次>`;
-  browseTag.classList.add("__browse_time");
-  return browseTag;
 }
 
 function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButtonTitle, jobCardItemDom, isRecommendPage } = {}) {
