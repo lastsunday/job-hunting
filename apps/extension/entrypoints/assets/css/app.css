@@ -362,7 +362,7 @@ div[data-search-sol-meta] {
   color: #414a60;
   padding-top: 5px;
   justify-content: end;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 }
 
 .__comment_badge_wrapper {
@@ -397,7 +397,6 @@ div[data-search-sol-meta] {
 .__BOSS_comment_wrapper {
   padding-right: 10px;
   padding-bottom: 10px;
-  flex-wrap: wrap;
 }
 
 .__51JOB_comment_wrapper {
