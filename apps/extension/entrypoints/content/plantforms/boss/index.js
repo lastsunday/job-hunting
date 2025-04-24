@@ -36,7 +36,7 @@ export function getBossData(responseText) {
 
 // 获取职位列表节点
 function getListByNode(node) {
-  const children = node?.children;
+  const children = node?.querySelectorAll(".card-area");
   return function getListItem(index) {
     return children?.[index];
   };
