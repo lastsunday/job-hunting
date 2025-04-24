@@ -914,7 +914,7 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
       companyName = companyNameConvert(companyName)
       fixValidHummanButton.textContent =
         "一直查询失败？点击该按钮去尝试解除人机验证吧！";
-      if (getCompanyInfoFunction) {
+      if (!item.isFullCompanyName && getCompanyInfoFunction) {
         let targetCompanyName = await getCompanyInfoFunction(
           item.jobCompanyApiUrl,
           { item }
@@ -992,10 +992,7 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
   mainChannelDiv.appendChild(quickSearchButton);
   dom.appendChild(mainChannelDiv);
   dom.appendChild(otherChannelDiv);
-  if (getCompanyInfoFunction || platform == PLATFORM_JOBSDB) {
-    //for boss,liepin,jobsdb
-    //skip
-  } else {
+  if (item.isFullCompanyName) {
     //自动查询公司信息
     quickSearchHandle(false);
   }
