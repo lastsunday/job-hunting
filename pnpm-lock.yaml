@@ -240,6 +240,9 @@ importers:
       '@webcomponents/custom-elements':
         specifier: ^1.6.0
         version: 1.6.0
+      '@weblogin/trendchart-elements':
+        specifier: ^2.0.1
+        version: 2.0.1
       '@yaireo/dragsort':
         specifier: ^1.3.2
         version: 1.3.2
@@ -5157,6 +5160,9 @@ packages:
 
   '@webext-core/match-patterns@1.0.3':
     resolution: {integrity: sha512-NY39ACqCxdKBmHgw361M9pfJma8e4AZo20w9AY+5ZjIj1W2dvXC8J31G5fjfOGbulW9w4WKpT8fPooi0mLkn9A==}
+
+  '@weblogin/trendchart-elements@2.0.1':
+    resolution: {integrity: sha512-mqduOzVpdRhV5AWLJaBuUS77fgc8bvpKUKhyf4TFRmFLkAL9KbVTQWtohIEc2YKZHID56jFuqGt7VXs21/gl8A==}
 
   '@wxt-dev/browser@0.0.315':
     resolution: {integrity: sha512-FUIK1ahRjER2y+TdOIqj+3sfB725jERNu0DwB/iRlrw4Vf0xNWuf1MzKg7r/rXkaRCQnJPDmw3m6E35qo4iuzA==}
@@ -18773,6 +18779,10 @@ snapshots:
       is-potential-custom-element-name: 1.0.1
 
   '@webext-core/match-patterns@1.0.3': {}
+
+  '@weblogin/trendchart-elements@2.0.1':
+    dependencies:
+      lit: 3.3.0
 
   '@wxt-dev/browser@0.0.315':
     dependencies:

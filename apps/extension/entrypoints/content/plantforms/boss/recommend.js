@@ -51,7 +51,7 @@ function getJobItemDetailUrlFunction(dom) {
 
 // 获取列表节点
 function getListByNode(node, startIndex) {
-    const children = node?.children;
+    const children = node?.querySelectorAll(".card-area");
     return function getListItem(index) {
         return children?.[index + startIndex].querySelector(".job-card-box");
     };

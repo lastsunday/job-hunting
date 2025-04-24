@@ -237,6 +237,10 @@ div[data-search-sol-meta] {
   border-radius: 10px;
 }
 
+.__company_info_quick_search_wrapper {
+  display: flex;
+}
+
 .__company_info_quick_search_item {
   display: flex;
   padding: 5px;
@@ -288,8 +292,23 @@ div[data-search-sol-meta] {
   text-wrap: nowrap;
 }
 
+.__modal {
+  position: fixed;
+  left: anchor(left);
+  bottom: anchor(top);
+  background-color: rgba(255, 255, 255, 0.98);
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  padding: 10px;
+  margin-bottom: 5px;
+  transform: translate(-50%, 0);
+}
+
+.__company_info_quick_search_item_source {
+  flex: 1;
+}
+
 .__company_info_other_channel {
-  justify-content: end;
 }
 
 .__company_reputation_content {
@@ -338,11 +357,12 @@ div[data-search-sol-meta] {
 
 .__comment_wrapper {
   display: flex;
-  justify-content: end;
   align-items: baseline;
   font-size: 14px;
   color: #414a60;
   padding-top: 5px;
+  justify-content: end;
+  flex-wrap: wrap;
 }
 
 .__comment_badge_wrapper {
@@ -377,7 +397,6 @@ div[data-search-sol-meta] {
 .__BOSS_comment_wrapper {
   padding-right: 10px;
   padding-bottom: 10px;
-  flex-wrap: wrap;
 }
 
 .__51JOB_comment_wrapper {
@@ -642,4 +661,29 @@ div[data-search-sol-meta] {
 .__job_analysis {
   display: inline-block;
   padding-left: 10px;
+}
+
+.__browse_chart_wrapper {
+  display: flex;
+  flex: 1;
+  margin-right: 10px;
+}
+
+/*trendchart-elements*/
+.__browse_chart_wrapper.has-shape-colors {
+  --shape-color-1: #597bfc;
+  --shape-color-2: #e2445c;
+  --shape-color-3: #9cd326;
+  --shape-color-4: #fdab3d;
+  --shape-color-5: #784bd1;
+  --shape-color-6: #f1de0f;
+  --shape-color-7: #c725d3;
+  --shape-color-8: #11a5db;
+  --shape-color-9: #7f5347;
+  --shape-color-10: #373737;
+}
+
+.__browse_chart {
+  flex: 1;
+  height: 14px;
 }
