@@ -815,10 +815,14 @@ function createOtherJobTag(item, jobIdAndDTOMap) {
 }
 
 async function asyncRenderOtherJobTag(div, item, jobIdAndDTOMap) {
-  const jobTagDTO = (jobIdAndDTOMap.get(item.jobId) ?? []).filter(item => item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source != null);
-  convertToTagData(jobTagDTO).forEach(item => {
-    div.appendChild(createTag(item))
-  });
+  const jobTagDTOList = (jobIdAndDTOMap.get(item.jobId) ?? []).filter(item => item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source != null);
+  if (jobTagDTOList.length > 0) {
+    convertToTagData(jobTagDTOList).forEach(item => {
+      div.appendChild(createTag(item))
+    });
+  } else {
+    div.parentElement.style = "display:none;";
+  }
 }
 
 function createTag(item) {
@@ -1395,10 +1399,14 @@ function createOtherCompanyTag(companyName) {
 }
 
 async function asyncRenderCompanyJobTag(div, companyId) {
-  const companyTagDTO = (await CompanyApi.getAllCompanyTagDTOByCompanyId(companyId)).filter(item => !(item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source == null));
-  convertToTagData(companyTagDTO).forEach(item => {
-    div.appendChild(createTag(item))
-  });
+  const companyTagDTOList = (await CompanyApi.getAllCompanyTagDTOByCompanyId(companyId)).filter(item => !(item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source == null));
+  if (companyTagDTOList.length > 0) {
+    convertToTagData(companyTagDTOList).forEach(item => {
+      div.appendChild(createTag(item))
+    });
+  } else {
+    div.parentElement.style = "display:none;";
+  }
 }
 
 function createMyCompanyTag(companyName) {
