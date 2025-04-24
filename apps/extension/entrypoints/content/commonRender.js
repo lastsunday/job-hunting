@@ -225,6 +225,8 @@ export function finalRender(jobDTOList, { platform, isFinalRender = true, isReco
         { autoLoad: true, isRecommendPage, platform }
       );
       commentWrapperDiv.append(jobItemCommentButton);
+      // 换行
+      commentWrapperDiv.appendChild($(`<div style="width:100%;"></div>`)[0]);
       if (isFinalRender && i == jobDTOList.length - 1) {
         commentWrapperDiv.appendChild($(`<div class="__status_job_render_finish"></div>`)[0]);
       }
@@ -972,10 +974,12 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
           clearAllChildNode(companyTagWrapperDiv);
           companyTagWrapperDiv.append(createCompanyTag(companyName));
         }));
-        otherChannelDiv.appendChild(createSearchCompanyLink(companyName));
+
         const companyIdSha256 = genIdFromText(companyName);
         const commentWrapperDiv = document.createElement("div");
         commentWrapperDiv.className = `__comment_wrapper __${platform}_comment_wrapper`
+        commentWrapperDiv.appendChild(createSearchCompanyLink(companyName));
+
         const companyCommentButton = genCommentTextButton(
           commentWrapperDiv,
           "公司评论",
@@ -983,7 +987,9 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
           companyIdSha256,
           { autoLoad: true, isRecommendPage, platform }
         );
+        // 换行
         commentWrapperDiv.appendChild(companyCommentButton);
+        commentWrapperDiv.appendChild($(`<div style="width:100%;"></div>`)[0]);
         otherChannelDiv.append(commentWrapperDiv);
       }
     } catch (e) {
@@ -1143,7 +1149,10 @@ export function createCompanyInfoDetail(company, quickSearchHandle) {
   );
   const syncDataButton = document.createElement("div");
   syncDataButton.className = "__company_info_quick_search_button";
-  syncDataButton.textContent = "📥立即同步数据";
+  syncDataButton.textContent = `📥${convertTimeOffsetToHumanReadable(
+    company.updateDatetime
+  )}`;
+  syncDataButton.title = "点击立即同步数据";
   syncDataButton.onclick = () => {
     contentDiv[0].parentElement.removeChild(contentDiv[0]);
     quickSearchHandle(true);
@@ -1152,16 +1161,10 @@ export function createCompanyInfoDetail(company, quickSearchHandle) {
     $(`<div class="__company_info_quick_search_item"></div>`)
       .append(
         $(
-          `<div><div class="__company_info_quick_search_item_label">数据来源：</div><div class="__company_info_quick_search_item_value"><a href="${company.sourceUrl}" target = "_blank"; ref = "noopener noreferrer">${company.sourceUrl}</a></div></div>`
+          `<div class="__company_info_quick_search_item_source"><div class="__company_info_quick_search_item_label">数据来源：</div><div class="__company_info_quick_search_item_value"><a href="${company.sourceUrl}" target = "_blank"; ref = "noopener noreferrer">${company.sourceUrl}</a></div></div>`
         )
-      )
+      ).append(syncDataButton)
   );
-  contentDiv.append(
-    $(
-      `<div class="__company_info_quick_search_item"><div class="__company_info_quick_search_item_label">数据同步时间：</div><div class="__company_info_quick_search_item_value">${convertTimeOffsetToHumanReadable(
-        company.updateDatetime
-      )}</div></div>`
-    ).append(syncDataButton));
   return contentDiv[0];
 }
 
@@ -1317,70 +1320,80 @@ async function renderWebsiteStatus(element, website) {
 export function createSearchCompanyLink(keyword) {
   const decode = encodeURIComponent(keyword);
   const dom = document.createElement("div");
-  const internetDiv = document.createElement("div");
-  internetDiv.className =
+  dom.className = "__company_info_quick_search_wrapper";
+  const quickSearch = $(`<div></div>`)[0];
+  quickSearch.className =
     "__company_info_quick_search_item __company_info_other_channel";
-  const internetLabelDiv = document.createElement("div");
-  internetLabelDiv.className = "__company_info_quick_search_item_label";
-  internetLabelDiv.textContent = " - 互联网渠道";
-  internetDiv.appendChild(
+  const buttonAnchorName = genUniqueId();
+  const button = $(`<div class="__comment_button" style="anchor-name:--${buttonAnchorName};">其他查询渠道</div>`)[0];
+  const menu = $(`<div
+    style="display:none;position-anchor: --${buttonAnchorName};" class="__modal"
+      ></div>`)[0];
+  const toggleMenu = () => {
+    if (menu.style.display == "none") {
+      menu.style.display = "block";
+    } else {
+      menu.style.display = "none";
+    }
+  };
+  menu.addEventListener('click', toggleMenu);
+  button.addEventListener('click', toggleMenu);
+  quickSearch.appendChild(button);
+
+  menu.appendChild($(`<div>互联网渠道：</div>`)[0]);
+  menu.appendChild(
     createATagWithSearch(`https://aiqicha.baidu.com/s?q=${decode}`, "爱企查")
   );
-  internetDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(
       `https://www.xiaohongshu.com/search_result?keyword=${decode}`,
       "小红书"
     )
   );
-  internetDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(
       `https://maimai.cn/web/search_center?type=feed&query=${decode}&highlight=true`,
       "脉脉"
     )
   );
-  internetDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(`https://www.bing.com/search?q=${decode}`, "必应")
   );
-  internetDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(`https://www.google.com/search?q=${decode}`, "Google")
   );
-  internetDiv.appendChild(internetLabelDiv);
-  dom.appendChild(internetDiv);
-  const govDiv = document.createElement("div");
-  govDiv.className =
-    "__company_info_quick_search_item __company_info_other_channel";
-  const govLabelDiv = document.createElement("div");
-  govLabelDiv.className = "__company_info_quick_search_item_label";
-  govLabelDiv.textContent = "- 政府渠道";
-  govDiv.appendChild(
+
+  menu.appendChild($(`<div>政府渠道：</div>`)[0]);
+  menu.appendChild(
     createATagWithSearch(
       `https://beian.miit.gov.cn/#/Integrated/recordQuery`,
       "工信部"
     )
   );
-  govDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(
       `https://www.creditchina.gov.cn/xinyongxinxixiangqing/xyDetail.html?keyword=${decode}`,
       "信用中国"
     )
   );
-  govDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(
       `https://www.gsxt.gov.cn/corp-query-homepage.html`,
       "企业信用"
     )
   );
-  govDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(`http://zxgk.court.gov.cn/zhzxgk/`, "执行信息")
   );
-  govDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(`https://wenshu.court.gov.cn/`, "裁判文书")
   );
-  govDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(`https://xwqy.gsxt.gov.cn/`, "个体私营")
   );
-  govDiv.appendChild(govLabelDiv);
-  dom.appendChild(govDiv);
+
+  quickSearch.appendChild(menu);
+  dom.appendChild(quickSearch);
   return dom;
 }
 
