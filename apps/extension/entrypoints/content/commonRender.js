@@ -59,6 +59,7 @@ const { convertToTagData } = useTag();
 
 import { useJob } from "@/common/hooks/job";
 const { isAgeLimitFromDescription, isAgeLimitFromDescriptionBy35 } = useJob();
+import { TcBar } from "@weblogin/trendchart-elements";
 
 export function renderTimeTag(
   divElement,
@@ -214,31 +215,38 @@ export function finalRender(jobDTOList, { platform, isFinalRender = true, isReco
     const jobId = item.jobId;
     const jobItemIdSha256 = genIdFromText(jobId);
     const commentWrapperDiv = document.getElementById("wrapper" + jobId);
-    commentWrapperDiv.classList.add("__comment_wrapper");
-    commentWrapperDiv.classList.add("__" + platform + "_comment_wrapper");
-    const jobItemCommentButton = genCommentTextButton(
-      commentWrapperDiv,
-      "职位评论",
-      item.jobName + "-" + item.jobCompanyName,
-      jobItemIdSha256,
-      { autoLoad: true, isRecommendPage, platform }
-    );
-    commentWrapperDiv.append(jobItemCommentButton);
-    if (isFinalRender && i == jobDTOList.length - 1) {
-      commentWrapperDiv.appendChild($(`<div class="__status_job_render_finish"></div>`)[0]);
-    }
-    const jobCardItem = commentWrapperDiv.parentElement.parentElement;
-    if (item.jobDescription) {
-      jobCardItem.title = item.jobDescription;
+    const jobCardItemDom = commentWrapperDiv.parentElement.parentElement;
+    if (commentWrapperDiv) {
+      commentWrapperDiv.classList.add("__comment_wrapper");
+      commentWrapperDiv.classList.add("__" + platform + "_comment_wrapper");
+      const jobItemCommentButton = genCommentTextButton(
+        commentWrapperDiv,
+        "职位评论",
+        item.jobName + "-" + item.jobCompanyName,
+        jobItemIdSha256,
+        { autoLoad: true, isRecommendPage, platform, jobCardItemDom }
+      );
+      commentWrapperDiv.append(jobItemCommentButton);
+      // 换行
+      commentWrapperDiv.appendChild($(`<div style="width:100%;"></div>`)[0]);
+      if (isFinalRender && i == jobDTOList.length - 1) {
+        commentWrapperDiv.appendChild($(`<div class="__status_job_render_finish"></div>`)[0]);
+      }
+      if (item.jobDescription) {
+        jobCardItemDom.title = item.jobDescription;
+      }
     }
   }
 }
 
-export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id, { autoLoad = false, platform, isRecommendPage } = {}) {
+export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id, { autoLoad = false, platform, isRecommendPage, jobCardItemDom } = {}) {
+  let targetDialogWrapper = jobCardItemDom;
+  const buttonAnchorName = genUniqueId();
   const dialogDiv = document.createElement("div");
-  dialogDiv.className = "__comment_dialog";
+  dialogDiv.className = "__comment_dialog __modal __modal_bottom";
+  dialogDiv.style = `position-anchor: --${buttonAnchorName};`;
   if (PLATFORM_BOSS == platform && isRecommendPage) {
-    dialogDiv.style = "position:relative;"
+    targetDialogWrapper = jobCardItemDom.parentElement;
   }
   const menuDiv = document.createElement("div");
   menuDiv.className = "__comment_menu";
@@ -254,7 +262,7 @@ export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle
   closeDiv.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    commentWrapperDiv.removeChild(dialogDiv);
+    targetDialogWrapper.removeChild(dialogDiv);
   });
   menuDiv.appendChild(closeDiv);
 
@@ -319,12 +327,12 @@ export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle
       }
     }, contentDiv);
   }
-  const commentBadgWrapper = $(`<div class="__comment_badge_wrapper"></div>`)[0];
+  const commentBadgWrapper = $(`<div class="__comment_badge_wrapper" style="anchor-name:--${buttonAnchorName};"></div>`)[0];
   commentButtonDiv.appendChild(commentBadgWrapper)
   commentButtonDiv.addEventListener("click", async (event) => {
     event.preventDefault();
     event.stopPropagation();
-    commentWrapperDiv.appendChild(dialogDiv);
+    targetDialogWrapper.appendChild(dialogDiv);
     dialogDiv.classList.add("__dialog_normal");
     clearAllChildNode(contentDiv);
     dialogDiv.append(contentDiv);
@@ -813,10 +821,14 @@ function createOtherJobTag(item, jobIdAndDTOMap) {
 }
 
 async function asyncRenderOtherJobTag(div, item, jobIdAndDTOMap) {
-  const jobTagDTO = (jobIdAndDTOMap.get(item.jobId) ?? []).filter(item => item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source != null);
-  convertToTagData(jobTagDTO).forEach(item => {
-    div.appendChild(createTag(item))
-  });
+  const jobTagDTOList = (jobIdAndDTOMap.get(item.jobId) ?? []).filter(item => item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source != null);
+  if (jobTagDTOList.length > 0) {
+    convertToTagData(jobTagDTOList).forEach(item => {
+      div.appendChild(createTag(item))
+    });
+  } else {
+    div.parentElement.style = "display:none;";
+  }
 }
 
 function createTag(item) {
@@ -861,23 +873,13 @@ function createCommentWrapper(jobDTO) {
   const jobId = jobDTO.jobId;
   const commentWrapperDiv = document.createElement("div");
   commentWrapperDiv.id = "wrapper" + jobId;
-  commentWrapperDiv.appendChild(createBrowseDetail(jobDTO));
-  commentWrapperDiv.appendChild(createBrowse(jobDTO));
+  const browseDetailCount = jobDTO.browseDetailCount ?? 0;
+  const browseCount = jobDTO.browseCount ?? 0;
+  // const total = browseDetailCount + browseCount;
+  const browseChart = $(`<div labels='["A","B"]' class="__browse_chart_wrapper has-shape-colors"><tc-bar horizontal class="__browse_chart" values="[${browseDetailCount},${browseCount}]" max="${20}"></tc-bar></div>`)[0];
+  browseChart.title = `职位查看次数: ${browseDetailCount}\n职位展示次数: ${browseCount}`;
+  commentWrapperDiv.appendChild(browseChart);
   return commentWrapperDiv;
-}
-
-function createBrowseDetail(jobDTO) {
-  const browseDetailTag = document.createElement("div");
-  browseDetailTag.textContent += `【查看过${jobDTO.browseDetailCount ?? 0}次】`;
-  browseDetailTag.classList.add("__first_browse_time");
-  return browseDetailTag;
-}
-
-function createBrowse(jobDTO) {
-  const browseTag = document.createElement("div");
-  browseTag.textContent = `<共展示过${jobDTO.browseCount ?? 0}次>`;
-  browseTag.classList.add("__browse_time");
-  return browseTag;
 }
 
 function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButtonTitle, jobCardItemDom, isRecommendPage } = {}) {
@@ -912,7 +914,7 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
       companyName = companyNameConvert(companyName)
       fixValidHummanButton.textContent =
         "一直查询失败？点击该按钮去尝试解除人机验证吧！";
-      if (getCompanyInfoFunction) {
+      if (!item.isFullCompanyName && getCompanyInfoFunction) {
         let targetCompanyName = await getCompanyInfoFunction(
           item.jobCompanyApiUrl,
           { item }
@@ -966,18 +968,22 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
           clearAllChildNode(companyTagWrapperDiv);
           companyTagWrapperDiv.append(createCompanyTag(companyName));
         }));
-        otherChannelDiv.appendChild(createSearchCompanyLink(companyName));
+
         const companyIdSha256 = genIdFromText(companyName);
         const commentWrapperDiv = document.createElement("div");
         commentWrapperDiv.className = `__comment_wrapper __${platform}_comment_wrapper`
+        commentWrapperDiv.appendChild(createSearchCompanyLink(companyName));
+
         const companyCommentButton = genCommentTextButton(
           commentWrapperDiv,
           "公司评论",
           companyName,
           companyIdSha256,
-          { autoLoad: true, isRecommendPage, platform }
+          { autoLoad: true, isRecommendPage, platform, jobCardItemDom }
         );
+        // 换行
         commentWrapperDiv.appendChild(companyCommentButton);
+        commentWrapperDiv.appendChild($(`<div style="width:100%;"></div>`)[0]);
         otherChannelDiv.append(commentWrapperDiv);
       }
     } catch (e) {
@@ -990,12 +996,17 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
   mainChannelDiv.appendChild(quickSearchButton);
   dom.appendChild(mainChannelDiv);
   dom.appendChild(otherChannelDiv);
-  if (getCompanyInfoFunction || platform == PLATFORM_JOBSDB) {
-    //for boss,liepin,jobsdb
-    //skip
-  } else {
-    //自动查询公司信息
-    quickSearchHandle(false);
+  if (item.isFullCompanyName) {
+    (async () => {
+      //查询数据库是否有公司信息
+      const company = await CompanyApi.getCompanyById(
+        genSha256(item.jobCompanyName) + ""
+      );
+      if (company) {
+        //自动查询公司信息
+        quickSearchHandle(false);
+      }
+    })();
   }
   return dom;
 }
@@ -1132,7 +1143,10 @@ export function createCompanyInfoDetail(company, quickSearchHandle) {
   );
   const syncDataButton = document.createElement("div");
   syncDataButton.className = "__company_info_quick_search_button";
-  syncDataButton.textContent = "📥立即同步数据";
+  syncDataButton.textContent = `📥${convertTimeOffsetToHumanReadable(
+    company.updateDatetime
+  )}`;
+  syncDataButton.title = "点击立即同步数据";
   syncDataButton.onclick = () => {
     contentDiv[0].parentElement.removeChild(contentDiv[0]);
     quickSearchHandle(true);
@@ -1141,16 +1155,10 @@ export function createCompanyInfoDetail(company, quickSearchHandle) {
     $(`<div class="__company_info_quick_search_item"></div>`)
       .append(
         $(
-          `<div><div class="__company_info_quick_search_item_label">数据来源：</div><div class="__company_info_quick_search_item_value"><a href="${company.sourceUrl}" target = "_blank"; ref = "noopener noreferrer">${company.sourceUrl}</a></div></div>`
+          `<div class="__company_info_quick_search_item_source"><div class="__company_info_quick_search_item_label">数据来源：</div><div class="__company_info_quick_search_item_value"><a href="${company.sourceUrl}" target = "_blank"; ref = "noopener noreferrer">${company.sourceUrl}</a></div></div>`
         )
-      )
+      ).append(syncDataButton)
   );
-  contentDiv.append(
-    $(
-      `<div class="__company_info_quick_search_item"><div class="__company_info_quick_search_item_label">数据同步时间：</div><div class="__company_info_quick_search_item_value">${convertTimeOffsetToHumanReadable(
-        company.updateDatetime
-      )}</div></div>`
-    ).append(syncDataButton));
   return contentDiv[0];
 }
 
@@ -1166,7 +1174,7 @@ async function renderWebsiteIpc(element, website) {
     } else {
       let abortFunctionHandler = null;
       const url = `https://icp.aizhan.com/${encodeURIComponent(
-        getDomain(website)
+        getDomain(autoFillHttp(website))
       )}/`;
       const result = await httpFetchGetText(url, (abortFunction) => {
         abortFunctionHandler = abortFunction;
@@ -1306,70 +1314,80 @@ async function renderWebsiteStatus(element, website) {
 export function createSearchCompanyLink(keyword) {
   const decode = encodeURIComponent(keyword);
   const dom = document.createElement("div");
-  const internetDiv = document.createElement("div");
-  internetDiv.className =
+  dom.className = "__company_info_quick_search_wrapper";
+  const quickSearch = $(`<div></div>`)[0];
+  quickSearch.className =
     "__company_info_quick_search_item __company_info_other_channel";
-  const internetLabelDiv = document.createElement("div");
-  internetLabelDiv.className = "__company_info_quick_search_item_label";
-  internetLabelDiv.textContent = " - 互联网渠道";
-  internetDiv.appendChild(
+  const buttonAnchorName = genUniqueId();
+  const button = $(`<div class="__comment_button" style="anchor-name:--${buttonAnchorName};">其他查询渠道</div>`)[0];
+  const menu = $(`<div
+    style="display:none;position-anchor: --${buttonAnchorName};" class="__modal"
+      ></div>`)[0];
+  const toggleMenu = () => {
+    if (menu.style.display == "none") {
+      menu.style.display = "block";
+    } else {
+      menu.style.display = "none";
+    }
+  };
+  menu.addEventListener('click', toggleMenu);
+  button.addEventListener('click', toggleMenu);
+  quickSearch.appendChild(button);
+
+  menu.appendChild($(`<div>互联网渠道：</div>`)[0]);
+  menu.appendChild(
     createATagWithSearch(`https://aiqicha.baidu.com/s?q=${decode}`, "爱企查")
   );
-  internetDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(
       `https://www.xiaohongshu.com/search_result?keyword=${decode}`,
       "小红书"
     )
   );
-  internetDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(
       `https://maimai.cn/web/search_center?type=feed&query=${decode}&highlight=true`,
       "脉脉"
     )
   );
-  internetDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(`https://www.bing.com/search?q=${decode}`, "必应")
   );
-  internetDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(`https://www.google.com/search?q=${decode}`, "Google")
   );
-  internetDiv.appendChild(internetLabelDiv);
-  dom.appendChild(internetDiv);
-  const govDiv = document.createElement("div");
-  govDiv.className =
-    "__company_info_quick_search_item __company_info_other_channel";
-  const govLabelDiv = document.createElement("div");
-  govLabelDiv.className = "__company_info_quick_search_item_label";
-  govLabelDiv.textContent = "- 政府渠道";
-  govDiv.appendChild(
+
+  menu.appendChild($(`<div>政府渠道：</div>`)[0]);
+  menu.appendChild(
     createATagWithSearch(
       `https://beian.miit.gov.cn/#/Integrated/recordQuery`,
       "工信部"
     )
   );
-  govDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(
       `https://www.creditchina.gov.cn/xinyongxinxixiangqing/xyDetail.html?keyword=${decode}`,
       "信用中国"
     )
   );
-  govDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(
       `https://www.gsxt.gov.cn/corp-query-homepage.html`,
       "企业信用"
     )
   );
-  govDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(`http://zxgk.court.gov.cn/zhzxgk/`, "执行信息")
   );
-  govDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(`https://wenshu.court.gov.cn/`, "裁判文书")
   );
-  govDiv.appendChild(
+  menu.appendChild(
     createATagWithSearch(`https://xwqy.gsxt.gov.cn/`, "个体私营")
   );
-  govDiv.appendChild(govLabelDiv);
-  dom.appendChild(govDiv);
+
+  quickSearch.appendChild(menu);
+  dom.appendChild(quickSearch);
   return dom;
 }
 
@@ -1396,10 +1414,14 @@ function createOtherCompanyTag(companyName) {
 }
 
 async function asyncRenderCompanyJobTag(div, companyId) {
-  const companyTagDTO = (await CompanyApi.getAllCompanyTagDTOByCompanyId(companyId)).filter(item => !(item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source == null));
-  convertToTagData(companyTagDTO).forEach(item => {
-    div.appendChild(createTag(item))
-  });
+  const companyTagDTOList = (await CompanyApi.getAllCompanyTagDTOByCompanyId(companyId)).filter(item => !(item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source == null));
+  if (companyTagDTOList.length > 0) {
+    convertToTagData(companyTagDTOList).forEach(item => {
+      div.appendChild(createTag(item))
+    });
+  } else {
+    div.parentElement.style = "display:none;";
+  }
 }
 
 function createMyCompanyTag(companyName) {

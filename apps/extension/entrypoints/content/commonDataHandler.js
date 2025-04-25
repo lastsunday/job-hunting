@@ -103,7 +103,7 @@ export function getJobIds(list, platform) {
     if (PLATFORM_51JOB == platform) {
       jobId = item.jobId;
     } else if (PLATFORM_BOSS == platform) {
-      jobId = item.encryptJobId;
+      jobId = item.encryptJobId ?? item.encryptId;
     } else if (PLATFORM_ZHILIAN == platform) {
       jobId = item.jobId;
     } else if (PLATFORM_LAGOU == platform) {

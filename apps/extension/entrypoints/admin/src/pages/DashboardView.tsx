@@ -254,7 +254,7 @@ const publicJobTrainList = [
 ];
 const jobWebsiteList = [
   {
-    url: 'https://www.zhipin.com/web/geek/job',
+    url: 'https://www.zhipin.com/web/geek/jobs',
     label: 'BOSS直聘',
     logo: logo.boss,
     desc: ``,

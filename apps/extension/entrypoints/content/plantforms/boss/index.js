@@ -10,9 +10,9 @@ import {
   renderSortJobItem,
   renderTimeTag,
   setupSortJobItem,
-  sortJobList,
 } from "../../commonRender";
 import onlineFilter from "./onlineFilter";
+import { infoLog } from "../../../../common/log";
 
 const DELAY_FETCH_TIME = 1000; //ms
 const DELAY_FETCH_TIME_NO_LOGIN = 75; //ms
@@ -36,23 +36,23 @@ export function getBossData(responseText) {
 
 // 获取职位列表节点
 function getListByNode(node) {
-  const children = node?.children;
+  const children = node?.querySelectorAll(".card-area");
   return function getListItem(index) {
     return children?.[index];
   };
 }
 
-// 监听 search-job-result 节点，判断职位列表是否被挂载
+// 监听职位列表容器节点，判断职位列表是否被挂载
 function mutationContainer() {
   return new Promise((resolve, reject) => {
-    const dom = document.querySelector(".search-job-result");
+    const dom = document.body;
     const observer = new MutationObserver(function (childList, obs) {
       (childList || []).forEach((item) => {
         const { addedNodes } = item;
         if (addedNodes && addedNodes.length > 0) {
           addedNodes.forEach((node) => {
             const { className } = node;
-            if (className === "job-list-box") {
+            if (className === "rec-job-list") {
               observer.disconnect();
               resolve(node);
             }
@@ -232,4 +232,13 @@ function isLoggedInByCookie(cookieName) {
 function isLoggedIn() {
   const cookieCheck = isLoggedInByCookie('bst'); // 猜测为 boss token
   return cookieCheck;
+}
+
+export async function handleJobDetail(data) {
+  const jobId = getJobIds([data], PLATFORM_BOSS)[0];
+  if (jobId) {
+    infoLog(`[handleJobDetail] save jobBrowseDetailHistory start jobId = ${jobId}`);
+    await JobApi.addJobBrowseDetailHistory(jobId);
+    infoLog(`[handleJobDetail] save jobBrowseDetailHistory success jobId = ${jobId}`);
+  }
 }

@@ -1,5 +1,5 @@
 import '@webcomponents/custom-elements';
-import { getBossData } from "../content/plantforms/boss/index.js";
+import { handleJobDetail } from "../content/plantforms/boss/index.js";
 import { handleBossRecommendData } from "../content/plantforms/boss/recommend.js";
 import { getJob51Data } from "../content/plantforms/job51/index.js";
 import { getJobsdbData } from "../content/plantforms/jobsdb/index.js";
@@ -41,17 +41,19 @@ export default defineContentScript({
                 if (!data) return;
                 const responseURL = data?.responseURL;
                 if (responseURL) {
-                    // boss直聘接口
-                    if (pathname == "/web/geek/job" && responseURL.indexOf("/search/joblist.json") !== -1) {
-                        getBossData(data?.response);
-                    }
-
-                    // boss直聘推荐页接口
-                    if ((pathname == "/web/geek/jobs" || pathname == "/web/geek/job-recommend") && (responseURL.indexOf("/wapi/zpgeek/pc/recommend/job/list.json") !== -1 || responseURL.indexOf("/search/joblist.json") !== -1)) {
-                        const url = new URL(responseURL);
-                        const page = Number.parseInt(url.searchParams.get("page"));
-                        const pageSize = Number.parseInt(url.searchParams.get("pageSize"));
-                        handleBossRecommendData(JSON.parse(data?.response)?.zpData?.jobList, page, pageSize);
+                    // boss直聘推荐页/搜索页接口
+                    if (pathname == "/web/geek/job" || pathname == "/web/geek/jobs" || pathname == "/web/geek/job-recommend") {
+                        if (responseURL.indexOf("/wapi/zpgeek/pc/recommend/job/list.json") !== -1 || responseURL.indexOf("/search/joblist.json") !== -1) {
+                            const url = new URL(responseURL);
+                            const page = Number.parseInt(url.searchParams.get("page"));
+                            const pageSize = Number.parseInt(url.searchParams.get("pageSize"));
+                            handleBossRecommendData(JSON.parse(data?.response)?.zpData?.jobList, page, pageSize);
+                        } else if (responseURL.indexOf("/wapi/zpgeek/job/detail.json") !== -1) {
+                            const jobInfo = JSON.parse(data?.response)?.zpData?.jobInfo;
+                            await handleJobDetail(jobInfo);
+                        } else {
+                            //skip
+                        }
                     }
 
                     // 智联招聘接口
