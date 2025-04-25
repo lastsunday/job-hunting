@@ -215,6 +215,7 @@ export function finalRender(jobDTOList, { platform, isFinalRender = true, isReco
     const jobId = item.jobId;
     const jobItemIdSha256 = genIdFromText(jobId);
     const commentWrapperDiv = document.getElementById("wrapper" + jobId);
+    const jobCardItemDom = commentWrapperDiv.parentElement.parentElement;
     if (commentWrapperDiv) {
       commentWrapperDiv.classList.add("__comment_wrapper");
       commentWrapperDiv.classList.add("__" + platform + "_comment_wrapper");
@@ -223,7 +224,7 @@ export function finalRender(jobDTOList, { platform, isFinalRender = true, isReco
         "职位评论",
         item.jobName + "-" + item.jobCompanyName,
         jobItemIdSha256,
-        { autoLoad: true, isRecommendPage, platform }
+        { autoLoad: true, isRecommendPage, platform, jobCardItemDom }
       );
       commentWrapperDiv.append(jobItemCommentButton);
       // 换行
@@ -231,19 +232,21 @@ export function finalRender(jobDTOList, { platform, isFinalRender = true, isReco
       if (isFinalRender && i == jobDTOList.length - 1) {
         commentWrapperDiv.appendChild($(`<div class="__status_job_render_finish"></div>`)[0]);
       }
-      const jobCardItem = commentWrapperDiv.parentElement.parentElement;
       if (item.jobDescription) {
-        jobCardItem.title = item.jobDescription;
+        jobCardItemDom.title = item.jobDescription;
       }
     }
   }
 }
 
-export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id, { autoLoad = false, platform, isRecommendPage } = {}) {
+export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle, id, { autoLoad = false, platform, isRecommendPage, jobCardItemDom } = {}) {
+  let targetDialogWrapper = jobCardItemDom;
+  const buttonAnchorName = genUniqueId();
   const dialogDiv = document.createElement("div");
-  dialogDiv.className = "__comment_dialog";
+  dialogDiv.className = "__comment_dialog __modal __modal_bottom";
+  dialogDiv.style = `position-anchor: --${buttonAnchorName};`;
   if (PLATFORM_BOSS == platform && isRecommendPage) {
-    dialogDiv.style = "position:relative;"
+    targetDialogWrapper = jobCardItemDom.parentElement;
   }
   const menuDiv = document.createElement("div");
   menuDiv.className = "__comment_menu";
@@ -259,7 +262,7 @@ export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle
   closeDiv.addEventListener("click", (event) => {
     event.preventDefault();
     event.stopPropagation();
-    commentWrapperDiv.removeChild(dialogDiv);
+    targetDialogWrapper.removeChild(dialogDiv);
   });
   menuDiv.appendChild(closeDiv);
 
@@ -324,12 +327,12 @@ export function genCommentTextButton(commentWrapperDiv, buttonLabel, dialogTitle
       }
     }, contentDiv);
   }
-  const commentBadgWrapper = $(`<div class="__comment_badge_wrapper"></div>`)[0];
+  const commentBadgWrapper = $(`<div class="__comment_badge_wrapper" style="anchor-name:--${buttonAnchorName};"></div>`)[0];
   commentButtonDiv.appendChild(commentBadgWrapper)
   commentButtonDiv.addEventListener("click", async (event) => {
     event.preventDefault();
     event.stopPropagation();
-    commentWrapperDiv.appendChild(dialogDiv);
+    targetDialogWrapper.appendChild(dialogDiv);
     dialogDiv.classList.add("__dialog_normal");
     clearAllChildNode(contentDiv);
     dialogDiv.append(contentDiv);
@@ -976,7 +979,7 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
           "公司评论",
           companyName,
           companyIdSha256,
-          { autoLoad: true, isRecommendPage, platform }
+          { autoLoad: true, isRecommendPage, platform, jobCardItemDom }
         );
         // 换行
         commentWrapperDiv.appendChild(companyCommentButton);
