@@ -10,9 +10,9 @@ import {
   renderSortJobItem,
   renderTimeTag,
   setupSortJobItem,
-  sortJobList,
 } from "../../commonRender";
 import onlineFilter from "./onlineFilter";
+import { infoLog } from "../../../../common/log";
 
 const DELAY_FETCH_TIME = 1000; //ms
 const DELAY_FETCH_TIME_NO_LOGIN = 75; //ms
@@ -232,4 +232,13 @@ function isLoggedInByCookie(cookieName) {
 function isLoggedIn() {
   const cookieCheck = isLoggedInByCookie('bst'); // 猜测为 boss token
   return cookieCheck;
+}
+
+export async function handleJobDetail(data) {
+  const jobId = getJobIds([data], PLATFORM_BOSS)[0];
+  if (jobId) {
+    infoLog(`[handleJobDetail] save jobBrowseDetailHistory start jobId = ${jobId}`);
+    await JobApi.addJobBrowseDetailHistory(jobId);
+    infoLog(`[handleJobDetail] save jobBrowseDetailHistory success jobId = ${jobId}`);
+  }
 }
