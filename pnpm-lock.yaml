@@ -322,8 +322,8 @@ importers:
         specifier: ^4.4.6
         version: 4.4.6(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-router:
-        specifier: ^7.5.1
-        version: 7.5.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        specifier: ^7.5.2
+        version: 7.5.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       semver:
         specifier: ^7.7.1
         version: 7.7.1
@@ -2150,8 +2150,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@inquirer/prompts@7.4.1':
-    resolution: {integrity: sha512-UlmM5FVOZF0gpoe1PT/jN4vk8JmpIWBlMvTL8M+hlvPmzN89K6z03+IFmyeu/oFCenwdwHDr2gky7nIGSEVvlA==}
+  '@inquirer/prompts@7.5.0':
+    resolution: {integrity: sha512-tk8Bx7l5AX/CR0sVfGj3Xg6v7cYlFBkEahH+EgBB+cZib6Fc83dwerTbzj7f2+qKckjIUGsviWRI1d7lx6nqQA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -2159,8 +2159,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@inquirer/rawlist@4.0.12':
-    resolution: {integrity: sha512-wNPJZy8Oc7RyGISPxp9/MpTOqX8lr0r+lCCWm7hQra+MDtYRgINv1hxw7R+vKP71Bu/3LszabxOodfV/uTfsaA==}
+  '@inquirer/rawlist@4.1.0':
+    resolution: {integrity: sha512-6ob45Oh9pXmfprKqUiEeMz/tjtVTFQTgDDz1xAMKMrIvyrYjAmRbQZjMJfsictlL4phgjLhdLu27IkHNnNjB7g==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -2177,8 +2177,8 @@ packages:
       '@types/node':
         optional: true
 
-  '@inquirer/select@4.1.1':
-    resolution: {integrity: sha512-IUXzzTKVdiVNMA+2yUvPxWsSgOG4kfX93jOM4Zb5FgujeInotv5SPIJVeXQ+fO4xu7tW8VowFhdG5JRmmCyQ1Q==}
+  '@inquirer/select@4.2.0':
+    resolution: {integrity: sha512-KkXQ4aSySWimpV4V/TUJWdB3tdfENZUU765GjOIZ0uPwdbGIG6jrxD4dDf1w68uP+DVtfNhr1A92B+0mbTZ8FA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@types/node': '>=18'
@@ -10700,8 +10700,8 @@ packages:
     resolution: {integrity: sha512-z6F7K9bV85EfseRCp2bzrpyQ0Gkw1uLoCel9XBVWPg/TjRj94SkJzUTGfOa4bs7iJvBWtQG0Wq7wnI0syw3EBQ==}
     engines: {node: '>=0.10.0'}
 
-  react-router@7.5.1:
-    resolution: {integrity: sha512-/jjU3fcYNd2bwz9Q0xt5TwyiyoO8XjSEFXJY4O/lMAlkGTHWuHRAbR9Etik+lSDqMC7A7mz3UlXzgYT6Vl58sA==}
+  react-router@7.5.2:
+    resolution: {integrity: sha512-9Rw8r199klMnlGZ8VAsV/I8WrIF6IyJ90JQUdboupx1cdkgYqwnrYjH+I/nY/7cA1X5zia4mDJqH36npP7sxGQ==}
     engines: {node: '>=20.0.0'}
     peerDependencies:
       react: '>=18'
@@ -14810,7 +14810,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 18.19.86
 
-  '@inquirer/prompts@7.4.1(@types/node@18.19.86)':
+  '@inquirer/prompts@7.5.0(@types/node@18.19.86)':
     dependencies:
       '@inquirer/checkbox': 4.1.5(@types/node@18.19.86)
       '@inquirer/confirm': 5.1.9(@types/node@18.19.86)
@@ -14819,13 +14819,13 @@ snapshots:
       '@inquirer/input': 4.1.9(@types/node@18.19.86)
       '@inquirer/number': 3.0.12(@types/node@18.19.86)
       '@inquirer/password': 4.0.12(@types/node@18.19.86)
-      '@inquirer/rawlist': 4.0.12(@types/node@18.19.86)
+      '@inquirer/rawlist': 4.1.0(@types/node@18.19.86)
       '@inquirer/search': 3.0.12(@types/node@18.19.86)
-      '@inquirer/select': 4.1.1(@types/node@18.19.86)
+      '@inquirer/select': 4.2.0(@types/node@18.19.86)
     optionalDependencies:
       '@types/node': 18.19.86
 
-  '@inquirer/rawlist@4.0.12(@types/node@18.19.86)':
+  '@inquirer/rawlist@4.1.0(@types/node@18.19.86)':
     dependencies:
       '@inquirer/core': 10.1.10(@types/node@18.19.86)
       '@inquirer/type': 3.0.6(@types/node@18.19.86)
@@ -14842,7 +14842,7 @@ snapshots:
     optionalDependencies:
       '@types/node': 18.19.86
 
-  '@inquirer/select@4.1.1(@types/node@18.19.86)':
+  '@inquirer/select@4.2.0(@types/node@18.19.86)':
     dependencies:
       '@inquirer/core': 10.1.10(@types/node@18.19.86)
       '@inquirer/figures': 1.0.11
@@ -15687,7 +15687,7 @@ snapshots:
 
   '@napi-rs/cli@3.0.0-alpha.77(@emnapi/runtime@1.4.3)(@types/node@18.19.86)':
     dependencies:
-      '@inquirer/prompts': 7.4.1(@types/node@18.19.86)
+      '@inquirer/prompts': 7.5.0(@types/node@18.19.86)
       '@napi-rs/cross-toolchain': 0.0.19
       '@napi-rs/wasm-tools': 0.0.3
       '@octokit/rest': 21.1.1
@@ -25614,7 +25614,7 @@ snapshots:
 
   react-refresh@0.17.0: {}
 
-  react-router@7.5.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+  react-router@7.5.2(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
     dependencies:
       cookie: 1.0.2
       react: 19.1.0
