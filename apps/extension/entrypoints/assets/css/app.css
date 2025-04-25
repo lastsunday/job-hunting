@@ -304,6 +304,11 @@ div[data-search-sol-meta] {
   transform: translate(-50%, 0);
 }
 
+.__modal_bottom {
+  bottom: auto;
+  top: anchor(bottom);
+}
+
 .__company_info_quick_search_item_source {
   flex: 1;
 }
