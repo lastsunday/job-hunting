@@ -1,5 +1,4 @@
 use std::str::FromStr;
-
 use axum::{
     body::Body,
     http::{self, Request, Response},
@@ -14,6 +13,7 @@ use testcontainers::ContainerAsync;
 use testcontainers_modules::postgres::Postgres;
 use tower::ServiceExt;
 
+#[allow(dead_code)]
 pub async fn setup_database() -> (Option<ContainerAsync<Postgres>>, AppState) {
     // postgres
     // let container = postgres::Postgres::default().start().await.unwrap();
@@ -31,22 +31,26 @@ pub async fn setup_database() -> (Option<ContainerAsync<Postgres>>, AppState) {
     (container, state)
 }
 
+#[allow(dead_code)]
 pub async fn tear_down(container: &Option<ContainerAsync<Postgres>>) {
     if container.is_some() {
         container.as_ref().unwrap().stop().await.unwrap();
     }
 }
 
+#[allow(dead_code)]
 pub async fn response_to_json(response: Response<Body>) -> Value {
     let body_bytes = response.into_body().collect().await.unwrap().to_bytes();
     let value: Value = serde_json::from_slice(&body_bytes).unwrap();
     value
 }
 
+#[allow(dead_code)]
 pub fn get_json_paging_result_items(value: &Value) -> Vec<Value> {
     value["items"].as_array().unwrap().clone()
 }
 
+#[allow(dead_code)]
 pub fn get_from_value<T: FromStr>(value: &Value, name: &str) -> Result<T, T::Err> {
     if value.get(name).unwrap().is_string() {
         value
@@ -61,6 +65,7 @@ pub fn get_from_value<T: FromStr>(value: &Value, name: &str) -> Result<T, T::Err
     }
 }
 
+#[allow(dead_code)]
 pub async fn post_json(app: Router, uri: &str, json: &Value) -> Response<Body> {
     app.oneshot(
         Request::builder()
@@ -74,6 +79,7 @@ pub async fn post_json(app: Router, uri: &str, json: &Value) -> Response<Body> {
     .unwrap()
 }
 
+#[allow(dead_code)]
 pub fn str_to_datetime(value: String) -> Option<DateTime<FixedOffset>> {
     let result = DateTime::parse_from_rfc3339(&value);
     let result = match result {
@@ -83,6 +89,7 @@ pub fn str_to_datetime(value: String) -> Option<DateTime<FixedOffset>> {
     result
 }
 
+#[allow(dead_code)]
 pub fn datetime_to_str(datetime: Option<DateTime<FixedOffset>>) -> String {
     match datetime {
         Some(item) => item.to_rfc3339(),
@@ -94,10 +101,14 @@ use server::util::git::gen_openssh_key;
 use std::str;
 use testcontainers::runners::AsyncRunner;
 use testcontainers_modules::gitea::{self, Gitea, GiteaRepo};
+#[allow(dead_code)]
 pub const ADMIN_USERNAME: &str = "git-admin";
+#[allow(dead_code)]
 pub const ADMIN_PASSWORD: &str = "git-admin";
+#[allow(dead_code)]
 pub const DATA_REPO: &str = "job-hunting-data";
 
+#[allow(dead_code)]
 pub async fn setup_git_server() -> (ContainerAsync<Gitea>, u16, u16, String, String) {
     let (private_key, public_key) = gen_openssh_key();
     let gitea = Gitea::default()
@@ -117,6 +128,7 @@ pub async fn setup_git_server() -> (ContainerAsync<Gitea>, u16, u16, String, Str
     (gitea, ssh_port, http_port, private_key, public_key)
 }
 
+#[allow(dead_code)]
 pub async fn tear_down_git_server(container: Option<ContainerAsync<Gitea>>) {
     if container.is_some() {
         container.as_ref().unwrap().stop().await.unwrap();
