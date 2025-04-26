@@ -1,54 +1,49 @@
-use git2::{Cred, RemoteCallbacks};
-use server::util::git::gen_openssh_key;
 use std::str;
 use std::{fs, path::Path};
-use testcontainers::runners::AsyncRunner;
-use testcontainers_modules::gitea::{self, Gitea, GiteaRepo};
 use uuid::Uuid;
-
-const ADMIN_USERNAME: &str = "git-admin";
-const ADMIN_PASSWORD: &str = "git-admin";
-const DATA_REPO: &str = "job-hunting-data";
-const TEST_DIR_PATH: &str = ".data_test_repo";
+mod common;
+use common::{setup_git_server, tear_down_git_server, ADMIN_PASSWORD, ADMIN_USERNAME, DATA_REPO};
+use server::service::data::{git_clone_by_http, git_clone_by_ssh};
 
 #[tokio::test]
-async fn test_clone_repo_success() {
-    let (private_key, public_key) = gen_openssh_key();
-    let gitea = Gitea::default()
-        .with_admin_account(ADMIN_USERNAME, ADMIN_PASSWORD, Some(public_key.clone()))
-        .with_repo(GiteaRepo::Private(DATA_REPO.to_owned()))
-        .start()
-        .await
-        .unwrap();
-    let ssh_port = gitea
-        .get_host_port_ipv4(gitea::GITEA_SSH_PORT)
-        .await
-        .unwrap();
+async fn test_clone_by_ssh_repo_success() {
+    let (gitea, ssh_port, _, private_key, public_key) = setup_git_server().await;
     let repo_url: &str =
         &format!("ssh://git@localhost:{ssh_port}/{ADMIN_USERNAME}/{DATA_REPO}.git");
-    let random_dir_name = Uuid::new_v4();
-    let local_path = &format!("{TEST_DIR_PATH}/{random_dir_name}");
-    let mut fo = git2::FetchOptions::new();
-    let mut callbacks = RemoteCallbacks::new();
-    callbacks.credentials(|_url, username_from_url, _allowed_types| {
-        Cred::ssh_key_from_memory(
-            username_from_url.unwrap(),
-            Some(&public_key.clone()),
-            &private_key.clone(),
-            None,
-        )
-    });
-    callbacks.certificate_check(|_cert, _str| Ok(git2::CertificateCheckStatus::CertificateOk));
-    fo.remote_callbacks(callbacks);
-    let mut builder = git2::build::RepoBuilder::new();
-    builder.fetch_options(fo);
-    let path = Path::new(local_path);
-    let _repo = match builder.clone(repo_url, path) {
+    let path_string = gen_unique_random_path();
+    let local_path = Path::new(&path_string);
+    let _repo = match git_clone_by_ssh(repo_url, &local_path, private_key, public_key) {
         Ok(repo) => repo,
         Err(e) => {
-            fs::remove_dir_all(path.parent().unwrap()).unwrap();
+            tear_down_git_server(Some(gitea)).await;
+            fs::remove_dir_all(local_path).unwrap();
             panic!("failed to clone: {}", e)
         }
     };
-    fs::remove_dir_all(path.parent().unwrap()).unwrap();
+    tear_down_git_server(Some(gitea)).await;
+    fs::remove_dir_all(local_path).unwrap();
+}
+
+#[tokio::test]
+async fn test_clone_by_http_repo_success() {
+    let (gitea, _, http_port, _, _) = setup_git_server().await;
+    let repo_url: &str = &format!("http://localhost:{http_port}/{ADMIN_USERNAME}/{DATA_REPO}.git");
+    let path_string = gen_unique_random_path();
+    let local_path = Path::new(&path_string);
+    let _repo = match git_clone_by_http(repo_url, &local_path, ADMIN_USERNAME, ADMIN_PASSWORD) {
+        Ok(repo) => repo,
+        Err(e) => {
+            tear_down_git_server(Some(gitea)).await;
+            fs::remove_dir_all(local_path).unwrap();
+            panic!("failed to clone: {}", e)
+        }
+    };
+    tear_down_git_server(Some(gitea)).await;
+    fs::remove_dir_all(local_path).unwrap();
+}
+
+fn gen_unique_random_path() -> String {
+    let random_dir_name = Uuid::new_v4();
+    let path_string = &format!(".{random_dir_name}");
+    path_string.to_string()
 }

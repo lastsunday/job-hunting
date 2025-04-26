@@ -7,9 +7,9 @@ use axum::{
 };
 use chrono::{DateTime, FixedOffset};
 use http_body_util::BodyExt;
-use server::{database::establish_connection, AppState};
 use migration::MigratorTrait;
 use serde_json::Value;
+use server::{database::establish_connection, AppState};
 use testcontainers::ContainerAsync;
 use testcontainers_modules::postgres::Postgres;
 use tower::ServiceExt;
@@ -87,5 +87,38 @@ pub fn datetime_to_str(datetime: Option<DateTime<FixedOffset>>) -> String {
     match datetime {
         Some(item) => item.to_rfc3339(),
         None => "".to_owned(),
+    }
+}
+
+use server::util::git::gen_openssh_key;
+use std::str;
+use testcontainers::runners::AsyncRunner;
+use testcontainers_modules::gitea::{self, Gitea, GiteaRepo};
+pub const ADMIN_USERNAME: &str = "git-admin";
+pub const ADMIN_PASSWORD: &str = "git-admin";
+pub const DATA_REPO: &str = "job-hunting-data";
+
+pub async fn setup_git_server() -> (ContainerAsync<Gitea>, u16, u16, String, String) {
+    let (private_key, public_key) = gen_openssh_key();
+    let gitea = Gitea::default()
+        .with_admin_account(ADMIN_USERNAME, ADMIN_PASSWORD, Some(public_key.clone()))
+        .with_repo(GiteaRepo::Private(DATA_REPO.to_owned()))
+        .start()
+        .await
+        .unwrap();
+    let ssh_port = gitea
+        .get_host_port_ipv4(gitea::GITEA_SSH_PORT)
+        .await
+        .unwrap();
+    let http_port = gitea
+        .get_host_port_ipv4(gitea::GITEA_HTTP_PORT)
+        .await
+        .unwrap();
+    (gitea, ssh_port, http_port, private_key, public_key)
+}
+
+pub async fn tear_down_git_server(container: Option<ContainerAsync<Gitea>>) {
+    if container.is_some() {
+        container.as_ref().unwrap().stop().await.unwrap();
     }
 }
