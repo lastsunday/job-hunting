@@ -1,3 +1,14 @@
+## 3.12.0 (2025-04-27)
+
+### 🚀 Features
+
+- 公司信息新增注册资本
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+- guguhetun @guguhetun
+
 ## 3.11.6 (2025-04-25)
 
 ### 🩹 Fixes
