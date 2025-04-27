@@ -106,18 +106,18 @@ export const CompanyService = {
   */
   statisticCompany: async function (message, param) {
     try {
-      let result = new StatisticCompanyDTO();
-      let now = dayjs();
-      let todayStart = now.startOf("day").format();
-      let todayEnd = now
+      const result = new StatisticCompanyDTO();
+      const now = dayjs();
+      const todayStart = now.startOf("day").format();
+      const todayEnd = now
         .startOf("day")
         .add(1, "day")
         .format();
-      let yesterdayStart = now
+      const yesterdayStart = now
         .startOf("day")
         .add(2, "day")
         .format();
-      let yesterdayEnd = now
+      const yesterdayEnd = now
         .startOf("day")
         .add(1, "day")
         .format();
@@ -158,7 +158,7 @@ export const CompanyService = {
      */
   companyStatisticGroupByStartDate: async function (message, param) {
     try {
-      let sql = `SELECT 
+      const sql = `SELECT 
           t2.level AS name,
           COUNT(t2.level) AS total
         FROM
@@ -186,7 +186,7 @@ export const CompanyService = {
         ) AS t2
         GROUP BY
           name;`;
-      let result = await companyStatistic({ sql });
+      const result = await companyStatistic({ sql });
       postSuccessMessage(message, result);
     } catch (e) {
       postErrorMessage(
@@ -203,7 +203,7 @@ export const CompanyService = {
    */
   companyStatisticGroupByInsurance: async function (message, param) {
     try {
-      let sql = `SELECT 
+      const sql = `SELECT 
           t2.level AS name,
           COUNT(t2.level) AS total
         FROM
@@ -235,7 +235,7 @@ export const CompanyService = {
         GROUP BY
           name;
       `;
-      let result = await companyStatistic({ sql });
+      const result = await companyStatistic({ sql });
       postSuccessMessage(message, result);
     } catch (e) {
       postErrorMessage(
@@ -248,9 +248,9 @@ export const CompanyService = {
 
 export const _searchCompany = async ({ param = null, connection = null } = {}) => {
   connection ??= await getDb();
-  let result = new SearchCompanyBO();
+  const result = new SearchCompanyBO();
   let sqlQuery = "";
-  let whereCondition = genSearchWhereConditionSql(param);
+  const whereCondition = genSearchWhereConditionSql(param);
   let orderBy = "";
   if (param.orderByColumn != null && param.orderBy != null) {
     orderBy =
@@ -262,8 +262,8 @@ export const _searchCompany = async ({ param = null, connection = null } = {}) =
   }
   let limit = '';
   if (param.pageNum != null && param.pageSize != null) {
-    let limitStart = (param.pageNum - 1) * param.pageSize;
-    let limitEnd = param.pageSize;
+    const limitStart = (param.pageNum - 1) * param.pageSize;
+    const limitEnd = param.pageSize;
     limit = " limit " + limitEnd + " OFFSET " + limitStart;
   }
   const sqlSearchQuery = genSqlSearchQuery();
@@ -271,16 +271,16 @@ export const _searchCompany = async ({ param = null, connection = null } = {}) =
   sqlQuery += whereCondition;
   sqlQuery += orderBy;
   sqlQuery += limit;
-  let items = [];
+  const items = [];
   let total = 0;
   const { rows } = await connection.query(sqlQuery);
   const queryRows = convertRows(rows);
   for (let i = 0; i < queryRows.length; i++) {
-    let item = queryRows[i];
-    let resultItem = new CompanyDTO();
-    let keys = Object.keys(item);
+    const item = queryRows[i];
+    const resultItem = new CompanyDTO();
+    const keys = Object.keys(item);
     for (let n = 0; n < keys.length; n++) {
-      let key = keys[n];
+      const key = keys[n];
       resultItem[toHump(key)] = item[key];
     }
     resultItem.tagNameArray = [];
@@ -291,14 +291,14 @@ export const _searchCompany = async ({ param = null, connection = null } = {}) =
   let sqlCountSubTable = "";
   sqlCountSubTable += sqlSearchQuery;
   sqlCountSubTable += whereCondition;
-  let ids = [];
-  let itemIdObjectMap = new Map();
+  const ids = [];
+  const itemIdObjectMap = new Map();
   if (items.length > 0) {
     items.forEach(item => {
       ids.push(item.companyId);
       itemIdObjectMap.set(item.companyId, item);
     });
-    let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids, { connection });
+    const companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids, { connection });
     companyTagDTOList.forEach(item => {
       itemIdObjectMap.get(item.companyId).tagNameArray.push(item.tagName);
       itemIdObjectMap.get(item.companyId).tagIdArray.push(item.tagId);
@@ -306,7 +306,7 @@ export const _searchCompany = async ({ param = null, connection = null } = {}) =
     });
   }
   //count
-  let sqlCount = `SELECT COUNT(*) AS total FROM (${sqlCountSubTable}) AS t1`;
+  const sqlCount = `SELECT COUNT(*) AS total FROM (${sqlCountSubTable}) AS t1`;
   const { rows: queryCountRows } = await connection.query(sqlCount);
   total = queryCountRows[0].total;
   result.items = items;
@@ -315,7 +315,7 @@ export const _searchCompany = async ({ param = null, connection = null } = {}) =
 }
 
 async function companyStatistic({ sql }) {
-  let result = [];
+  const result = [];
   const { rows: resultRows } = await (await getDb()).query(sql);
   resultRows.forEach(item => {
     result.push(Object.assign(new ChartBasicDTO(), item));
@@ -333,20 +333,20 @@ export async function _getCompanyDTOByIds(companyIds, { connection = null } = {}
     return [];
   }
   connection ??= await getDb();
-  let items = [];
+  const items = [];
   let sqlQuery = "";
-  let whereCondition = genIdsWhereConditionSql(companyIds);
+  const whereCondition = genIdsWhereConditionSql(companyIds);
   const sqlSearchQuery = genSqlSearchQuery();
   sqlQuery += sqlSearchQuery;
   sqlQuery += whereCondition;
   const { rows } = await connection.query(sqlQuery);
   const queryRows = convertRows(rows);
   for (let i = 0; i < queryRows.length; i++) {
-    let item = queryRows[i];
-    let resultItem = new CompanyDTO();
-    let keys = Object.keys(item);
+    const item = queryRows[i];
+    const resultItem = new CompanyDTO();
+    const keys = Object.keys(item);
     for (let n = 0; n < keys.length; n++) {
-      let key = keys[n];
+      const key = keys[n];
       resultItem[toHump(key)] = item[key];
     }
     resultItem.tagNameArray = [];
@@ -354,14 +354,14 @@ export async function _getCompanyDTOByIds(companyIds, { connection = null } = {}
     resultItem.companyTagList = [];
     items.push(resultItem);
   }
-  let ids = [];
-  let itemIdObjectMap = new Map();
+  const ids = [];
+  const itemIdObjectMap = new Map();
   if (items.length > 0) {
     items.forEach(item => {
       ids.push(item.companyId);
       itemIdObjectMap.set(item.companyId, item);
     });
-    let companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids, { connection });
+    const companyTagDTOList = await _getAllCompanyTagDTOByCompanyIds(ids, { connection });
     companyTagDTOList.forEach(item => {
       itemIdObjectMap.get(item.companyId).tagNameArray.push(item.tagName);
       itemIdObjectMap.get(item.companyId).tagIdArray.push(item.tagId);
@@ -421,7 +421,7 @@ function genSearchWhereConditionSql(param) {
 }
 
 function genIdsWhereConditionSql(companyIds) {
-  let ids = "'" + companyIds.join("','") + "'";
+  const ids = "'" + companyIds.join("','") + "'";
   let whereCondition = "";
   if (companyIds) {
     whereCondition += ` AND company_id IN (${ids})`;
@@ -434,7 +434,7 @@ function genIdsWhereConditionSql(companyIds) {
 }
 
 function genSqlSearchQuery() {
-  return `SELECT company_id, company_name, company_desc, company_start_date, company_status, company_legal_person, company_unified_code, company_web_site, company_insurance_num, company_self_risk, company_union_risk, company_address, company_scope, company_tax_no, company_industry, company_license_number, company_longitude, company_latitude, source_url, source_platform, source_record_id, source_refresh_datetime, create_datetime, update_datetime FROM company`
+  return `SELECT company_id, company_name, company_desc, company_start_date, company_status, company_legal_person, company_unified_code, company_web_site, company_insurance_num, company_self_risk, company_union_risk, company_address, company_scope, company_tax_no, company_industry, company_license_number, company_longitude, company_latitude, source_url, source_platform, source_record_id, source_refresh_datetime, create_datetime, update_datetime,reg_capital_value,reg_capital_currency,paidin_capital_value,paidin_capital_currency FROM company`
 }
 
 export const _companyGetByIds = async ({ param = null, connection = null } = {}) => {

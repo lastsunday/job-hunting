@@ -1,3 +1,25 @@
+## 3.12.1 (2025-04-27)
+
+### 🩹 Fixes
+
+- 更换互联网企业黑名单域名(job.me88.top)->(www.job996.xyz)
+- 修复职位卡片中公司注册资本展示异常的问题
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
+## 3.12.0 (2025-04-27)
+
+### 🚀 Features
+
+- 公司信息新增注册资本
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+- guguhetun @guguhetun
+
 ## 3.11.6 (2025-04-25)
 
 ### 🩹 Fixes

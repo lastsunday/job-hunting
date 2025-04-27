@@ -1,4 +1,4 @@
-import { CompanyTagDTO } from "@/common/data/dto/companyTagDTO";
+import { CompanyTagDTO } from '@/common/data/dto/companyTagDTO';
 export type CompanyData = {
   id: string;
   name: string;
@@ -6,7 +6,7 @@ export type CompanyData = {
   url?: string;
   status: string;
   startDate: Date;
-  industry: String;
+  industry: string;
   unifiedCode: string;
   taxNo: string;
   licenseNumber: string;
@@ -19,9 +19,11 @@ export type CompanyData = {
   longitude: number;
   latitude: number;
   desc: string;
-  sourcePlatform: string,
-  sourceRecordId: string,
-  sourceRefreshDatetime: Date,
-  createDatetime: Date,
-  updateDatetime: Date,
+  sourcePlatform: string;
+  sourceRecordId: string;
+  sourceRefreshDatetime: Date;
+  createDatetime: Date;
+  updateDatetime: Date;
+  regCapitalValue: number;
+  regCapitalCurrency: string;
 };

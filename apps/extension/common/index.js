@@ -24,7 +24,7 @@ export function getUrlByTagAndCompanyName(tagName, companyName) {
     if (tagName == TAG_RUOBILIN_BLACK_LIST) {
         return `https://kjxb.org/?s=${decode}&post_type=question`;
     } else if (tagName == TAG_IT_BLACK_LIST) {
-        return `https://job.me88.top/index.php/search/=${decode}`;
+        return `https://www.job996.xyz/index.php/search/=${decode}`;
     } else if (tagName == TAG_IT_BLACK_LIST_2) {
         return `http://www.blackdir.com/?search=${decode}`;
     } else if (tagName == TAG_CREDIT_BJ_BLACK_LIST) {

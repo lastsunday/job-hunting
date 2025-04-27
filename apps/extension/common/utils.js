@@ -84,6 +84,26 @@ export function convertTimeOffsetToHumanReadable(dateTime, now) {
   }
 }
 
+export function convertNumberToHumanReadable(value) {
+  if (value == null || value == undefined) {
+    return "-";
+  } else {
+    let targetValue = value;
+    let unit = "";
+    if (value < 10000) {
+      //skip
+    } else if (value < 100000000) {
+      targetValue = value / 10000;
+      unit = "万";
+    } else {
+      targetValue = value / 100000000;
+      unit = "亿";
+    }
+    targetValue = Number(targetValue.toFixed(3));
+    return `${targetValue}${unit}`
+  }
+}
+
 export function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
@@ -156,7 +176,7 @@ export function isNumeric(value) {
   return !isNaN(parseFloat(value)) && isFinite(value);
 }
 
-const isEmpty = (str) => !str?.length;
+export const isEmpty = (str) => !str?.length;
 
 export function isBlank(str) {
   return !str || /^\s*$/.test(str);

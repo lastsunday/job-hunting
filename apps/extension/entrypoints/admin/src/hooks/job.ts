@@ -17,7 +17,7 @@ import { JobData } from "../data/JobData";
 export function useJob() {
 
     const convertJobDataToGeojson = (items: JobData[]): FeatureCollection => {
-        let features: Feature[] = [];
+        const features: Feature[] = [];
         items.forEach(item => {
             if (item.longitude != null && item.latitude != null) {
                 features.push({
@@ -31,7 +31,7 @@ export function useJob() {
                 });
             }
         });
-        let result: FeatureCollection = {
+        const result: FeatureCollection = {
             type: "FeatureCollection",
             features: features,
         };
@@ -39,7 +39,7 @@ export function useJob() {
     }
 
     const convertToJobDataList = (item: any[]): JobData[] => {
-        let result = [];
+        const result = [];
         item.map((item) => {
             result.push(convertToJobData(item));
         });
@@ -63,6 +63,8 @@ export function useJob() {
             companyLongitude,
             companyLatitude,
             companyDesc,
+            regCapitalValue,
+            regCapitalCurrency,
         } = item.companyDTO ?? {};
 
         return {
@@ -91,6 +93,8 @@ export function useJob() {
                 longitude: companyLongitude,
                 latitude: companyLatitude,
                 desc: companyDesc,
+                regCapitalValue,
+                regCapitalCurrency,
             },
             jobTagList: item.jobTagDTOList,
             location: item.jobLocationName,

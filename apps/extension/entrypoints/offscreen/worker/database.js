@@ -7,6 +7,7 @@ import { ChangeLogV1 } from "./changeLog/changeLogV1";
 import { ChangeLogV10 } from './changeLog/changeLogV10';
 import { ChangeLogV11 } from './changeLog/changeLogV11';
 import { ChangeLogV12 } from './changeLog/changeLogV12';
+import { ChangeLogV13 } from './changeLog/changeLogV13';
 import { ChangeLogV2 } from "./changeLog/changeLogV2";
 import { ChangeLogV3 } from './changeLog/changeLogV3';
 import { ChangeLogV4 } from './changeLog/changeLogV4';
@@ -359,6 +360,7 @@ export const Database = {
           changelogList.push(new ChangeLogV10());
           changelogList.push(new ChangeLogV11());
           changelogList.push(new ChangeLogV12());
+          changelogList.push(new ChangeLogV13());
           initChangeLog(changelogList);
           initDb();
           initializing = true;

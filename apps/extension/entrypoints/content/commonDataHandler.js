@@ -29,6 +29,8 @@ import {
 } from "./common";
 import { AnalysisConfigDTO } from "../../common/data/dto/analysisConfigDTO";
 import { CONFIG_KEY_ANALYSIS } from "../../common/config";
+import { useCompany } from "../../common/hooks/company";
+const { convertCapitalValueFromString } = useCompany();
 
 const SALARY_MATCH = /(?<min>[0-9\.]*)(?<minUnit>\D*)(?<max>[0-9\.]*)(?<maxUnit>\D*)(?<month>\d*)/;
 const JOB_YEAR_MATCH = /(?<min>[0-9\.]*)\D*(?<max>[0-9\.]*)/;
@@ -720,6 +722,15 @@ function handleAiqichaData(source) {
     company.companyLongitude = wgs84[0];
     company.companyLatitude = wgs84[1];
   }
+  const { value: regCapitalValue, currency: regCapitalCurrency } = convertCapitalValueFromString(source.regCapital);
+  company.regCapitalValue = regCapitalValue;
+  company.regCapitalCurrency = regCapitalCurrency;
+  //TODO 当前调用的https://aiqicha.baidu.com/company_detail_[pid]页面信息里，实缴资本获取不到，需要调用https://aiqicha.baidu.com/detail/basicAllDataAjax?pid=[pid]，但是该接口做了接口调用验证的限制。
+  // const { value: paidinCapitalValue, currency: paidinCapitalCurrency } = convertCapitalValueFromString(source.paidinCapital);
+  // company.paidinCapitalValue = paidinCapitalValue;
+  // company.paidinCapitalCurrency = paidinCapitalCurrency;
+  company.paidinCapitalValue = null;
+  company.paidinCapitalCurrency = null;
   company.sourceUrl = source.sourceUrl;
   company.sourcePlatform = PLATFORM_AIQICHA;
   company.sourceRecordId = source.pid;

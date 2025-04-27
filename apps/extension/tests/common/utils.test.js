@@ -28,7 +28,8 @@ import {
   parseToLineObjectToToHumpObject,
   randomDelay,
   toHump,
-  toLine
+  toLine,
+  convertNumberToHumanReadable
 } from '../../common/utils';
 import sha256 from "crypto-js/sha256";
 
@@ -200,4 +201,24 @@ test('isToday should return true if the date is today', () => {
 
 test('cleanHTMLTag should remove HTML tags from string', () => {
   expect(cleanHTMLTag('<p>text</p>')).toBe('text');
+});
+
+test('convertNumberToHumanReadable should convert valid string', () => {
+  expect(convertNumberToHumanReadable(null)).toBe(`-`);
+  expect(convertNumberToHumanReadable(0.0001)).toBe(`0`);
+  expect(convertNumberToHumanReadable(0.001)).toBe(`0.001`);
+  expect(convertNumberToHumanReadable(1)).toBe(`1`);
+  expect(convertNumberToHumanReadable(10)).toBe(`10`);
+  expect(convertNumberToHumanReadable(100)).toBe(`100`);
+  expect(convertNumberToHumanReadable(1000)).toBe(`1000`);
+  expect(convertNumberToHumanReadable(14999.99999)).toBe(`1.5万`);
+  expect(convertNumberToHumanReadable(10000)).toBe(`1万`);
+  expect(convertNumberToHumanReadable(100000)).toBe(`10万`);
+  expect(convertNumberToHumanReadable(1000000)).toBe(`100万`);
+  expect(convertNumberToHumanReadable(10000000)).toBe(`1000万`);
+  expect(convertNumberToHumanReadable(100000000)).toBe(`1亿`);
+  expect(convertNumberToHumanReadable(1000000000)).toBe(`10亿`);
+  expect(convertNumberToHumanReadable(10000000000)).toBe(`100亿`);
+  expect(convertNumberToHumanReadable(10045640000)).toBe(`100.456亿`);
+  expect(convertNumberToHumanReadable(10045650000)).toBe(`100.457亿`);
 });

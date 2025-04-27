@@ -21,6 +21,7 @@ import {
   genUniqueId,
   getDomain,
   dateToStr,
+  convertNumberToHumanReadable,
 } from "../../common/utils";
 import {
   JOB_STATUS_DESC_NEWEST
@@ -1094,6 +1095,11 @@ export function createCompanyInfoDetail(company, quickSearchHandle) {
           `<div><div class="__company_info_quick_search_item_label">统一社会信用代码：</div>${company.companyUnifiedCode}</div>`
         )
       )
+      .append(
+        $(
+          `<div title='${company.regCapitalValue ? Number.prototype.toLocaleString.call(Number(company.regCapitalValue)) : "-"}'><div class="__company_info_quick_search_item_label" >注册资本：</div>${convertNumberToHumanReadable(company.regCapitalValue)}${company.regCapitalCurrency ? (company.regCapitalCurrency) : ""}</div>`
+        )
+      )
   );
   const websiteStatusElement = $(`<div></div>`);
   renderWebsiteStatus(websiteStatusElement[0], company.companyWebSite);
@@ -1584,11 +1590,11 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
   }));
   contentDiv.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
     title: "互联网企业黑名单",
-    sourceTitle: "信息来源:互联网企业黑名单 https://job.me88.top/",
-    sourceUrl: `https://job.me88.top/index.php/search/${encodeURIComponent(keyword)}`,
+    sourceTitle: "信息来源:互联网企业黑名单 https://www.job996.xyz/",
+    sourceUrl: `https://www.job996.xyz/index.php/search/${encodeURIComponent(keyword)}`,
     companyTag: TAG_IT_BLACK_LIST,
     searchFunction: async (keyword) => {
-      return await httpFetchGetTextWithAbort(`https://job.me88.top/index.php/search/${encodeURIComponent(keyword)}`);
+      return await httpFetchGetTextWithAbort(`https://www.job996.xyz/index.php/search/${encodeURIComponent(keyword)}`);
     },
     handleSearchCount: (result) => {
       const hyperlinks = $(result).find("div[class=\"post-box paddingall\"]");

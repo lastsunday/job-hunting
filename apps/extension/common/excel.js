@@ -219,6 +219,32 @@ export const COMPANY_FILE_HEADER = [
         "数据来源更新时间",
         "记录创建日期",
         "记录更新日期",
+    ], [
+        "公司",
+        "公司描述",
+        "成立时间",
+        "经营状态",
+        "法人",
+        "统一社会信用代码",
+        "官网",
+        "社保人数",
+        "自身风险数",
+        "关联风险数",
+        "地址",
+        "经营范围",
+        "纳税人识别号",
+        "所属行业",
+        "工商注册号",
+        "经度",
+        "纬度",
+        "注册资本",
+        "注册资本货币",
+        "数据来源地址",
+        "数据来源平台",
+        "数据来源记录编号",
+        "数据来源更新时间",
+        "记录创建日期",
+        "记录更新日期",
     ]
 ];
 
@@ -244,6 +270,8 @@ export const companyDataToExcelJSONArray = (list) => {
             工商注册号: item.companyLicenseNumber,
             经度: item.companyLongitude,
             纬度: item.companyLatitude,
+            注册资本: item.regCapitalValue,
+            注册资本货币: item.regCapitalCurrency,
             数据来源地址: item.sourceUrl,
             数据来源平台: item.sourcePlatform,
             数据来源记录编号: item.sourceRecordId,
@@ -280,6 +308,8 @@ export const companyExcelDataToObjectArray = (data, datetime) => {
         item.companyLicenseNumber = dataItem['工商注册号'];
         item.companyLongitude = dataItem['经度'];
         item.companyLatitude = dataItem['纬度'];
+        item.regCapitalValue = dataItem['注册资本'];
+        item.regCapitalCurrency = dataItem['注册资本货币'];
         item.sourceUrl = dataItem['数据来源地址'];
         item.sourcePlatform = dataItem['数据来源平台'];
         item.sourceRecordId = dataItem['数据来源记录编号'];
