@@ -3,7 +3,7 @@ import { CompanyData } from "../data/CompanyData";
 export function useCompany() {
 
     const convertToCompanyDataList = (items: any[]): CompanyData[] => {
-        let result = [];
+        const result = [];
         items.map((item) => {
             result.push(convertToCompanyData(item));
         });
@@ -37,6 +37,8 @@ export function useCompany() {
             createDatetime,
             updateDatetime,
             companyTagList,
+            regCapitalValue,
+            regCapitalCurrency,
         } = item ?? {};
         return {
             id: companyId,
@@ -63,6 +65,8 @@ export function useCompany() {
             sourceRefreshDatetime,
             createDatetime,
             updateDatetime,
+            regCapitalValue,
+            regCapitalCurrency,
         }
     }
 

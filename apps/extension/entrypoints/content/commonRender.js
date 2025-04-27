@@ -21,6 +21,7 @@ import {
   genUniqueId,
   getDomain,
   dateToStr,
+  convertNumberToHumanReadable,
 } from "../../common/utils";
 import {
   JOB_STATUS_DESC_NEWEST
@@ -1092,6 +1093,11 @@ export function createCompanyInfoDetail(company, quickSearchHandle) {
       .append(
         $(
           `<div><div class="__company_info_quick_search_item_label">统一社会信用代码：</div>${company.companyUnifiedCode}</div>`
+        )
+      )
+      .append(
+        $(
+          `<div title='${company.regCapitalValue ? Number.prototype.toLocaleString.call(Number(company.regCapitalValue)) : "-"}'><div class="__company_info_quick_search_item_label" >注册资本：</div>${convertNumberToHumanReadable(company.regCapitalValue)}${company.regCapitalCurrency ?? (company.regCapitalCurrency)}</div>`
         )
       )
   );
