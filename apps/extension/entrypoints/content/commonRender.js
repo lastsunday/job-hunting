@@ -1097,7 +1097,7 @@ export function createCompanyInfoDetail(company, quickSearchHandle) {
       )
       .append(
         $(
-          `<div title='${company.regCapitalValue ? Number.prototype.toLocaleString.call(Number(company.regCapitalValue)) : "-"}'><div class="__company_info_quick_search_item_label" >注册资本：</div>${convertNumberToHumanReadable(company.regCapitalValue)}${company.regCapitalCurrency ?? (company.regCapitalCurrency)}</div>`
+          `<div title='${company.regCapitalValue ? Number.prototype.toLocaleString.call(Number(company.regCapitalValue)) : "-"}'><div class="__company_info_quick_search_item_label" >注册资本：</div>${convertNumberToHumanReadable(company.regCapitalValue)}${company.regCapitalCurrency ? (company.regCapitalCurrency) : ""}</div>`
         )
       )
   );
