@@ -1590,11 +1590,11 @@ export function createCompanyReputation(keyword, companyTagUpdateCallback) {
   }));
   contentDiv.appendChild(genCompanyCheckingElement(keyword, companyTagUpdateCallback, {
     title: "互联网企业黑名单",
-    sourceTitle: "信息来源:互联网企业黑名单 https://job.me88.top/",
-    sourceUrl: `https://job.me88.top/index.php/search/${encodeURIComponent(keyword)}`,
+    sourceTitle: "信息来源:互联网企业黑名单 https://www.job996.xyz/",
+    sourceUrl: `https://www.job996.xyz/index.php/search/${encodeURIComponent(keyword)}`,
     companyTag: TAG_IT_BLACK_LIST,
     searchFunction: async (keyword) => {
-      return await httpFetchGetTextWithAbort(`https://job.me88.top/index.php/search/${encodeURIComponent(keyword)}`);
+      return await httpFetchGetTextWithAbort(`https://www.job996.xyz/index.php/search/${encodeURIComponent(keyword)}`);
     },
     handleSearchCount: (result) => {
       const hyperlinks = $(result).find("div[class=\"post-box paddingall\"]");
