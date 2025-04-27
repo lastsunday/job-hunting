@@ -1,12 +1,10 @@
-import { Descriptions, DescriptionsProps, Tag, Typography } from "antd";
-import { useJob } from "../hooks/job";
-import { CompanyData } from "../data/CompanyData";
-import Link from "antd/es/typography/Link";
-import { QuestionCircleOutlined } from "@ant-design/icons";
-const { platformLogo, platformFormat } = useJob();
+import { Descriptions, DescriptionsProps, Tag, Typography } from 'antd';
+import { CompanyData } from '../data/CompanyData';
+import Link from 'antd/es/typography/Link';
+import { QuestionCircleOutlined } from '@ant-design/icons';
 const { Text } = Typography;
-import { dateToStr } from "@/common/utils";
-import Markdown from "marked-react";
+import { dateToStr, convertNumberToHumanReadable } from '@/common/utils';
+import Markdown from 'marked-react';
 
 export type CompanytemTableProps = {
   data: CompanyData;
@@ -31,12 +29,14 @@ const JobItemTable: React.FC<CompanytemTableProps> = (props) => {
     longitude,
     latitude,
     desc,
+    regCapitalValue,
+    regCapitalCurrency,
   } = props.data;
 
-  const items: DescriptionsProps["items"] = [
+  const items: DescriptionsProps['items'] = [
     {
-      key: "name",
-      label: "公司全称",
+      key: 'name',
+      label: '公司全称',
       span: 1,
       children: (
         <>
@@ -78,26 +78,26 @@ const JobItemTable: React.FC<CompanytemTableProps> = (props) => {
       ),
     },
     {
-      key: "status",
-      label: "经营状态",
+      key: 'status',
+      label: '经营状态',
       span: 1,
       children: <>{status}</>,
     },
     {
-      key: "startDate",
-      label: "成立时间",
+      key: 'startDate',
+      label: '成立时间',
       span: 1,
-      children: <>{dateToStr(startDate,"YYYY-MM-DD")}</>,
+      children: <>{dateToStr(startDate, 'YYYY-MM-DD')}</>,
     },
     {
-      key: "industry",
-      label: "所属行业",
+      key: 'industry',
+      label: '所属行业',
       span: 1,
       children: <>{industry}</>,
     },
     {
-      key: "unifiedCode",
-      label: "统一社会信用代码",
+      key: 'unifiedCode',
+      label: '统一社会信用代码',
       span: 1,
       children: (
         <>
@@ -106,8 +106,8 @@ const JobItemTable: React.FC<CompanytemTableProps> = (props) => {
       ),
     },
     {
-      key: "taxNo",
-      label: "纳税人识别号",
+      key: 'taxNo',
+      label: '纳税人识别号',
       span: 1,
       children: (
         <>
@@ -116,8 +116,8 @@ const JobItemTable: React.FC<CompanytemTableProps> = (props) => {
       ),
     },
     {
-      key: "licenseNumber",
-      label: "工商注册号",
+      key: 'licenseNumber',
+      label: '工商注册号',
       span: 1,
       children: (
         <>
@@ -126,8 +126,8 @@ const JobItemTable: React.FC<CompanytemTableProps> = (props) => {
       ),
     },
     {
-      key: "legalPerson",
-      label: "法人",
+      key: 'legalPerson',
+      label: '法人',
       span: 1,
       children: (
         <>
@@ -136,8 +136,8 @@ const JobItemTable: React.FC<CompanytemTableProps> = (props) => {
       ),
     },
     {
-      key: "degree",
-      label: "官网",
+      key: 'degree',
+      label: '官网',
       span: 1,
       children: (
         <>
@@ -152,26 +152,39 @@ const JobItemTable: React.FC<CompanytemTableProps> = (props) => {
       ),
     },
     {
-      key: "insuranceNum",
-      label: "社保人数",
+      key: 'insuranceNum',
+      label: '社保人数',
       span: 1,
       children: <>{insuranceNum}</>,
     },
     {
-      key: "selfRisk",
-      label: "自身风险数",
+      key: 'selfRisk',
+      label: '自身风险数',
       span: 1,
       children: <>{selfRisk}</>,
     },
     {
-      key: "unionRisk",
-      label: "关联风险数",
+      key: 'unionRisk',
+      label: '关联风险数',
       span: 1,
       children: <>{unionRisk}</>,
     },
     {
-      key: "address",
-      label: "地址",
+      key: 'regCapital',
+      label: '注册资本',
+      span: 1,
+      children: (
+        <>
+          <Text copyable>
+            {convertNumberToHumanReadable(regCapitalValue)}
+            {regCapitalCurrency ?? regCapitalCurrency}
+          </Text>
+        </>
+      ),
+    },
+    {
+      key: 'address',
+      label: '地址',
       span: 1,
       children: (
         <>
@@ -180,8 +193,8 @@ const JobItemTable: React.FC<CompanytemTableProps> = (props) => {
       ),
     },
     {
-      key: "longitudeAndLatitude",
-      label: "经纬度",
+      key: 'longitudeAndLatitude',
+      label: '经纬度',
       span: 2,
       children: (
         <>
@@ -196,8 +209,8 @@ const JobItemTable: React.FC<CompanytemTableProps> = (props) => {
       ),
     },
     {
-      key: "companyTagList",
-      label: "标签",
+      key: 'companyTagList',
+      label: '标签',
       span: 3,
       children: (
         <>
@@ -212,9 +225,9 @@ const JobItemTable: React.FC<CompanytemTableProps> = (props) => {
       ),
     },
     {
-      key: "desc",
-      label: "经营范围",
-      span: "filled",
+      key: 'desc',
+      label: '经营范围',
+      span: 'filled',
       children: (
         <>
           <Markdown gfm={true} breaks={true} isInline={true}>

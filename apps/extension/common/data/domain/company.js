@@ -72,6 +72,22 @@ export class Company {
    */
   companyLatitude;
   /**
+   * 注册资本数值
+   */
+  regCapitalValue;
+  /**
+   * 注册资本货币
+   */
+  regCapitalCurrency;
+  /**
+   * 实缴资本数值
+   */
+  paidinCapitalValue;
+  /**
+   * 实缴资本数值
+   */
+  paidinCapitalCurrency;
+  /**
    * 数据来源地址
    */
   sourceUrl;
