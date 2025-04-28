@@ -1,3 +1,14 @@
+## 3.12.2 (2025-04-28)
+
+### 🩹 Fixes
+
+- 修复职位页滚动异常的问题（BOSS直聘）
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+- FocusSweetwater @FocusSweetwater
+
 ## 3.12.1 (2025-04-27)
 
 ### 🩹 Fixes
