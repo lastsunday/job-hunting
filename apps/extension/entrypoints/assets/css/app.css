@@ -177,7 +177,7 @@ div[data-search-sol-meta] {
 }
 
 .page-jobs-main .job-detail-container {
-  position: static !important;
+  left: 680px !important;
 }
 
 .job-recommend-main .job-detail-container {
