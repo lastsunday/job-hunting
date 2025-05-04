@@ -1,9 +1,11 @@
 use chrono::Utc;
 use git2::build::TreeUpdateBuilder;
-use git2::{FileMode, Signature, Time};
+use git2::{Cred, FileMode, RemoteCallbacks, Signature, Time};
 use std::collections::HashMap;
 use std::str;
 use std::{fs, path::Path};
+use testcontainers::ContainerAsync;
+use testcontainers_modules::gitea::Gitea;
 use uuid::Uuid;
 mod common;
 use common::{setup_git_server, tear_down_git_server, ADMIN_PASSWORD, ADMIN_USERNAME, DATA_REPO};
@@ -47,9 +49,21 @@ async fn test_clone_by_http_repo_success() {
     tear_down_git_server(Some(gitea)).await;
     fs::remove_dir_all(local_path).unwrap();
 }
-
-#[tokio::test]
-async fn test_clone_by_http_repo_and_ls_tree() {
+fn create_test_file_map() -> HashMap<String, String> {
+    let mut test_data_file_map = HashMap::new();
+    test_data_file_map.insert("2024/10-10/job.zip".to_string(), "job-v0.zip".to_string());
+    test_data_file_map.insert(
+        "2024/10-10/company.zip".to_string(),
+        "company-v0.zip".to_string(),
+    );
+    test_data_file_map.insert("2024/12-31/job.zip".to_string(), "job-v1.zip".to_string());
+    test_data_file_map.insert(
+        "2024/12-31/company.zip".to_string(),
+        "company-v1.zip".to_string(),
+    );
+    test_data_file_map
+}
+async fn setup_git_server_and_test_repo() -> (ContainerAsync<Gitea>, String) {
     // setup gitea and clone repo
     let (gitea, _, http_port, _, _) = setup_git_server().await;
     let repo_url: &str = &format!("http://localhost:{http_port}/{ADMIN_USERNAME}/{DATA_REPO}.git");
@@ -64,12 +78,7 @@ async fn test_clone_by_http_repo_and_ls_tree() {
         }
     };
     let resources_data_path = Path::new("tests").join("resources").join("data");
-    let mut test_data_file_map = HashMap::new();
-    test_data_file_map.insert("2024/10-10/job.zip", "job-v0.zip");
-    test_data_file_map.insert("2024/10-10/company.zip", "company-v0.zip");
-    test_data_file_map.insert("2024/12-31/job.zip", "job-v1.zip");
-    test_data_file_map.insert("2024/12-31/company.zip", "company-v1.zip");
-    test_data_file_map.insert("2025/04-29/company.zip", "company-v2.zip");
+    let test_data_file_map = create_test_file_map();
     let head = repo.head().unwrap();
     let head_commit_id = repo.refname_to_id(head.name().unwrap()).unwrap();
     let head_commit = repo.find_commit(head_commit_id).unwrap();
@@ -102,6 +111,40 @@ async fn test_clone_by_http_repo_and_ls_tree() {
         &[&parent],
     )
     .unwrap();
+    let main_branch = repo.find_branch("main", git2::BranchType::Local).unwrap();
+    let mut remote = repo.find_remote("origin").unwrap();
+    let mut po = git2::PushOptions::new();
+    let mut callbacks = RemoteCallbacks::new();
+    callbacks.credentials(|_, _, _| Cred::userpass_plaintext(ADMIN_USERNAME, ADMIN_PASSWORD));
+    po.remote_callbacks(callbacks);
+    remote
+        .push::<&str>(
+            &[main_branch.into_reference().name().unwrap()],
+            Some(&mut po),
+        )
+        .unwrap();
+    fs::remove_dir_all(local_path).unwrap();
+    (gitea, repo_url.to_string())
+}
+
+#[tokio::test]
+async fn test_clone_by_http_repo_and_ls_tree() {
+    let (gitea, repo_url) = setup_git_server_and_test_repo().await;
+    let path_string = gen_unique_random_path();
+    let local_path = Path::new(&path_string);
+    let repo = match git_clone_by_http(
+        repo_url.as_str(),
+        local_path,
+        ADMIN_USERNAME,
+        ADMIN_PASSWORD,
+    ) {
+        Ok(repo) => repo,
+        Err(e) => {
+            tear_down_git_server(Some(gitea)).await;
+            fs::remove_dir_all(local_path).unwrap();
+            panic!("failed to clone: {}", e)
+        }
+    };
     // get head tree and ls tree
     let commit = repo
         .find_commit(
@@ -111,6 +154,7 @@ async fn test_clone_by_http_repo_and_ls_tree() {
         .unwrap();
     let tree = commit.tree().unwrap();
     let list = ls_tree_to_path_list(&tree);
+    let test_data_file_map = create_test_file_map();
     let mut expect_file_map = HashMap::new();
     expect_file_map.insert("README.md", "");
     for key in test_data_file_map.keys() {
