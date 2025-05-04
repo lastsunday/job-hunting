@@ -1,5 +1,6 @@
 use chrono::Utc;
-use git2::{Signature, Time};
+use git2::build::TreeUpdateBuilder;
+use git2::{FileMode, Signature, Time};
 use std::collections::HashMap;
 use std::str;
 use std::{fs, path::Path};
@@ -62,17 +63,27 @@ async fn test_clone_by_http_repo_and_ls_tree() {
             panic!("failed to clone: {}", e)
         }
     };
-    // add file 2025/04-29/test.txt
-    let test_dir_path = local_path.join("2025").join("04-29");
-    let test_file_path = &test_dir_path.join("test.txt");
-    fs::create_dir_all(test_dir_path).unwrap();
-    fs::write(Path::new(test_file_path), b"Hello, world!").unwrap();
-    repo.index()
-        .unwrap()
-        .add_path(test_file_path.strip_prefix(local_path).unwrap())
-        .unwrap();
-    let tree_id = repo.index().unwrap().write_tree().unwrap();
+    let resources_data_path = Path::new("tests").join("resources").join("data");
+    let mut test_data_file_map = HashMap::new();
+    test_data_file_map.insert("2024/10-10/job.zip", "job-v0.zip");
+    test_data_file_map.insert("2024/10-10/company.zip", "company-v0.zip");
+    test_data_file_map.insert("2024/12-31/job.zip", "job-v1.zip");
+    test_data_file_map.insert("2024/12-31/company.zip", "company-v1.zip");
+    test_data_file_map.insert("2025/04-29/company.zip", "company-v2.zip");
+    let head = repo.head().unwrap();
+    let head_commit_id = repo.refname_to_id(head.name().unwrap()).unwrap();
+    let head_commit = repo.find_commit(head_commit_id).unwrap();
+    let tree_id = head_commit.tree_id();
     let tree = repo.find_tree(tree_id).unwrap();
+    let mut tree_update_builder = TreeUpdateBuilder::new();
+    for key in test_data_file_map.keys() {
+        let test_file_path = resources_data_path.join(test_data_file_map.get(key).unwrap());
+        let test_file_data = fs::read(test_file_path.as_path()).unwrap();
+        let file_blob_id = repo.blob(&test_file_data).unwrap();
+        tree_update_builder.upsert(Path::new(key), file_blob_id, FileMode::Blob);
+    }
+    let update_tree_id = tree_update_builder.create_updated(&repo, &tree).unwrap();
+    let update_tree = repo.find_tree(update_tree_id).unwrap();
     let now = Utc::now();
     let sig = Signature::new(
         ADMIN_USERNAME,
@@ -82,21 +93,33 @@ async fn test_clone_by_http_repo_and_ls_tree() {
     .unwrap();
     let head_id = repo.refname_to_id("HEAD").unwrap();
     let parent = repo.find_commit(head_id).unwrap();
-    repo.commit(Some("HEAD"), &sig, &sig, "add test file", &tree, &[&parent])
-        .unwrap();
+    repo.commit(
+        Some("HEAD"),
+        &sig,
+        &sig,
+        "add test file",
+        &update_tree,
+        &[&parent],
+    )
+    .unwrap();
     // get head tree and ls tree
     let commit = repo
-        .find_commit(repo.head().unwrap().target().take().unwrap())
+        .find_commit(
+            repo.refname_to_id(repo.head().unwrap().name().unwrap())
+                .unwrap(),
+        )
         .unwrap();
     let tree = commit.tree().unwrap();
     let list = ls_tree_to_path_list(&tree);
-    let mut map = HashMap::new();
-    map.insert("README.md", "");
-    map.insert("2025/04-29/test.txt", "");
-    for item in list {
-        assert!(map.contains_key(item.as_str()));
+    let mut expect_file_map = HashMap::new();
+    expect_file_map.insert("README.md", "");
+    for key in test_data_file_map.keys() {
+        expect_file_map.insert(key, "");
     }
-    
+    assert_eq!(expect_file_map.len(), list.len());
+    for item in list {
+        assert!(expect_file_map.contains_key(item.as_str()));
+    }
     tear_down_git_server(Some(gitea)).await;
     fs::remove_dir_all(local_path).unwrap();
 }
