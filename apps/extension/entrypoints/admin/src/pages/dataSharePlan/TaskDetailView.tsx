@@ -28,7 +28,7 @@ const fillSearchParam = (searchParam, values) => {
     }
 }
 
-const TaskView: React.FC = () => {
+const TaskDetailView: React.FC = () => {
 
     const tableRef = useRef();
     const { taskFormat, statusFormat, getColorForStatus,
@@ -212,4 +212,4 @@ const TaskView: React.FC = () => {
     </>
 }
 
-export default TaskView;
+export default TaskDetailView;

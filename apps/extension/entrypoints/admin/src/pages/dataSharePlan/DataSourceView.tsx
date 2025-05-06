@@ -5,8 +5,8 @@ import { dateToStr } from "@/common/utils";
 import { Button, Col, DatePicker, Flex, Form, Input, Modal, Space, TableColumnsType, Typography } from "antd";
 import dayjs from "dayjs";
 import BasicTable from "../../components/BasicTable";
-import PartnerEdit from "./PartnerEdit";
-import PartnerFind from "./PartnerFind";
+import DataSourceEdit from "./DataSourceEdit";
+import DataSourceFind from "./DataSourceFind";
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
@@ -29,14 +29,14 @@ const fillSearchParam = (searchParam, values) => {
     }
 }
 
-const PartnerView: React.FC = () => {
+const DataSourceView: React.FC = () => {
 
-    const [isPartnerEditModalOpen, setIsPartnerEditModalOpen] = useState(false);
-    const [editPartnerData, setEditPartnerData] = useState<DataSharePartner>();
+    const [isDataSourceEditModalOpen, setIsDataSourceEditModalOpen] = useState(false);
+    const [editDataSourceData, setEditDataSourceData] = useState<DataSharePartner>();
     const [mode, setMode] = useState<"add" | "update">("update");
     const tableRef = useRef();
 
-    const [isPartnerFindModalOpen, setIsPartnerFindModalOpen] = useState(false);
+    const [isDataSourceFindModalOpen, setIsDataSourceFindModalOpen] = useState(false);
 
     const searchFields =
     {
@@ -115,29 +115,29 @@ const PartnerView: React.FC = () => {
                 <Space size="middle">
                     <Button type="link" onClick={() => {
                         setMode("update");
-                        setEditPartnerData({
+                        setEditDataSourceData({
                             id: record.id,
                             username: record.username,
                             reponame: record.reponame,
                             repoType: record.repoType,
                         });
-                        setIsPartnerEditModalOpen(true);
+                        setIsDataSourceEditModalOpen(true);
                     }}>编辑伙伴信息</Button>
                 </Space>
             ),
         },
     ];
 
-    const onPartnerAdd = () => {
+    const onDataSourceAdd = () => {
         setMode("add");
-        setEditPartnerData({
+        setEditDataSourceData({
             reponame: DEFAULT_DATA_REPO,
             repoType: DEFAULT_REPO_TYPE,
         });
-        setIsPartnerEditModalOpen(true);
+        setIsDataSourceEditModalOpen(true);
     }
 
-    const onPartnerSave = async (data: DataSharePartner) => {
+    const onDataSourceSave = async (data: DataSharePartner) => {
         const { id, username, reponame, repoType } = data;
         let entity = new DataSharePartner();
         entity.id = id;
@@ -145,11 +145,11 @@ const PartnerView: React.FC = () => {
         entity.reponame = reponame;
         entity.repoType = repoType;
         await DataSharePartnerApi.dataSharePartnerAddOrUpdate(entity);
-        setIsPartnerEditModalOpen(false);
+        setIsDataSourceEditModalOpen(false);
         tableRef?.current.refresh();
     }
 
-    const onPartnerDelete = async (keys: React.Key[]) => {
+    const onDataSourceDelete = async (keys: React.Key[]) => {
         await DataSharePartnerApi.dataSharePartnerDeleteByIds(keys);
         tableRef?.current.refresh();
     }
@@ -158,8 +158,8 @@ const PartnerView: React.FC = () => {
         <BasicTable
             ref={tableRef}
             mode={["r", "c", "d"]}
-            onAdd={onPartnerAdd}
-            onDelete={onPartnerDelete}
+            onAdd={onDataSourceAdd}
+            onDelete={onDataSourceDelete}
             searchProps={{
                 columns,
                 searchFields,
@@ -171,15 +171,15 @@ const PartnerView: React.FC = () => {
             rowKeyFunction={(record) => { return record.id }}
             additionMenu={<Flex><Button onClick={
                 () => {
-                    setIsPartnerFindModalOpen(true);
+                    setIsDataSourceFindModalOpen(true);
                 }
             }>寻找伙伴</Button></Flex>}
         ></BasicTable>
         <Modal
             title={`${mode == "update" ? "编辑伙伴信息" : "新增伙伴信息"}`}
-            open={isPartnerEditModalOpen}
+            open={isDataSourceEditModalOpen}
             onCancel={() => {
-                setIsPartnerEditModalOpen(false);
+                setIsDataSourceEditModalOpen(false);
             }}
             maskClosable={false}
             footer={null}
@@ -187,17 +187,17 @@ const PartnerView: React.FC = () => {
             width="80%"
             destroyOnClose
         >
-            <PartnerEdit
+            <DataSourceEdit
                 mode={mode}
-                data={editPartnerData}
-                onSave={onPartnerSave}
-            ></PartnerEdit>
+                data={editDataSourceData}
+                onSave={onDataSourceSave}
+            ></DataSourceEdit>
         </Modal>
         <Modal
             title={`寻找伙伴`}
-            open={isPartnerFindModalOpen}
+            open={isDataSourceFindModalOpen}
             onCancel={() => {
-                setIsPartnerFindModalOpen(false);
+                setIsDataSourceFindModalOpen(false);
             }}
             maskClosable={false}
             footer={null}
@@ -205,11 +205,11 @@ const PartnerView: React.FC = () => {
             width="80%"
             destroyOnClose
         >
-            <PartnerFind
+            <DataSourceFind
 
-            ></PartnerFind>
+            ></DataSourceFind>
         </Modal>
     </>
 }
 
-export default PartnerView;
+export default DataSourceView;

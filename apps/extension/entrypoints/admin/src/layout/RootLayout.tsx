@@ -11,12 +11,11 @@ import {
   SettingOutlined,
   ShareAltOutlined,
 } from '@ant-design/icons';
-import { Button, Flex, Layout, Menu, theme } from 'antd';
+import { Breadcrumb, Button, Flex, Layout, Menu, theme } from 'antd';
 import React, { useState } from 'react';
-import { Outlet, useNavigate } from 'react-router';
+import { Outlet, useLocation, useNavigate } from 'react-router';
 import { useShallow } from 'zustand/shallow';
 import logo from '../assets/logo.svg';
-import useDataSharePlanStore from '../store/DataSharePlanStore';
 import useAnalysisStore from '../store/AnalysisStore';
 import useJobSnapshotStore from '../store/JobSnapshotStore';
 import HeaderRight from './HeaderRight';
@@ -30,29 +29,27 @@ const siderStyle: React.CSSProperties = {
 
 const RootLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [menuItems, setMenuItems] = useState([]);
+  const [pathTitleMap, setPathTitleMap] = useState(new Map());
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
   const navigate = useNavigate();
-
-  const [dataSharePlanEnable] = useDataSharePlanStore(
-    useShallow((state) => [state.enable])
-  );
+  const location = useLocation();
 
   const [analysisConfig] = useAnalysisStore(
     useShallow((state) => [state.config])
   );
 
   const genDataSharePlanMenu = () => {
-    if (dataSharePlanEnable) {
-      return [
-        { key: 'dataSharePlanStatistic', label: '统计' },
-        { key: 'task', label: '任务' },
-        { key: 'partner', label: '伙伴' },
-      ];
-    } else {
-      return [{ key: 'dataSharePlanWelcome', label: '欢迎使用' }];
-    }
+    return [{ key: 'manager', label: '管理' }];
+  };
+
+  const genTaskMenu = () => {
+    return [
+      { key: 'taskStatistic', label: '统计' },
+      { key: 'taskDetail', label: '详情' },
+    ];
   };
 
   const genAnalysisMenu = () => {
@@ -66,6 +63,131 @@ const RootLayout: React.FC = () => {
   const [jobSnapshotConfig] = useJobSnapshotStore(
     useShallow((state) => [state.config])
   );
+
+  const refreshMenu = () => {
+    setMenuItems([
+      {
+        key: '',
+        icon: <HomeOutlined />,
+        label: '首页',
+      },
+      {
+        key: 'assistant',
+        icon: <RobotOutlined />,
+        label: '个人助理',
+        children: [
+          { key: 'favoriteJob', label: '职位偏好' },
+          { key: 'historyJob', label: '浏览历史' },
+          { key: 'automate', label: '自动化' },
+        ],
+      },
+      {
+        key: 'bbs',
+        icon: <CommentOutlined />,
+        label: '讨论区',
+      },
+      {
+        key: 'data',
+        icon: <DatabaseOutlined />,
+        label: '数据',
+        children: [
+          { key: 'job', label: '职位' },
+          jobSnapshotConfig.enable
+            ? { key: 'jobSnapshot', label: '职位快照' }
+            : null,
+          { key: 'company', label: '公司' },
+          { key: 'tag', label: '标签' },
+          { key: 'companyTag', label: '公司标签' },
+          { key: 'jobTag', label: '职位标签' },
+        ],
+      },
+      {
+        key: 'analysisPlan',
+        icon: <div className="i-mdi:think-outline" />,
+        label: '职位分析',
+        children: [...genAnalysisMenu()],
+      },
+      jobSnapshotConfig.enable
+        ? null
+        : {
+            key: 'jobSnapshotSetting',
+            icon: <HistoryOutlined />,
+            label: '职位快照',
+          },
+      {
+        key: 'dataSource',
+        icon: <DatabaseOutlined />,
+        label: '数据源',
+        children: [...genDataSharePlanMenu()],
+      },
+      {
+        key: 'task',
+        icon: <div className="i-material-symbols:other-admission-outline" />,
+        label: '任务',
+        children: [...genTaskMenu()],
+      },
+      {
+        key: 'file',
+        icon: <FileOutlined />,
+        label: '文件',
+      },
+      {
+        key: 'system',
+        icon: <DesktopOutlined />,
+        label: '系统',
+      },
+      {
+        key: 'setting',
+        icon: <SettingOutlined />,
+        label: '设置',
+      },
+    ]);
+    const walkResult = new Map();
+    walkMenu({ menuItems, resultMap: walkResult });
+    setPathTitleMap(walkResult);
+  };
+
+  useEffect(() => {
+    refreshMenu();
+  }, [jobSnapshotConfig, analysisConfig]);
+
+  const walkMenu = ({ menuItems, parentMenu = null, resultMap = null }) => {
+    for (let i = 0; i < menuItems.length; i++) {
+      const item = menuItems[i];
+      if (item) {
+        resultMap.set(
+          `${parentMenu?.key ?? ''}/${item.key}`,
+          (parentMenu ? parentMenu.label ?? [] : []).concat(item.label)
+        );
+        if (item.children && item.children.length > 0) {
+          walkMenu({
+            menuItems: item.children ?? [],
+            parentMenu: {
+              key: `${parentMenu?.key ?? ''}/${item.key}`,
+              label: (parentMenu ? parentMenu.label ?? [] : []).concat(
+                item.label
+              ),
+            },
+            resultMap,
+          });
+        }
+      }
+    }
+  };
+
+  const [breadcrumbItem, setBreadcrumbItem] = useState([]);
+
+  useEffect(() => {
+    refreshBreadcrumb();
+  }, [location, pathTitleMap]);
+
+  const refreshBreadcrumb = () => {
+    setBreadcrumbItem(
+      pathTitleMap.get(location.pathname)?.map((item) => {
+        return { title: item };
+      })
+    );
+  };
 
   return (
     <Layout className="root" hasSider>
@@ -87,82 +209,10 @@ const RootLayout: React.FC = () => {
           theme="dark"
           mode="inline"
           defaultSelectedKeys={['1']}
-          onSelect={({ key }) => {
-            navigate(`/${key}`);
+          onSelect={({ keyPath }) => {
+            navigate(`/${keyPath.reverse().join('/')}`);
           }}
-          items={[
-            {
-              key: '',
-              icon: <HomeOutlined />,
-              label: '首页',
-            },
-            {
-              key: 'assistant',
-              icon: <RobotOutlined />,
-              label: '个人助理',
-              children: [
-                { key: 'favoriteJob', label: '职位偏好' },
-                { key: 'historyJob', label: '浏览历史' },
-                { key: 'automate', label: '自动化' },
-              ],
-            },
-            {
-              key: 'bbs',
-              icon: <CommentOutlined />,
-              label: '讨论区',
-            },
-            {
-              key: 'data',
-              icon: <DatabaseOutlined />,
-              label: '数据',
-              children: [
-                { key: 'job', label: '职位' },
-                jobSnapshotConfig.enable
-                  ? { key: 'jobSnapshot', label: '职位快照' }
-                  : null,
-                { key: 'company', label: '公司' },
-                { key: 'tag', label: '标签' },
-                { key: 'companyTag', label: '公司标签' },
-                { key: 'jobTag', label: '职位标签' },
-              ],
-            },
-            {
-              key: 'analysisPlan',
-              icon: <div className="i-mdi:think-outline" />,
-              label: '职位分析',
-              children: [...genAnalysisMenu()],
-            },
-            dataSharePlanEnable
-              ? {
-                  key: 'dataSharePlan',
-                  icon: <ShareAltOutlined />,
-                  label: '数据共享计划',
-                  children: [...genDataSharePlanMenu()],
-                }
-              : null,
-            jobSnapshotConfig.enable
-              ? null
-              : {
-                  key: 'jobSnapshotSetting',
-                  icon: <HistoryOutlined />,
-                  label: '职位快照',
-                },
-            {
-              key: 'file',
-              icon: <FileOutlined />,
-              label: '文件',
-            },
-            {
-              key: 'system',
-              icon: <DesktopOutlined />,
-              label: '系统',
-            },
-            {
-              key: 'setting',
-              icon: <SettingOutlined />,
-              label: '设置',
-            },
-          ]}
+          items={menuItems}
         />
       </Sider>
       <Layout>
@@ -178,6 +228,9 @@ const RootLayout: React.FC = () => {
                 height: 64,
               }}
             />
+            <Flex align="center">
+              <Breadcrumb items={breadcrumbItem} />
+            </Flex>
             <Flex flex={1} justify="end">
               <HeaderRight></HeaderRight>
             </Flex>

@@ -1,14 +1,14 @@
-import { DataSharePartner } from "@/common/data/domain/dataSharePartner";
+import { DataShareDataSourceEdit } from "@/common/data/domain/dataShareDataSourceEdit";
 import { Flex, Form, FormProps, Input, Space, Spin } from "antd";
 import SubmitButton from "../../components/SubmitButton";
 import { JobTagEditData } from "../../data/JobTagEditData";
 
-export type PartnerEditProps = {
-    data: DataSharePartner;
+export type DataSourceEditProps = {
+    data: DataShareDataSourceEdit;
     onSave: (data: JobTagEditData) => void;
     mode?: "add" | "update",
 };
-const PartnerEdit: React.FC<PartnerEditProps> = ({ data, onSave, mode = "update" }) => {
+const DataSourceEdit: React.FC<DataSourceEditProps> = ({ data, onSave, mode = "update" }) => {
 
     const [form] = Form.useForm();
     const [loading, setLoading] = useState<boolean>(false);
@@ -76,4 +76,4 @@ const PartnerEdit: React.FC<PartnerEditProps> = ({ data, onSave, mode = "update"
         </Spin>
     </>
 }
-export default PartnerEdit;
+export default DataSourceEdit;

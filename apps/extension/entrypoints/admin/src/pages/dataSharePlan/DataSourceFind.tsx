@@ -28,10 +28,10 @@ import { useShallow } from 'zustand/shallow';
 import { PageInfo } from '../../data/PageInfo';
 import { Owner, RepositoryData } from '../../data/RepositoryData';
 import useAuthStore from '../../store/AuthStore';
-import styles from './PartnerFind.module.css';
+import styles from './DataSourceFind.module.css';
 
-export type PartnerFindProps = {};
-const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
+export type DataSourceFindProps = {};
+const DataSourceFind: React.FC<DataSourceFindProps> = ({}) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [dataSource, setDataSource] = useState<RepositoryData[]>([]);
   const [refresh, setRefresh] = useState(false);
@@ -303,4 +303,4 @@ const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
     </>
   );
 };
-export default PartnerFind;
+export default DataSourceFind;

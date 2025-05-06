@@ -19,9 +19,9 @@ import CompanyView from './pages/data/CompanyView';
 import JobTagView from './pages/data/JobTagView';
 import JobView from './pages/data/JobView';
 import TagView from './pages/data/TagView';
-import PartnerView from './pages/dataSharePlan/PartnerView';
-import DataSharePlanStatisticView from './pages/dataSharePlan/StatisticView';
-import TaskView from './pages/dataSharePlan/TaskView';
+import DataSourceView from './pages/dataSharePlan/DataSourceView';
+import TaskStatisticView from './pages/dataSharePlan/StatisticView';
+import TaskDetailView from './pages/dataSharePlan/TaskDetailView';
 import DataSharePlanWelcomeView from './pages/dataSharePlan/WelcomeView';
 import AnalysisWelcomeView from './pages/analysis/WelcomeView';
 import AnalysisSettingView from './pages/analysis/SettingView';
@@ -76,32 +76,32 @@ const App: React.FC = () => {
       <Routes>
         <Route element={<RootLayout />}>
           <Route index element={<DashboardView />} />
-          <Route path="favoriteJob" element={<FavoriteJobView />} />
-          <Route path="historyJob" element={<HistoryJobView />} />
-          <Route path="automate" element={<AutomateView />} />
+          <Route path="assistant/favoriteJob" element={<FavoriteJobView />} />
+          <Route path="assistant/historyJob" element={<HistoryJobView />} />
+          <Route path="assistant/automate" element={<AutomateView />} />
           <Route path="bbs" element={<BbsView />} />
-          <Route path="job" element={<JobView />} />
-          <Route path="jobSnapshot" element={<JobSnapshotView />} />
-          <Route path="company" element={<CompanyView />} />
-          <Route path="tag" element={<TagView />} />
-          <Route path="jobTag" element={<JobTagView />} />
-          <Route path="companyTag" element={<CompanyTagView />} />
-          <Route path="analysisWelcome" element={<AnalysisWelcomeView />} />
-          <Route path="analysisSetting" element={<AnalysisSettingView />} />
+          <Route path="data/job" element={<JobView />} />
+          <Route path="data/jobSnapshot" element={<JobSnapshotView />} />
+          <Route path="data/company" element={<CompanyView />} />
+          <Route path="data/tag" element={<TagView />} />
+          <Route path="data/jobTag" element={<JobTagView />} />
+          <Route path="data/companyTag" element={<CompanyTagView />} />
+          <Route path="analysisPlan/analysisWelcome" element={<AnalysisWelcomeView />} />
+          <Route path="analysisPlan/analysisSetting" element={<AnalysisSettingView />} />
           <Route
-            path="dataSharePlanWelcome"
+            path="dataSharePlan/dataSharePlanWelcome"
             element={<DataSharePlanWelcomeView />}
           />
           <Route
-            path="dataSharePlanStatistic"
-            element={<DataSharePlanStatisticView />}
+            path="task/taskStatistic"
+            element={<TaskStatisticView />}
           />
           <Route
             path="jobSnapshotSetting"
             element={<JobSnapshotWelcomeView />}
           />
-          <Route path="task" element={<TaskView />} />
-          <Route path="partner" element={<PartnerView />} />
+          <Route path="task/taskDetail" element={<TaskDetailView />} />
+          <Route path="datasource/manager" element={<DataSourceView />} />
           <Route path="file" element={<FileView />} />
           <Route path="system" element={<SystemView />} />
           <Route path="setting" element={<SettingView />} />
