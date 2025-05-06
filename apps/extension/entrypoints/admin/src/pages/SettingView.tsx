@@ -12,9 +12,12 @@ import {
   Button,
   Card,
   Flex,
+  Form,
   message,
   Modal,
+  Spin,
   Switch,
+  Tag,
   Tooltip,
   Typography,
 } from 'antd';
@@ -34,9 +37,23 @@ const { Text, Link } = Typography;
 const version = __APP_VERSION__;
 
 const SettingView: React.FC = () => {
-  const [enable, change] = useDataSharePlanStore(
-    useShallow((state) => [state.enable, state.change])
+  const [
+    enable,
+    change,
+    privateDataSyncEnableConfig,
+    updatePrivateDataSyncEnableConfig,
+  ] = useDataSharePlanStore(
+    useShallow((state) => [
+      state.enable,
+      state.change,
+      state.privateDataSyncEnableConfig,
+      state.updatePrivateDataSyncEnableConfig,
+    ])
   );
+  const [
+    updatePrivateDataSyncEnableConfigLoading,
+    setUpdatePrivateDataSyncEnableConfigLoading,
+  ] = useState(false);
   const [analysisConfig, updateAnalysis] = useAnalysisStore(
     useShallow((state) => [state.config, state.update])
   );
@@ -106,14 +123,31 @@ const SettingView: React.FC = () => {
       state.downloadLatest,
     ])
   );
+  const private_data_setting = [
+    { label: '职位数据', name: 'job', value: false, header: JOB_FILE_HEADER },
+    {
+      label: '公司数据',
+      name: 'company',
+      header: COMPANY_FILE_HEADER,
+    },
+    {
+      label: '职位标签数据',
+      name: 'jobTag',
+      header: JOB_TAG_FILE_HEADER,
+    },
+    {
+      label: '公司标签数据',
+      name: 'companyTag',
+      header: COMPANY_TAG_FILE_HEADER,
+    },
+  ];
+
+  const [privateDataSettingForm] = Form.useForm();
 
   useEffect(() => {
     setDataSharePlanEnable(enable);
     setAnalysisEnable(analysisConfig.enable);
     setJobSnapshotEnable(jobSnapshotConfig.enable);
-    if (enable) {
-      setIsDangerDataShareMenuOpen(true);
-    }
   }, []);
 
   useEffect(() => {
@@ -132,22 +166,11 @@ const SettingView: React.FC = () => {
     }
   };
 
-  const [isDangerDataShareMenuOpen, setIsDangerDataShareMenuOpen] =
-    useState(false);
-
-  const getSwitchStyle = () => {
-    if (isDangerDataShareMenuOpen) {
-      return { backgroundColor: 'red' };
-    } else {
-      return null;
-    }
-  };
-
   return (
     <>
       {contextHolder}
       <Flex gap="small" wrap vertical>
-        <Card title="程序信息" bordered={false} size="small">
+        <Card title="程序信息" variant="borderless" size="small">
           <Flex gap={10} vertical>
             <Flex gap={10}>
               <Text type="success">版本 {version}</Text>
@@ -273,10 +296,10 @@ const SettingView: React.FC = () => {
             </Flex>
           </Flex>
         </Card>
-        <Card title="GitHub App" bordered={false} size="small">
+        <Card title="GitHub App" variant="borderless" size="small">
           <Flex vertical gap={5}>
             <Flex>
-              <Tooltip title="安装GitHubApp获得评论、数据共享计划能力">
+              <Tooltip title="安装GitHubApp获得评论、数据云备份和分享的能力">
                 <Button
                   onClick={() => {
                     installAndLogin();
@@ -360,48 +383,92 @@ const SettingView: React.FC = () => {
         </Card>
         <Card
           title=<Flex align="center" gap={5}>
-            <Text>数据共享计划</Text>
-            <Switch
-              style={getSwitchStyle()}
-              checkedChildren="风险操作开启"
-              unCheckedChildren="风险操作关闭"
-              size="small"
-              checked={isDangerDataShareMenuOpen}
-              onChange={(checked) => {
-                setIsDangerDataShareMenuOpen(checked);
-              }}
-            ></Switch>
+            <Text>数据云备份和分享</Text>
           </Flex>
           variant="borderless"
           size="small"
         >
-          {isDangerDataShareMenuOpen ? (
-            <CheckCard.Group
-              onChange={async (value) => {
-                if (value) {
-                  await change(true);
-                  setDataSharePlanEnable(true);
-                } else {
-                  await change(false);
-                  setDataSharePlanEnable(false);
-                }
-              }}
-              value={dataSharePlanEnable}
+          <Spin spinning={updatePrivateDataSyncEnableConfigLoading}>
+            <Card
+              title=<Flex align="center" gap={5}>
+                <Text>私有数据</Text>
+                <Switch
+                  checkedChildren="私有数据云备份开启"
+                  unCheckedChildren="私有数据云备份关闭"
+                  size="small"
+                  checked={dataSharePlanEnable}
+                  onChange={async (checked) => {
+                    try {
+                      setUpdatePrivateDataSyncEnableConfigLoading(true);
+                      if (checked) {
+                        await change(true);
+                        setDataSharePlanEnable(true);
+                      } else {
+                        await change(false);
+                        setDataSharePlanEnable(false);
+                      }
+                    } finally {
+                      setUpdatePrivateDataSyncEnableConfigLoading(false);
+                    }
+                  }}
+                ></Switch>
+              </Flex>
+              variant="borderless"
+              size="small"
             >
-              <CheckCard
-                title="开启"
-                description="开启数据共享计划，请遵守相关法律法规"
-                value={true}
-              />
-              <CheckCard
-                title="关闭"
-                description="关闭数据共享计划"
-                value={false}
-              />
-            </CheckCard.Group>
-          ) : null}
+              <Form
+                form={privateDataSettingForm}
+                labelCol={{ span: 4 }}
+                wrapperCol={{ span: 14 }}
+                layout="horizontal"
+                disabled={!dataSharePlanEnable}
+                initialValues={privateDataSyncEnableConfig}
+              >
+                {private_data_setting.map((item) => {
+                  return (
+                    <Form.Item
+                      key={item.name}
+                      label={item.label}
+                      name={item.name}
+                      tooltip={{
+                        color: 'white',
+                        placement: 'right',
+                        title: (
+                          <Flex wrap gap={3}>
+                            {item.header[item.header.length - 1].map((name) => {
+                              return (
+                                <Tag
+                                  key={`${item.name}${name}`}
+                                  color="magenta"
+                                >
+                                  {name}
+                                </Tag>
+                              );
+                            })}
+                          </Flex>
+                        ),
+                      }}
+                    >
+                      <Switch
+                        onChange={async () => {
+                          try {
+                            setUpdatePrivateDataSyncEnableConfigLoading(true);
+                            await updatePrivateDataSyncEnableConfig(
+                              privateDataSettingForm.getFieldsValue()
+                            );
+                          } finally {
+                            setUpdatePrivateDataSyncEnableConfigLoading(false);
+                          }
+                        }}
+                      ></Switch>
+                    </Form.Item>
+                  );
+                })}
+              </Form>
+            </Card>
+          </Spin>
         </Card>
-        <Card title="数据管理" bordered={false} size="small">
+        <Card title="数据管理" variant="borderless" size="small">
           <Flex vertical gap={5}>
             <DatabaseBackupRestore />
             <DataBackupRestore
