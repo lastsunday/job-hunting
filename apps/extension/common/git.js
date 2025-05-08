@@ -23,6 +23,22 @@ export async function lsTree({
     return paths;
 }
 
+export async function getFiles({
+    url = null,
+    oids = null,
+    getResponseAsyncFunction = async ({ url, method, headers, body }) => {
+        return fetch(url, { method, headers, body });
+    }
+} = {}
+) {
+    const blobsIdx = await fetchObjects(url, oids, { getResponseAsyncFunction });
+    const result = new Map();
+    await Promise.all(oids.map(async oid => {
+        result.set(oid, await extractGitObjectFromIdx(blobsIdx, oid));
+    }));
+    return result;
+}
+
 async function walkTree({ idx = null, oid = null, parentPath = null, result = new Map() } = {}) {
     const tree = await idx.read({ oid });
     readObject(tree);
