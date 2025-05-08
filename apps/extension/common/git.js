@@ -103,7 +103,7 @@ async function lsRefs(repoUrl, refPrefix, { getResponseAsyncFunction = async ({ 
     const response = await getResponseAsyncFunction({
         url: repoUrl + '/git-upload-pack', method: 'POST', headers: {
             'Accept': 'application/x-git-upload-pack-advertisement',
-            'content-type': 'application/x-git-upload-pack-request',
+            'Content-Type': 'application/x-git-upload-pack-request',
             'Content-Length': packbuffer.length,
             'Git-Protocol': 'version=2'
         }, body: packbuffer
@@ -136,7 +136,7 @@ async function fetchWithoutBlobs(repoUrl, commitHash, { getResponseAsyncFunction
         method: 'POST',
         headers: {
             'Accept': 'application/x-git-upload-pack-advertisement',
-            'content-type': 'application/x-git-upload-pack-request',
+            'Content-Type': 'application/x-git-upload-pack-request',
             'Content-Length': packbuffer.length,
         },
         body: packbuffer
@@ -216,7 +216,7 @@ async function fetchObjects(repoUrl, objectHashes, { getResponseAsyncFunction = 
         method: 'POST',
         headers: {
             'Accept': 'application/x-git-upload-pack-advertisement',
-            'content-type': 'application/x-git-upload-pack-request',
+            'Content-Type': 'application/x-git-upload-pack-request',
             'Content-Length': packbuffer.length,
         },
         body: packbuffer
