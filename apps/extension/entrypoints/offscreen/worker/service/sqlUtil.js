@@ -30,11 +30,22 @@ export function genLikeSql(paramList, columnName) {
     return result;
 }
 
+export function genWhereSql(params) {
+    let result = "";
+    params.forEach(param => {
+        const { include, sql } = param;
+        if (include) {
+            result += `${sql} `;
+        }
+    })
+    return handleAndReturnWhereSql(result);
+}
+
 export function handleAndReturnWhereSql(whereCondition) {
-    let result = whereCondition;
-    if (result.startsWith(" AND")) {
-        result = result.replace("AND", "");
-        result = " WHERE " + result;
+    let result = whereCondition.trim();
+    if (result.startsWith("AND ")) {
+        result = result.replace("AND ", "");
+        result = "WHERE " + result;
     }
     return result;
 }

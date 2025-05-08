@@ -6,6 +6,7 @@ import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/
 import dayjs from "dayjs";
 import { getDb } from "../database";
 import { BaseService } from "./baseService";
+import { genWhereSql } from "./sqlUtil";
 
 export const SERVICE_INSTANCE = new BaseService("task_data_upload", "id",
     () => {
@@ -95,8 +96,14 @@ export const _taskDataUploadAddOrUpdate = async ({ param = null, connection = nu
     return await SERVICE_INSTANCE._addOrUpdate(param, { connection });
 }
 
-export const _taskDataUploadGetMaxEndDatetime = async ({ connection = null } = {}) => {
+export const _taskDataUploadGetMaxEndDatetime = async ({ connection = null, username = null, reponame = null, type = null } = {}) => {
     connection ??= await getDb();
-    const { rows } = await connection.query("SELECT MAX(end_datetime) AS datetime FROM task_data_upload;");
+    const whereCondition = genWhereSql([
+        { include: username, sql: `AND username = '${username}'` },
+        { include: reponame, sql: `AND reponame = '${reponame}'` },
+        { include: type, sql: `AND type = '${type}'` }
+    ]
+    );
+    const { rows } = await connection.query(`SELECT MAX(end_datetime) AS datetime FROM task_data_upload ${whereCondition}`);
     return rows[0].datetime;
 }

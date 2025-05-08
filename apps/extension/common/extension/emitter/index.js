@@ -1,12 +1,11 @@
 import { EmitterApi } from "@/common/api";
-import { WEB_WORKER } from "@/common/api/bridgeCommon";
 import App, { WORLD_WEB_WORKER } from "@/common/extension/app";
 const Emitter = (() => {
 
     const eventCallbackMap = new Map();
 
     const initMethod = () => {
-        if (App.isWorld(WORLD_WEB_WORKER)) {
+        if (App.isWorld(WORLD_WEB_WORKER) || typeof chrome == "undefined") {
             //skip
         } else {
             chrome.storage.onChanged.addListener((changes, namespace) => {

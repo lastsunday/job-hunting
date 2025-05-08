@@ -38,30 +38,35 @@ import { getPathByDatetime, getToken, isLogin, setToken } from "./index";
 dayjs.extend(minMax);
 
 // Calculate
-export async function calculateUploadTask({ userName, repoName } = {}) {
+export async function calculateUploadTask({ userName, repoName, taskType,
+    getMaxEndDatetimeByUploadTask = _taskDataUploadGetMaxEndDatetime,
+    targetDay = async () => { return new Date() }
+} = {}) {
     //根据今天的时间判断最新的job,company,companyTag任务是否已经存在
-    let taskDataUploadMaxDateString = await _taskDataUploadGetMaxEndDatetime();
-    let taskDataUploadMaxDate = taskDataUploadMaxDateString ? dayjs(taskDataUploadMaxDateString) : null;
-    let today = dayjs(new Date()).startOf("day");
+    const taskDataUploadMaxDateString = await getMaxEndDatetimeByUploadTask({ username: userName, reponame: repoName, type: taskType });
+    const taskDataUploadMaxDate = taskDataUploadMaxDateString ? dayjs(taskDataUploadMaxDateString).startOf("day") : null;
+    const today = dayjs(await targetDay()).startOf("day");
     if (today.isSame(taskDataUploadMaxDate)) {
         //如果存在
         infoLog(`[TASK DATA UPLOAD CALCULATE] taskDataUploadMaxDate is today = ${taskDataUploadMaxDate}`)
         infoLog(`[TASK DATA UPLOAD CALCULATE] skip add data upload record`)
-        //skip
+        return false;
     } else {
         infoLog(`[TASK DATA UPLOAD CALCULATE] taskDataUploadMaxDate(${taskDataUploadMaxDate}) not equal today(${today})`)
         infoLog(`[TASK DATA UPLOAD CALCULATE] add data upload record starting`)
         //如果不存在
         //获取仓库中最新数据上传的时间
         try {
-            let repoMaxDate = await calculateRepoMaxUploadDate({
+            //TODO need modify to search by type
+            const repoMaxDate = await calculateRepoMaxUploadDate({
                 userName, repoName
             })
             //计算数据项开始时间,取最小值(数据库时间,仓库时间)
-            let dataSyncStartDatetime = dayjs.min(taskDataUploadMaxDate, dayjs(repoMaxDate));
+            const dataSyncStartDatetime = dayjs.min(taskDataUploadMaxDate, dayjs(repoMaxDate));
             infoLog(`[TASK DATA UPLOAD CALCULATE] dataSyncStartDatetime = ${dataSyncStartDatetime}`)
             try {
                 await (await getDb()).transaction(async (tx) => {
+                    //TODO need modify to search by one type
                     infoLog(`[TASK DATA UPLOAD CALCULATE] add data upload task ${userName}/${repoName} startDatetime=${dayjs(dataSyncStartDatetime).format()} endDatetime=${dayjs(today).format()} starting`)
                     infoLog(`[TASK DATA UPLOAD CALCULATE] add data upload task ${userName}/${repoName} type=${TASK_TYPE_JOB_DATA_UPLOAD}`)
                     await addDataUploadTask({
@@ -92,6 +97,7 @@ export async function calculateUploadTask({ userName, repoName } = {}) {
             errorLog(e);
         }
         debugLog(`[TASK DATA UPLOAD CALCULATE] add data upload record end`)
+        return true;
     }
 }
 

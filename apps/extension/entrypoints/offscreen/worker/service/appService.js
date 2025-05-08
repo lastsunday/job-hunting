@@ -5,6 +5,9 @@ import { _getUser, runScheduleTask, runTask } from "./app";
 import { calculateDataSharePartnerList, getDataSharePlanConfig } from "./app/dataSharePlan";
 import { calculateDownloadTask } from "./app/taskDownload";
 import { calculateUploadTask } from "./app/taskUpload";
+import { useTask } from "@/common/hooks/task";
+
+const { getUploadTaskTypeFromConfig } = useTask();
 
 export const AppService = {
 
@@ -20,9 +23,14 @@ export const AppService = {
                     let repoName = DEFAULT_DATA_REPO;
                     infoLog(`[Task] has login info userName = ${userName}`)
                     infoLog(`[Task] calculateUploadTask`)
-                    await calculateUploadTask({ userName: userName, repoName: repoName });
+                    const enableUploadTaskTypeList = getUploadTaskTypeFromConfig(dataSharePlanConfig);
+                    infoLog(`[Task] calculateUploadTask enable upload task type list = ${enableUploadTaskTypeList}`)
+                    for (let i = 0; i < enableUploadTaskTypeList.length; i++) {
+                        const taskType = enableUploadTaskTypeList[i];
+                        await calculateUploadTask({ userName, repoName, taskType });
+                    }
                     //获取自身的数据共享计划仓库
-                    let shareDataPlanList = [{ username: userName, reponame: DEFAULT_DATA_REPO }];
+                    let shareDataPlanList = [{ username: userName, reponame: repoName }];
                     //从数据库中获取数据共享伙伴列表
                     let dataSharePartnerList = await calculateDataSharePartnerList();
                     shareDataPlanList.push(...dataSharePartnerList);
