@@ -140,8 +140,8 @@ async function sendMessage(message) {
 }
 
 async function _sendMessage(message) {
-  if (message.invokeEnv == WEB_WORKER) {
-    postMessage({ data: message });
+  if (message.invokeEnv == WEB_WORKER || typeof chrome == "undefined") {
+    postMessage({ data: message }, "/");
   } else {
     await chrome.runtime.sendMessage(message);
   }

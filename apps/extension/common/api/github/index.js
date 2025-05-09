@@ -157,6 +157,20 @@ export const GithubApi = {
       }
     });
   },
+  /**
+   * 
+   * @param {*} owner 
+   * @param {*} repo 
+   * @param {*} treeSha The SHA1 value or ref (branch or tag) name of the tree.
+   * @param {*} param3 
+   * @returns 
+   */
+  async getTree(owner, repo, treeSha, { getTokenFunction, setTokenFunction }) {
+    return await fetchJson(`${GITHUB_URL_API}/repos/${owner}/${repo}/git/trees/${treeSha}?recursive=true&t=${new Date().getTime()}`, null, {
+      method: "GET", getTokenFunction, setTokenFunction, headers: {
+      }
+    });
+  },
 }
 
 async function getDeveloperToken() {

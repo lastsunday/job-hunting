@@ -50,7 +50,7 @@ const Emitter = (() => {
         emit: async (key, value) => {
             const obj = {};
             obj[key] = value;
-            if (App.isWorld(WORLD_WEB_WORKER)) {
+            if (App.isWorld(WORLD_WEB_WORKER) || typeof chrome == "undefined") {
                 await EmitterApi.emitterEmit(obj)
             } else {
                 await chrome.storage.local.set(obj);

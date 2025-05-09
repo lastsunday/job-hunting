@@ -3,16 +3,7 @@ import path from 'path'
 
 export default defineConfig({
   test: {
-    environment: "happy-dom",
-    environmentOptions: {
-      happyDOM: {
-        settings: {
-          fetch: {
-            disableSameOriginPolicy: true
-          }
-        }
-      },
-    },
+    environment: "jsdom",
     include: ['tests/**/*.test.{js,ts,tsx}'],
   },
   resolve: {

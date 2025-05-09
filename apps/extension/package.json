@@ -51,6 +51,7 @@
     "analysis": "workspace:*",
     "antd": "^5.24.9",
     "array-move": "^4.0.0",
+    "blob-polyfill": "^9.0.20240710",
     "buffer": "^6.0.3",
     "core-js": "^3.42.0",
     "crc-32": "^1.2.2",

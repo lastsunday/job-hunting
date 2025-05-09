@@ -1,48 +1,31 @@
 import { expect, test } from "vitest";
 import { sparseCheckout, lsTree, getFiles } from "@/common/git";
+import { Blob } from 'blob-polyfill';
 
 //是否打印调试日志
-const DEBUG = false;
-//在线数据测试开关
-const DISABLE_ONLINE_TEST = true;
+const DEBUG = import.meta.env.TEST_ENABLE_DEBUG_LOG === "true";
+const skipOnlineTest = !(import.meta.env.TEST_ENABLE_ONLINE_TEST === "true");
+const accessToken = import.meta.env.TEST_GITHUB_APP_ACCESS_TOKEN;
 
-//跳过该测试
-//暂无法使用https方式访问私有的github仓库
-test('ls github private repo return correct content', { timeout: 30000, skip: true }, async () => {
-    // const token = "";
-    // const username = "x-access-token";
-    // const password = token;
-    const username = "skystarday";
-    const pat = ``;
-    const classicToken = ``;
+test('ls github private repo return correct content', { timeout: 30000, skip: skipOnlineTest }, async () => {
     const url = `https://github.com/skystarday/job-hunting-data`;
-    // const url = `https://${username}:${token}@github.com/skystarday/job-hunting-data.git`;
-    // const url = `https://${pat}@github.com/skystarday/job-hunting-data`;
-    // const result = await sparseCheckout(url, `HEAD`, [`2025/04-28/job.zip`], {
-    //     getResponseAsyncFunction
-    // });
     const result = await lsTree({
-        url, ref: `HEAD`, getResponseAsyncFunction
+        url, ref: `HEAD`, getResponseAsyncFunction: async ({ url, method, headers, body }) => {
+            headers["Authorization"] = `Bearer ${accessToken}`;
+            return await fetch(url, { method, headers, body });
+        }
     });
-    // const result = await lsTree({
-    //     url, ref: `HEAD`, getResponseAsyncFunction: async ({ url, method, headers, body }) => {
-    //         // headers["Authorization"] = `Basic ${Buffer.from(`${username}:${password}`).toString('base64')}`;
-    //         headers["Authorization"] = `Basic ${Buffer.from(`${username}:${classicToken}`).toString('base64')}`;
-    //         // headers["Authorization"] = `Bearer ${token}`;
-    //         return await fetch(url, { method, headers, body });
-    //     }
-    // });
     expect(result.size).gt(0);
 })
 
-test('ls github public repo return correct content', { timeout: 30000, skip: DISABLE_ONLINE_TEST }, async () => {
+test('ls github public repo return correct content', { timeout: 30000, skip: skipOnlineTest }, async () => {
     const result = await lsTree({
         url: `https://github.com/lastsunday/job-hunting`, ref: `HEAD`, getResponseAsyncFunction
     });
     expect(result.size).gt(0);
 })
 
-test('ls gitea public repo return correct content', { timeout: 30000, skip: DISABLE_ONLINE_TEST }, async () => {
+test('ls gitea public repo return correct content', { timeout: 30000, skip: skipOnlineTest }, async () => {
     const result = await lsTree({
         url: `https://gitea.com/lastsunday/job-hunting`, ref: `HEAD`, getResponseAsyncFunction
     });
