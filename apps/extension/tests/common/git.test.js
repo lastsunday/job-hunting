@@ -1,6 +1,7 @@
 import { expect, test } from "vitest";
 import { sparseCheckout, lsTree, getFiles } from "@/common/git";
 import { Blob } from 'blob-polyfill';
+import { fromHex, toHex } from "../util";
 
 //是否打印调试日志
 const DEBUG = import.meta.env.TEST_ENABLE_DEBUG_LOG === "true";
@@ -188,15 +189,3 @@ const getResponseAsyncFunction = async ({ url, method, headers, body }) => {
     }
     return new Response(blob.stream(), { status: 200 });
 };
-
-const fromHex = (hex) =>
-    Uint8Array.from(hex.match(/.{1,2}/g).map((byte) => parseInt(byte, 16)));
-
-export function toHex(buffer) {
-    let hex = ''
-    for (const byte of new Uint8Array(buffer)) {
-        if (byte < 16) hex += '0'
-        hex += byte.toString(16)
-    }
-    return hex
-}

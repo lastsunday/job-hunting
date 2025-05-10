@@ -19,8 +19,8 @@ export async function lsTree({
     const refs = await lsRefs(url, ref, { getResponseAsyncFunction });
     const commitHash = refs[ref];
     const treesIdx = await fetchWithoutBlobs(url, commitHash, { getResponseAsyncFunction });
-    const paths = resolvePaths(treesIdx, commitHash);
-    return paths;
+    const pathMap = resolvePaths(treesIdx, commitHash);
+    return pathMap;
 }
 
 export async function getFiles({

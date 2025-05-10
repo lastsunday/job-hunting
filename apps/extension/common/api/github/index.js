@@ -262,7 +262,11 @@ function isRaw(header) {
   return header && header["Accept"] == "application/vnd.github.raw+json";
 }
 
-async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin, getTokenFunction, setTokenFunction, headers } = { method: "POST", skipLogin: false }) {
+export async function _fetch(url, { method = "GET", getTokenFunction, setTokenFunction, headers, body } = {}) {
+  return fetchJson(url, null, { method, getTokenFunction, setTokenFunction, headers, isReturnResponseObject: true, body });
+}
+
+async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin, getTokenFunction, setTokenFunction, headers, isReturnResponseObject = false, body } = { method: "POST", skipLogin: false, isRawFetch: false }) {
   try {
     let oauthDTO = null;
     if (getTokenFunction) {
@@ -273,14 +277,18 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
     if (!oauthDTO && !skipLogin) {
       throw EXCEPTION.NO_LOGIN;
     }
-    let response = await fetchJsonReturnResponse(url, data, { method, skipLogin, getTokenFunction, headers });
+    let response = await fetchJsonReturnResponse(url, data, { method, skipLogin, getTokenFunction, headers, body });
     let status = response.status;
     if (isStatusNoError(response)) {
       let result = null;
-      if (isRaw(headers)) {
-        result = await response.arrayBuffer();
+      if (isReturnResponseObject) {
+        result = response;
       } else {
-        result = await response.json();
+        if (isRaw(headers)) {
+          result = await response.arrayBuffer();
+        } else {
+          result = await response.json();
+        }
       }
       if (responseHeaderCallback) {
         return responseHeaderCallback(result, response.headers);
@@ -330,13 +338,17 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
           }
           infoLog("continue request");
           //再次发出请求
-          response = await fetchJsonReturnResponse(url, data, { method, getTokenFunction });
+          response = await fetchJsonReturnResponse(url, data, { method, getTokenFunction, body });
           if (isStatusNoError(response)) {
             let result = null;
-            if (isRaw(headers)) {
-              result = await response.arrayBuffer();
+            if (isReturnResponseObject) {
+              result = response;
             } else {
-              result = await response.json();
+              if (isRaw(headers)) {
+                result = await response.arrayBuffer();
+              } else {
+                result = await response.json();
+              }
             }
             if (responseHeaderCallback) {
               return responseHeaderCallback(result, response.headers);
@@ -378,7 +390,7 @@ async function fetchJsonWithToken(url, data, { method, token, responseHeaderCall
   }
 }
 
-async function fetchJsonReturnResponse(url, data, { method, token, skipLogin, getTokenFunction, headers } = { method: "POST", skipLogin: false }) {
+async function fetchJsonReturnResponse(url, data, { method, token, skipLogin, getTokenFunction, headers, body } = { method: "POST", skipLogin: false }) {
   let targetToken = token;
   if (!targetToken) {
     let oauthDTO = null;
@@ -405,7 +417,9 @@ async function fetchJsonReturnResponse(url, data, { method, token, skipLogin, ge
     method,
     headers: targetHeaders,
   };
-  if (data) {
+  if (body) {
+    option.body = body;
+  } else if (data) {
     option.body = JSON.stringify(data);
   }
   let response = await fetch(url, option);

@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { GithubApi } from "@/common/api/github";
+import { GithubApi, _fetch as githubFetch } from "@/common/api/github";
 
 const skipOnlineTest = !(import.meta.env.TEST_ENABLE_ONLINE_TEST === "true");
 const accessToken = import.meta.env.TEST_GITHUB_APP_ACCESS_TOKEN;
@@ -20,3 +20,13 @@ test('get tree return repo tree data', { timeout: 30000, skip: skipOnlineTest },
     expect(result.tree.length).gt(0);
 })
 
+test('fetch return response object', { timeout: 30000, skip: skipOnlineTest }, async () => {
+    let tokenDTO = {
+        accessToken, refreshToken
+    }
+    const response = await githubFetch("https://api.github.com/user", {
+        getTokenFunction: async () => { return tokenDTO },
+        setTokenFunction: async (token) => { tokenDTO = token }
+    })
+    expect(response.status).toBe(200);
+})

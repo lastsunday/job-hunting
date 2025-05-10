@@ -4,6 +4,7 @@ import { JobTagBO } from "./data/bo/jobTagBO";
 import { Job } from "./data/domain/job";
 import { JobSnapshot } from "./data/domain/jobSnapshot";
 import { convertDateStringToDateObject, dateToStr, genIdFromText } from "./utils";
+import { utils, writeXLSX } from "xlsx";
 
 const HEADER_VERSION_PREFIX = "__VERSION_";
 
@@ -479,4 +480,11 @@ export const jobSnapshotDataToObjectArray = (data, datetime) => {
         result.push(item);
     }
     return result;
+}
+
+export async function convertJsonObjectToExcelData(result) {
+    const ws = utils.json_to_sheet(result);
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, "Data");
+    return writeXLSX(wb, { type: "buffer" });
 }

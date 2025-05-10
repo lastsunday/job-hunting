@@ -79,3 +79,22 @@ export async function unzipAdvanceFileToJson({ fileName, file }) {
     });
     return promise;
 }
+
+export async function zipFileToBase64(dataTypeName, excelData) {
+    const promise = new Promise((resolve, reject) => {
+        const zip = new JSZip();
+        zip.file(`${dataTypeName}.xlsx`, excelData);
+        zip
+            .generateAsync({
+                compression: "DEFLATE",
+                compressionOptions: { level: 9 },
+                type: "base64",
+            })
+            .then(function (content) {
+                resolve(content);
+            }).catch((e) => {
+                reject(e);
+            });
+    });
+    return promise;
+}
