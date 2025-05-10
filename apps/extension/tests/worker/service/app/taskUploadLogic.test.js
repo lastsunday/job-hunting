@@ -25,7 +25,7 @@ test('calculateRepoMaxUploadDate return correct content', async () => {
             return map;
         }
     });
-    expect(result).toStrictEqual(dayjs("2025-01-03").toDate());
+    expect(result).toStrictEqual(dayjs("2025-01-03"));
 })
 
 test('saveTask return correct result', {}, async () => {

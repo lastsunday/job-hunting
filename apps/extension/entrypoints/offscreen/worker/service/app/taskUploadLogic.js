@@ -91,7 +91,7 @@ export async function calculateRepoMaxUploadDate({
                 filterResult.push(dayjs(`${YYYY}-${MM}-${DD}`));
             }
         });
-        return dayjs.max(filterResult).toDate();
+        return dayjs.max(filterResult);
     } else {
         throw `can't find file name by type = ${type}`;
     }

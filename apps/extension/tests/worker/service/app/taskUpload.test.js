@@ -25,7 +25,7 @@ test('calculateUploadTask need upload', async () => {
         expect(type).toBe(TASK_TYPE_JOB_DATA_UPLOAD);
         expect(userName).toBe(USER_NAME);
         expect(repoName).toBe(REPO_NAME);
-        return dayjs("2025-05-04T16:00:00Z").toDate();
+        return dayjs("2025-05-04T16:00:00Z");
     });
     vi.spyOn(modTaskUploadLogic, 'saveTask').mockImplementation(async ({ type, startDatetime, endDatetime, userName, repoName }) => {
         expect(type).toBe(TASK_TYPE_JOB_DATA_UPLOAD);
