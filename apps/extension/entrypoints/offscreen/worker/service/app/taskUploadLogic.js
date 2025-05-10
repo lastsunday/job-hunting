@@ -27,6 +27,7 @@ import { _taskDataUploadAddOrUpdate } from "../taskDataUploadService";
 import { _taskAddOrUpdate } from "../taskService";
 import { getToken, setToken } from "./index";
 dayjs.extend(minMax);
+import { parse } from "@/common/utils/date";
 
 export const saveTask = async ({ type, startDatetime, endDatetime, userName, repoName, getTotalByTaskType = _getTotalByTaskType }) => {
     await (await getDb()).transaction(async (tx) => {
@@ -88,7 +89,7 @@ export async function calculateRepoMaxUploadDate({
             const matchPath = path.match(new RegExp(`\\/(?<YYYY>[0-9]{4})\\/(?<MM>[0-1][0-9])-(?<DD>[0-3][0-9])\\/${fileName}\\..*`));
             if (matchPath) {
                 const { YYYY, MM, DD } = matchPath.groups;
-                filterResult.push(dayjs(`${YYYY}-${MM}-${DD}`));
+                filterResult.push(parse(`${YYYY}-${MM}-${DD}`));
             }
         });
         return dayjs.max(filterResult);

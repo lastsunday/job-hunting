@@ -5,6 +5,7 @@ import * as modTaskDataUploadService from "@/entrypoints/offscreen/worker/servic
 import * as modTaskService from "@/entrypoints/offscreen/worker/service/taskService";
 import dayjs from "dayjs";
 import { expect, test, vi } from "vitest";
+import { parse } from "@/common/utils/date";
 const USER_NAME = import.meta.env.TEST_GITHUB_APP_USERNAME;
 const REPO_NAME = "job-hunting-data";
 const DEBUG = import.meta.env.TEST_ENABLE_DEBUG_LOG === "true";
@@ -25,7 +26,7 @@ test('calculateRepoMaxUploadDate return correct content', async () => {
             return map;
         }
     });
-    expect(result).toStrictEqual(dayjs("2025-01-03"));
+    expect(result).toStrictEqual(parse("2025-01-03"));
 })
 
 test('saveTask return correct result', {}, async () => {
@@ -49,8 +50,8 @@ test('saveTask return correct result', {}, async () => {
         expect(type).toBe(TASK_TYPE_JOB_DATA_UPLOAD);
         expect(username).toBe(USER_NAME);
         expect(reponame).toBe(REPO_NAME);
-        expect(startDatetime).toStrictEqual(dayjs("2025-05-04T16:00:00Z"));
-        expect(endDatetime).toStrictEqual(dayjs("2025-05-05T16:00:00Z"));
+        expect(startDatetime).toStrictEqual(dayjs(parse("2025-05-04")));
+        expect(endDatetime).toStrictEqual(dayjs(parse("2025-05-05")));
         expect(dataCount).toBe(10);
         return { id: "testDataId" }
     });
@@ -64,8 +65,8 @@ test('saveTask return correct result', {}, async () => {
     });
     await saveTask({
         type: TASK_TYPE_JOB_DATA_UPLOAD,
-        startDatetime: dayjs("2025-05-04T16:00:00Z"),
-        endDatetime: dayjs("2025-05-05T16:00:00Z"),
+        startDatetime: dayjs(parse("2025-05-04")),
+        endDatetime: dayjs(parse("2025-05-05")),
         userName: USER_NAME,
         repoName: REPO_NAME,
         getTotalByTaskType: async () => {
