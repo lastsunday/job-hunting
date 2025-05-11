@@ -113,7 +113,7 @@ export async function calculateRepoMaxUploadDate({
 
 export async function searchByChunk({ param = {}, connection = null, searchFunction = null, maxChunkCount = null } = {}) {
   if (param.pageNum == null && param.pageSize == null && maxChunkCount) {
-    const queryTotalParam = Object.assign(param, { pageNum: 1, pageSize: 1 });
+    const queryTotalParam = Object.assign(param, { pageNum: 1, pageSize: 0 });
     const queryTotal = (await searchFunction({ param: queryTotalParam, connection })).total;
     const result = [];
     const stepCount = Number.parseInt(queryTotal / maxChunkCount) + ((queryTotal % maxChunkCount > 0 ? 1 : 0));
