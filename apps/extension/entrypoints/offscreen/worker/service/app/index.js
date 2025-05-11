@@ -1,9 +1,9 @@
 import {
-    TASK_STATUS_ERROR,
-    TASK_STATUS_FINISHED,
-    TASK_STATUS_FINISHED_BUT_ERROR,
-    TASK_STATUS_READY,
-    TASK_STATUS_RUNNING
+  TASK_STATUS_ERROR,
+  TASK_STATUS_FINISHED,
+  TASK_STATUS_FINISHED_BUT_ERROR,
+  TASK_STATUS_READY,
+  TASK_STATUS_RUNNING
 } from "@/common";
 import { KEY_GITHUB_OAUTH_TOKEN, KEY_GITHUB_USER, TASK_STATUS_ERROR_MAX_RETRY_COUNT } from "@/common/config";
 import { SearchTaskBO } from "@/common/data/bo/searchTaskBO";
@@ -30,56 +30,56 @@ setupDownloadHandle(TASK_HANDLE_MAP);
 setupMergeHandle(TASK_HANDLE_MAP);
 
 export async function runTask() {
-    debugLog(`[TASK RUN] starting`)
-    //获取按创建时间升序需要执行的任务
-    let searchParam = new SearchTaskBO();
-    searchParam.statusList = [TASK_STATUS_READY, TASK_STATUS_RUNNING, TASK_STATUS_ERROR];
-    searchParam.endRetryCount = TASK_STATUS_ERROR_MAX_RETRY_COUNT;
-    searchParam.orderByColumn = "createDatetime";
-    searchParam.orderBy = "ASC";
-    let taskResult = await _searchTask({ param: searchParam });
-    debugLog(`[TASK RUN] task count = ${taskResult.total}`)
-    if (taskResult.total > 0) {
-        for (let i = 0; i < taskResult.items.length; i++) {
-            let taskItem = taskResult.items[i];
-            debugLog(`[TASK RUN] current task seq = ${i}, id = ${taskItem.id},type = ${taskItem.type},retryCount = ${taskItem.retryCount}`)
-            taskItem.retryCount = taskItem.retryCount + 1;
-            let startDatetime = dayjs();
-            try {
-                taskItem.status = TASK_STATUS_RUNNING;
-                await _taskAddOrUpdate({ param: taskItem });
-                if (TASK_HANDLE_MAP.has(taskItem.type)) {
-                    //执行
-                    let errorMessage = await TASK_HANDLE_MAP.get(taskItem.type)(taskItem.dataId);
-                    if (errorMessage) {
-                        taskItem.errorReason = errorMessage;
-                        taskItem.status = TASK_STATUS_FINISHED_BUT_ERROR;
-                    } else {
-                        taskItem.status = TASK_STATUS_FINISHED;
-                    }
-                    taskItem.costTime = dayjs().diff(startDatetime);
-                    await _taskAddOrUpdate({ param: taskItem });
-                } else {
-                    throw `[TASK RUN] not supported task type = ${taskItem.type}`
-                }
-            } catch (e) {
-                debugLog(e);
-                //执行异常，补充异常信息
-                taskItem.status = TASK_STATUS_ERROR;
-                taskItem.errorReason = JSON.stringify(e);
-                taskItem.costTime = dayjs().diff(startDatetime);
-                await _taskAddOrUpdate({ param: taskItem });
-            }
+  infoLog(`[TASK RUN] starting`)
+  //获取按创建时间升序需要执行的任务
+  let searchParam = new SearchTaskBO();
+  searchParam.statusList = [TASK_STATUS_READY, TASK_STATUS_RUNNING, TASK_STATUS_ERROR];
+  searchParam.endRetryCount = TASK_STATUS_ERROR_MAX_RETRY_COUNT;
+  searchParam.orderByColumn = "createDatetime";
+  searchParam.orderBy = "ASC";
+  let taskResult = await _searchTask({ param: searchParam });
+  infoLog(`[TASK RUN] task count = ${taskResult.total}`)
+  if (taskResult.total > 0) {
+    for (let i = 0; i < taskResult.items.length; i++) {
+      let taskItem = taskResult.items[i];
+      infoLog(`[TASK RUN] current task seq = ${i}, id = ${taskItem.id},type = ${taskItem.type},retryCount = ${taskItem.retryCount}`)
+      taskItem.retryCount = taskItem.retryCount + 1;
+      let startDatetime = dayjs();
+      try {
+        taskItem.status = TASK_STATUS_RUNNING;
+        await _taskAddOrUpdate({ param: taskItem });
+        if (TASK_HANDLE_MAP.has(taskItem.type)) {
+          //执行
+          let errorMessage = await TASK_HANDLE_MAP.get(taskItem.type)(taskItem.dataId);
+          if (errorMessage) {
+            taskItem.errorReason = errorMessage;
+            taskItem.status = TASK_STATUS_FINISHED_BUT_ERROR;
+          } else {
+            taskItem.status = TASK_STATUS_FINISHED;
+          }
+          taskItem.costTime = dayjs().diff(startDatetime);
+          await _taskAddOrUpdate({ param: taskItem });
+        } else {
+          throw `[TASK RUN] not supported task type = ${taskItem.type}`
         }
-    } else {
-        debugLog(`[TASK RUN] skip task run`)
+      } catch (e) {
+        debugLog(e);
+        //执行异常，补充异常信息
+        taskItem.status = TASK_STATUS_ERROR;
+        taskItem.errorReason = JSON.stringify(e);
+        taskItem.costTime = dayjs().diff(startDatetime);
+        await _taskAddOrUpdate({ param: taskItem });
+      }
     }
-    debugLog(`[TASK RUN] end`)
+  } else {
+    infoLog(`[TASK RUN] skip task run`)
+  }
+  infoLog(`[TASK RUN] end`)
 }
 
 export async function runScheduleTask() {
-    infoLog("[TASK] [SCHEDULE] runScheduleTask")
-    await scheduleClearFile();
+  infoLog("[TASK] [SCHEDULE] runScheduleTask")
+  await scheduleClearFile();
 }
 
 /**
@@ -87,10 +87,10 @@ export async function runScheduleTask() {
  * @param {OauthDTO} token 
  */
 export async function setToken(token) {
-    let config = new Config();
-    config.key = KEY_GITHUB_OAUTH_TOKEN;
-    config.value = JSON.stringify(token);
-    return _addOrUpdateConfig(config);
+  let config = new Config();
+  config.key = KEY_GITHUB_OAUTH_TOKEN;
+  config.value = JSON.stringify(token);
+  return _addOrUpdateConfig(config);
 }
 
 /**
@@ -98,16 +98,16 @@ export async function setToken(token) {
  * @returns OauthDTO
  */
 export async function getToken() {
-    let oauthDTO = new OauthDTO();
-    let config = await _getConfigByKey(KEY_GITHUB_OAUTH_TOKEN);
-    if (config) {
-        let value = JSON.parse(config.value);
-        if (value) {
-            Object.assign(oauthDTO, value);
-            return oauthDTO;
-        }
+  let oauthDTO = new OauthDTO();
+  let config = await _getConfigByKey(KEY_GITHUB_OAUTH_TOKEN);
+  if (config) {
+    let value = JSON.parse(config.value);
+    if (value) {
+      Object.assign(oauthDTO, value);
+      return oauthDTO;
     }
-    return null;
+  }
+  return null;
 }
 
 /**
@@ -115,22 +115,22 @@ export async function getToken() {
  * @returns UserDTO
  */
 export async function _getUser({ connection = null } = {}) {
-    let userDTO = new UserDTO();
-    let config = await _getConfigByKey(KEY_GITHUB_USER, { connection });
-    if (config) {
-        let value = JSON.parse(config.value);
-        if (value) {
-            Object.assign(userDTO, value);
-            return userDTO;
-        }
+  let userDTO = new UserDTO();
+  let config = await _getConfigByKey(KEY_GITHUB_USER, { connection });
+  if (config) {
+    let value = JSON.parse(config.value);
+    if (value) {
+      Object.assign(userDTO, value);
+      return userDTO;
     }
-    return null;
+  }
+  return null;
 }
 
 export async function isLogin() {
-    return (await getToken()) ? true : false;
+  return (await getToken()) ? true : false;
 }
 
 export function getPathByDatetime({ datetime }) {
-    return `/${dayjs(datetime).format("YYYY")}/${dayjs(datetime).format("MM-DD")}`;
+  return `/${dayjs(datetime).format("YYYY")}/${dayjs(datetime).format("MM-DD")}`;
 }
