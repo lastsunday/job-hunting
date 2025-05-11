@@ -6,15 +6,15 @@ import { _searchDataSharePartner } from "../dataSharePartnerService";
 
 export async function getDataSharePlanConfig() {
     let dataSharePlanConfig = new DataSharePlanConfigDTO();
-    let configValue = await _getConfigByKey(CONFIG_KEY_DATA_SHARE_PLAN);
+    const configValue = await _getConfigByKey(CONFIG_KEY_DATA_SHARE_PLAN);
     if (configValue && configValue.value) {
-        dataSharePlanConfig = JSON.parse(configValue.value);
+        dataSharePlanConfig = Object.assign(dataSharePlanConfig,JSON.parse(configValue.value));
     }
     return dataSharePlanConfig;
 }
 
 export async function calculateDataSharePartnerList() {
-    let searchParam = new SearchDataSharePartnerBO();
+    const searchParam = new SearchDataSharePartnerBO();
     searchParam.orderByColumn = "updateDatetime";
     searchParam.orderBy = "DESC";
     return (await _searchDataSharePartner({ param: searchParam })).items;

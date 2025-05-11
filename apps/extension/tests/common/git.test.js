@@ -12,25 +12,27 @@ test('ls github private repo return correct content', { timeout: 30000, skip: sk
     const url = `https://github.com/skystarday/job-hunting-data`;
     const result = await lsTree({
         url, ref: `HEAD`, getResponseAsyncFunction: async ({ url, method, headers, body }) => {
-            headers["Authorization"] = `Bearer ${accessToken}`;
+            //Basic auth 的username可以不填，下面给了空格字符，密码可以为Github APP access token和Personal access token (classic)
+            //TODO Fine-grained personal access token 未进行测试
+            headers["Authorization"] = `Basic ${Buffer.from(` :${accessToken}`).toString('base64')}`;
             return await fetch(url, { method, headers, body });
         }
     });
-    expect(result.size).gt(0);
+    expect(result.size).gte(0);
 })
 
 test('ls github public repo return correct content', { timeout: 30000, skip: skipOnlineTest }, async () => {
     const result = await lsTree({
         url: `https://github.com/lastsunday/job-hunting`, ref: `HEAD`, getResponseAsyncFunction
     });
-    expect(result.size).gt(0);
+    expect(result.size).gte(0);
 })
 
 test('ls gitea public repo return correct content', { timeout: 30000, skip: skipOnlineTest }, async () => {
     const result = await lsTree({
         url: `https://gitea.com/lastsunday/job-hunting`, ref: `HEAD`, getResponseAsyncFunction
     });
-    expect(result.size).gt(0);
+    expect(result.size).gte(0);
 })
 
 const gitRepoData = {

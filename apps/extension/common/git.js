@@ -8,7 +8,7 @@ import { GitPackIndex } from '@/lib/isomorphic-git/models/GitPackIndex.js'
 import { collect } from '@/lib/isomorphic-git/utils/collect.js'
 import { parseUploadPackResponse } from '@/lib/isomorphic-git/wire/parseUploadPackResponse.js'
 import { Buffer } from 'buffer'
-window.Buffer = Buffer;
+globalThis.Buffer = Buffer;
 
 export async function lsTree({
     url = null,
@@ -108,6 +108,9 @@ async function lsRefs(repoUrl, refPrefix, { getResponseAsyncFunction = async ({ 
             'Git-Protocol': 'version=2'
         }, body: packbuffer
     })
+    if(response.status != 200){
+        throw `invalid response status ${response.status}`
+    }
     const refs = {};
     for await (const line of parseGitResponseLines(response)) {
         const spaceAt = line.indexOf(' ');
@@ -130,7 +133,6 @@ async function fetchWithoutBlobs(repoUrl, commitHash, { getResponseAsyncFunction
         GitPktLine.encode(`done\n`),
         GitPktLine.encode(`done\n`),
     ]));
-
     const response = await getResponseAsyncFunction({
         url: repoUrl + '/git-upload-pack',
         method: 'POST',
@@ -141,7 +143,9 @@ async function fetchWithoutBlobs(repoUrl, commitHash, { getResponseAsyncFunction
         },
         body: packbuffer
     })
-
+    if(response.status != 200){
+        throw `invalid response status ${response.status}`
+    }
     const iterator = streamToIterator(await response.body);
 
     const parsed = await parseUploadPackResponse(iterator)
@@ -210,7 +214,6 @@ async function fetchObjects(repoUrl, objectHashes, { getResponseAsyncFunction = 
         GitPktLine.flush(),
         GitPktLine.encode(`done\n`),
     ]));
-
     const response = await getResponseAsyncFunction({
         url: repoUrl + '/git-upload-pack',
         method: 'POST',
@@ -221,7 +224,9 @@ async function fetchObjects(repoUrl, objectHashes, { getResponseAsyncFunction = 
         },
         body: packbuffer
     })
-
+    if(response.status != 200){
+        throw `invalid response status ${response.status}`
+    }
     const iterator = streamToIterator(await response.body);
     const parsed = await parseUploadPackResponse(iterator)
     const packfile = Buffer.from(await collect(parsed.packfile))

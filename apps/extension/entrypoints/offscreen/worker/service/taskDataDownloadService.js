@@ -3,8 +3,7 @@ import { SearchTaskDataDownloadBO } from "@/common/data/bo/searchTaskDataDownloa
 import { TaskDataDownload } from "@/common/data/domain/taskDataDownload";
 import { SearchTaskDataDownloadDTO } from "@/common/data/dto/searchTaskDataDownloadDTO";
 import { postSuccessMessage } from "@/common/extension/worker/util";
-import { dateToStr } from "@/common/utils";
-import dayjs from "dayjs";
+import { dateToStr } from "@/common/utils/date";
 import { BaseService } from "./baseService";
 
 export const SERVICE_INSTANCE = new BaseService("task_data_download", "id",
@@ -116,7 +115,7 @@ export const _taskDataDownloadGetById = async ({ param = null, connection = null
 }
 
 export const _taskDataDownloadAddOrUpdate = async ({ param = null, connection = null } = {}) => {
-    param.datetime = dayjs(param.datetime).format();
+    param.datetime = dateToStr(param.datetime);
     return await SERVICE_INSTANCE._addOrUpdate(param, { connection });;
 }
 

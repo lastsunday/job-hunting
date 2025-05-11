@@ -48,8 +48,17 @@ export async function calculateUploadTask({ userName, repoName, taskType,
             const repoMaxDate = await calculateRepoMaxUploadDate({
                 userName, repoName, type: taskType
             })
+            let dataSyncStartDatetime = null;
             //计算数据项开始时间,取最小值(数据库时间,仓库时间)
-            const dataSyncStartDatetime = dayjs.min(taskDataUploadMaxDate, dayjs(repoMaxDate));
+            if(repoMaxDate && taskDataUploadMaxDate){
+                dataSyncStartDatetime = dayjs.min(taskDataUploadMaxDate, dayjs(repoMaxDate));
+            }else {
+                if(repoMaxDate == null){
+                    dataSyncStartDatetime = repoMaxDate;
+                }else{
+                    dataSyncStartDatetime = taskDataUploadMaxDate;
+                }
+            }
             infoLog(`[TASK DATA UPLOAD CALCULATE] dataSyncStartDatetime = ${dataSyncStartDatetime}`)
             try {
                 infoLog(`[TASK DATA UPLOAD CALCULATE] add data upload task ${userName}/${repoName} startDatetime=${dataSyncStartDatetime} endDatetime=${today} starting`)

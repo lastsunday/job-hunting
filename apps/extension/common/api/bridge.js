@@ -141,7 +141,14 @@ async function sendMessage(message) {
 
 async function _sendMessage(message) {
   if (message.invokeEnv == WEB_WORKER || typeof chrome == "undefined") {
-    postMessage({ data: message }, "/");
+    if (typeof importScripts === 'function') {
+      //只在WebWorker环境下运行
+      //https://github.com/emscripten-core/emscripten/blob/54b0f19d9e8130de16053b0915d114c346c99f17/src/shell.js
+      postMessage({ data: message });
+    } else {
+      //不在WebWorker环境下，跳过
+      //如jsdom环境
+    }
   } else {
     await chrome.runtime.sendMessage(message);
   }

@@ -166,10 +166,18 @@ export const GithubApi = {
    * @returns 
    */
   async getTree(owner, repo, treeSha, { getTokenFunction, setTokenFunction }) {
-    return await fetchJson(`${GITHUB_URL_API}/repos/${owner}/${repo}/git/trees/${treeSha}?recursive=true&t=${new Date().getTime()}`, null, {
-      method: "GET", getTokenFunction, setTokenFunction, headers: {
+    try {
+      return await fetchJson(`${GITHUB_URL_API}/repos/${owner}/${repo}/git/trees/${treeSha}?recursive=true&t=${new Date().getTime()}`, null, {
+        method: "GET", getTokenFunction, setTokenFunction, headers: {
+        }
+      });
+    } catch (e) {
+      if (e == EXCEPTION.NOT_FOUND) {
+        return { tree: [] };
+      } else {
+        throw e;
       }
-    });
+    }
   },
 }
 
@@ -262,11 +270,14 @@ function isRaw(header) {
   return header && header["Accept"] == "application/vnd.github.raw+json";
 }
 
-export async function _fetch(url, { method = "GET", getTokenFunction, setTokenFunction, headers, body } = {}) {
-  return fetchJson(url, null, { method, getTokenFunction, setTokenFunction, headers, isReturnResponseObject: true, body });
+/**
+ * authMode: Bearer | Basic
+ */
+export async function _fetch(url, { method = "GET", getTokenFunction, setTokenFunction, headers, body, authMode } = {}) {
+  return fetchJson(url, null, { method, getTokenFunction, setTokenFunction, headers, isReturnResponseObject: true, body, authMode });
 }
 
-async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin, getTokenFunction, setTokenFunction, headers, isReturnResponseObject = false, body } = { method: "POST", skipLogin: false, isRawFetch: false }) {
+async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin, getTokenFunction, setTokenFunction, headers, isReturnResponseObject = false, body, authMode } = { method: "POST", skipLogin: false, isRawFetch: false }) {
   try {
     let oauthDTO = null;
     if (getTokenFunction) {
@@ -277,7 +288,7 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
     if (!oauthDTO && !skipLogin) {
       throw EXCEPTION.NO_LOGIN;
     }
-    let response = await fetchJsonReturnResponse(url, data, { method, skipLogin, getTokenFunction, headers, body });
+    let response = await fetchJsonReturnResponse(url, data, { method, token: oauthDTO.accessToken, skipLogin, getTokenFunction, headers, body, authMode });
     let status = response.status;
     if (isStatusNoError(response)) {
       let result = null;
@@ -338,7 +349,7 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
           }
           infoLog("continue request");
           //再次发出请求
-          response = await fetchJsonReturnResponse(url, data, { method, getTokenFunction, body });
+          response = await fetchJsonReturnResponse(url, data, { method, getTokenFunction, body, authMode });
           if (isStatusNoError(response)) {
             let result = null;
             if (isReturnResponseObject) {
@@ -376,8 +387,8 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
   }
 }
 
-async function fetchJsonWithToken(url, data, { method, token, responseHeaderCallback }) {
-  let response = await fetchJsonReturnResponse(url, data, { method, token });
+async function fetchJsonWithToken(url, data, { method, token, responseHeaderCallback, authMode }) {
+  let response = await fetchJsonReturnResponse(url, data, { method, token, authMode });
   let status = response.status;
   if (isStatusNoError(response)) {
     const jsonResult = await response.json();
@@ -390,7 +401,7 @@ async function fetchJsonWithToken(url, data, { method, token, responseHeaderCall
   }
 }
 
-async function fetchJsonReturnResponse(url, data, { method, token, skipLogin, getTokenFunction, headers, body } = { method: "POST", skipLogin: false }) {
+async function fetchJsonReturnResponse(url, data, { method, token, skipLogin, getTokenFunction, headers, body, authMode = "Bearer" } = { method: "POST", skipLogin: false }) {
   let targetToken = token;
   if (!targetToken) {
     let oauthDTO = null;
@@ -411,7 +422,11 @@ async function fetchJsonReturnResponse(url, data, { method, token, skipLogin, ge
     targetHeaders = { ...targetHeaders, ...headers };
   }
   if (targetToken) {
-    targetHeaders["Authorization"] = `Bearer ${targetToken}`;
+    if (authMode == "Basic") {
+      targetHeaders["Authorization"] = `Basic ${Buffer.from(` :${targetToken}`).toString('base64')}`;
+    } else {
+      targetHeaders["Authorization"] = `Bearer ${targetToken}`;
+    }
   }
   let option = {
     method,

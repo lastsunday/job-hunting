@@ -6,7 +6,8 @@ import {
     TASK_TYPE_JOB_DATA_UPLOAD,
     TASK_TYPE_JOB_TAG_DATA_UPLOAD
 } from "@/common";
-import { EXCEPTION, GithubApi } from "@/common/api/github";
+import { EXCEPTION, GithubApi, _fetch as githubFetch } from "@/common/api/github";
+import { GITHUB_URL } from "@/common/config";
 import { CompanyTagExportBO } from "@/common/data/bo/companyTagExportBO";
 import { JobTagExportBO } from "@/common/data/bo/jobTagExportBO";
 import { SearchCompanyBO } from "@/common/data/bo/searchCompanyBO";
@@ -14,7 +15,9 @@ import { SearchJobBO } from "@/common/data/bo/searchJobBO";
 import { Task } from "@/common/data/domain/task";
 import { TaskDataUpload } from "@/common/data/domain/taskDataUpload";
 import { convertJsonObjectToExcelData } from "@/common/excel";
+import { lsTree } from "@/common/git";
 import { infoLog } from "@/common/log";
+import { parse } from "@/common/utils/date";
 import { zipFileToBase64 } from "@/common/zip";
 import dayjs from "dayjs";
 import minMax from 'dayjs/plugin/minMax'; // ES 2015
@@ -27,7 +30,6 @@ import { _taskDataUploadAddOrUpdate } from "../taskDataUploadService";
 import { _taskAddOrUpdate } from "../taskService";
 import { getToken, setToken } from "./index";
 dayjs.extend(minMax);
-import { parse } from "@/common/utils/date";
 
 export const saveTask = async ({ type, startDatetime, endDatetime, userName, repoName, getTotalByTaskType = _getTotalByTaskType }) => {
     await (await getDb()).transaction(async (tx) => {
@@ -76,7 +78,7 @@ export async function calculateRepoMaxUploadDate({
             url: `${GITHUB_URL}/${userName}/${repoName}`,
             ref: "HEAD",
             getResponseAsyncFunction: async ({ url, method, headers, body }) => {
-                return githubFetch(url, { method, headers, body });
+                return githubFetch(url, { method, headers, body, authMode: "Basic" });
             }
         })
     } }) {
@@ -92,7 +94,11 @@ export async function calculateRepoMaxUploadDate({
                 filterResult.push(parse(`${YYYY}-${MM}-${DD}`));
             }
         });
-        return dayjs.max(filterResult);
+        if (filterResult.length > 0) {
+            return dayjs.max(filterResult);
+        } else {
+            return null;
+        }
     } else {
         throw `can't find file name by type = ${type}`;
     }

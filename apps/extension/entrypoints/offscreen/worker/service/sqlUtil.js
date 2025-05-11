@@ -1,4 +1,4 @@
-import dayjs from "dayjs";
+import { dateToStr } from "@/common/utils/date";
 
 export function genNotLikeSql(paramList, columnName) {
     let result = "";
@@ -52,7 +52,7 @@ export function handleAndReturnWhereSql(whereCondition) {
 
 export function genDatetimeConditionSql(datetime, columnName, operation) {
     if (datetime) {
-        let datetimeString = dayjs(datetime).format();
+        let datetimeString = dateToStr(datetime);
         return ` AND ${columnName} ${operation} '${datetimeString}'`;
     } else {
         return "";

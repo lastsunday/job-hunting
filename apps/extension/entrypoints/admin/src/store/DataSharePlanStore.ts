@@ -25,8 +25,9 @@ const useDataSharePlanStore = create<DataSharePlanState>()((set) => {
     const _init = async () => {
         const configValue = await ConfigApi.getConfigByKey(CONFIG_KEY_DATA_SHARE_PLAN);
         if (configValue && configValue.value) {
-            const config = JSON.parse(configValue.value);
-            set(() => (config));
+            let dataSharePlanConfig = new DataSharePlanConfigDTO();
+            dataSharePlanConfig = Object.assign(dataSharePlanConfig, JSON.parse(configValue.value));
+            set(() => (dataSharePlanConfig));
         } else {
             set(() => (new DataSharePlanConfigDTO()));
         }

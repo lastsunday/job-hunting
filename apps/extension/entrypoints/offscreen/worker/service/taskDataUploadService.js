@@ -3,7 +3,7 @@ import { SearchTaskDataUploadBO } from "@/common/data/bo/searchTaskDataUploadBO"
 import { TaskDataUpload } from "@/common/data/domain/taskDataUpload";
 import { SearchTaskDataUploadDTO } from "@/common/data/dto/searchTaskDataUploadDTO";
 import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
-import dayjs from "dayjs";
+import { dateToStr } from "@/common/utils/date";
 import { getDb } from "../database";
 import { BaseService } from "./baseService";
 import { genWhereSql } from "./sqlUtil";
@@ -91,8 +91,8 @@ export const _taskDataUploadGetById = async ({ param = null, connection = null }
 }
 
 export const _taskDataUploadAddOrUpdate = async ({ param = null, connection = null } = {}) => {
-    param.startDatetime = dayjs(param.startDatetime).format();
-    param.endDatetime = dayjs(param.endDatetime).format();
+    param.startDatetime = dateToStr(param.startDatetime);
+    param.endDatetime = dateToStr(param.endDatetime);
     return await SERVICE_INSTANCE._addOrUpdate(param, { connection });
 }
 

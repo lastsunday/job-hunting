@@ -29,6 +29,18 @@ test('calculateRepoMaxUploadDate return correct content', async () => {
     expect(result).toStrictEqual(parse("2025-01-03"));
 })
 
+test('calculateRepoMaxUploadDate return null', async () => {
+    const result = await calculateRepoMaxUploadDate({
+        userName: USER_NAME, repoName: REPO_NAME, type: TASK_TYPE_JOB_DATA_UPLOAD, getPathMap: async ({ userName, repoName }) => {
+            expect(userName).toBe(USER_NAME);
+            expect(repoName).toBe(REPO_NAME);
+            const map = new Map();
+            return map;
+        }
+    });
+    expect(result).toBeNull();
+})
+
 test('saveTask return correct result', {}, async () => {
     vi.spyOn(mod, 'getDb').mockImplementation(async () => {
         const tx = {

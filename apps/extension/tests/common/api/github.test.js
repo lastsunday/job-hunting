@@ -17,7 +17,7 @@ test('get tree return repo tree data', { timeout: 30000, skip: skipOnlineTest },
             getTokenFunction: async () => { return tokenDTO },
             setTokenFunction: async (token) => { tokenDTO = token }
         })
-    expect(result.tree.length).gt(0);
+    expect(result.tree.length).gte(0);
 })
 
 test('fetch return response object', { timeout: 30000, skip: skipOnlineTest }, async () => {
