@@ -65,7 +65,7 @@ const RootLayout: React.FC = () => {
   );
 
   const refreshMenu = () => {
-    setMenuItems([
+    const menu = [
       {
         key: '',
         icon: <HomeOutlined />,
@@ -110,10 +110,10 @@ const RootLayout: React.FC = () => {
       jobSnapshotConfig.enable
         ? null
         : {
-            key: 'jobSnapshotSetting',
-            icon: <HistoryOutlined />,
-            label: '职位快照',
-          },
+          key: 'jobSnapshotSetting',
+          icon: <HistoryOutlined />,
+          label: '职位快照',
+        },
       {
         key: 'dataSource',
         icon: <DatabaseOutlined />,
@@ -141,9 +141,10 @@ const RootLayout: React.FC = () => {
         icon: <SettingOutlined />,
         label: '设置',
       },
-    ]);
+    ];
+    setMenuItems(menu);
     const walkResult = new Map();
-    walkMenu({ menuItems, resultMap: walkResult });
+    walkMenu({ menuItems: menu, resultMap: walkResult });
     setPathTitleMap(walkResult);
   };
 
