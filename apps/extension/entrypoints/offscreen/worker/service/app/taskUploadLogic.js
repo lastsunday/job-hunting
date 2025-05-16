@@ -36,6 +36,7 @@ import {
   JOB_TAG_MAX_EXPORT_SIZE,
   COMPANY_TAG_MAX_EXPORT_SIZE,
 } from "@/common/config";
+import { queryRepoFileDateList } from "./taskLogic";
 
 
 export const saveTask = async ({ type, startDatetime, endDatetime, userName, repoName, getTotalByTaskType = _getTotalByTaskType }) => {
@@ -79,36 +80,10 @@ export async function addDataUploadTask({ type, startDatetime, endDatetime, user
 }
 
 export async function calculateRepoMaxUploadDate({
-  userName, repoName, type,
-  getPathMap = async ({ userName, repoName }) => {
-    return await lsTree({
-      url: `${GITHUB_URL}/${userName}/${repoName}`,
-      ref: "HEAD",
-      getResponseAsyncFunction: async ({ url, method, headers, body }) => {
-        return githubFetch(url, { method, headers, body, authMode: "Basic" });
-      }
-    })
-  } }) {
-  if (TASK_TYPE_AND_FILE_NAME_MAP.has(type)) {
-    const pathMap = await getPathMap({ userName, repoName });
-    const fileName = TASK_TYPE_AND_FILE_NAME_MAP.get(type);
-    const pathKeys = pathMap.keys();
-    const filterResult = [];
-    pathKeys.forEach(path => {
-      const matchPath = path.match(new RegExp(`\\/(?<YYYY>[0-9]{4})\\/(?<MM>[0-1][0-9])-(?<DD>[0-3][0-9])\\/${fileName}\\..*`));
-      if (matchPath) {
-        const { YYYY, MM, DD } = matchPath.groups;
-        filterResult.push(parse(`${YYYY}-${MM}-${DD}`));
-      }
-    });
-    if (filterResult.length > 0) {
-      return dayjs.max(filterResult);
-    } else {
-      return null;
-    }
-  } else {
-    throw `can't find file name by type = ${type}`;
-  }
+  userName, repoName, type, getPathMap
+}) {
+  const filterResult = await queryRepoFileDateList({ userName, repoName, taskType: type, getPathMap });
+  return dayjs.max(filterResult);
 }
 
 export async function searchByChunk({ param = {}, connection = null, searchFunction = null, maxChunkCount = null } = {}) {
@@ -173,7 +148,7 @@ export async function getJobTagData({ pageNum = null, pageSize = null, startDate
   return searchByChunk({ param: searchParam, connection, searchFunction: _jobTagExport, maxChunkCount: JOB_TAG_MAX_EXPORT_SIZE });
 }
 
-export async function createRepoIfNotExists({ userName, repoName }) {
+export async function createRepoIfNotExists({ userName, repoName, isPrivate = true } = {}) {
   try {
     await GithubApi.getRepo(userName, repoName, { getTokenFunction: getToken, setTokenFunction: setToken, });
     infoLog(`[Task Data] repo ${repoName} exists`);
@@ -181,7 +156,7 @@ export async function createRepoIfNotExists({ userName, repoName }) {
     infoLog(`[Task Data] repo ${repoName} exists not exists`);
     infoLog(`[Task Data] create a new repo ${repoName}`);
     if (e == EXCEPTION.NOT_FOUND) {
-      await GithubApi.newRepo(repoName, { getTokenFunction: getToken, setTokenFunction: setToken, });
+      await GithubApi.newRepo(repoName, { isPrivate, getTokenFunction: getToken, setTokenFunction: setToken, });
       infoLog(`create a new repo ${repoName} success`);
     } else {
       throw e;

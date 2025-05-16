@@ -20,77 +20,77 @@ export const AUTOMATE_ERROR_UNKNOW = "AUTOMATE_ERROR_UNKNOW";
 export const AUTOMATE_ERROR_HUMAN_VALID = "AUTOMATE_ERROR_HUMAN_VALID";
 
 export function getUrlByTagAndCompanyName(tagName, companyName) {
-    const decode = encodeURIComponent(companyName);
-    if (tagName == TAG_RUOBILIN_BLACK_LIST) {
-        return `https://kjxb.org/?s=${decode}&post_type=question`;
-    } else if (tagName == TAG_IT_BLACK_LIST) {
-        return `https://www.job996.xyz/index.php/search/=${decode}`;
-    } else if (tagName == TAG_IT_BLACK_LIST_2) {
-        return `http://www.blackdir.com/?search=${decode}`;
-    } else if (tagName == TAG_CREDIT_BJ_BLACK_LIST) {
-        return `https://creditbj.jxj.beijing.gov.cn/credit-portal/credit_service/publicity/record/black`;
-    } else {
-        return null;
-    }
+  const decode = encodeURIComponent(companyName);
+  if (tagName == TAG_RUOBILIN_BLACK_LIST) {
+    return `https://kjxb.org/?s=${decode}&post_type=question`;
+  } else if (tagName == TAG_IT_BLACK_LIST) {
+    return `https://www.job996.xyz/index.php/search/=${decode}`;
+  } else if (tagName == TAG_IT_BLACK_LIST_2) {
+    return `http://www.blackdir.com/?search=${decode}`;
+  } else if (tagName == TAG_CREDIT_BJ_BLACK_LIST) {
+    return `https://creditbj.jxj.beijing.gov.cn/credit-portal/credit_service/publicity/record/black`;
+  } else {
+    return null;
+  }
 }
 
 export function genId(id, platform) {
-    return platform + "_" + id;
+  return platform + "_" + id;
 }
 
 export function getInfoFromJobDetailUrl(url) {
-    if (url.href.startsWith("https://www.zhipin.com/job_detail/")) {
-        const platform = PLATFORM_BOSS;
-        const jobId = genId(url.href.match(/https:\/\/www.zhipin.com\/job_detail\/(?<id>.*)\.html/).groups.id, platform);
-        return {
-            platform,
-            jobId,
-            url: url.origin + url.pathname,
-        };
-    } else if (url.href.startsWith("https://jobs.51job.com/")) {
-        const platform = PLATFORM_51JOB;
-        const jobId = genId(url.href.match(/https:\/\/jobs.51job.com\/.*\/(?<id>.*)\.html/).groups.id, platform);
-        return {
-            platform,
-            jobId,
-            url: url.origin + url.pathname,
-        };
-    } else if (url.href.startsWith("https://www.zhaopin.com/jobdetail/")) {
-        const platform = PLATFORM_ZHILIAN;
-        const jobId = genId(url.href.match(/https:\/\/www.zhaopin.com\/jobdetail\/(?<id>.*)\.htm/).groups.id, platform);
-        return {
-            platform,
-            jobId,
-            url: url.origin + url.pathname,
-        };
-    } else if (url.href.match(/https:\/\/www.liepin.com\/(lptjob|a|job)\//)) {
-        const platform = PLATFORM_LIEPIN;
-        const jobId = genId(url.href.match(/https:\/\/www.liepin.com\/(a|job|lptjob)\/(?<id>[0-9]*)/).groups.id, platform);
-        return {
-            platform,
-            jobId,
-            url: url.origin + url.pathname,
-        };
-    } else if (url.href.startsWith("https://www.lagou.com/wn/jobs/")) {
-        const platform = PLATFORM_LAGOU;
-        const jobId = genId(url.href.match(/https:\/\/www.lagou.com\/wn\/jobs\/(?<id>.*)\.html/).groups.id, platform);
-        return {
-            platform,
-            jobId,
-            url: url.origin + url.pathname,
-        };
-    } else if (url.href.startsWith("https://www.jobonline.cn/positionDetail")) {
-        const platform = PLATFORM_JOBONLINE;
-        const regexContent = url.href.match(/https:\/\/www.jobonline.cn\/positionDetail\?id=(?<id>[0-9]*)/);
-        const jobId = genId(regexContent.groups.id, platform);
-        return {
-            platform,
-            jobId,
-            url: regexContent[0]
-        };
-    } else {
-        throw `not supported url = ${url}`;
-    }
+  if (url.href.startsWith("https://www.zhipin.com/job_detail/")) {
+    const platform = PLATFORM_BOSS;
+    const jobId = genId(url.href.match(/https:\/\/www.zhipin.com\/job_detail\/(?<id>.*)\.html/).groups.id, platform);
+    return {
+      platform,
+      jobId,
+      url: url.origin + url.pathname,
+    };
+  } else if (url.href.startsWith("https://jobs.51job.com/")) {
+    const platform = PLATFORM_51JOB;
+    const jobId = genId(url.href.match(/https:\/\/jobs.51job.com\/.*\/(?<id>.*)\.html/).groups.id, platform);
+    return {
+      platform,
+      jobId,
+      url: url.origin + url.pathname,
+    };
+  } else if (url.href.startsWith("https://www.zhaopin.com/jobdetail/")) {
+    const platform = PLATFORM_ZHILIAN;
+    const jobId = genId(url.href.match(/https:\/\/www.zhaopin.com\/jobdetail\/(?<id>.*)\.htm/).groups.id, platform);
+    return {
+      platform,
+      jobId,
+      url: url.origin + url.pathname,
+    };
+  } else if (url.href.match(/https:\/\/www.liepin.com\/(lptjob|a|job)\//)) {
+    const platform = PLATFORM_LIEPIN;
+    const jobId = genId(url.href.match(/https:\/\/www.liepin.com\/(a|job|lptjob)\/(?<id>[0-9]*)/).groups.id, platform);
+    return {
+      platform,
+      jobId,
+      url: url.origin + url.pathname,
+    };
+  } else if (url.href.startsWith("https://www.lagou.com/wn/jobs/")) {
+    const platform = PLATFORM_LAGOU;
+    const jobId = genId(url.href.match(/https:\/\/www.lagou.com\/wn\/jobs\/(?<id>.*)\.html/).groups.id, platform);
+    return {
+      platform,
+      jobId,
+      url: url.origin + url.pathname,
+    };
+  } else if (url.href.startsWith("https://www.jobonline.cn/positionDetail")) {
+    const platform = PLATFORM_JOBONLINE;
+    const regexContent = url.href.match(/https:\/\/www.jobonline.cn\/positionDetail\?id=(?<id>[0-9]*)/);
+    const jobId = genId(regexContent.groups.id, platform);
+    return {
+      platform,
+      jobId,
+      url: regexContent[0]
+    };
+  } else {
+    throw `not supported url = ${url}`;
+  }
 }
 
 export const MISSION_AUTO_BROWSE_JOB_SEARCH_PAGE = "MISSION_AUTO_BROWSE_JOB_SEARCH_PAGE";
@@ -121,22 +121,26 @@ export const DATA_TYPE_NAME_JOB_TAG = "job_tag";
 export const DATA_TYPE_NAME_JOB_SNAPSHOT = "job_snapshot";
 
 export const TASK_TYPE_AND_FILE_NAME_MAP = new Map([
-    [TASK_TYPE_JOB_DATA_UPLOAD, DATA_TYPE_NAME_JOB],
-    [TASK_TYPE_COMPANY_DATA_UPLOAD, DATA_TYPE_NAME_COMPANY],
-    [TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, DATA_TYPE_NAME_COMPANY_TAG],
-    [TASK_TYPE_JOB_TAG_DATA_UPLOAD, DATA_TYPE_NAME_JOB_TAG],
+  [TASK_TYPE_JOB_DATA_UPLOAD, DATA_TYPE_NAME_JOB],
+  [TASK_TYPE_JOB_DATA_DOWNLOAD, DATA_TYPE_NAME_JOB],
+  [TASK_TYPE_COMPANY_DATA_UPLOAD, DATA_TYPE_NAME_COMPANY],
+  [TASK_TYPE_COMPANY_DATA_DOWNLOAD, DATA_TYPE_NAME_COMPANY],
+  [TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, DATA_TYPE_NAME_COMPANY_TAG],
+  [TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD, DATA_TYPE_NAME_COMPANY_TAG],
+  [TASK_TYPE_JOB_TAG_DATA_UPLOAD, DATA_TYPE_NAME_JOB_TAG],
+  [TASK_TYPE_JOB_TAG_DATA_DOWNLOAD, DATA_TYPE_NAME_JOB_TAG],
 ]);
 
 export const isDownloadType = (value) => {
-    return value == TASK_TYPE_JOB_DATA_DOWNLOAD || value == TASK_TYPE_COMPANY_DATA_DOWNLOAD || value == TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD || value == TASK_TYPE_JOB_TAG_DATA_DOWNLOAD;
+  return value == TASK_TYPE_JOB_DATA_DOWNLOAD || value == TASK_TYPE_COMPANY_DATA_DOWNLOAD || value == TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD || value == TASK_TYPE_JOB_TAG_DATA_DOWNLOAD;
 }
 
 export const isUploadType = (value) => {
-    return value == TASK_TYPE_JOB_DATA_UPLOAD || value == TASK_TYPE_COMPANY_DATA_UPLOAD || value == TASK_TYPE_COMPANY_TAG_DATA_UPLOAD || value == TASK_TYPE_JOB_TAG_DATA_UPLOAD;
+  return value == TASK_TYPE_JOB_DATA_UPLOAD || value == TASK_TYPE_COMPANY_DATA_UPLOAD || value == TASK_TYPE_COMPANY_TAG_DATA_UPLOAD || value == TASK_TYPE_JOB_TAG_DATA_UPLOAD;
 }
 
 export const isMergeType = (value) => {
-    return value == TASK_TYPE_JOB_DATA_MERGE || value == TASK_TYPE_COMPANY_DATA_MERGE || value == TASK_TYPE_COMPANY_TAG_DATA_MERGE || value == TASK_TYPE_JOB_TAG_DATA_MERGE;
+  return value == TASK_TYPE_JOB_DATA_MERGE || value == TASK_TYPE_COMPANY_DATA_MERGE || value == TASK_TYPE_COMPANY_TAG_DATA_MERGE || value == TASK_TYPE_JOB_TAG_DATA_MERGE;
 };
 
 export const TASK_STATUS_READY = "READY";
@@ -155,5 +159,5 @@ export const EVENT_RESPONSE_INFO = "EVENT_RESPONSE_INFO";
 export const API_SERVER_GITHUB = "github.com";
 
 export const isDevEnv = () => {
-    return import.meta.env.DEV;
+  return import.meta.env.DEV;
 }

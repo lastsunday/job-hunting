@@ -141,8 +141,8 @@ export const GithubApi = {
    * @param {*} param
    * @returns 
    */
-  async newRepo(repo, { getTokenFunction, setTokenFunction }) {
-    return await fetchJson(`${GITHUB_URL_API}/user/repos`, { "name": repo }, { method: "POST", getTokenFunction, setTokenFunction });
+  async newRepo(repo, { isPrivate = true, getTokenFunction, setTokenFunction } = {}) {
+    return await fetchJson(`${GITHUB_URL_API}/user/repos`, { "name": repo, "private": isPrivate }, { method: "POST", getTokenFunction, setTokenFunction });
   },
   async createFileContent(owner, repo, path, base64Data, msg, { getTokenFunction, setTokenFunction }) {
     return await fetchJson(`${GITHUB_URL_API}/repos/${owner}/${repo}/contents${path}`, { "message": msg, "content": base64Data }, { method: "PUT", getTokenFunction, setTokenFunction });

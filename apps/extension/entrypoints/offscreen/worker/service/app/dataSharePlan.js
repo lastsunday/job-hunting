@@ -5,17 +5,18 @@ import { _getConfigByKey } from "../configService";
 import { _searchDataSharePartner } from "../dataSharePartnerService";
 
 export async function getDataSharePlanConfig() {
-    let dataSharePlanConfig = new DataSharePlanConfigDTO();
-    const configValue = await _getConfigByKey(CONFIG_KEY_DATA_SHARE_PLAN);
-    if (configValue && configValue.value) {
-        dataSharePlanConfig = Object.assign(dataSharePlanConfig,JSON.parse(configValue.value));
-    }
-    return dataSharePlanConfig;
+  let dataSharePlanConfig = new DataSharePlanConfigDTO();
+  const configValue = await _getConfigByKey(CONFIG_KEY_DATA_SHARE_PLAN);
+  if (configValue && configValue.value) {
+    dataSharePlanConfig = Object.assign(dataSharePlanConfig, JSON.parse(configValue.value));
+  }
+  return dataSharePlanConfig;
 }
 
 export async function calculateDataSharePartnerList() {
-    const searchParam = new SearchDataSharePartnerBO();
-    searchParam.orderByColumn = "updateDatetime";
-    searchParam.orderBy = "DESC";
-    return (await _searchDataSharePartner({ param: searchParam })).items;
+  const searchParam = new SearchDataSharePartnerBO();
+  searchParam.orderByColumn = "updateDatetime";
+  searchParam.orderBy = "DESC";
+  searchParam.enable = true;
+  return (await _searchDataSharePartner({ param: searchParam })).items;
 }

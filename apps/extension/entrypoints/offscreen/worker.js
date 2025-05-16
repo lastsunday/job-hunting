@@ -3,7 +3,7 @@
 globalThis._content = undefined;
 import userService from "@/common/extension/hooks/service.js";
 import { onMessageHandle, postSuccessMessage } from "@/common/extension/worker/util";
-import { debugLog } from "@/common/log";
+import { infoLog } from "@/common/log";
 import { Database } from "./worker/database";
 import { AppService } from "./worker/service/appService";
 import { AssistantService } from "./worker/service/assistantService";
@@ -25,7 +25,7 @@ import { TaskDataUploadService } from "./worker/service/taskDataUploadService";
 import { TaskService } from "./worker/service/taskService";
 import { JobSnapshotService } from "./worker/service/jobSnapshotService";
 
-debugLog("worker ready");
+infoLog("worker ready");
 const ACTION_FUNCTION = new Map();
 
 export const WorkerBridge = {
