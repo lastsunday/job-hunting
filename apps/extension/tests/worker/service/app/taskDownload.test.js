@@ -31,22 +31,21 @@ test('calculateDownloadTask in correct logic', async () => {
         userName: USER_NAME,
         repoName: REPO_NAME,
         type: TASK_TYPE,
-        startDatetime: '2024-12-30T00:00:00+08:00',
-        endDatetime: '2025-01-04T00:00:00+08:00',
+        startDatetime: parse("2024-12-30"),
+        endDatetime: parse("2025-01-04"),
         orderByColumn: 'createDatetime',
         orderBy: 'ASC'
       }
     );
     return {
       items: [{
-
         id: "testid",
         type: TASK_TYPE,
         username: USER_NAME,
         reponame: REPO_NAME,
-        datetime: "2024-12-30T00:00:00+08:00",
-        createDatetime: "2024-12-30T00:00:00+08:00",
-        updateDatetime: "2024-12-30T00:00:00+08:00",
+        datetime: parse("2024-12-30"),
+        createDatetime: parse("2024-12-30"),
+        updateDatetime: parse("2024-12-30"),
       }],
       total: 1
     };
@@ -78,7 +77,7 @@ test('downloadDataByDataId in correct logic', async () => {
       type: TASK_TYPE,
       username: USER_NAME,
       reponame: REPO_NAME,
-      datetime: "2025-01-01T00:00:00+08:00"
+      datetime: parse("2025-01-01")
     };
   });
   vi.spyOn(modTaskLogic, "getFileData").mockImplementation(async ({ userName, repoName, filePath }) => {
@@ -91,7 +90,7 @@ test('downloadDataByDataId in correct logic', async () => {
     expect(userName).toBe(USER_NAME);
     expect(repoName).toBe(REPO_NAME);
     expect(taskType).toBe(TASK_TYPE_JOB_DATA_MERGE);
-    expect(datetime).toBe("2025-01-01T00:00:00+08:00");
+    expect(datetime).toMatchObject(parse("2025-01-01"));
     expect(file.name).toBe("job.zip");
     expect(file.size).toBe(fileData.byteLength);
   });

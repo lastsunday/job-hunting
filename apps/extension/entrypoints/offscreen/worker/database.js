@@ -349,6 +349,7 @@ export const Database = {
       }
       if (!initializing) {
         try {
+          initializing = true;
           debugLog("Loading and initializing...");
           const changelogList = [];
           changelogList.push(new ChangeLogV1());
@@ -367,7 +368,6 @@ export const Database = {
           changelogList.push(new ChangeLogV14());
           initChangeLog(changelogList);
           await initDb({ dataDir });
-          initializing = true;
           debugLog("Done initializing. Running app...");
           resolve(db);
         } catch (e) {

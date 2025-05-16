@@ -44,8 +44,8 @@ export async function calculateDownloadTask({ userName, repoName, taskType, getT
     searchParam.userName = userName;
     searchParam.repoName = repoName;
     searchParam.type = taskType;
-    searchParam.startDatetime = dateToStr(startDatetimeForSearchTaskDownload);
-    searchParam.endDatetime = dateToStr(dayjs(endDatetimeForSearchTaskDownload).add(1, "day"));
+    searchParam.startDatetime = parse(startDatetimeForSearchTaskDownload);
+    searchParam.endDatetime = parse(dayjs(endDatetimeForSearchTaskDownload).add(1, "day"));
     searchParam.orderByColumn = "createDatetime";
     searchParam.orderBy = "ASC";
     let taskDataDownloadResult = await _searchTaskDataDownload({ param: searchParam });
