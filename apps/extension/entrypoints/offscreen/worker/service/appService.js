@@ -12,50 +12,49 @@ export const AppService = {
 
   appBackgroundTaskRun: async function (message, param) {
     try {
+      const shareDataPlanList = [];
       let dataSharePlanConfig = await getDataSharePlanConfig();
       if (dataSharePlanConfig.enable) {
-        infoLog(`[TASK] Data share plan enable`);
-        infoLog(`[TASK] Data share plan task running`);
+        infoLog(`[TASK] private data sync enable`);
+        infoLog(`[TASK] private data sync task running`);
         let userDTO = await _getUser();
         if (userDTO) {
           let userName = userDTO.login;
           infoLog(`[Task] has login info userName = ${userName}`)
           infoLog(`[Task] calculateUploadTask`)
           const enablePrivateUploadTaskTypeList = getPrivateUploadTaskTypeFromConfig(dataSharePlanConfig);
-          infoLog(`[Task] calculateUploadTask enable upload task type list = ${enablePrivateUploadTaskTypeList}`)
-          const shareDataPlanList = [];
+          infoLog(`[Task] calculateUploadTask enable upload task type list = ${JSON.stringify(enablePrivateUploadTaskTypeList)}`)
           if (enablePrivateUploadTaskTypeList.length > 0) {
             const repoName = getPrivateRepoName();
             createRepoIfNotExists({ userName, repoName, isPrivate: true });
             for (let i = 0; i < enablePrivateUploadTaskTypeList.length; i++) {
-              const taskType = enablePrivateUploadTaskTypeList[i];
+              const taskType = enablePrivateUploadTaskTypeList[i].type;
               await calculateUploadTask({ userName, repoName, taskType });
             }
             const enablePrivateDownloadTaskTypeList = getPrivateDownloadTaskTypeFromConfig(dataSharePlanConfig);
             shareDataPlanList.push({ username: userName, reponame: repoName, config: { taskTypeList: enablePrivateDownloadTaskTypeList } });
           }
-          //从数据库中获取数据共享伙伴列表
-          let dataSharePartnerList = await calculateDataSharePartnerList();
-          shareDataPlanList.push(...dataSharePartnerList);
-          infoLog(`[TASK] Share data plan list length = ${shareDataPlanList.length}`);
-          for (let i = 0; i < shareDataPlanList.length; i++) {
-            const shareItem = shareDataPlanList[i];
-            const taskTypeList = getTaskTypeListFromDataSharePartnerConfig(shareItem.config);
-            for (let n = 0; n < taskTypeList.length; n++) {
-              const taskType = taskTypeList[n];
-              await calculateDownloadTask({ userName: shareItem.username, repoName: shareItem.reponame, taskType });
-            }
-          }
-          infoLog(`[TASK] runTask`)
-          await runTask();
         } else {
           infoLog(`[TASK] no login info`)
-          infoLog(`[TASK] skip data share plan`)
+          infoLog(`[TASK] skip upload task calculate and self private data download`)
         }
       } else {
-        infoLog(`[TASK] Data share plan disable`);
-        infoLog(`[TASK] Data share plan task skip`);
+        infoLog(`[TASK] skip private data sync`)
       }
+      //从数据库中获取数据共享伙伴列表
+      let dataSharePartnerList = await calculateDataSharePartnerList();
+      shareDataPlanList.push(...dataSharePartnerList);
+      infoLog(`[TASK] Share data plan list length = ${shareDataPlanList.length}`);
+      for (let i = 0; i < shareDataPlanList.length; i++) {
+        const shareItem = shareDataPlanList[i];
+        const taskTypeList = getTaskTypeListFromDataSharePartnerConfig(shareItem.config);
+        for (let n = 0; n < taskTypeList.length; n++) {
+          const taskType = taskTypeList[n].type;
+          await calculateDownloadTask({ userName: shareItem.username, repoName: shareItem.reponame, taskType });
+        }
+      }
+      infoLog(`[TASK] runTask`)
+      await runTask();
       infoLog(`[TASK] runScheduleTask`)
       await runScheduleTask();
       postSuccessMessage(message, {});

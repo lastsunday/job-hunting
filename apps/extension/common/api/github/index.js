@@ -22,6 +22,7 @@ export const EXCEPTION = {
   NOT_FOUND: "NOT_FOUND",
   NO_PERMISSION: "NO_PERMISSION",
   CREATION_FAILED: "CREATION_FAILED",
+  UNAUTHORIZED: "UNAUTHORIZED",
 }
 
 export const GithubApi = {
@@ -285,10 +286,7 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
     } else {
       oauthDTO = await AuthApi.authGetToken();
     }
-    if (!oauthDTO && !skipLogin) {
-      throw EXCEPTION.NO_LOGIN;
-    }
-    let response = await fetchJsonReturnResponse(url, data, { method, token: oauthDTO.accessToken, skipLogin, getTokenFunction, headers, body, authMode });
+    let response = await fetchJsonReturnResponse(url, data, { method, token: oauthDTO?.accessToken, skipLogin, getTokenFunction, headers, body, authMode });
     let status = response.status;
     if (isStatusNoError(response)) {
       let result = null;
@@ -373,6 +371,8 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
       } catch (e) {
         throw e;
       }
+    } else if (status == 401) {
+      throw EXCEPTION.UNAUTHORIZED;
     } else if (status == 403) {
       throw EXCEPTION.NO_PERMISSION;
     } else if (status == 404) {
@@ -411,9 +411,6 @@ async function fetchJsonReturnResponse(url, data, { method, token, skipLogin, ge
       oauthDTO = await AuthApi.authGetToken();
     }
     targetToken = oauthDTO?.accessToken;
-  }
-  if (!targetToken && !skipLogin) {
-    throw EXCEPTION.NO_LOGIN;
   }
   let targetHeaders = {
     "Content-Type": "application/json",

@@ -31,7 +31,17 @@ export async function calculateDownloadTask({ userName, repoName, taskType, getT
   return dayjs();
 } }) {
   const targetDay = await getTargetDay();
-  let repoAllFileDateList = await queryRepoFileDateList({ userName, repoName, taskType });
+  let repoAllFileDateList = [];
+  try {
+    repoAllFileDateList = await queryRepoFileDateList({ userName, repoName, taskType });
+  } catch (e) {
+    if (e == EXCEPTION.UNAUTHORIZED) {
+      infoLog(`[TASK DATA DOWNLOAD CALCULATE] repo(${userName}/${repoName}) taskType = ${taskType} not found or unauthorized `);
+    } else {
+      throw e;
+    }
+    return false;
+  }
   const repoFilterAndSortAscDateList = filterAndSortAscDateList({ dateList: repoAllFileDateList, targetDay, retentionDay: TASK_DATA_DOWNLOAD_MAX_DAY });
   //查找缺失的日期
   //获得数据库区间时间范围的记录
@@ -44,8 +54,8 @@ export async function calculateDownloadTask({ userName, repoName, taskType, getT
     searchParam.userName = userName;
     searchParam.repoName = repoName;
     searchParam.type = taskType;
-    searchParam.startDatetime = parse(startDatetimeForSearchTaskDownload);
-    searchParam.endDatetime = parse(dayjs(endDatetimeForSearchTaskDownload).add(1, "day"));
+    searchParam.startDatetime = startDatetimeForSearchTaskDownload;
+    searchParam.endDatetime = endDatetimeForSearchTaskDownload.add(1, "day");
     searchParam.orderByColumn = "createDatetime";
     searchParam.orderBy = "ASC";
     let taskDataDownloadResult = await _searchTaskDataDownload({ param: searchParam });

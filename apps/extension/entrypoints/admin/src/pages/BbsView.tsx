@@ -25,6 +25,8 @@ import Issue from './bbs/Issue';
 import IssueCommentView from './bbs/IssueCommentView';
 import IssueEdit from './bbs/IssueEdit';
 const { getAllData, getLocationId } = useLocation();
+import useAuthStore from '../store/AuthStore';
+import { useShallow } from 'zustand/shallow';
 
 const CONFIG_KEY_VIEW_BBS = 'CONFIG_KEY_VIEW_BBS';
 
@@ -73,15 +75,17 @@ const BbsView: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageInfo, setPageInfo] = useState<PageInfo>();
-  const rootRef = useRef();
+  const rootRef = useRef(null);
   const [messageApi, contextHolder] = message.useMessage();
   const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
   const [editData, setEditData] = useState<IssueEditData>();
   const [refresh, setRefresh] = useState(false);
-
   const [isIssueCommentModalOpen, setIsIssueCommentModalOpen] = useState(false);
   const [commentIssueData, setCommentIssueData] = useState<IssueData>();
   const [init, setInit] = useState(false);
+  const [auth] = useAuthStore(
+    useShallow((state) => [state.auth])
+  );
 
   const onChange: CascaderProps<Option>['onChange'] = (value: string[]) => {
     cascaderRef.current.blur();
@@ -113,6 +117,14 @@ const BbsView: React.FC = () => {
   }, []);
 
   const search = async () => {
+    if (!auth) {
+      messageApi.open({
+        key: "needLogin",
+        type: 'warning',
+        content: `需要登录后查看`,
+      });
+      return;
+    }
     //scroll to top
     scrollToTop();
     setLoading(true);
@@ -122,17 +134,10 @@ const BbsView: React.FC = () => {
       setTotal(result.search.issueCount);
       setPageInfo(result.search.pageInfo);
     } catch (e) {
-      if (e == EXCEPTION.NO_LOGIN) {
-        messageApi.open({
-          type: 'warning',
-          content: `需要登录后查看`,
-        });
-      } else {
-        messageApi.open({
-          type: 'error',
-          content: `查询失败`,
-        });
-      }
+      messageApi.open({
+        type: 'error',
+        content: `查询失败`,
+      });
     } finally {
       setLoading(false);
     }

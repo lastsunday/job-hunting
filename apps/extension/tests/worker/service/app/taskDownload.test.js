@@ -110,7 +110,7 @@ test('downloadDataByDataId file not found and never upload', async () => {
       type: TASK_TYPE,
       username: USER_NAME,
       reponame: REPO_NAME,
-      datetime: "2025-01-01T00:00:00+08:00"
+      datetime: parse("2025-01-01")
     };
   });
   vi.spyOn(modTaskLogic, "getFileData").mockImplementation(async ({ userName, repoName, filePath }) => {
@@ -118,7 +118,7 @@ test('downloadDataByDataId file not found and never upload', async () => {
   })
   const result = await downloadDataByDataId(dataId, dataTypeName, taskType, {
     getTargetDay: async () => {
-      return parse("2025-01-02T00:00:00+08:00");
+      return parse("2025-01-02");
     }
   });
   expect(result).contains("never upload");
@@ -136,7 +136,7 @@ test('downloadDataByDataId file not found', async () => {
       type: TASK_TYPE,
       username: USER_NAME,
       reponame: REPO_NAME,
-      datetime: "2025-01-01T00:00:00+08:00"
+      datetime: parse("2025-01-01")
     };
   });
   vi.spyOn(modTaskLogic, "getFileData").mockImplementation(async ({ userName, repoName, filePath }) => {
@@ -145,7 +145,7 @@ test('downloadDataByDataId file not found', async () => {
   try {
     const result = await downloadDataByDataId(dataId, dataTypeName, taskType, {
       getTargetDay: async () => {
-        return parse("2025-01-01T23:59:59+08:00");
+        return parse("2025-01-01T23:59:59");
       }
     });
   } catch (e) {

@@ -77,10 +77,10 @@ test('appBackgroundTaskRun run in correct logic', async () => {
         enable: true,
         config: {
           taskTypeList: [
-            TASK_TYPE_JOB_DATA_DOWNLOAD,
-            TASK_TYPE_COMPANY_DATA_DOWNLOAD,
-            TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD,
-            TASK_TYPE_JOB_TAG_DATA_DOWNLOAD
+            { type: TASK_TYPE_JOB_DATA_DOWNLOAD },
+            { type: TASK_TYPE_COMPANY_DATA_DOWNLOAD },
+            { type: TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD },
+            { type: TASK_TYPE_JOB_TAG_DATA_DOWNLOAD }
           ],
         },
       },

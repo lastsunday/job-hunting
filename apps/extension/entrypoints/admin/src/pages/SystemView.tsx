@@ -146,14 +146,14 @@ const SystemView: React.FC = () => {
             return (
               <Popover
                 key={index}
-                content={<Text copyable>{value}</Text>}
+                content={<Text copyable>{typeof value == 'object' ? JSON.stringify(value) : value}</Text>}
                 trigger="click"
               >
                 <Text
                   key={index}
-                  title={`${value}`}
+                  title={`${typeof value == 'object' ? JSON.stringify(value) : value}`}
                   ellipsis
-                >{`${value}`}</Text>
+                >{`${typeof value == 'object' ? JSON.stringify(value) : value}`}</Text>
               </Popover>
             );
           },
@@ -365,9 +365,9 @@ const SystemView: React.FC = () => {
                   initialState={
                     serializedState
                       ? {
-                          json: JSON.parse(serializedState || ''),
-                          fields: stateFields,
-                        }
+                        json: JSON.parse(serializedState || ''),
+                        fields: stateFields,
+                      }
                       : undefined
                   }
                   onChange={onSqlChange}
@@ -390,11 +390,10 @@ const SystemView: React.FC = () => {
               {sqlExecError != null ? (
                 sqlExecError == '' ? (
                   <Alert
-                    message={`执行成功,耗时${sqlCostTime}ms${
-                      affectedRows != null
-                        ? ',影响' + affectedRows + '条数据'
-                        : ''
-                    }`}
+                    message={`执行成功,耗时${sqlCostTime}ms${affectedRows != null
+                      ? ',影响' + affectedRows + '条数据'
+                      : ''
+                      }`}
                     type="success"
                     showIcon
                     closable

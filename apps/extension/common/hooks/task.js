@@ -1,5 +1,6 @@
-import { DataSharePlanConfigDTO } from "../data/dto/dataSharePlanConfigDTO";
+import { DEFAULT_DATA_REPO } from "@/common/config";
 import {
+  TASK_TYPE_ALL_PRIVATE_DATA_DOWNLOAD,
   TASK_TYPE_COMPANY_DATA_DOWNLOAD,
   TASK_TYPE_COMPANY_DATA_UPLOAD,
   TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD,
@@ -7,10 +8,15 @@ import {
   TASK_TYPE_JOB_DATA_DOWNLOAD,
   TASK_TYPE_JOB_DATA_UPLOAD,
   TASK_TYPE_JOB_TAG_DATA_DOWNLOAD,
-  TASK_TYPE_JOB_TAG_DATA_UPLOAD
+  TASK_TYPE_JOB_TAG_DATA_UPLOAD,
 } from "../../common";
-import { DEFAULT_DATA_REPO } from "@/common/config";
-
+import { DataSharePlanConfigDTO } from "../data/dto/dataSharePlanConfigDTO";
+const ALL_PRIVATE_DATA_TYPE = [
+  { type: TASK_TYPE_JOB_DATA_DOWNLOAD },
+  { type: TASK_TYPE_COMPANY_DATA_DOWNLOAD },
+  { type: TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD },
+  { type: TASK_TYPE_JOB_TAG_DATA_DOWNLOAD },
+];
 export function useTask() {
 
   /**
@@ -25,16 +31,16 @@ export function useTask() {
     const result = [];
     const privateDataSyncEnableConfig = config.privateDataSyncEnableConfig;
     if (privateDataSyncEnableConfig.job) {
-      result.push(TASK_TYPE_JOB_DATA_UPLOAD);
+      result.push({ type: TASK_TYPE_JOB_DATA_UPLOAD });
     }
     if (privateDataSyncEnableConfig.company) {
-      result.push(TASK_TYPE_COMPANY_DATA_UPLOAD);
+      result.push({ type: TASK_TYPE_COMPANY_DATA_UPLOAD });
     }
     if (privateDataSyncEnableConfig.companyTag) {
-      result.push(TASK_TYPE_COMPANY_TAG_DATA_UPLOAD);
+      result.push({ type: TASK_TYPE_COMPANY_TAG_DATA_UPLOAD });
     }
     if (privateDataSyncEnableConfig.jobTag) {
-      result.push(TASK_TYPE_JOB_TAG_DATA_UPLOAD);
+      result.push({ type: TASK_TYPE_JOB_TAG_DATA_UPLOAD });
     }
     return result;
   };
@@ -51,36 +57,40 @@ export function useTask() {
     const result = [];
     const privateDataSyncEnableConfig = config.privateDataSyncEnableConfig;
     if (privateDataSyncEnableConfig.job) {
-      result.push(TASK_TYPE_JOB_DATA_DOWNLOAD);
+      result.push({ type: TASK_TYPE_JOB_DATA_DOWNLOAD });
     }
     if (privateDataSyncEnableConfig.company) {
-      result.push(TASK_TYPE_COMPANY_DATA_DOWNLOAD);
+      result.push({ type: TASK_TYPE_COMPANY_DATA_DOWNLOAD });
     }
     if (privateDataSyncEnableConfig.companyTag) {
-      result.push(TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD);
+      result.push({ type: TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD });
     }
     if (privateDataSyncEnableConfig.jobTag) {
-      result.push(TASK_TYPE_JOB_TAG_DATA_DOWNLOAD);
+      result.push({ type: TASK_TYPE_JOB_TAG_DATA_DOWNLOAD });
     }
     return result;
   };
 
   const getTaskTypeListFromDataSharePartnerConfig = (config) => {
+    let result = [];
     if (config == null || config == undefined || config.taskTypeList == null || config.taskTypeList == undefined) {
-      return [
-        TASK_TYPE_JOB_DATA_DOWNLOAD,
-        TASK_TYPE_COMPANY_DATA_DOWNLOAD,
-        TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD,
-        TASK_TYPE_JOB_TAG_DATA_DOWNLOAD,
-      ];
+      result.push(...ALL_PRIVATE_DATA_TYPE);
     } else {
-      return config.taskTypeList;
+      if (config.taskTypeList.map(item => item.type).includes(TASK_TYPE_ALL_PRIVATE_DATA_DOWNLOAD)) {
+        result.push(...ALL_PRIVATE_DATA_TYPE);
+      } else {
+        result.push(...config.taskTypeList);
+      }
     }
+    return result;
   }
 
   const getPrivateRepoName = () => {
     return DEFAULT_DATA_REPO;
   }
 
-  return { getPrivateUploadTaskTypeFromConfig, getPrivateDownloadTaskTypeFromConfig, getPrivateRepoName, getTaskTypeListFromDataSharePartnerConfig };
+  return {
+    getPrivateUploadTaskTypeFromConfig, getPrivateDownloadTaskTypeFromConfig,
+    getPrivateRepoName, getTaskTypeListFromDataSharePartnerConfig,
+  };
 }
