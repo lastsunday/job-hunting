@@ -18,6 +18,7 @@ import { TagData } from "../../data/TagData";
 import { TagEditData } from "../../data/TagEditData";
 import { useTag } from "../../hooks/tag";
 import TagEdit from "./TagEdit";
+import { Popover } from "antd/lib";
 
 const { Text } = Typography;
 const { convertSortField } = useTag();
@@ -41,7 +42,16 @@ const TagView: React.FC = () => {
     {
       title: '编号',
       dataIndex: 'tagId',
-      render: (value: string) => <Text copyable ellipsis title={value}>{`${value && value.length > 5 ? value.slice(0, 5) + "..." : value}`}</Text>,
+      render: (value: string) =>
+        <Popover
+          content={<Text copyable>{value}</Text>}
+          trigger="click"
+        >
+          <Text
+            title={`${value}`}
+            ellipsis
+          >{`${value?.length > 8 ? value.substring(0, 8) : value}`}</Text>
+        </Popover>,
       minWidth: 100,
     },
     {
@@ -66,14 +76,14 @@ const TagView: React.FC = () => {
     {
       title: '创建时间',
       dataIndex: 'createDatetime',
-      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value,"YYYY-MM-DD")}</Text>,
+      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value, "YYYY-MM-DD")}</Text>,
       minWidth: 100,
       sorter: true,
     },
     {
       title: '更新时间',
       dataIndex: 'updateDatetime',
-      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value,"YYYY-MM-DD")}</Text>,
+      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value, "YYYY-MM-DD")}</Text>,
       minWidth: 100,
       sorter: true,
     },

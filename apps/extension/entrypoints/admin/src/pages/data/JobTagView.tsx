@@ -28,6 +28,7 @@ import { useJobTag } from "../../hooks/jobTag";
 import { useTag } from "../../hooks/tag";
 import JobTagEdit from "./JobTagEdit";
 import styles from "./JobTagView.module.css";
+import { Popover } from "antd/lib";
 const { platformFormat } = useJob();
 
 const { Text } = Typography;
@@ -53,7 +54,16 @@ const JobTagView: React.FC = () => {
     {
       title: '职位编号',
       dataIndex: 'jobId',
-      render: (value: string) =>  <Text copyable style={{ width: 100 }} title={value}>{`${value && value.length > 5 ? value.slice(0, 5)+"..." : value}`}</Text>,
+      render: (value: string) =>
+        <Popover
+          content={<Text copyable>{value}</Text>}
+          trigger="click"
+        >
+          <Text
+            title={`${value}`}
+            ellipsis
+          >{`${value?.length > 8 ? value.substring(0, 8) + "..." : value}`}</Text>
+        </Popover>,
       minWidth: 100,
     },
     {
@@ -79,7 +89,7 @@ const JobTagView: React.FC = () => {
       dataIndex: 'tagArray',
       render: (value: JobTagDTO[]) => {
         const result = [];
-        value.filter(item => item.sourceType == TAG_SOURCE_TYPE_PLATFORM).map((item,index) => {
+        value.filter(item => item.sourceType == TAG_SOURCE_TYPE_PLATFORM).map((item, index) => {
           result.push(
             <Tag className={styles.tag} key={index}>{item.tagName}</Tag>
           );
@@ -94,7 +104,7 @@ const JobTagView: React.FC = () => {
       render: (value: JobTagDTO[]) => {
         const result = [];
         const tagData = convertToTagData(value.filter(item => item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source == null));
-        tagData.map((item,index) => {
+        tagData.map((item, index) => {
           result.push(
             <CustomTag item={item} key={index}></CustomTag>
           );
@@ -127,7 +137,7 @@ const JobTagView: React.FC = () => {
     {
       title: '更新时间',
       dataIndex: 'updateDatetime',
-      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value,"YYYY-MM-DD")}</Text>,
+      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value, "YYYY-MM-DD")}</Text>,
       minWidth: 100,
       sorter: true,
     },

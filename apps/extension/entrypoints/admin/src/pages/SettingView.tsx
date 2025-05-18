@@ -4,6 +4,7 @@ import {
   COMPANY_MAX_EXPORT_SIZE,
   COMPANY_TAG_MAX_EXPORT_SIZE,
   JOB_MAX_EXPORT_SIZE,
+  JOB_PUBLIC_MAX_EXPORT_SIZE,
   JOB_SNAPSHOT_MAX_EXPORT_SIZE,
   JOB_TAG_MAX_EXPORT_SIZE,
 } from '@/common/config';
@@ -70,6 +71,9 @@ const SettingView: React.FC = () => {
     getJobDataToExcelJsonArray,
     getJobDataTotal,
     saveJobData,
+    getJobPublicDataToExcelJsonArray,
+    getJobPublicDataTotal,
+    saveJobPublicData,
     getCompanyDataToExcelJsonArray,
     getCompanyDataTotal,
     saveCompanyData,
@@ -80,6 +84,7 @@ const SettingView: React.FC = () => {
     saveJobTagData,
     getJobTagDataTotal,
     JOB_FILE_HEADER,
+    JOB_PUBLIC_FILE_HEADER,
     COMPANY_FILE_HEADER,
     COMPANY_TAG_FILE_HEADER,
     JOB_TAG_FILE_HEADER,
@@ -471,59 +476,73 @@ const SettingView: React.FC = () => {
         <Card title="数据管理" variant="borderless" size="small">
           <Flex vertical gap={5}>
             <DatabaseBackupRestore />
-            <DataBackupRestore
-              title="职位"
-              getExcelJsonArrayFunction={getJobDataToExcelJsonArray}
-              fileHeader={JOB_FILE_HEADER}
-              saveDataFunction={saveJobData}
-              getDataTotalFunction={getJobDataTotal}
-              getMaxExportCount={async () => {
-                return JOB_MAX_EXPORT_SIZE;
-              }}
-            />
-            <DataBackupRestore
-              title="公司"
-              getExcelJsonArrayFunction={getCompanyDataToExcelJsonArray}
-              fileHeader={COMPANY_FILE_HEADER}
-              saveDataFunction={saveCompanyData}
-              getDataTotalFunction={getCompanyDataTotal}
-              getMaxExportCount={async () => {
-                return COMPANY_MAX_EXPORT_SIZE;
-              }}
-            />
-            <DataBackupRestore
-              title="职位标签"
-              getExcelJsonArrayFunction={getJobTagDataToExcelJsonArray}
-              fileHeader={JOB_TAG_FILE_HEADER}
-              saveDataFunction={saveJobTagData}
-              getDataTotalFunction={getJobTagDataTotal}
-              getMaxExportCount={async () => {
-                return JOB_TAG_MAX_EXPORT_SIZE;
-              }}
-            />
-            <DataBackupRestore
-              title="公司标签"
-              getExcelJsonArrayFunction={getCompanyTagDataToExcelJsonArray}
-              fileHeader={COMPANY_TAG_FILE_HEADER}
-              saveDataFunction={saveCompanyTagData}
-              getDataTotalFunction={getCompanyTagDataTotal}
-              getMaxExportCount={async () => {
-                return COMPANY_TAG_MAX_EXPORT_SIZE;
-              }}
-            />
-            <DataBackupRestore
-              title="职位快照"
-              getExcelJsonArrayFunction={getJobSnapshotDataToJsonArray}
-              fileHeader={JOB_SNAPSHOT_FILE_HEADER}
-              saveDataFunction={saveJobSnapshotData}
-              getDataTotalFunction={getJobSnapshotDataTotal}
-              getMaxExportCount={async () => {
-                return JOB_SNAPSHOT_MAX_EXPORT_SIZE;
-              }}
-              dataType={DATA_TYPE_NAME_JOB_SNAPSHOT}
-              format="json"
-              accept=".tar.xz"
-            />
+            <Card title="私有数据" variant='outlined' size='small'>
+              <DataBackupRestore
+                title="职位"
+                getExcelJsonArrayFunction={getJobDataToExcelJsonArray}
+                fileHeader={JOB_FILE_HEADER}
+                saveDataFunction={saveJobData}
+                getDataTotalFunction={getJobDataTotal}
+                getMaxExportCount={async () => {
+                  return JOB_MAX_EXPORT_SIZE;
+                }}
+              />
+              <DataBackupRestore
+                title="公司"
+                getExcelJsonArrayFunction={getCompanyDataToExcelJsonArray}
+                fileHeader={COMPANY_FILE_HEADER}
+                saveDataFunction={saveCompanyData}
+                getDataTotalFunction={getCompanyDataTotal}
+                getMaxExportCount={async () => {
+                  return COMPANY_MAX_EXPORT_SIZE;
+                }}
+              />
+              <DataBackupRestore
+                title="职位标签"
+                getExcelJsonArrayFunction={getJobTagDataToExcelJsonArray}
+                fileHeader={JOB_TAG_FILE_HEADER}
+                saveDataFunction={saveJobTagData}
+                getDataTotalFunction={getJobTagDataTotal}
+                getMaxExportCount={async () => {
+                  return JOB_TAG_MAX_EXPORT_SIZE;
+                }}
+              />
+              <DataBackupRestore
+                title="公司标签"
+                getExcelJsonArrayFunction={getCompanyTagDataToExcelJsonArray}
+                fileHeader={COMPANY_TAG_FILE_HEADER}
+                saveDataFunction={saveCompanyTagData}
+                getDataTotalFunction={getCompanyTagDataTotal}
+                getMaxExportCount={async () => {
+                  return COMPANY_TAG_MAX_EXPORT_SIZE;
+                }}
+              />
+              <DataBackupRestore
+                title="职位快照"
+                getExcelJsonArrayFunction={getJobSnapshotDataToJsonArray}
+                fileHeader={JOB_SNAPSHOT_FILE_HEADER}
+                saveDataFunction={saveJobSnapshotData}
+                getDataTotalFunction={getJobSnapshotDataTotal}
+                getMaxExportCount={async () => {
+                  return JOB_SNAPSHOT_MAX_EXPORT_SIZE;
+                }}
+                dataType={DATA_TYPE_NAME_JOB_SNAPSHOT}
+                format="json"
+                accept=".tar.xz"
+              />
+            </Card>
+            <Card title="公开数据" variant='outlined' size='small'>
+              <DataBackupRestore
+                title="职位公开数据"
+                getExcelJsonArrayFunction={getJobPublicDataToExcelJsonArray}
+                fileHeader={JOB_PUBLIC_FILE_HEADER}
+                saveDataFunction={saveJobPublicData}
+                getDataTotalFunction={getJobPublicDataTotal}
+                getMaxExportCount={async () => {
+                  return JOB_PUBLIC_MAX_EXPORT_SIZE;
+                }}
+              />
+            </Card>
           </Flex>
         </Card>
       </Flex>

@@ -12,12 +12,13 @@ import {
   JOB_TAG_FILE_HEADER,
   jobDataToExcelJSONArray, jobExcelDataToObjectArray,
   jobTagDataToExcelJSONArray, jobTagExcelDataToObjectArray,
-  JOB_SNAPSHOT_FILE_HEADER, jobSnapshotDataToJSONArray,
-  jobSnapshotDataToObjectArray
+  JOB_SNAPSHOT_FILE_HEADER, jobSnapshotDataToJSONArray, jobSnapshotDataToObjectArray,
+  JOB_PUBLIC_FILE_HEADER, jobPublicDataToExcelJSONArray, jobPublicExcelDataToObjectArray,
 } from "@/common/excel";
 import {
   getMergeDataListForCompany,
-  getMergeDataListForJob, getMergeDataListForTag, getMergeDataListForJobSnapshot
+  getMergeDataListForJob, getMergeDataListForTag,
+  getMergeDataListForJobSnapshot, getMergeDataListForJobPublic
 } from "@/common/service/dataSyncService";
 import { genIdFromText } from "@/common/utils";
 import { useJobSnapshot } from '@/common/hooks/jobSnapshot';
@@ -49,6 +50,35 @@ export function useData() {
   const saveJobData = async (data) => {
     const jobList = jobExcelDataToObjectArray(data);
     const targetList = await getMergeDataListForJob(jobList, "jobId", async (ids) => {
+      return JobApi.jobGetByIds(ids);
+    });
+    await JobApi.batchAddOrUpdateJob(targetList);
+    return targetList;
+  }
+
+  const getJobPublicDataToExcelJsonArray = async (pageNum, pageSize) => {
+    const searchParam = new SearchJobBO();
+    searchParam.pageNum = pageNum;
+    searchParam.pageSize = pageSize;
+    searchParam.orderByColumn = "updateDatetime";
+    searchParam.orderBy = "DESC";
+    const data = await JobApi.searchJob(searchParam);
+    const list = data.items;
+    const result = jobPublicDataToExcelJSONArray(list);
+    return result;
+  }
+
+  const getJobPublicDataTotal = async () => {
+    const searchParam = new SearchJobBO();
+    searchParam.pageNum = 1;
+    searchParam.pageSize = 1;
+    const data = await JobApi.searchJob(searchParam);
+    return data.total;
+  }
+
+  const saveJobPublicData = async (data) => {
+    const jobList = jobPublicExcelDataToObjectArray(data);
+    const targetList = await getMergeDataListForJobPublic(jobList, "jobId", async (ids) => {
       return JobApi.jobGetByIds(ids);
     });
     await JobApi.batchAddOrUpdateJob(targetList);
@@ -154,7 +184,6 @@ export function useData() {
     return targetList;
   }
 
-
   const saveJobSnapshotData = async (data) => {
     const result = jobSnapshotDataToObjectArray(data);
     const targetList = await getMergeDataListForJobSnapshot(result, "id", async (ids) => {
@@ -195,10 +224,12 @@ export function useData() {
 
   return {
     getJobDataToExcelJsonArray, getJobDataTotal, saveJobData,
+    getJobPublicDataToExcelJsonArray, getJobPublicDataTotal, saveJobPublicData,
     getCompanyDataToExcelJsonArray, getCompanyDataTotal, saveCompanyData,
     getCompanyTagDataToExcelJsonArray, getCompanyTagDataTotal, saveCompanyTagData,
     getJobTagDataToExcelJsonArray, getJobTagDataTotal, saveJobTagData,
-    JOB_FILE_HEADER, COMPANY_FILE_HEADER, COMPANY_TAG_FILE_HEADER, JOB_TAG_FILE_HEADER, JOB_SNAPSHOT_FILE_HEADER,
+    JOB_FILE_HEADER, COMPANY_FILE_HEADER, COMPANY_TAG_FILE_HEADER,
+    JOB_TAG_FILE_HEADER, JOB_SNAPSHOT_FILE_HEADER, JOB_PUBLIC_FILE_HEADER,
     saveJobSnapshotData, getJobSnapshotDataTotal, getJobSnapshotDataToJsonArray
   }
 }
