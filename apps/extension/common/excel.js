@@ -3,6 +3,7 @@ import { CompanyTagBO } from "./data/bo/companyTagBO";
 import { JobTagBO } from "./data/bo/jobTagBO";
 import { Job } from "./data/domain/job";
 import { JobSnapshot } from "./data/domain/jobSnapshot";
+import { JobPublic } from "./data/domain/jobPublic";
 import { convertDateStringToDateObject, dateToStr, genIdFromText } from "./utils";
 import { utils, writeXLSX } from "xlsx";
 
@@ -200,7 +201,7 @@ export const jobPublicExcelDataToObjectArray = (data) => {
   const jobList = [];
   for (let i = 0; i < data.length; i++) {
     const dataItem = data[i];
-    const item = new Job();
+    const item = new JobPublic();
     item.jobId = dataItem['职位自编号'];
     item.createDatetime = convertDateStringToDateObject(dataItem['首次扫描日期']);
     item.updateDatetime = convertDateStringToDateObject(dataItem['记录更新日期']);

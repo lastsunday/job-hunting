@@ -14,9 +14,9 @@ export class BaseService {
 
   async search(message, param, { detailInjectAsyncCallback = null, entityClassCreateFunction = null } = {}) {
     try {
-      postSuccessMessage(message, await this._search(param, { detailInjectAsyncCallback, entityClassCreateFunction }));
+      await postSuccessMessage(message, await this._search(param, { detailInjectAsyncCallback, entityClassCreateFunction }));
     } catch (e) {
-      postErrorMessage(message, `[worker] search error : ` + e.message);
+      await postErrorMessage(message, `[worker] search error : ` + e.message);
     }
   }
 
@@ -32,9 +32,9 @@ export class BaseService {
 
   async count(message, param) {
     try {
-      postSuccessMessage(message, { total: await this._count() });
+      await postSuccessMessage(message, { total: await this._count() });
     } catch (e) {
-      postErrorMessage(message, `[worker] search error : ` + e.message);
+      await postErrorMessage(message, `[worker] search error : ` + e.message);
     }
   }
 
@@ -44,9 +44,9 @@ export class BaseService {
 
   async getOne(message, param, column) {
     try {
-      postSuccessMessage(message, await this._getOne(param, column));
+      await postSuccessMessage(message, await this._getOne(param, column));
     } catch (e) {
-      postErrorMessage(message, `[worker] getOne error : ` + e.message);
+      await postErrorMessage(message, `[worker] getOne error : ` + e.message);
     }
   }
 
@@ -61,9 +61,9 @@ export class BaseService {
    */
   async getById(message, param) {
     try {
-      postSuccessMessage(message, await this._getById(param));
+      await postSuccessMessage(message, await this._getById(param));
     } catch (e) {
-      postErrorMessage(
+      await postErrorMessage(
         message,
         "[worker] getById error : " + e.message
       );
@@ -86,9 +86,9 @@ export class BaseService {
    */
   async getByIds(message, param) {
     try {
-      postSuccessMessage(message, (await this._getByIds(param)));
+      await postSuccessMessage(message, (await this._getByIds(param)));
     } catch (e) {
-      postErrorMessage(
+      await postErrorMessage(
         message,
         "[worker] getByIds error : " + e.message
       );
@@ -125,9 +125,9 @@ export class BaseService {
   async deleteById(message, id, column) {
     try {
       await _deleteById(this.tableName, column, id);
-      postSuccessMessage(message, {});
+      await postSuccessMessage(message, {});
     } catch (e) {
-      postErrorMessage(
+      await postErrorMessage(
         message,
         "[worker] deleteById error : " + e.message
       );
@@ -152,15 +152,15 @@ export class BaseService {
     try {
       if (ids && ids.length > 0) {
         await this._deleteByIds(ids, column);
-        postSuccessMessage(message, {});
+        await postSuccessMessage(message, {});
       } else {
-        postErrorMessage(
+        await postErrorMessage(
           message,
           "[worker] deleteByIds error : ids is empty"
         );
       }
     } catch (e) {
-      postErrorMessage(
+      await postErrorMessage(
         message,
         "[worker] deleteByIds error : " + e.message
       );
@@ -187,12 +187,12 @@ export class BaseService {
    * 
    * @param {*} param 
    */
-  async _addOrUpdate(param, { overrideUpdateDatetime = false, connection = null } = {}) {
+  async _addOrUpdate(param, { overrideUpdateDatetime = false, overrideCreateDatetime = false, connection = null } = {}) {
     const idKey = toHump(this.tableIdColumn);
     if (param[idKey] == null) {
       param[idKey] = genUniqueId();
     }
-    await batchInsertOrReplace(this.entityClassCreateFunction(), this.tableName, this.tableIdColumn, [param], { overrideUpdateDatetime, connection });
+    await batchInsertOrReplace(this.entityClassCreateFunction(), this.tableName, this.tableIdColumn, [param], { overrideUpdateDatetime, overrideCreateDatetime, connection });
     return param;
   }
 

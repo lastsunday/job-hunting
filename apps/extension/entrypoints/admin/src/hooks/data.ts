@@ -1,4 +1,4 @@
-import { CompanyApi, JobApi, JobSnapshotApi } from "@/common/api";
+import { CompanyApi, JobApi, JobSnapshotApi, JobPublicApi } from "@/common/api";
 import { CompanyTagExportBO } from "@/common/data/bo/companyTagExportBO";
 import { JobTagExportBO } from "@/common/data/bo/jobTagExportBO";
 import { SearchCompanyBO } from "@/common/data/bo/searchCompanyBO";
@@ -77,12 +77,19 @@ export function useData() {
   }
 
   const saveJobPublicData = async (data) => {
-    const jobList = jobPublicExcelDataToObjectArray(data);
-    const targetList = await getMergeDataListForJobPublic(jobList, "jobId", async (ids) => {
+    const jobPublicList = jobPublicExcelDataToObjectArray(data);
+    jobPublicList.forEach(item => {
+      item.sourceType = 0;
+      item.source = null;
+    })
+    const targetObject = await getMergeDataListForJobPublic(jobPublicList, "jobId", async (ids: string[]) => {
       return JobApi.jobGetByIds(ids);
+    }, async (ids: string[]) => {
+      const result = await JobPublicApi.jobPublicSearch({ jobIds: ids, sourceType: 0, source: null });
+      return result.items;
     });
-    await JobApi.batchAddOrUpdateJob(targetList);
-    return targetList;
+    await JobPublicApi.jobPublicBatchAddJobPublicAndUpdateJob(targetObject);
+    return targetObject.jobPublicList;
   }
 
   const getCompanyDataToExcelJsonArray = async (pageNum, pageSize) => {

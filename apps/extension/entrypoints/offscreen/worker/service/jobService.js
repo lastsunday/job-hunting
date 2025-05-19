@@ -24,7 +24,7 @@ import { _getAllJobTagDTOByJobIds, _jobTagBatchAddOrUpdate } from "./jobTagServi
 const JOB_VISIT_TYPE_SEARCH = "SEARCH";
 const JOB_VISIT_TYPE_DETAIL = "DETAIL";
 
-const SERVICE_INSTANCE = new BaseService("job", "job_id",
+export const SERVICE_INSTANCE = new BaseService("job", "job_id",
   () => {
     return new Job();
   },

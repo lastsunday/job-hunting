@@ -210,6 +210,16 @@ test('database init correct', async () => {
         'reponame',
         'repo_type'
       ]
+    },
+    job_public: {
+      columns: [
+        'id',
+        'job_id',
+        'source_type',
+        'source',
+        'create_datetime',
+        'update_datetime'
+      ]
     }
   }
   const db = await getDb({ dataDir: 'memory://' });

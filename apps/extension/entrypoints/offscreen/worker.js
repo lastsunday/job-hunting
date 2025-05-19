@@ -24,6 +24,7 @@ import { TaskDataMergeService } from "./worker/service/taskDataMergeService";
 import { TaskDataUploadService } from "./worker/service/taskDataUploadService";
 import { TaskService } from "./worker/service/taskService";
 import { JobSnapshotService } from "./worker/service/jobSnapshotService";
+import JobPublicService from "./worker/service/jobPublicService";
 
 infoLog("worker ready");
 const ACTION_FUNCTION = new Map();
@@ -57,6 +58,7 @@ mergeServiceMethod(ACTION_FUNCTION, TaskDataMergeService);
 mergeServiceMethod(ACTION_FUNCTION, DataSharePartnerService);
 mergeServiceMethod(ACTION_FUNCTION, JobTagService);
 mergeServiceMethod(ACTION_FUNCTION, JobSnapshotService);
+mergeServiceMethod(ACTION_FUNCTION, JobPublicService);
 
 onmessage = function (e) {
   onMessageHandle(e, ACTION_FUNCTION);

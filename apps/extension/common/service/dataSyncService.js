@@ -88,8 +88,15 @@ export const getValidJobData = (existsRecord, newRecord) => {
   }
 }
 
-export async function getMergeDataListForJobPublic(items, idColumn, getByIdsCallback) {
-  return await getMergeDataListByOption(items, idColumn, getByIdsCallback, (existsRecord, newRecord) => {
+export async function getMergeDataListForJobPublic(items, idColumn, getJobByIdsCallback, getJobPublicByIdsCallback) {
+  const jobPublicList = await getMergeDataListByOption(items, idColumn, getJobPublicByIdsCallback, (existsRecord, newRecord) => {
+    if (parse(existsRecord.createDatetime).isAfter(newRecord.createDatetime)) {
+      return newRecord;
+    } else {
+      return;
+    }
+  });
+  const jobList = await getMergeDataListByOption(items, idColumn, getJobByIdsCallback, (existsRecord, newRecord) => {
     if (parse(existsRecord.createDatetime).isAfter(newRecord.createDatetime)) {
       //返回修改首次扫描时间后原纪录
       const cloneObject = Object.assign({}, existsRecord);
@@ -99,6 +106,7 @@ export async function getMergeDataListForJobPublic(items, idColumn, getByIdsCall
       return null;
     }
   }, { onlyUpdate: true });
+  return { jobPublicList, jobList };
 }
 
 export async function getMergeDataListForCompanyTag(items, getByIdsCallback) {
