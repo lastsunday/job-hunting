@@ -3,6 +3,8 @@ import { JobPublic } from "@/common/data/domain/jobPublic";
 import { BaseService } from "../service/baseService";
 import { SERVICE_INSTANCE as JOB_SERVICE_INSTANCE } from "../service/jobService";
 import BaseBridgeService, { addTransactionServiceMethod, fillBaseServiceMethod } from "./baseBridgeService";
+import { getDb,convertRows } from "../database";
+import { genWhereSql } from "./sqlUtil";
 const TABLE_NAME = "job_public";
 const TABLE_ID_COLUMN = "id";
 const SERVICE_NAME = "jobPublic";
@@ -61,5 +63,17 @@ addTransactionServiceMethod({
     }
   }
 })
+
+export const _queryMinCreateDatetimeGroupByJobId = async (jobIds, { connection = null } = {}) => {
+  connection ??= await getDb();
+  const sql = `SELECT job_id ,MIN(create_datetime) AS create_datetime FROM job_public ${genWhereSql(
+    [
+      { include: jobIds && jobIds.length > 0, sql: ` AND job_id IN (${"'" + jobIds.join("','") + "'"})` }
+    ]
+  )} GROUP BY job_id`;
+  const { rows } = await connection.query(sql);
+  return convertRows(rows);
+}
+
 
 export default JobPublicService;
