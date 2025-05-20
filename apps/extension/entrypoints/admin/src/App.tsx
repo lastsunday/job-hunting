@@ -32,6 +32,7 @@ import useAnalysisStore from './store/AnalysisStore';
 import JobSnapshotView from './pages/data/JobSnapshotView';
 import JobSnapshotWelcomeView from './pages/jobSnapshot/WelcomeView';
 import useJobSnapshotStore from './store/JobSnapshotStore';
+import JobPublicView from './pages/data/JobPublicView';
 const App: React.FC = () => {
   const [init, setInit] = useState(false);
 
@@ -86,6 +87,7 @@ const App: React.FC = () => {
           <Route path="data/tag" element={<TagView />} />
           <Route path="data/jobTag" element={<JobTagView />} />
           <Route path="data/companyTag" element={<CompanyTagView />} />
+          <Route path="data/jobPublic" element={<JobPublicView />} />
           <Route path="analysisPlan/analysisWelcome" element={<AnalysisWelcomeView />} />
           <Route path="analysisPlan/analysisSetting" element={<AnalysisSettingView />} />
           <Route
