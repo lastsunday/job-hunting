@@ -15,6 +15,6 @@ test('job _batchInsertOrUpdateJob correct', async () => {
   const addJobResult = await _batchInsertOrUpdateJob([jobItem]);
   expect(addJobResult.length).toBe(1);
   const result = await SERVICE_INSTANCE._getById("jobId1");
-  expect(dateToStr(result.createDatetime)).toBe(dateToStr(parse("2025-05-18")));
+  expect(dateToStr(parse(result.createDatetime))).toBe(dateToStr(parse("2025-05-18")));
 })
 
