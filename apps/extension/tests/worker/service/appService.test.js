@@ -9,7 +9,9 @@ import {
   TASK_TYPE_JOB_DATA_DOWNLOAD, TASK_TYPE_COMPANY_DATA_DOWNLOAD,
   TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD, TASK_TYPE_JOB_TAG_DATA_DOWNLOAD,
   TASK_TYPE_JOB_DATA_UPLOAD, TASK_TYPE_COMPANY_DATA_UPLOAD,
-  TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, TASK_TYPE_JOB_TAG_DATA_UPLOAD
+  TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, TASK_TYPE_JOB_TAG_DATA_UPLOAD,
+  TASK_TYPE_ALL_PRIVATE_DATA_DOWNLOAD,
+  TASK_TYPE_JOB_PUBLIC_DATA_UPLOAD, TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD, TASK_TYPE_ALL_PUBLIC_DATA_DOWNLOAD
 } from "@/common";
 test('appBackgroundTaskRun run in correct logic', async () => {
   vi.spyOn(modUtil, 'postErrorMessage').mockImplementation((message, error) => {
@@ -23,6 +25,10 @@ test('appBackgroundTaskRun run in correct logic', async () => {
         company: true,
         jobTag: true,
         companyTag: true,
+      },
+      enablePublic: true,
+      publicDataSyncEnableConfig: {
+        jobPublic: true,
       }
     }
   });
@@ -33,9 +39,11 @@ test('appBackgroundTaskRun run in correct logic', async () => {
   }));
   const userName = "lastsunday";
   const repoName = "job-hunting-data";
+  const publicRepoName = "job-hunting-public-data";
   const isPrivate = true;
   const expectResult = [
-    ...Array(4).fill({ userName, repoName, isPrivate })
+    { userName, repoName, isPrivate },
+    { userName, repoName: publicRepoName, isPrivate: false }
   ];
   const expectIterator = expectResult.values();
   vi.spyOn(modTaskUpload, 'createRepoIfNotExists').mockImplementation(async ({ userName, repoName, isPrivate }) => {
@@ -49,6 +57,7 @@ test('appBackgroundTaskRun run in correct logic', async () => {
     { userName, repoName, taskType: TASK_TYPE_COMPANY_DATA_UPLOAD },
     { userName, repoName, taskType: TASK_TYPE_COMPANY_TAG_DATA_UPLOAD },
     { userName, repoName, taskType: TASK_TYPE_JOB_TAG_DATA_UPLOAD },
+    { userName, repoName: publicRepoName, taskType: TASK_TYPE_JOB_PUBLIC_DATA_UPLOAD },
   ];
   const expectCaculateUploadTaskIterator = expectCaculateUploadTaskResult.values();
   vi.spyOn(modTaskUpload, 'calculateUploadTask').mockImplementation(async ({ userName, repoName, taskType }) => {
@@ -67,7 +76,7 @@ test('appBackgroundTaskRun run in correct logic', async () => {
         repoType: "GIT_HUB",
         enable: true,
         config: {
-          taskTypeList: null,
+          taskTypeList: [{ type: TASK_TYPE_ALL_PRIVATE_DATA_DOWNLOAD }],
         },
       },
       {
@@ -84,6 +93,26 @@ test('appBackgroundTaskRun run in correct logic', async () => {
           ],
         },
       },
+      {
+        username: OTHER_1_USER_NAME,
+        reponame: publicRepoName,
+        repoType: "GIT_HUB",
+        enable: true,
+        config: {
+          taskTypeList: [{ type: TASK_TYPE_ALL_PUBLIC_DATA_DOWNLOAD }],
+        },
+      },
+      {
+        username: OTHER_2_USER_NAME,
+        reponame: publicRepoName,
+        repoType: "GIT_HUB",
+        enable: true,
+        config: {
+          taskTypeList: [
+            { type: TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD },
+          ],
+        },
+      },
     ];
   });
   const expectCaculateDownloadTaskResult = [
@@ -91,6 +120,7 @@ test('appBackgroundTaskRun run in correct logic', async () => {
     { userName, repoName, taskType: TASK_TYPE_COMPANY_DATA_DOWNLOAD },
     { userName, repoName, taskType: TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD },
     { userName, repoName, taskType: TASK_TYPE_JOB_TAG_DATA_DOWNLOAD },
+    { userName, repoName: publicRepoName, taskType: TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD },
     { userName: OTHER_1_USER_NAME, repoName, taskType: TASK_TYPE_JOB_DATA_DOWNLOAD },
     { userName: OTHER_1_USER_NAME, repoName, taskType: TASK_TYPE_COMPANY_DATA_DOWNLOAD },
     { userName: OTHER_1_USER_NAME, repoName, taskType: TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD },
@@ -99,6 +129,8 @@ test('appBackgroundTaskRun run in correct logic', async () => {
     { userName: OTHER_2_USER_NAME, repoName, taskType: TASK_TYPE_COMPANY_DATA_DOWNLOAD },
     { userName: OTHER_2_USER_NAME, repoName, taskType: TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD },
     { userName: OTHER_2_USER_NAME, repoName, taskType: TASK_TYPE_JOB_TAG_DATA_DOWNLOAD },
+    { userName: OTHER_1_USER_NAME, repoName: publicRepoName, taskType: TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD },
+    { userName: OTHER_2_USER_NAME, repoName: publicRepoName, taskType: TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD },
   ];
   const expectCaculateDownloadTaskIterator = expectCaculateDownloadTaskResult.values();
   vi.spyOn(modTaskDownload, 'calculateDownloadTask').mockImplementation((async ({ userName, repoName, taskType }) => {

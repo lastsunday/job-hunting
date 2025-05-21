@@ -2,16 +2,20 @@ import { ConfigApi, DataSharePartnerApi, TaskApi } from "@/common/api";
 import { CONFIG_KEY_DATA_SHARE_PLAN, GLOBAL_STATISTIC_LOOP_DELAY } from "@/common/config";
 import { StatisticTaskBO } from "@/common/data/bo/statisticTaskBO";
 import { Config } from "@/common/data/domain/config";
-import { DataSharePlanConfigDTO, PrivateDataSyncEnableConfig } from "@/common/data/dto/dataSharePlanConfigDTO";
+import { DataSharePlanConfigDTO, PrivateDataSyncEnableConfig, PublicDataSyncEnableConfig } from "@/common/data/dto/dataSharePlanConfigDTO";
 import dayjs from "dayjs";
 import { create } from 'zustand';
 
 interface DataSharePlanState {
   enable: boolean,
   privateDataSyncEnableConfig: PrivateDataSyncEnableConfig,
+  enablePublic: boolean,
+  publicDataSyncEnableConfig: PublicDataSyncEnableConfig,
   init: () => Promise<void>,
   change: (enable: boolean) => Promise<void>,
   updatePrivateDataSyncEnableConfig: (privateDataSyncEnableConfig: PrivateDataSyncEnableConfig) => Promise<void>,
+  changePublic: (enable: boolean) => Promise<void>,
+  updatePublicDataSyncEnableConfig: (privateDataSyncEnableConfig: PrivateDataSyncEnableConfig) => Promise<void>,
   dataSharePartnerCount: number,
   uploadRecordTotalCountToday: number,
   downloadFileTotalCountToday: number,
@@ -82,6 +86,8 @@ const useDataSharePlanStore = create<DataSharePlanState>()((set) => {
   return {
     enable: false,
     privateDataSyncEnableConfig: null,
+    enablePublic: false,
+    publicDataSyncEnableConfig: null,
     init: async () => {
       await _init();
     },
@@ -89,9 +95,17 @@ const useDataSharePlanStore = create<DataSharePlanState>()((set) => {
       await _update({ enable });
       set(() => ({ enable }));
     },
+    changePublic: async (enablePublic: boolean) => {
+      await _update({ enablePublic });
+      set(() => ({ enablePublic }));
+    },
     updatePrivateDataSyncEnableConfig: async (privateDataSyncEnableConfig: PrivateDataSyncEnableConfig) => {
       await _update({ privateDataSyncEnableConfig });
       set(() => ({ privateDataSyncEnableConfig }));
+    },
+    updatePublicDataSyncEnableConfig: async (publicDataSyncEnableConfig: PublicDataSyncEnableConfig) => {
+      await _update({ publicDataSyncEnableConfig });
+      set(() => ({ publicDataSyncEnableConfig }));
     },
   }
 })

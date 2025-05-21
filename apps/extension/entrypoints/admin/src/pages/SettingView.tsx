@@ -43,17 +43,25 @@ const SettingView: React.FC = () => {
     change,
     privateDataSyncEnableConfig,
     updatePrivateDataSyncEnableConfig,
+    enablePublic,
+    changePublic,
+    publicDataSyncEnableConfig,
+    updatePublicDataSyncEnableConfig,
   ] = useDataSharePlanStore(
     useShallow((state) => [
       state.enable,
       state.change,
       state.privateDataSyncEnableConfig,
       state.updatePrivateDataSyncEnableConfig,
+      state.enablePublic,
+      state.changePublic,
+      state.publicDataSyncEnableConfig,
+      state.updatePublicDataSyncEnableConfig,
     ])
   );
   const [
-    updatePrivateDataSyncEnableConfigLoading,
-    setUpdatePrivateDataSyncEnableConfigLoading,
+    updateDataSyncEnableConfigLoading,
+    setUpdateDataSyncEnableConfigLoading,
   ] = useState(false);
   const [analysisConfig, updateAnalysis] = useAnalysisStore(
     useShallow((state) => [state.config, state.update])
@@ -62,6 +70,7 @@ const SettingView: React.FC = () => {
     useShallow((state) => [state.installAndLogin])
   );
   const [dataSharePlanEnable, setDataSharePlanEnable] = useState(false);
+  const [dataPublicEnable, setDataPublicEnable] = useState(false);
   const [analysisEnable, setAnalysisEnable] = useState(false);
   const [jobSnapshotEnable, setJobSnapshotEnable] = useState(false);
   const [jobSnapshotConfig, updateJobSnapshotConfig] = useJobSnapshotStore(
@@ -149,8 +158,16 @@ const SettingView: React.FC = () => {
 
   const [privateDataSettingForm] = Form.useForm();
 
+  const public_data_setting = [
+    { label: '职位公开数据', name: 'jobPublic', value: false, header: JOB_PUBLIC_FILE_HEADER },
+  ];
+
+  const [publicDataSettingForm] = Form.useForm();
+
+
   useEffect(() => {
     setDataSharePlanEnable(enable);
+    setDataPublicEnable(enablePublic);
     setAnalysisEnable(analysisConfig.enable);
     setJobSnapshotEnable(jobSnapshotConfig.enable);
   }, []);
@@ -393,7 +410,7 @@ const SettingView: React.FC = () => {
           variant="borderless"
           size="small"
         >
-          <Spin spinning={updatePrivateDataSyncEnableConfigLoading}>
+          <Spin spinning={updateDataSyncEnableConfigLoading}>
             <Card
               title=<Flex align="center" gap={5}>
                 <Text>私有数据</Text>
@@ -404,7 +421,7 @@ const SettingView: React.FC = () => {
                   checked={dataSharePlanEnable}
                   onChange={async (checked) => {
                     try {
-                      setUpdatePrivateDataSyncEnableConfigLoading(true);
+                      setUpdateDataSyncEnableConfigLoading(true);
                       if (checked) {
                         await change(true);
                         setDataSharePlanEnable(true);
@@ -413,7 +430,7 @@ const SettingView: React.FC = () => {
                         setDataSharePlanEnable(false);
                       }
                     } finally {
-                      setUpdatePrivateDataSyncEnableConfigLoading(false);
+                      setUpdateDataSyncEnableConfigLoading(false);
                     }
                   }}
                 ></Switch>
@@ -457,12 +474,89 @@ const SettingView: React.FC = () => {
                       <Switch
                         onChange={async () => {
                           try {
-                            setUpdatePrivateDataSyncEnableConfigLoading(true);
+                            setUpdateDataSyncEnableConfigLoading(true);
                             await updatePrivateDataSyncEnableConfig(
                               privateDataSettingForm.getFieldsValue()
                             );
                           } finally {
-                            setUpdatePrivateDataSyncEnableConfigLoading(false);
+                            setUpdateDataSyncEnableConfigLoading(false);
+                          }
+                        }}
+                      ></Switch>
+                    </Form.Item>
+                  );
+                })}
+              </Form>
+            </Card>
+            <Card
+              title=<Flex align="center" gap={5}>
+                <Text>公开数据</Text>
+                <Switch
+                  checkedChildren="公开数据共享开启"
+                  unCheckedChildren="公开数据共享关闭"
+                  size="small"
+                  checked={dataPublicEnable}
+                  onChange={async (checked) => {
+                    try {
+                      setUpdateDataSyncEnableConfigLoading(true);
+                      if (checked) {
+                        await changePublic(true);
+                        setDataPublicEnable(true);
+                      } else {
+                        await changePublic(false);
+                        setDataPublicEnable(false);
+                      }
+                    } finally {
+                      setUpdateDataSyncEnableConfigLoading(false);
+                    }
+                  }}
+                ></Switch>
+              </Flex>
+              variant="borderless"
+              size="small"
+            >
+              <Form
+                form={publicDataSettingForm}
+                labelCol={{ span: 4 }}
+                wrapperCol={{ span: 14 }}
+                layout="horizontal"
+                disabled={!dataPublicEnable}
+                initialValues={publicDataSyncEnableConfig}
+              >
+                {public_data_setting.map((item) => {
+                  return (
+                    <Form.Item
+                      key={item.name}
+                      label={item.label}
+                      name={item.name}
+                      tooltip={{
+                        color: 'white',
+                        placement: 'right',
+                        title: (
+                          <Flex wrap gap={3}>
+                            {item.header[item.header.length - 1].map((name) => {
+                              return (
+                                <Tag
+                                  key={`${item.name}${name}`}
+                                  color="magenta"
+                                >
+                                  {name}
+                                </Tag>
+                              );
+                            })}
+                          </Flex>
+                        ),
+                      }}
+                    >
+                      <Switch
+                        onChange={async () => {
+                          try {
+                            setUpdateDataSyncEnableConfigLoading(true);
+                            await updatePublicDataSyncEnableConfig(
+                              publicDataSettingForm.getFieldsValue()
+                            );
+                          } finally {
+                            setUpdateDataSyncEnableConfigLoading(false);
                           }
                         }}
                       ></Switch>

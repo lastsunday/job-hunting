@@ -10,7 +10,7 @@ import { SearchTaskBO } from "@/common/data/bo/searchTaskBO";
 import { Config } from "@/common/data/domain/config";
 import { OauthDTO } from "@/common/data/dto/oauthDTO";
 import { UserDTO } from "@/common/data/dto/userDTO";
-import { debugLog, infoLog } from "@/common/log";
+import { infoLog, errorLog } from "@/common/log";
 import dayjs from "dayjs";
 import minMax from 'dayjs/plugin/minMax'; // ES 2015
 import { _addOrUpdateConfig, _getConfigByKey } from "../configService";
@@ -63,10 +63,10 @@ export async function runTask() {
           throw `[TASK RUN] not supported task type = ${taskItem.type}`
         }
       } catch (e) {
-        debugLog(e);
+        errorLog(e);
         //执行异常，补充异常信息
         taskItem.status = TASK_STATUS_ERROR;
-        taskItem.errorReason = JSON.stringify(e);
+        taskItem.errorReason = e ? e.stack : e;
         taskItem.costTime = dayjs().diff(startDatetime);
         await _taskAddOrUpdate({ param: taskItem });
       }

@@ -17,6 +17,7 @@ export const URL_TRAFFIC_POPULAR_REFERRERS = "https://api.github.com/repos/lasts
 export const URL_TRAFFIC_VIEWS = "https://api.github.com/repos/lastsunday/job-hunting/traffic/views";
 
 export const DEFAULT_DATA_REPO = "job-hunting-data";
+export const DEFAULT_PUBLIC_DATA_REPO = "job-hunting-public-data";
 
 export const COMMENT_PAGE_SIZE = 30;
 

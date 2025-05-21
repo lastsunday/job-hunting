@@ -2,10 +2,12 @@ import {
   DATA_TYPE_NAME_COMPANY,
   DATA_TYPE_NAME_COMPANY_TAG,
   DATA_TYPE_NAME_JOB,
+  DATA_TYPE_NAME_JOB_PUBLIC,
   DATA_TYPE_NAME_JOB_TAG,
   TASK_TYPE_COMPANY_DATA_UPLOAD,
   TASK_TYPE_COMPANY_TAG_DATA_UPLOAD,
   TASK_TYPE_JOB_DATA_UPLOAD,
+  TASK_TYPE_JOB_PUBLIC_DATA_UPLOAD,
   TASK_TYPE_JOB_TAG_DATA_UPLOAD
 } from "@/common";
 import { EXCEPTION, GithubApi } from "@/common/api/github";
@@ -13,6 +15,7 @@ import {
   companyDataToExcelJSONArray,
   companyTagDataToExcelJSONArray,
   jobDataToExcelJSONArray,
+  jobPublicDataToExcelJSONArray,
   jobTagDataToExcelJSONArray
 } from "@/common/excel";
 import { debugLog, errorLog, infoLog } from "@/common/log";
@@ -23,7 +26,7 @@ import { getPathByDatetime, getToken, isLogin, setToken } from "./index";
 import {
   calculateRepoMaxUploadDate,
   getCompanyData,
-  getCompanyTagData, getJobData, getJobTagData, saveTask, uploadData
+  getCompanyTagData, getJobData, getJobPublicData, getJobTagData, saveTask, uploadData
 } from "./taskUploadLogic";
 dayjs.extend(minMax);
 
@@ -106,6 +109,9 @@ export function setup(handleMap) {
   })
   handleMap.set(TASK_TYPE_JOB_TAG_DATA_UPLOAD, async (dataId) => {
     return uploadDataByDataId(dataId, DATA_TYPE_NAME_JOB_TAG, getJobTagData, jobTagDataToExcelJSONArray);
+  })
+  handleMap.set(TASK_TYPE_JOB_PUBLIC_DATA_UPLOAD, async (dataId) => {
+    return uploadDataByDataId(dataId, DATA_TYPE_NAME_JOB_PUBLIC, getJobPublicData, jobPublicDataToExcelJSONArray);
   })
 }
 

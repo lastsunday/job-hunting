@@ -1,12 +1,16 @@
 import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
 import { useTask } from "@/common/hooks/task";
-import { infoLog, errorLog } from "@/common/log";
+import { infoLog, errorLog, warnLog } from "@/common/log";
 import { _getUser, runScheduleTask, runTask } from "./app";
 import { calculateDataSharePartnerList, getDataSharePlanConfig } from "./app/dataSharePlan";
 import { calculateDownloadTask } from "./app/taskDownload";
 import { calculateUploadTask, createRepoIfNotExists } from "./app/taskUpload";
-const { getPrivateUploadTaskTypeFromConfig, getPrivateRepoName,
-  getPrivateDownloadTaskTypeFromConfig, getTaskTypeListFromDataSharePartnerConfig } = useTask();
+const {
+  getPrivateUploadTaskTypeFromConfig, getPrivateRepoName,
+  getPrivateDownloadTaskTypeFromConfig, getTaskTypeListFromDataSharePartnerConfig,
+  getPublicUploadTaskTypeFromConfig, getPublicRepoName,
+  getPublicDownloadTaskTypeFromConfig,
+} = useTask();
 
 export const AppService = {
 
@@ -21,25 +25,68 @@ export const AppService = {
         if (userDTO) {
           let userName = userDTO.login;
           infoLog(`[Task] has login info userName = ${userName}`)
-          infoLog(`[Task] calculateUploadTask`)
+          infoLog(`[Task] private calculateUploadTask`)
           const enablePrivateUploadTaskTypeList = getPrivateUploadTaskTypeFromConfig(dataSharePlanConfig);
-          infoLog(`[Task] calculateUploadTask enable upload task type list = ${JSON.stringify(enablePrivateUploadTaskTypeList)}`)
+          infoLog(`[Task] private calculateUploadTask enable upload task type list = ${JSON.stringify(enablePrivateUploadTaskTypeList)}`)
           if (enablePrivateUploadTaskTypeList.length > 0) {
             const repoName = getPrivateRepoName();
-            createRepoIfNotExists({ userName, repoName, isPrivate: true });
+            try {
+              await createRepoIfNotExists({ userName, repoName, isPrivate: true });
+            } catch (e) {
+              warnLog(`[Task] createRepoIfNotExists ${userName}/${repoName} failure,message = ${e}`)
+            }
             for (let i = 0; i < enablePrivateUploadTaskTypeList.length; i++) {
               const taskType = enablePrivateUploadTaskTypeList[i].type;
-              await calculateUploadTask({ userName, repoName, taskType });
+              try {
+                await calculateUploadTask({ userName, repoName, taskType });
+              } catch (e) {
+                warnLog(`[Task] private calculateUploadTask failure,message = ${e}`)
+              }
             }
             const enablePrivateDownloadTaskTypeList = getPrivateDownloadTaskTypeFromConfig(dataSharePlanConfig);
             shareDataPlanList.push({ username: userName, reponame: repoName, config: { taskTypeList: enablePrivateDownloadTaskTypeList } });
           }
         } else {
           infoLog(`[TASK] no login info`)
-          infoLog(`[TASK] skip upload task calculate and self private data download`)
+          infoLog(`[TASK] skip private upload task calculate and self private data download`)
         }
       } else {
         infoLog(`[TASK] skip private data sync`)
+      }
+      if (dataSharePlanConfig.enablePublic) {
+        infoLog(`[TASK] public data sync enable`);
+        infoLog(`[TASK] public data sync task running`);
+        let userDTO = await _getUser();
+        if (userDTO) {
+          let userName = userDTO.login;
+          infoLog(`[Task] has login info userName = ${userName}`)
+          infoLog(`[Task] public calculateUploadTask`)
+          const enablePublicUploadTaskTypeList = getPublicUploadTaskTypeFromConfig(dataSharePlanConfig);
+          infoLog(`[Task] public calculateUploadTask enable upload task type list = ${JSON.stringify(enablePublicUploadTaskTypeList)}`)
+          if (enablePublicUploadTaskTypeList.length > 0) {
+            const repoName = getPublicRepoName();
+            try {
+              await createRepoIfNotExists({ userName, repoName, isPrivate: false });
+            } catch (e) {
+              warnLog(`[Task] createRepoIfNotExists ${userName}/${repoName} failure,message = ${e}`)
+            }
+            for (let i = 0; i < enablePublicUploadTaskTypeList.length; i++) {
+              const taskType = enablePublicUploadTaskTypeList[i].type;
+              try {
+                await calculateUploadTask({ userName, repoName, taskType });
+              } catch (e) {
+                warnLog(`[Task] public calculateUploadTask failure,message = ${e}`)
+              }
+            }
+            const enablePublicDownloadTaskTypeList = getPublicDownloadTaskTypeFromConfig(dataSharePlanConfig);
+            shareDataPlanList.push({ username: userName, reponame: repoName, config: { taskTypeList: enablePublicDownloadTaskTypeList } });
+          }
+        } else {
+          infoLog(`[TASK] no login info`)
+          infoLog(`[TASK] skip public upload task calculate and self private data download`)
+        }
+      } else {
+        infoLog(`[TASK] skip public data sync`)
       }
       //从数据库中获取数据共享伙伴列表
       let dataSharePartnerList = await calculateDataSharePartnerList();
@@ -50,7 +97,11 @@ export const AppService = {
         const taskTypeList = getTaskTypeListFromDataSharePartnerConfig(shareItem.config);
         for (let n = 0; n < taskTypeList.length; n++) {
           const taskType = taskTypeList[n].type;
-          await calculateDownloadTask({ userName: shareItem.username, repoName: shareItem.reponame, taskType });
+          try {
+            await calculateDownloadTask({ userName: shareItem.username, repoName: shareItem.reponame, taskType });
+          } catch (e) {
+            warnLog(`[Task] calculateDownloadTask failure,${shareItem.username}/${shareItem.reponame},taskType = ${taskType},message = ${e}`)
+          }
         }
       }
       infoLog(`[TASK] runTask`)

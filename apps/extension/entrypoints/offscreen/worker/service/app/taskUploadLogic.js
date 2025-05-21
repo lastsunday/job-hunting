@@ -4,10 +4,11 @@ import {
   TASK_TYPE_COMPANY_DATA_UPLOAD,
   TASK_TYPE_COMPANY_TAG_DATA_UPLOAD,
   TASK_TYPE_JOB_DATA_UPLOAD,
+  TASK_TYPE_JOB_PUBLIC_DATA_UPLOAD,
   TASK_TYPE_JOB_TAG_DATA_UPLOAD
 } from "@/common";
 import { EXCEPTION, GithubApi, _fetch as githubFetch } from "@/common/api/github";
-import { GITHUB_URL } from "@/common/config";
+import { GITHUB_URL, JOB_PUBLIC_MAX_EXPORT_SIZE } from "@/common/config";
 import { CompanyTagExportBO } from "@/common/data/bo/companyTagExportBO";
 import { JobTagExportBO } from "@/common/data/bo/jobTagExportBO";
 import { SearchCompanyBO } from "@/common/data/bo/searchCompanyBO";
@@ -43,7 +44,6 @@ export const saveTask = async ({ type, startDatetime, endDatetime, userName, rep
   await (await getDb()).transaction(async (tx) => {
     const total = await getTotalByTaskType({ type, startDatetime, endDatetime, connection: tx });
     await addDataUploadTask({ type, startDatetime, endDatetime, userName, repoName, connection: tx, total });
-    infoLog(`[TASK DATA UPLOAD CALCULATE] add data upload task ${userName}/${repoName} type=${type}`)
   });
 }
 
@@ -56,6 +56,8 @@ export const _getTotalByTaskType = async ({ type, startDatetime, endDatetime, co
     return (await getCompanyTagData({ pageNum: 1, pageSize: 1, startDatetime, endDatetime, connection })).total;
   } else if (type == TASK_TYPE_JOB_TAG_DATA_UPLOAD) {
     return (await getJobTagData({ pageNum: 1, pageSize: 1, startDatetime, endDatetime, connection })).total;
+  } else if (type == TASK_TYPE_JOB_PUBLIC_DATA_UPLOAD) {
+    return (await getJobData({ pageNum: 1, pageSize: 1, startDatetime, endDatetime, connection })).total;
   } else {
     throw `not supported type = ${type}`;
   }
@@ -146,6 +148,17 @@ export async function getJobTagData({ pageNum = null, pageSize = null, startDate
   searchParam.startDatetimeForUpdate = startDatetime;
   searchParam.endDatetimeForUpdate = endDatetime;
   return searchByChunk({ param: searchParam, connection, searchFunction: _jobTagExport, maxChunkCount: JOB_TAG_MAX_EXPORT_SIZE });
+}
+
+export async function getJobPublicData({ pageNum = null, pageSize = null, startDatetime = null, endDatetime = null, connection = null } = {}) {
+  const searchParam = new SearchJobBO();
+  searchParam.pageNum = pageNum;
+  searchParam.pageSize = pageSize;
+  searchParam.startDatetimeForUpdate = startDatetime;
+  searchParam.endDatetimeForUpdate = endDatetime;
+  searchParam.orderByColumn = "updateDatetime";
+  searchParam.orderBy = "DESC";
+  return searchByChunk({ param: searchParam, connection, searchFunction: _searchJob, maxChunkCount: JOB_PUBLIC_MAX_EXPORT_SIZE });
 }
 
 export async function createRepoIfNotExists({ userName, repoName, isPrivate = true } = {}) {
