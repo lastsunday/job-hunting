@@ -279,7 +279,8 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
                   <Flex>{additionMenu ? additionMenu : null}</Flex>
                   {mode?.includes('c') ? (
                     <Button
-                      type="primary"
+                      variant='dashed'
+                      color='default'
                       loading={addLoading}
                       onClick={async () => {
                         if (onAdd) {
@@ -315,7 +316,6 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
                     >
                       <Button
                         loading={deleteLoading}
-                        type="primary"
                         disabled={!hasSelected}
                         danger
                       >
@@ -364,8 +364,8 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
             rowKey={
               rowKeyFunction
                 ? (record) => {
-                    return rowKeyFunction(record);
-                  }
+                  return rowKeyFunction(record);
+                }
                 : (record) => record.id
             }
             columns={[
@@ -377,7 +377,7 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
                       {index +
                         1 +
                         (tableParams.pagination.current - 1) *
-                          tableParams.pagination.pageSize}
+                        tableParams.pagination.pageSize}
                     </Text>
                   ),
                   minWidth: 50,

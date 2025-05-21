@@ -1,13 +1,12 @@
 
 import { DataSharePartnerApi } from '@/common/api';
-import { EXCEPTION, GithubApi } from '@/common/api/github';
+import { GithubApi } from '@/common/api/github';
 import {
   COMMENT_PAGE_SIZE,
-  DEFAULT_DATA_REPO,
-  DEFAULT_REPO_TYPE,
+  DEFAULT_REPO_TYPE
 } from '@/common/config';
 import { SearchDataSharePartnerBO } from '@/common/data/bo/searchDataSharePartnerBO';
-import { DataSharePartner, Config } from '@/common/data/domain/dataSharePartner';
+import { Config, DataSharePartner } from '@/common/data/domain/dataSharePartner';
 import { dateToStr } from '@/common/utils';
 import {
   Avatar,
@@ -29,7 +28,10 @@ import { PageInfo } from '../../../data/PageInfo';
 import { Owner, RepositoryData } from '../../../data/RepositoryData';
 import useAuthStore from '../../../store/AuthStore';
 import styles from './StandardData.module.css';
+import { Tag } from 'antd/lib';
 const { Text } = Typography;
+import { useTask } from "@/common/hooks/task";
+import { useTask as useTaskInner } from "../../../hooks/task";
 export type StandardDataProps = {
   repo: string;
   config: Config;
@@ -61,6 +63,9 @@ const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
   const [auth, username] = useAuthStore(useShallow((state) => [state.auth, state.username]));
   const [messageApi, contextHolder] = message.useMessage();
 
+  const { getTaskTypeListFromDataSharePartnerConfig } = useTask();
+  const { getDisplayNameByTaskType } = useTaskInner();
+  let _loading = false;
   const genState = (id: string) => {
     if (!idObjectMap.has(id)) {
       return null;
@@ -74,7 +79,7 @@ const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
           </Tooltip>
         </>
       );
-    } else if (item.name != DEFAULT_DATA_REPO) {
+    } else if (item.name != repo) {
       return (
         <>
           <Tooltip title="仓库名不符合条件">
@@ -118,12 +123,13 @@ const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
       title: '头像',
       dataIndex: 'owner',
       render: (value: Owner) => <Avatar src={value.avatarUrl} />,
+      minWidth: 70,
     },
     {
       title: '用户名',
       dataIndex: 'owner',
       render: (value: Owner) => <Text>{value.login}</Text>,
-      minWidth: 120,
+      minWidth: 160,
     },
     {
       title: '仓库名',
@@ -131,10 +137,18 @@ const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
       render: (value: string) => <Text>{value}</Text>,
     },
     {
-      title: '星数',
+      title: <div className={styles.headerTitle}>星数<div className='i-fluent-emoji-flat:star'></div></div>,
       dataIndex: 'stargazerCount',
       render: (value: number) => <Text>{value}</Text>,
-      minWidth: 70,
+      minWidth: 100,
+    },
+    {
+      title: '数据任务',
+      dataIndex: "id",
+      render: (value: string) => {
+        return [...getTaskTypeListFromDataSharePartnerConfig(config).map(item => <Tag className={styles.tag} color="#108ee9">{getDisplayNameByTaskType(item.type)}</Tag>)];
+      },
+      minWidth: 150,
     },
     {
       title: '最近更新时间',
@@ -155,6 +169,11 @@ const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
   ];
 
   const fetchData = () => {
+    if (_loading) {
+      return;
+    }
+    _loading = true;
+    setLoading(true);
     (async () => {
       if (!auth) {
         messageApi.open({
@@ -165,7 +184,6 @@ const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
         return;
       }
       scrollToTop();
-      setLoading(true);
       try {
         const result = await GithubApi.queryRepository(searchParam);
         const { nodes } = result.search;
@@ -203,14 +221,11 @@ const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
           content: `查询失败`,
         });
       } finally {
+        _loading = false;
         setLoading(false);
       }
     })();
   };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   useEffect(fetchData, [searchParam, currentPage, pageSize, refresh]);
 
@@ -224,7 +239,7 @@ const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
     getCheckboxProps: (record) => ({
       disabled:
         record.owner.login === username ||
-        record.name != DEFAULT_DATA_REPO ||
+        record.name != repo ||
         dataSharePartnerMap.has(record.owner.login),
     }),
   };

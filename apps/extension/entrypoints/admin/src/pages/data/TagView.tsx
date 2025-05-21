@@ -104,7 +104,7 @@ const TagView: React.FC = () => {
           name={`isPublic`}
           label={`标签私密性`}
         >
-          <Select allowClear options={[{ value: false, label: <span>私有</span> }, { value: true, label: <span>公有</span> }]} />
+          <Select allowClear options={[{ value: false, label: <span>私有</span> }, { value: true, label: <span>公开</span> }]} />
         </Form.Item>
       </Col>,
     ]

@@ -205,7 +205,7 @@ function genQueryRepositoryHQL({ first, after, last, before, repo }) {
   return {
     query: `
     {
-      search(query:"${repo} in:name sort:updated-desc",type:REPOSITORY,first: ${first ?? null}, after: ${after ? "\"" + after + "\"" : null},last:${last ?? null},before:${before ? "\"" + before + "\"" : null}) {
+      search(query:"\\"${repo}\\" in:name sort:updated-desc",type:REPOSITORY,first: ${first ?? null}, after: ${after ? "\"" + after + "\"" : null},last:${last ?? null},before:${before ? "\"" + before + "\"" : null}) {
         nodes{
           ... on Repository{
             id

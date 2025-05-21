@@ -8,6 +8,7 @@ import BasicTable from "../../components/BasicTable";
 import { useTask } from "../../hooks/task";
 import DataSourceEdit from "./DataSourceEdit";
 import DataSourceFind from "./DataSourceFind";
+import styles from "./DataSourceView.module.css";
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
 const { getDisplayNameByTaskType } = useTask();
@@ -113,7 +114,7 @@ const DataSourceView: React.FC = () => {
     {
       title: '配置',
       dataIndex: 'config',
-      render: (value: Config) => <Flex wrap> {value?.taskTypeList ? value.taskTypeList.map(item => <Tag>{getDisplayNameByTaskType(item.type)}</Tag>) : <Tag>缺省值</Tag>}</Flex>,
+      render: (value: Config) => <Flex wrap> {value?.taskTypeList ? value.taskTypeList.map(item => <Tag className={styles.tag} color="#108ee9">{getDisplayNameByTaskType(item.type)}</Tag>) : <Tag className={styles.tag}>缺省值</Tag>}</Flex>,
       minWidth: 100,
     },
     {
@@ -195,11 +196,11 @@ const DataSourceView: React.FC = () => {
         },
       }}
       rowKeyFunction={(record) => { return record.id }}
-      additionMenu={<Flex><Button onClick={
+      additionMenu={<Flex><Button icon={<div className="i-fluent-mdl2:search-data"></div>} color="pink" variant="dashed" onClick={
         () => {
           setIsDataSourceFindModalOpen(true);
         }
-      }>搜寻</Button></Flex>}
+      }>搜寻数据源</Button></Flex>}
     ></BasicTable>
     <Modal
       title={`${mode == "update" ? "编辑" : "新增"}`}
@@ -220,14 +221,14 @@ const DataSourceView: React.FC = () => {
       ></DataSourceEdit>
     </Modal>
     <Modal
-      title={`搜寻`}
+      title={`搜寻数据源`}
       open={isDataSourceFindModalOpen}
       onCancel={() => {
         setIsDataSourceFindModalOpen(false);
       }}
       maskClosable={false}
       footer={null}
-      style={{ maxWidth: "1000px" }}
+      style={{ maxWidth: "1500px" }}
       width="80%"
       destroyOnClose
     >
