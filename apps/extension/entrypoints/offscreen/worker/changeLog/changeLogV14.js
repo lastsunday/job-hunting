@@ -31,9 +31,40 @@ CREATE TABLE company_comment (
   )
   `;
 
+const SQL_CREATE_DATA_SOURCE_METADATA = `
+CREATE TABLE data_source_metadata (
+    id VARCHAR(255) PRIMARY KEY,
+    name VARCHAR(255),
+    description TEXT,
+    icon VARCHAR(255),
+    type VARCHAR(255),
+    config JSONB,
+    data JSONB,
+    enable BOOLEAN DEFAULT TRUE,
+    seq INTEGER,
+    auto_update_enable BOOLEAN DEFAULT TRUE,
+    create_datetime TIMESTAMPTZ,
+    update_datetime TIMESTAMPTZ
+  )
+  `;
+
+const SQL_DATA_DATA_SOURCE_METADATA = `
+INSERT INTO data_source_metadata(id,name,description,icon,type,config,data,enable,seq,auto_update_enable,create_datetime,update_datetime) VALUES 
+('0','公开数据','标准公开数据','i-material-symbols:public','GITHUB_GRAPHQL_SEARCH_REPO',
+'{"repoName":"job-hunting-data","config":{"taskTypeList":["ALL_PUBLIC_DATA_DOWNLOAD"]}}',null,true,null,false,'2025-05-24 00:00:00','2025-05-24 00:00:00'),
+('1','私有数据','标准私有数据','i-material-symbols:private-connectivity','GITHUB_GRAPHQL_SEARCH_REPO',
+'{"repoName":"job-hunting-public-data","config":{"taskTypeList":["ALL_PRIVATE_DATA_DOWNLOAD"]}}',null,true,null,false,'2025-05-24 00:00:00','2025-05-24 00:00:00');
+`
+
 export class ChangeLogV14 extends ChangeLog {
   getSqlList() {
-    const sqlList = [SQL_ALTER_TABLE_PARTNE_ADD_COLUMN, SQL_CREATE_JOB_PUBLIC, SQL_CREATE_COMPANY_COMMENT];
+    const sqlList = [
+      SQL_ALTER_TABLE_PARTNE_ADD_COLUMN,
+      SQL_CREATE_JOB_PUBLIC,
+      SQL_CREATE_COMPANY_COMMENT,
+      SQL_CREATE_DATA_SOURCE_METADATA,
+      SQL_DATA_DATA_SOURCE_METADATA,
+    ];
     return sqlList;
   }
 }

@@ -1293,3 +1293,14 @@ export const CompanyCommentApi = {
 };
 fillBridgeApi({ api: CompanyCommentApi });
 
+export const DataSourceMetadataApi = {
+  dataSourceMetadataSearch: mockFunction,
+  dataSourceMetadataAddOrUpdate: mockFunction,
+  dataSourceMetadataBatchAddOrUpdate: mockFunction,
+  dataSourceMetadataGetById: mockFunction,
+  dataSourceMetadataGetByIds: mockFunction,
+  dataSourceMetadataDeleteById: mockFunction,
+  dataSourceMetadataDeleteByIds: mockFunction,
+};
+fillBridgeApi({ api: DataSourceMetadataApi });
+

@@ -221,8 +221,7 @@ test('database init correct', async () => {
         'update_datetime'
       ]
     },
-    company_comment:
-    {
+    company_comment: {
       columns: [
         'id',
         'company_id',
@@ -232,6 +231,22 @@ test('database init correct', async () => {
         'source_type',
         'source',
         'source_data_name',
+        'create_datetime',
+        'update_datetime'
+      ]
+    },
+    data_source_metadata: {
+      columns: [
+        'id',
+        'name',
+        'description',
+        'icon',
+        'type',
+        'config',
+        'data',
+        'enable',
+        'seq',
+        'auto_update_enable',
         'create_datetime',
         'update_datetime'
       ]

@@ -1,0 +1,15 @@
+.name {
+  max-width: 250px !important;
+}
+
+.description {
+  max-width: 250px !important;
+}
+
+.config {
+  max-width: 300px !important;
+}
+
+.data {
+  max-width: 300px !important;
+}

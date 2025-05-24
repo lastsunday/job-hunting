@@ -43,7 +43,10 @@ const RootLayout: React.FC = () => {
   );
 
   const genDataSharePlanMenu = () => {
-    return [{ key: 'manager', label: '管理' }];
+    return [
+      { key: 'list', label: '列表' },
+      { key: 'metadata', label: '元数据' },
+    ];
   };
 
   const genTaskMenu = () => {

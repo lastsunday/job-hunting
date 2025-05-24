@@ -35,6 +35,7 @@ import useJobSnapshotStore from './store/JobSnapshotStore';
 import JobPublicView from './pages/data/JobPublicView';
 import DataManagementView from './pages/DataManagementView';
 import CompanyCommentView from './pages/data/CompanyCommentView';
+import DataSourceMetadataView from './pages/dataSharePlan/DataSourceMetadataView';
 const App: React.FC = () => {
   const [init, setInit] = useState(false);
 
@@ -107,7 +108,8 @@ const App: React.FC = () => {
             element={<TaskStatisticView />}
           />
           <Route path="task/taskDetail" element={<TaskDetailView />} />
-          <Route path="datasource/manager" element={<DataSourceView />} />
+          <Route path="dataSource/list" element={<DataSourceView />} />
+          <Route path="dataSource/metadata" element={<DataSourceMetadataView />} />
           <Route path="system/file" element={<FileView />} />
           <Route path="system/database" element={<DatabaseView />} />
           <Route path="system/setting" element={<SettingView />} />
