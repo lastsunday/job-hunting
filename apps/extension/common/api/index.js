@@ -1282,3 +1282,14 @@ export const JobPublicApi = {
 };
 fillBridgeApi({ api: JobPublicApi });
 
+export const CompanyCommentApi = {
+  companyCommentSearch: mockFunction,
+  companyCommentAddOrUpdate: mockFunction,
+  companyCommentBatchAddOrUpdate: mockFunction,
+  companyCommentGetById: mockFunction,
+  companyCommentGetByIds: mockFunction,
+  companyCommentDeleteById: mockFunction,
+  companyCommentDeleteByIds: mockFunction,
+};
+fillBridgeApi({ api: CompanyCommentApi });
+

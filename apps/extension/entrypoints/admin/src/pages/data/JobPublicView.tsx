@@ -12,9 +12,9 @@ import { Popover } from "antd/lib";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import BasicTable from "../../components/BasicTable";
-import { useTag } from "../../hooks/tag";
+import { useJobPublic } from "../../hooks/jobPublic";
 const { Text } = Typography;
-const { convertSortField } = useTag();
+const { convertSortField } = useJobPublic();
 dayjs.extend(duration)
 
 const fillSearchParam = (searchParam, values) => {

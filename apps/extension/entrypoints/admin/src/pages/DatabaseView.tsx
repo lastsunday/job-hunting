@@ -24,7 +24,7 @@ import {
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import StatisticCard from '../components/StatisticCard';
-import styles from './SystemView.module.css';
+import styles from './DatabaseView.module.css';
 import React from 'react';
 const { Text } = Typography;
 dayjs.extend(duration);
@@ -37,7 +37,7 @@ import {
   STORAGE_KEY_SQL_EDITOR_VALUE,
 } from '@/common/config';
 
-const SystemView: React.FC = () => {
+const DatabaseView: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [databaseSize, setDatabaseSize] = useState();
   const [schemaVersion, setSchemaVersion] = useState();
@@ -413,7 +413,7 @@ const SystemView: React.FC = () => {
                   pagination={{
                     showTotal: (total, range) =>
                       `${range[0]}-${range[1]} 共 ${total} 条记录`,
-                    pageSize: 10,
+                    showSizeChanger: true,
                     pageSizeOptions: [10, 50, 100, 200, 500, 1000],
                   }}
                   scroll={{ x: '100%' }}
@@ -431,4 +431,4 @@ const SystemView: React.FC = () => {
   );
 };
 
-export default SystemView;
+export default DatabaseView;

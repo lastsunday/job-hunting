@@ -186,6 +186,34 @@ export function isNotEmpty(value) {
   return value != undefined && value != null && !(/^\s*$/.test(value));
 }
 
+export function emptyReturnUndefined(value) {
+  return isNotEmpty(value) ? value : undefined;
+}
+
+export function emptyReturnUndefinedOrNull(value) {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  } else {
+    if (value.trim() === '') {
+      return null;
+    } else {
+      return value;
+    }
+  }
+}
+
+export function notNumberReturnUndefinedOrNull(value) {
+  if (value === undefined || value === null || value === '') {
+    return undefined;
+  } else {
+    if (Number.isNaN(value)) {
+      return null;
+    } else {
+      return Number.parseInt(value);
+    }
+  }
+}
+
 export function autoFillHttp(url) {
   if (
     url.substr(0, 7).toLowerCase() == "http://" ||
@@ -276,4 +304,13 @@ export function isToday(value) {
 
 export function cleanHTMLTag(value) {
   return value?.replaceAll("<br>", "").replaceAll("<br />", "").replaceAll("<p>", "").replaceAll("</p>", "").replaceAll("&nbsp;", "");
+}
+
+/**
+ * 转换公司名称，中文括号转为英文括号
+ * @param {string} name
+ * @returns
+ */
+export function companyNameConvert(name) {
+  return name.replaceAll("（", "(").replaceAll("）", ")");
 }

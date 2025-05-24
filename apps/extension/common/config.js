@@ -63,6 +63,7 @@ export const COMPANY_TAG_MAX_EXPORT_SIZE = 10000;
 export const JOB_SNAPSHOT_MAX_EXPORT_SIZE = 100;
 //职位快照全数据数据库处理最大记录条数，如果处理的记录数过大（由于content字段尺寸较大导致的内存错误）程序会报错
 export const JOB_SNAPSHOT_FULL_FETCH_OR_INSERT_MAX_BATCH_SIZE = 10;
+export const COMPANY_COMMENT_MAX_EXPORT_SIZE = 10000;
 
 // Dev Config
 export const ENABLE_SQL_AUTO_EXPLAIN = false;

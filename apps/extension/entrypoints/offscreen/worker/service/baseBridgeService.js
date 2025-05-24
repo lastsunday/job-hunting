@@ -34,7 +34,7 @@ export const addServiceMethod = ({ bridgeService = null, methodName = null, meth
     try {
       await postSuccessMessage(message, await methodFunction({ param }));
     } catch (e) {
-      await postErrorMessage(message, `[worker] ${targetMethodName} error : ` + e.message);
+      await postErrorMessage(message, `[worker] ${targetMethodName} error : ` + e);
     }
   };
 };
@@ -48,7 +48,7 @@ export const addTransactionServiceMethod = ({ bridgeService = null, methodName =
         await postSuccessMessage(message, await methodFunction({ param, tx }));
       });
     } catch (e) {
-      await postErrorMessage(message, `[worker] ${targetMethodName} error : ` + e.message);
+      await postErrorMessage(message, `[worker] ${targetMethodName} error : ` + e);
     }
   };
 };

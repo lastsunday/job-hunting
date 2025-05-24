@@ -10,7 +10,7 @@ import BbsView from './pages/BbsView';
 import DashboardView from './pages/DashboardView';
 import FileView from './pages/FileView';
 import SettingView from './pages/SettingView';
-import SystemView from './pages/SystemView';
+import DatabaseView from './pages/DatabaseView';
 import AutomateView from './pages/assistant/AutomateView';
 import FavoriteJobView from './pages/assistant/FavoriteJobView';
 import HistoryJobView from './pages/assistant/HistoryJobView';
@@ -33,6 +33,8 @@ import JobSnapshotView from './pages/data/JobSnapshotView';
 import JobSnapshotWelcomeView from './pages/jobSnapshot/WelcomeView';
 import useJobSnapshotStore from './store/JobSnapshotStore';
 import JobPublicView from './pages/data/JobPublicView';
+import DataManagementView from './pages/DataManagementView';
+import CompanyCommentView from './pages/data/CompanyCommentView';
 const App: React.FC = () => {
   const [init, setInit] = useState(false);
 
@@ -80,6 +82,13 @@ const App: React.FC = () => {
           <Route path="assistant/favoriteJob" element={<FavoriteJobView />} />
           <Route path="assistant/historyJob" element={<HistoryJobView />} />
           <Route path="assistant/automate" element={<AutomateView />} />
+          <Route path="assistant/analysisWelcome" element={<AnalysisWelcomeView />} />
+          <Route path="assistant/analysisSetting" element={<AnalysisSettingView />} />
+          <Route
+            path="assistant/jobSnapshotSetting"
+            element={<JobSnapshotWelcomeView />}
+          />
+          <Route path="assistant/jobSnapshot" element={<JobSnapshotView />} />
           <Route path="bbs" element={<BbsView />} />
           <Route path="data/job" element={<JobView />} />
           <Route path="data/jobSnapshot" element={<JobSnapshotView />} />
@@ -88,8 +97,7 @@ const App: React.FC = () => {
           <Route path="data/jobTag" element={<JobTagView />} />
           <Route path="data/companyTag" element={<CompanyTagView />} />
           <Route path="data/jobPublic" element={<JobPublicView />} />
-          <Route path="analysisPlan/analysisWelcome" element={<AnalysisWelcomeView />} />
-          <Route path="analysisPlan/analysisSetting" element={<AnalysisSettingView />} />
+          <Route path="data/companyComment" element={<CompanyCommentView />} />
           <Route
             path="dataSharePlan/dataSharePlanWelcome"
             element={<DataSharePlanWelcomeView />}
@@ -98,15 +106,12 @@ const App: React.FC = () => {
             path="task/taskStatistic"
             element={<TaskStatisticView />}
           />
-          <Route
-            path="jobSnapshotSetting"
-            element={<JobSnapshotWelcomeView />}
-          />
           <Route path="task/taskDetail" element={<TaskDetailView />} />
           <Route path="datasource/manager" element={<DataSourceView />} />
-          <Route path="file" element={<FileView />} />
-          <Route path="system" element={<SystemView />} />
-          <Route path="setting" element={<SettingView />} />
+          <Route path="system/file" element={<FileView />} />
+          <Route path="system/database" element={<DatabaseView />} />
+          <Route path="system/setting" element={<SettingView />} />
+          <Route path="system/dataManagement" element={<DataManagementView />} />
           <Route path="*" element={<DashboardView />} />
         </Route>
       </Routes>

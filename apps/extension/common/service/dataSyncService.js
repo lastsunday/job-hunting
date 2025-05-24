@@ -49,6 +49,10 @@ export async function getMergeDataListForCompany(items, idColumn, getByIdsCallba
   });
 }
 
+export async function getMergeDataListForCompanyComment(items, idColumn, getByIdsCallback) {
+  return await getMergeDataList(items, idColumn, getByIdsCallback);
+}
+
 export async function getMergeDataListForJob(items, idColumn, getByIdsCallback) {
   return await getMergeDataList(items, idColumn, getByIdsCallback, getValidJobData);
 }

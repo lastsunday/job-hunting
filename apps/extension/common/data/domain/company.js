@@ -1,3 +1,5 @@
+import { genSha256, companyNameConvert } from "@/common/utils";
+
 export class Company {
   /**
    * 编号
@@ -105,4 +107,13 @@ export class Company {
   sourceRefreshDatetime;
   createDatetime;
   updateDatetime;
+}
+
+export const genId = (item) => {
+  return genIdByCompanyName(item.companyName);
+}
+
+export const genIdByCompanyName = (companyName) => {
+  let idShaContent = companyNameConvert(companyName);
+  return genSha256(idShaContent) + "";
 }

@@ -19,6 +19,7 @@ import logo from '../assets/logo.svg';
 import useAnalysisStore from '../store/AnalysisStore';
 import useJobSnapshotStore from '../store/JobSnapshotStore';
 import HeaderRight from './HeaderRight';
+import { Children } from 'react';
 const { Header, Sider, Content } = Layout;
 
 const siderStyle: React.CSSProperties = {
@@ -54,9 +55,9 @@ const RootLayout: React.FC = () => {
 
   const genAnalysisMenu = () => {
     if (analysisConfig.enable) {
-      return [{ key: 'analysisSetting', label: '设置' }];
+      return [{ icon: <div className="i-mdi:think-outline" />, key: 'analysisSetting', label: '职位分析' }];
     } else {
-      return [{ key: 'analysisWelcome', label: '欢迎使用' }];
+      return [{ icon: <div className="i-mdi:think-outline" />, key: 'analysisWelcome', label: '职位分析' }];
     }
   };
 
@@ -79,6 +80,14 @@ const RootLayout: React.FC = () => {
           { key: 'favoriteJob', label: '职位偏好' },
           { key: 'historyJob', label: '浏览历史' },
           { key: 'automate', label: '自动化' },
+          ...genAnalysisMenu(),
+          jobSnapshotConfig.enable
+            ? { key: 'jobSnapshot', icon: <HistoryOutlined />, label: '职位快照' }
+            : {
+              key: 'jobSnapshotSetting',
+              icon: <HistoryOutlined />,
+              label: '职位快照',
+            },
         ],
       },
       {
@@ -100,21 +109,9 @@ const RootLayout: React.FC = () => {
           { key: 'companyTag', label: '公司标签' },
           { key: 'jobTag', label: '职位标签' },
           { key: 'jobPublic', label: '职位公开数据' },
+          { key: 'companyComment', label: '公司评论' },
         ],
       },
-      {
-        key: 'analysisPlan',
-        icon: <div className="i-mdi:think-outline" />,
-        label: '职位分析',
-        children: [...genAnalysisMenu()],
-      },
-      jobSnapshotConfig.enable
-        ? null
-        : {
-          key: 'jobSnapshotSetting',
-          icon: <HistoryOutlined />,
-          label: '职位快照',
-        },
       {
         key: 'dataSource',
         icon: <DatabaseOutlined />,
@@ -128,19 +125,31 @@ const RootLayout: React.FC = () => {
         children: [...genTaskMenu()],
       },
       {
-        key: 'file',
-        icon: <FileOutlined />,
-        label: '文件',
-      },
-      {
         key: 'system',
         icon: <DesktopOutlined />,
         label: '系统',
-      },
-      {
-        key: 'setting',
-        icon: <SettingOutlined />,
-        label: '设置',
+        children: [
+          {
+            key: 'setting',
+            icon: <SettingOutlined />,
+            label: '设置',
+          },
+          {
+            key: 'dataManagement',
+            icon: <SettingOutlined />,
+            label: '数据管理',
+          },
+          {
+            key: 'database',
+            icon: <DatabaseOutlined />,
+            label: '数据库',
+          },
+          {
+            key: 'file',
+            icon: <FileOutlined />,
+            label: '文件',
+          },
+        ],
       },
     ];
     setMenuItems(menu);

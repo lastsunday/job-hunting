@@ -220,6 +220,21 @@ test('database init correct', async () => {
         'create_datetime',
         'update_datetime'
       ]
+    },
+    company_comment:
+    {
+      columns: [
+        'id',
+        'company_id',
+        'company_name',
+        'comment',
+        'emotion',
+        'source_type',
+        'source',
+        'source_data_name',
+        'create_datetime',
+        'update_datetime'
+      ]
     }
   }
   const db = await getDb({ dataDir: 'memory://' });

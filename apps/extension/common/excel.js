@@ -4,8 +4,9 @@ import { JobTagBO } from "./data/bo/jobTagBO";
 import { Job } from "./data/domain/job";
 import { JobSnapshot } from "./data/domain/jobSnapshot";
 import { JobPublic } from "./data/domain/jobPublic";
-import { convertDateStringToDateObject, dateToStr, genIdFromText } from "./utils";
+import { convertDateStringToDateObject, dateToStr, genIdFromText, genSha256 } from "./utils";
 import { utils, writeXLSX } from "xlsx";
+import { CompanyComment, genId as companyCommentGenId } from "./data/domain/companyComment";
 
 const HEADER_VERSION_PREFIX = "__VERSION_";
 
@@ -357,6 +358,50 @@ export const companyExcelDataToObjectArray = (data, datetime) => {
     companyBOList.push(item);
   }
   return companyBOList;
+}
+
+export const COMPANY_COMMENT_FILE_HEADER = [
+  [
+    "公司",
+    "评论",
+  ]
+];
+
+export const companyCommentDataToExcelJSONArray = (list) => {
+  const result = [];
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    const obj = {
+      公司: item.companyName,
+      评论: item.comment,
+    };
+    fillDataVersion(obj, COMPANY_COMMENT_FILE_HEADER);
+    result.push(obj);
+  }
+  return result;
+}
+
+export const companyCommentExcelDataToObjectArray = (data) => {
+  const jobList = [];
+  for (let i = 0; i < data.length; i++) {
+    const dataItem = data[i];
+    const companyNameString = dataItem['公司'];
+    const comment = dataItem['评论'];
+    if (comment) {
+      const splitCompanyArray = companyNameString.split("\n");
+      for (let n = 0; n < splitCompanyArray.length; n++) {
+        const companyName = splitCompanyArray[n];
+        if (companyName) {
+          const item = new CompanyComment();
+          item.companyName = companyName.trim();
+          item.comment = (comment + "").trim();
+          item.id = companyCommentGenId(item);
+          jobList.push(item);
+        }
+      }
+    }
+  }
+  return jobList;
 }
 
 export const COMPANY_TAG_FILE_HEADER = [

@@ -1,7 +1,7 @@
 import { JobPublicSearchBO } from "@/common/data/bo/jobPublicSearchBO";
 import { JobPublic } from "@/common/data/domain/jobPublic";
 import { convertRows, getDb } from "../database";
-import { BaseService } from "../service/baseService";
+import { BaseService } from "./baseService";
 import { SERVICE_INSTANCE as JOB_SERVICE_INSTANCE } from "../service/jobService";
 import BaseBridgeService, { addTransactionServiceMethod, fillBaseServiceMethod } from "./baseBridgeService";
 import { genWhereSql } from "./sqlUtil";
