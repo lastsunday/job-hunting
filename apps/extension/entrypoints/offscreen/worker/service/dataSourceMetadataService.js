@@ -2,7 +2,7 @@ import { DataSourceMetadataSearchBO } from "@/common/data/bo/dataSourceMetadataS
 import { DataSourceMetadata } from "@/common/data/domain/dataSourceMetadata";
 import BaseBridgeService, { fillBaseServiceMethod } from "./baseBridgeService";
 import { BaseService } from "./baseService";
-import { genInTextSql, genLikeSql, genRangeDatetimeConditionSql } from "./sqlUtil";
+import { genEqValueConditionSql, genInTextSql, genLikeSql, genRangeDatetimeConditionSql } from "./sqlUtil";
 const TABLE_NAME = "data_source_metadata";
 const TABLE_ID_COLUMN = "id";
 const SERVICE_NAME = "dataSourceMetadata";
@@ -17,6 +17,8 @@ export const SERVICE_INSTANCE = new BaseService(TABLE_NAME, TABLE_ID_COLUMN,
     let whereCondition = "".concat(
       genInTextSql(param.id, "id"),
       genLikeSql(param.name, "name"),
+      genEqValueConditionSql(param.enable, "enable"),
+      genEqValueConditionSql(param.autoUpdateEnable, "auto_update_enable"),
       genRangeDatetimeConditionSql(param.startDatetimeForCreate, param.endDatetimeForCreate, 'create_datetime'),
       genRangeDatetimeConditionSql(param.startDatetimeForUpdate, param.endDatetimeForUpdate, 'update_datetime'),
     );

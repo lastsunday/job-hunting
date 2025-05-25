@@ -166,9 +166,9 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
   ) => {
     searchParam.pageNum = pagination.current;
     searchParam.pageSize = pagination.pageSize;
-    if (tableParams.sortField && tableParams.sortOrder && convertSortField) {
-      searchParam.orderByColumn = convertSortField(tableParams.sortField);
-      if (tableParams.sortOrder === 'descend') {
+    if (sorter.field && sorter.order && convertSortField) {
+      searchParam.orderByColumn = convertSortField(sorter.field);
+      if (sorter.order === 'descend') {
         searchParam.orderBy = 'DESC';
       } else {
         searchParam.orderBy = 'ASC';

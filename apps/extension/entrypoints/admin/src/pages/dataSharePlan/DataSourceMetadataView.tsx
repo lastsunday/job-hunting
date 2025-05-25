@@ -160,6 +160,8 @@ const DataSourceMetadataView: React.FC = () => {
       dataIndex: 'seq',
       render: (value: string) => <Text>{value}</Text>,
       minWidth: 100,
+      sorter: true,
+      defaultSortOrder: "ascend"
     },
     {
       title: '自动更新',
@@ -234,9 +236,6 @@ const DataSourceMetadataView: React.FC = () => {
         search: async (searchParam) => {
           return await DataSourceMetadataApi.dataSourceMetadataSearch(searchParam);
         },
-        orderByColumn: "seq",
-        searchParam: {
-        }
       }}
       rowKeyFunction={(record) => { return record.id }}
     ></BasicTable>

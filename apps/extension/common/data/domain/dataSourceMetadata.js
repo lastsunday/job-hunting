@@ -64,6 +64,10 @@ export class ConfigGithubGraphqlSearchRepoConfig {
   taskTypeList = [];
 }
 
+export class TaskType {
+  type;
+}
+
 export class ConfigGitMetadata {
   url;
   filePath;

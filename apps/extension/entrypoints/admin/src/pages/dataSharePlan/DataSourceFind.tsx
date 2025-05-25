@@ -1,5 +1,6 @@
-import { DEFAULT_DATA_REPO, DEFAULT_PUBLIC_DATA_REPO } from "@/common/config";
-import { TASK_TYPE_ALL_PRIVATE_DATA_DOWNLOAD, TASK_TYPE_ALL_PUBLIC_DATA_DOWNLOAD } from "@/common";
+import { DataSourceMetadataApi } from "@/common/api";
+import { DataSourceMetadataSearchBO } from "@/common/data/bo/dataSourceMetadataSearchBO";
+import { TYPE_GITHUB_GRAPHQL_SEARCH_REPO } from "@/common/data/domain/dataSourceMetadata";
 import {
   Flex,
 } from 'antd';
@@ -9,43 +10,86 @@ import "./DataSourceFind.css";
 export type DataSourceFindProps = {};
 const DataSourceFind: React.FC<DataSourceFindProps> = ({ }) => {
 
-  const [tabKey, setTabKey] = useState(TASK_TYPE_ALL_PUBLIC_DATA_DOWNLOAD);
+  const [tabKey, setTabKey] = useState<string>();
+
+  const [dataSourceMetadata, setDataSourceMeta] = useState([]);
+  const [idDataSourceMetadataMap, setIdDataSourceMetadataMap] = useState(new Map());
 
   const genTabContent = () => {
-    if (tabKey == TASK_TYPE_ALL_PRIVATE_DATA_DOWNLOAD) {
-      return <StandardData key={TASK_TYPE_ALL_PRIVATE_DATA_DOWNLOAD} repo={DEFAULT_DATA_REPO} config={{ taskTypeList: [{ type: TASK_TYPE_ALL_PRIVATE_DATA_DOWNLOAD }] }}></StandardData>
-    } else if (tabKey == TASK_TYPE_ALL_PUBLIC_DATA_DOWNLOAD) {
-      return <StandardData key={TASK_TYPE_ALL_PUBLIC_DATA_DOWNLOAD} repo={DEFAULT_PUBLIC_DATA_REPO} config={{ taskTypeList: [{ type: TASK_TYPE_ALL_PUBLIC_DATA_DOWNLOAD }] }}></StandardData>
+    const id = tabKey;
+    if (id) {
+      if (idDataSourceMetadataMap.has(id)) {
+        const item = idDataSourceMetadataMap.get(id);
+        if (item.type == TYPE_GITHUB_GRAPHQL_SEARCH_REPO) {
+          const config = item.config;
+          return <StandardData key={id} repo={config.repoName} config={config.config}></StandardData>
+        } else {
+          //TODO
+          throw `not support yet`;
+        }
+      } else {
+        throw `unknow data source metadata id = ${id}`;
+      }
     } else {
-      throw `unknow source type = ${tabKey}`;
+      return null;
     }
   }
 
   const onTabChange = (key: string) => {
-    setTabKey(key);
+    if (key) {
+      setTabKey(key);
+    }
+  }
+
+  const queryDataSourceMetadata = async () => {
+    const param = new DataSourceMetadataSearchBO();
+    param.enable = true;
+    param.orderByColumn = "seq";
+    param.orderBy = "ASC";
+    const result = await DataSourceMetadataApi.dataSourceMetadataSearch(param);
+    setDataSourceMeta(result.items);
+    setIdDataSourceMetadataMap(new Map(result.items.map(item => [item.id, item])));
+    if (result.items.length > 0) {
+      setTabKey(result.items[0].id);
+    }
+  }
+
+  useEffect(() => {
+    queryDataSourceMetadata();
+  }, []);
+
+  const genItems = () => {
+    let result = [];
+    if (dataSourceMetadata.length > 0) {
+      for (let i = 0; i < dataSourceMetadata.length; i++) {
+        const item = dataSourceMetadata[i];
+        if (item.type == TYPE_GITHUB_GRAPHQL_SEARCH_REPO) {
+          result.push(
+            {
+              icon: <div className={`${item.icon} tab-icon`}></div>,
+              key: item.id,
+              label: item.name,
+            }
+          );
+        } else {
+
+        }
+      }
+    }
+    return result;
   }
 
   return (
     <>
       <Flex vertical>
         <Tabs
-          defaultActiveKey={tabKey}
           onChange={onTabChange}
-          items={[
-            {
-              icon: <div className="i-material-symbols:public tab-icon"></div>,
-              key: TASK_TYPE_ALL_PUBLIC_DATA_DOWNLOAD,
-              label: "公开数据",
-            },
-            {
-              icon: <div className="i-material-symbols:private-connectivity tab-icon"></div>,
-              key: TASK_TYPE_ALL_PRIVATE_DATA_DOWNLOAD,
-              label: "私有数据",
-            },
-          ]}
+          items={genItems()}
         >
         </Tabs>
-        {genTabContent()}
+        <div key={tabKey}>
+          {genTabContent()}
+        </div>
       </Flex>
     </>
   );

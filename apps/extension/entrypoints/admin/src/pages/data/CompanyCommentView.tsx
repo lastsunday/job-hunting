@@ -199,7 +199,7 @@ const CompanyCommentView: React.FC = () => {
           <Input allowClear placeholder="请输入公司名称" />
         </Form.Item>
       </Col>,
-      <Col span={8} key="source">
+      <Col span={8} key="sourceDataName">
         <Form.Item
           name={`sourceDataName`}
           label={`数据集名称`}

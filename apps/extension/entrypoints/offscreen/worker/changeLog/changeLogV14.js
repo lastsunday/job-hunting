@@ -51,9 +51,9 @@ CREATE TABLE data_source_metadata (
 const SQL_DATA_DATA_SOURCE_METADATA = `
 INSERT INTO data_source_metadata(id,name,description,icon,type,config,data,enable,seq,auto_update_enable,create_datetime,update_datetime) VALUES 
 ('0','公开数据','标准公开数据','i-material-symbols:public','GITHUB_GRAPHQL_SEARCH_REPO',
-'{"repoName":"job-hunting-data","config":{"taskTypeList":["ALL_PUBLIC_DATA_DOWNLOAD"]}}',null,true,null,false,'2025-05-24 00:00:00','2025-05-24 00:00:00'),
+'{"repoName":"job-hunting-public-data","config":{"taskTypeList":[{"type":"ALL_PUBLIC_DATA_DOWNLOAD"}]}}',null,true,1,false,'2025-05-24 00:00:00','2025-05-24 00:00:00'),
 ('1','私有数据','标准私有数据','i-material-symbols:private-connectivity','GITHUB_GRAPHQL_SEARCH_REPO',
-'{"repoName":"job-hunting-public-data","config":{"taskTypeList":["ALL_PRIVATE_DATA_DOWNLOAD"]}}',null,true,null,false,'2025-05-24 00:00:00','2025-05-24 00:00:00');
+'{"repoName":"job-hunting-data","config":{"taskTypeList":[{"type":"ALL_PRIVATE_DATA_DOWNLOAD"}]}}',null,true,2,false,'2025-05-24 00:00:00','2025-05-24 00:00:00');
 `
 
 export class ChangeLogV14 extends ChangeLog {

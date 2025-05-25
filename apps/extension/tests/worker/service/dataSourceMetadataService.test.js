@@ -114,7 +114,7 @@ test('data source metadata service crud logic correct', async () => {
   vi.spyOn(modUtil, 'postSuccessMessage').mockImplementation(async (message, data) => {
     const item2 = data[0];
     expect(item2.name).toBe(("默认2"));
-    itemId2 = item2.id;
+    itemId2 = item2.id
   });
   await Service[Service.getMethodName(METHOD_BATCH_ADD_OR_UPDATE)]({}, { items: [item2] });
   vi.spyOn(modUtil, 'postSuccessMessage').mockImplementation(async (message, data) => {
@@ -128,6 +128,8 @@ test('data source metadata service crud logic correct', async () => {
     pageNum: 1,
     pageSize: 1,
     id: [itemId],
+    enable: true,
+    autoUpdateEnable: true,
     startDatetimeForCreate: parse("2025-05-19"),
     endDatetimeForCreate: parse("2025-05-20"),
     startDatetimeForUpdate: parse("2025-05-19"),
