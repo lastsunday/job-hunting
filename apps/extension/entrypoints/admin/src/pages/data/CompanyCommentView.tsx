@@ -113,6 +113,22 @@ const CompanyCommentView: React.FC = () => {
       minWidth: 100,
     },
     {
+      title: "情感",
+      dataIndex: 'emotion',
+      render: (value: string) =>
+        <Popover
+          content={<Text copyable>{value}</Text>}
+          trigger="click"
+        >
+          <Text
+            className={styles.comment}
+            title={`${value}`}
+            ellipsis
+          >{value}</Text>
+        </Popover>,
+      minWidth: 100,
+    },
+    {
       title: '数据集名称',
       dataIndex: 'sourceDataName',
       render: (value: string) =>
