@@ -314,3 +314,19 @@ export function cleanHTMLTag(value) {
 export function companyNameConvert(name) {
   return name.replaceAll("（", "(").replaceAll("）", ")");
 }
+
+export function clone(obj) {
+  return obj ? JSON.parse(JSON.stringify(obj)) : null;
+}
+
+export function toJSONString(obj) {
+  return obj ? JSON.stringify(obj) : "";
+}
+
+export function toJSONStringPretty(obj) {
+  return obj ? JSON.stringify(obj, null, 2) : "";
+}
+
+export function toJSON(str) {
+  return str ? JSON.parse(str) : null;
+}

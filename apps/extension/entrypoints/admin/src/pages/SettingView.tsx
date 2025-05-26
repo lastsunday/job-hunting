@@ -1,12 +1,5 @@
-import { DATA_TYPE_NAME_JOB_SNAPSHOT } from '@/common';
 import {
-  APP_ID,
-  COMPANY_MAX_EXPORT_SIZE,
-  COMPANY_TAG_MAX_EXPORT_SIZE,
-  JOB_MAX_EXPORT_SIZE,
-  JOB_PUBLIC_MAX_EXPORT_SIZE,
-  JOB_SNAPSHOT_MAX_EXPORT_SIZE,
-  JOB_TAG_MAX_EXPORT_SIZE,
+  APP_ID
 } from '@/common/config';
 import { CheckCard } from '@ant-design/pro-components';
 import {
@@ -29,10 +22,8 @@ import { useData } from '../hooks/data';
 import useAnalysisStore from '../store/AnalysisStore';
 import useAuthStore from '../store/AuthStore';
 import useDataSharePlanStore from '../store/DataSharePlanStore';
-import useSystemStore from '../store/SystemStore';
-import DataBackupRestore from './setting/DataBackupRestore';
-import DatabaseBackupRestore from './setting/DatabaseBackupRestore';
 import useJobSnapshotStore from '../store/JobSnapshotStore';
+import useSystemStore from '../store/SystemStore';
 const { Text, Link } = Typography;
 
 const version = __APP_VERSION__;

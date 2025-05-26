@@ -1,5 +1,5 @@
 import { DataSourceMetadataApi } from "@/common/api";
-import { DataSourceMetadata } from "@/common/data/domain/dataSourceMetadata";
+import { DataSourceMetadata, TYPE_GIT_METADATA } from "@/common/data/domain/dataSourceMetadata";
 import { dateToStr, emptyReturnUndefined } from "@/common/utils";
 import {
   Col,
@@ -10,12 +10,14 @@ import {
   TableColumnsType,
   Typography, message
 } from "antd";
-import { Popover } from "antd/lib";
+import { Button, Modal, Popover, Space } from "antd/lib";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import BasicTable from "../../components/BasicTable";
 import { useDataSourceMetadata } from "../../hooks/dataSourceMetadata";
 import styles from "./DataSourceMetadataView.module.css";
+import DataSourceMetadataEditView from "./DataSourceMetadataEditView";
+import { clone, toJSONStringPretty } from "@/common/utils";
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
 const { convertSortField } = useDataSourceMetadata();
@@ -46,6 +48,9 @@ const DataSourceMetadataView: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const tableRef = useRef(null);
 
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editData, setEditData] = useState<DataSourceMetadata>();
+  const [mode, setMode] = useState<"add" | "update">("update");
   const columns: TableColumnsType<DataSourceMetadata> = [
     {
       title: '编号',
@@ -183,6 +188,18 @@ const DataSourceMetadataView: React.FC = () => {
       minWidth: 100,
       sorter: true,
     },
+    {
+      title: '操作',
+      key: 'action',
+      fixed: "right",
+      render: (_, record) => (
+        <Space size="middle">
+          <Button type="link" onClick={() => {
+            onEdit(record);
+          }}>编辑</Button>
+        </Space>
+      ),
+    },
   ];
 
   const searchFields = {
@@ -223,11 +240,43 @@ const DataSourceMetadataView: React.FC = () => {
       </Col>,]
   }
 
+  const onAdd = () => {
+    setMode("add");
+    setEditData({
+      type: TYPE_GIT_METADATA,
+      enable: true,
+      autoUpdateEnable: true,
+    });
+    setIsEditModalOpen(true);
+  }
+
+  const onEdit = (record: DataSourceMetadata) => {
+    setMode("update");
+    const cloneRecord = clone(record);
+    cloneRecord.config = toJSONStringPretty(cloneRecord.config);
+    cloneRecord.data = toJSONStringPretty(cloneRecord.data) ?? "";
+    setEditData(cloneRecord);
+    setIsEditModalOpen(true);
+  }
+
+  const onSave = async (data: DataSourceMetadata) => {
+    await DataSourceMetadataApi.dataSourceMetadataAddOrUpdate(data);
+    setIsEditModalOpen(false);
+    tableRef?.current.refresh();
+  }
+
+  const onDelete = async (keys: React.Key[]) => {
+    await DataSourceMetadataApi.dataSourceMetadataDeleteByIds(keys);
+    tableRef?.current.refresh();
+  }
+
   return <>
     {contextHolder}
     <BasicTable
       ref={tableRef}
-      mode={["r"]}
+      mode={["c", "r", "d"]}
+      onAdd={onAdd}
+      onDelete={onDelete}
       searchProps={{
         columns,
         searchFields,
@@ -239,6 +288,24 @@ const DataSourceMetadataView: React.FC = () => {
       }}
       rowKeyFunction={(record) => { return record.id }}
     ></BasicTable>
+    <Modal
+      title={`${mode == "update" ? "编辑" : "新增"}`}
+      open={isEditModalOpen}
+      onCancel={() => {
+        setIsEditModalOpen(false);
+      }}
+      maskClosable={false}
+      footer={null}
+      style={{ maxWidth: "1000px" }}
+      width="80%"
+      destroyOnClose
+    >
+      <DataSourceMetadataEditView
+        mode={mode}
+        data={editData}
+        onSave={onSave}
+      ></DataSourceMetadataEditView>
+    </Modal>
   </>
 }
 

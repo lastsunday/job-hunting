@@ -1,12 +1,16 @@
 import { DataSourceMetadataApi } from "@/common/api";
 import { DataSourceMetadataSearchBO } from "@/common/data/bo/dataSourceMetadataSearchBO";
-import { TYPE_GITHUB_GRAPHQL_SEARCH_REPO } from "@/common/data/domain/dataSourceMetadata";
+import { TYPE_GITHUB_GRAPHQL_SEARCH_REPO, TYPE_GIT_METADATA } from "@/common/data/domain/dataSourceMetadata";
 import {
   Flex,
+  Typography,
 } from 'antd';
-import { Tabs } from 'antd/lib';
+import { Popover, Tabs } from 'antd/lib';
 import StandardData from './dataSource/StandardData';
+const { Text } = Typography;
 import "./DataSourceFind.css";
+import CustomData from "./dataSource/CustomData";
+import { warnLog } from "@/common/log";
 export type DataSourceFindProps = {};
 const DataSourceFind: React.FC<DataSourceFindProps> = ({ }) => {
 
@@ -24,8 +28,7 @@ const DataSourceFind: React.FC<DataSourceFindProps> = ({ }) => {
           const config = item.config;
           return <StandardData key={id} repo={config.repoName} config={config.config}></StandardData>
         } else {
-          //TODO
-          throw `not support yet`;
+          return <CustomData key={id} data={item.data}></CustomData>
         }
       } else {
         throw `unknow data source metadata id = ${id}`;
@@ -68,11 +71,38 @@ const DataSourceFind: React.FC<DataSourceFindProps> = ({ }) => {
             {
               icon: <div className={`${item.icon} tab-icon`}></div>,
               key: item.id,
-              label: item.name,
+              label:
+                <Popover
+                  content={<Text>{item.name}</Text>}
+                  trigger="hover"
+                >
+                  <Text
+                    title={`${item.name}`}
+                    ellipsis
+                  >{item.name}</Text>
+                </Popover>,
+            }
+          );
+        } else if (item.type == TYPE_GIT_METADATA) {
+          result.push(
+            {
+              icon: <div className={`${item.icon} tab-icon`}></div>,
+              key: item.id,
+              label:
+                <Popover
+                  content={<Text>{item.name}</Text>}
+                  trigger="hover"
+                >
+                  <Text
+                    title={`${item.name}`}
+                    ellipsis
+                  >{item.name}</Text>
+                </Popover>,
             }
           );
         } else {
-
+          //skip
+          warnLog(`unknow metadata type =${item.type}`);
         }
       }
     }

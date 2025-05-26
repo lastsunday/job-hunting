@@ -88,7 +88,7 @@ const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
         </>
       );
     } else {
-      if (dataSharePartnerMap.has(item.owner.login)) {
+      if (dataSharePartnerMap.has(`${item.owner.login}${repo}`)) {
         return (
           <>
             <Tooltip title="已添加到伙伴列表">
@@ -146,7 +146,7 @@ const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
       title: '数据任务',
       dataIndex: "id",
       render: (value: string) => {
-        return [...getTaskTypeListFromDataSharePartnerConfig(config).map(item => <Tag className={styles.tag} color="#108ee9">{getDisplayNameByTaskType(item.type)}</Tag>)];
+        return [...getTaskTypeListFromDataSharePartnerConfig(config).map(item => <Tag key={item.type} className={styles.tag} color="#108ee9">{getDisplayNameByTaskType(item.type)}</Tag>)];
       },
       minWidth: 150,
     },
@@ -207,7 +207,7 @@ const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
           const dataSharePartnerMap = new Map();
           for (let i = 0; i < partnerResultItems.length; i++) {
             const item = partnerResultItems[i];
-            dataSharePartnerMap.set(item.username, null);
+            dataSharePartnerMap.set(`${item.username}${item.reponame}`, null);
           }
           setDataSharePartnerMap(dataSharePartnerMap);
         }
@@ -299,16 +299,16 @@ const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
         <Flex vertical gap={10}>
           <Flex ref={topRef} vertical gap={10}>
             <Flex justify="end">
-              <Flex flex={1}>
-                <Button
-                  type="primary"
-                  loading={addLoading}
-                  disabled={!hasSelected}
-                  onClick={onAdd}
-                >
-                  添加
-                </Button>
-              </Flex>
+              <Button
+                type="primary"
+                loading={addLoading}
+                disabled={!hasSelected}
+                onClick={onAdd}
+              >
+                添加
+              </Button>
+            </Flex>
+            <Flex justify='end'>
               <Pagination
                 simple
                 current={currentPage}

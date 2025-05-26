@@ -61,7 +61,7 @@ export class ConfigGithubGraphqlSearchRepo {
 }
 
 export class ConfigGithubGraphqlSearchRepoConfig {
-  taskTypeList = [];
+  taskTypeList = [new TaskType()];
 }
 
 export class TaskType {
@@ -74,7 +74,7 @@ export class ConfigGitMetadata {
 }
 
 export class Data {
-  sourceList = [new Source()];
+  source = [new Source()];
 }
 
 export class Source {
@@ -83,12 +83,17 @@ export class Source {
   username;
   reponame;
   description;
-  config = new SourceConfig();
+  config = [new SourceConfig()];
 }
 
 export class SourceConfig {
+  taskTypeList = [new CustomTaskType()];
+}
+
+export class CustomTaskType {
   name;
   type;
   fileName;
   emotion;
+  description;
 }

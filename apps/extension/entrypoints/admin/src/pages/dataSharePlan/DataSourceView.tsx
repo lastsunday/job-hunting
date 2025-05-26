@@ -36,9 +36,28 @@ const DataSourceView: React.FC = () => {
   const [isDataSourceEditModalOpen, setIsDataSourceEditModalOpen] = useState(false);
   const [editDataSourceData, setEditDataSourceData] = useState<DataSharePartner>();
   const [mode, setMode] = useState<"add" | "update">("update");
-  const tableRef = useRef();
+  const tableRef = useRef(null);
 
   const [isDataSourceFindModalOpen, setIsDataSourceFindModalOpen] = useState(false);
+  const genTaskTypeTag = (taskTypeList) => {
+    return taskTypeList ?
+      taskTypeList.map(item =>
+        <Popover
+          content={<Flex vertical>
+            <Tag className={styles.tag} color="#108ee9">
+              {getDisplayNameByTaskType(item.type)}
+            </Tag>
+            {item.description ? <Text>{item.description}</Text> : null}
+          </Flex>}
+          trigger="hover"
+        >
+          <Tag className={styles.tag} color={item.name ? "#f50" : "#108ee9"}>
+            {item.name ? item.name : getDisplayNameByTaskType(item.type)}
+          </Tag>
+        </Popover>
+      )
+      : <Tag className={styles.tag}>缺省值</Tag>;
+  }
 
   const searchFields =
   {
@@ -114,7 +133,7 @@ const DataSourceView: React.FC = () => {
     {
       title: '配置',
       dataIndex: 'config',
-      render: (value: Config) => <Flex wrap> {value?.taskTypeList ? value.taskTypeList.map(item => <Tag className={styles.tag} color="#108ee9">{getDisplayNameByTaskType(item.type)}</Tag>) : <Tag className={styles.tag}>缺省值</Tag>}</Flex>,
+      render: (value: Config) => <Flex wrap> {genTaskTypeTag(value.taskTypeList)}</Flex>,
       minWidth: 100,
     },
     {

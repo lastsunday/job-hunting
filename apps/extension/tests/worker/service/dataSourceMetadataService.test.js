@@ -81,12 +81,14 @@ test('data source metadata service crud logic correct', async () => {
               type: "COMPANY_COMMENT_DOWNLOAD",
               fileName: "mine_field_shenzhen",
               emotion: -1,
+              description: "来自网络收集",
             },
             {
               name: "广州避雷公司名单",
               type: "COMPANY_COMMENT_DOWNLOAD",
               fileName: "mine_field_guangzhou",
               emotion: -1,
+              description: "来自网络收集",
             }
           ]
         },
@@ -118,7 +120,7 @@ test('data source metadata service crud logic correct', async () => {
   });
   await Service[Service.getMethodName(METHOD_BATCH_ADD_OR_UPDATE)]({}, { items: [item2] });
   vi.spyOn(modUtil, 'postSuccessMessage').mockImplementation(async (message, data) => {
-    expect(data.total).toBe(4);
+    expect(data.total).toBe(5);
   });
   await Service[Service.getMethodName(METHOD_SEARCH)]({}, { pageNum: 1, pageSize: 1 });
   vi.spyOn(modUtil, 'postSuccessMessage').mockImplementation(async (message, data) => {
@@ -150,7 +152,7 @@ test('data source metadata service crud logic correct', async () => {
   });
   await Service[Service.getMethodName(METHOD_DELETE_BY_ID)]({}, itemId2);
   vi.spyOn(modUtil, 'postSuccessMessage').mockImplementation(async (message, data) => {
-    expect(data.total).toBe(3);
+    expect(data.total).toBe(4);
   });
   await Service[Service.getMethodName(METHOD_SEARCH)]({}, { pageNum: 1, pageSize: 1 });
   vi.spyOn(modUtil, 'postSuccessMessage').mockImplementation(async (message, data) => {
@@ -158,7 +160,7 @@ test('data source metadata service crud logic correct', async () => {
   });
   await Service[Service.getMethodName(METHOD_DELETE_BY_IDS)]({}, [itemId]);
   vi.spyOn(modUtil, 'postSuccessMessage').mockImplementation(async (message, data) => {
-    expect(data.total).toBe(2);
+    expect(data.total).toBe(3);
   });
   await Service[Service.getMethodName(METHOD_SEARCH)]({}, { pageNum: 1, pageSize: 1 });
 })
