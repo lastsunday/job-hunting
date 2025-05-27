@@ -1,0 +1,43 @@
+{
+  "data": {
+    "source": [
+      {
+        "name": "lastsunday",
+        "config": {
+          "taskTypeList": [
+            {
+              "name": "深圳避雷公司名单",
+              "type": "COMPANY_COMMENT_DOWNLOAD",
+              "emotion": "NEGATIVE",
+              "fileName": "mine_field_shenzhen",
+              "description": "来自网络收集"
+            },
+            {
+              "name": "广州避雷公司名单",
+              "type": "COMPANY_COMMENT_DOWNLOAD",
+              "emotion": "NEGATIVE",
+              "fileName": "mine_field_guangzhou",
+              "description": "来自网络收集"
+            }
+          ]
+        },
+        "repoType": "GITHUB",
+        "reponame": "job-hunting-source",
+        "username": "lastsunday",
+        "description": "lastsunday数据源"
+      }
+    ]
+  },
+  "icon": "i-material-symbols:public",
+  "name": "预设数据源",
+  "type": "GIT_METADATA",
+  "config": {
+    "config": {
+      "url": "https://github.com/lastsunday/job-hunting-data-source",
+      "filePath": "metadata.json"
+    }
+  },
+  "enable": true,
+  "description": "预设数据源",
+  "autoUpdateEnable": true
+}

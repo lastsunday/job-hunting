@@ -13,3 +13,11 @@
 .data {
   max-width: 300px !important;
 }
+
+.icon {
+  width: 25px;
+  height: 25px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+}

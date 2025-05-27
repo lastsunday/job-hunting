@@ -7,6 +7,7 @@ import {
 } from '@/common/config';
 import { SearchDataSharePartnerBO } from '@/common/data/bo/searchDataSharePartnerBO';
 import { Config, DataSharePartner } from '@/common/data/domain/dataSharePartner';
+import { useTask } from "@/common/hooks/task";
 import { dateToStr } from '@/common/utils';
 import {
   Avatar,
@@ -21,22 +22,22 @@ import {
   Typography,
   message,
 } from 'antd';
+import { Tag } from 'antd/lib';
 import { TableRowSelection } from 'antd/lib/table/interface';
 import dayjs from 'dayjs';
 import { useShallow } from 'zustand/shallow';
 import { PageInfo } from '../../../data/PageInfo';
 import { Owner, RepositoryData } from '../../../data/RepositoryData';
+import { useTask as useTaskInner } from "../../../hooks/task";
 import useAuthStore from '../../../store/AuthStore';
 import styles from './StandardData.module.css';
-import { Tag } from 'antd/lib';
 const { Text } = Typography;
-import { useTask } from "@/common/hooks/task";
-import { useTask as useTaskInner } from "../../../hooks/task";
 export type StandardDataProps = {
   repo: string;
   config: Config;
+  onAddCallback?: () => void;
 };
-const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
+const StandardData: React.FC<StandardDataProps> = ({ repo, config, onAddCallback }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [dataSource, setDataSource] = useState<RepositoryData[]>([]);
   const [refresh, setRefresh] = useState(false);
@@ -284,6 +285,7 @@ const StandardData: React.FC<StandardDataProps> = ({ repo, config }) => {
         entityList.push(entity);
       }
       await DataSharePartnerApi.dataSharePartnerBatchAddOrUpdate(entityList);
+      onAddCallback ? onAddCallback() : null;
     } finally {
       setAddLoading(false);
     }

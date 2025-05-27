@@ -1,18 +1,21 @@
 import { DataSourceMetadataApi } from "@/common/api";
 import { DataSourceMetadataSearchBO } from "@/common/data/bo/dataSourceMetadataSearchBO";
 import { TYPE_GITHUB_GRAPHQL_SEARCH_REPO, TYPE_GIT_METADATA } from "@/common/data/domain/dataSourceMetadata";
+import { warnLog } from "@/common/log";
 import {
   Flex,
   Typography,
 } from 'antd';
 import { Popover, Tabs } from 'antd/lib';
-import StandardData from './dataSource/StandardData';
-const { Text } = Typography;
-import "./DataSourceFind.css";
 import CustomData from "./dataSource/CustomData";
-import { warnLog } from "@/common/log";
-export type DataSourceFindProps = {};
-const DataSourceFind: React.FC<DataSourceFindProps> = ({ }) => {
+import StandardData from './dataSource/StandardData';
+import "./DataSourceFind.css";
+import styles from "./DataSourceFind.module.css";
+const { Text } = Typography;
+export type DataSourceFindProps = {
+  onAddCallback?: () => void
+};
+const DataSourceFind: React.FC<DataSourceFindProps> = ({ onAddCallback }) => {
 
   const [tabKey, setTabKey] = useState<string>();
 
@@ -26,9 +29,9 @@ const DataSourceFind: React.FC<DataSourceFindProps> = ({ }) => {
         const item = idDataSourceMetadataMap.get(id);
         if (item.type == TYPE_GITHUB_GRAPHQL_SEARCH_REPO) {
           const config = item.config;
-          return <StandardData key={id} repo={config.repoName} config={config.config}></StandardData>
+          return <StandardData onAddCallback={onAddCallback} key={id} repo={config.repoName} config={config.config}></StandardData>
         } else {
-          return <CustomData key={id} data={item.data}></CustomData>
+          return <CustomData onAddCallback={onAddCallback} key={id} data={item.data}></CustomData>
         }
       } else {
         throw `unknow data source metadata id = ${id}`;
@@ -69,7 +72,7 @@ const DataSourceFind: React.FC<DataSourceFindProps> = ({ }) => {
         if (item.type == TYPE_GITHUB_GRAPHQL_SEARCH_REPO) {
           result.push(
             {
-              icon: <div className={`${item.icon} tab-icon`}></div>,
+              icon: <div className={styles.icon} style={{ backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(item.icon)}")` }}></div>,
               key: item.id,
               label:
                 <Popover
@@ -86,7 +89,7 @@ const DataSourceFind: React.FC<DataSourceFindProps> = ({ }) => {
         } else if (item.type == TYPE_GIT_METADATA) {
           result.push(
             {
-              icon: <div className={`${item.icon} tab-icon`}></div>,
+              icon: <div className={styles.icon} style={{ backgroundImage: `url("data:image/svg+xml,${encodeURIComponent(item.icon)}")` }}></div>,
               key: item.id,
               label:
                 <Popover

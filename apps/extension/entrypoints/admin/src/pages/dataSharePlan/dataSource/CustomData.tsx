@@ -12,14 +12,15 @@ import {
   Typography
 } from 'antd';
 import BasicTable from "../../../components/BasicTable";
+import { useTask } from "../../../hooks/task";
 import styles from "./CustomData.module.css";
 const { Text } = Typography;
-import { useTask } from "../../../hooks/task";
 const { getDisplayNameByTaskType } = useTask();
 export type CustomDataProps = {
   data: Data;
+  onAddCallback?: () => void;
 };
-const CustomData: React.FC<CustomDataProps> = ({ data }) => {
+const CustomData: React.FC<CustomDataProps> = ({ data, onAddCallback }) => {
   const [dataSource, setDataSource] = useState<Source[]>([]);
   const tableRef = useRef(null);
   const [dataSharePartnerMap, setDataSharePartnerMap] = useState<
@@ -217,6 +218,7 @@ const CustomData: React.FC<CustomDataProps> = ({ data }) => {
       entityList.push(entity);
     }
     await DataSharePartnerApi.dataSharePartnerBatchAddOrUpdate(entityList);
+    onAddCallback ? onAddCallback() : null;
     setRefresh(!refresh);
   }
 

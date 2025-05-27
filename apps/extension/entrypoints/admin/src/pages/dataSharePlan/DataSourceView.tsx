@@ -252,7 +252,9 @@ const DataSourceView: React.FC = () => {
       destroyOnClose
     >
       <DataSourceFind
-
+        onAddCallback={() => {
+          tableRef.current.refresh();
+        }}
       ></DataSourceFind>
     </Modal>
   </>

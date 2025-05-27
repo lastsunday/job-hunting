@@ -35,7 +35,6 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@electric-sql/pglite": "^0.2.17",
-    "@iconify/json": "^2.2.334",
     "@lit/react": "^1.0.7",
     "@pansy/lnglat-transform": "^1.0.3",
     "@tsparticles/react": "^3.0.0",
@@ -88,6 +87,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.26.0",
+    "@iconify/json": "^2.2.341",
     "@playwright/test": "^1.52.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@types/chrome": "^0.0.299",
