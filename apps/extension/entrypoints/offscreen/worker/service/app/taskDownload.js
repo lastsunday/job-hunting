@@ -15,7 +15,9 @@ import {
   TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD,
   TASK_TYPE_JOB_PUBLIC_DATA_MERGE,
   TASK_TYPE_JOB_TAG_DATA_DOWNLOAD,
-  TASK_TYPE_JOB_TAG_DATA_MERGE
+  TASK_TYPE_JOB_TAG_DATA_MERGE,
+  TASK_TYPE_METADATA_DATA_DOWNLOAD,
+  TASK_TYPE_METADATA_DATA_MERGE
 } from "@/common";
 import { EXCEPTION } from "@/common/api/github";
 import { TASK_DATA_DOWNLOAD_MAX_DAY } from "@/common/config";
@@ -29,7 +31,7 @@ import dayjs from "dayjs";
 import { _queryLatestTaskDataDownload, _searchTaskDataDownload, _taskDataDownloadGetById } from "../taskDataDownloadService";
 import { getPathByDatetime, isLogin } from "./index";
 import { saveFileAndCalculateDataMergeTask, saveTask } from "./taskDownloadLogic";
-import { filterAndSortAscDateList, getFileData, queryRepoFileDateList } from "./taskLogic";
+import { filterAndSortAscDateList, getFileData, getFileDataByUrl, queryRepoFileDateList } from "./taskLogic";
 import { shasum } from "@/common/utils/shasum";
 import { _updateTaskStatus } from "../taskService";
 // Calculate
@@ -160,15 +162,56 @@ export function setup(handleMap) {
   handleMap.set(TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD, async (dataId) => {
     return downloadDataByDataId(dataId, DATA_TYPE_NAME_JOB_PUBLIC, TASK_TYPE_JOB_PUBLIC_DATA_MERGE);
   })
+  handleMap.set(TASK_TYPE_METADATA_DATA_DOWNLOAD, async (dataId) => {
+    return downloadDataByDataId(dataId, null, TASK_TYPE_METADATA_DATA_MERGE);
+  })
 }
 
 export async function downloadDataByDataId(dataId, dataTypeName, taskType, { getTargetDay = async () => {
   return dayjs();
 } } = {}) {
-  if (!(await isLogin())) {
-    infoLog(`[TASK HANDLE]No login info, skip run task dataId = ${dataId}, dataTypeName = ${dataTypeName}`)
-    throw EXCEPTION.NO_LOGIN;
+  const targetDay = await getTargetDay();
+  if (isStandardDataDownloadType(taskType)) {
+    return await handleDownloadStandardDataByDataId(dataId, dataTypeName, taskType, { targetDay });
+  } else {
+    return await handleDownloadDataByDataId(dataId, taskType);
   }
+}
+
+export async function handleDownloadDataByDataId(dataId, taskType) {
+  let taskData = await _taskDataDownloadGetById({ param: dataId });
+  const datetime = taskData.datetime;
+  const typeId = taskData.typeId;
+  const config = taskData?.config?.config;
+  const url = config?.url;
+  const filePath = config?.filePath;
+  if (url && filePath) {
+    try {
+      infoLog(`[TASK DOWNLOAD DATA] get file from ${url}/${filePath}`);
+      const fileData = await getFileDataByUrl({ url, filePath });
+      const file = new File();
+      file.name = filePath;
+      file.sha = await shasum(fileData);
+      file.encoding = "base64"
+      file.content = bytesToBase64(fileData);
+      file.size = fileData.byteLength;
+      file.type = "file";
+      await saveFileAndCalculateDataMergeTask({ taskType, file, datetime, typeId });
+      return null;
+    } catch (e) {
+      if (e == EXCEPTION.NOT_FOUND) {
+        debugLog(`[TASK DOWNLOAD DATA] file not exists ${url}/${filePath}`)
+        return `file not exists ${url}/${filePath}`;
+      } else {
+        throw e;
+      }
+    }
+  } else {
+    throw "config url or path not exists";
+  }
+}
+
+export async function handleDownloadStandardDataByDataId(dataId, dataTypeName, taskType, { targetDay } = {}) {
   let taskData = await _taskDataDownloadGetById({ param: dataId });
   let userName = taskData.username;
   let repoName = taskData.reponame;
@@ -198,7 +241,7 @@ export async function downloadDataByDataId(dataId, dataTypeName, taskType, { get
       //如果超过，则将通过任务
       //如果未超过则报错，使得其可以继续查询
       const ONE_DAY_OFFSET = 86400000;
-      let now = await getTargetDay();
+      let now = targetDay;
       const fileDatetime = parse(datetime)
       const offset = now.valueOf() - fileDatetime.valueOf();
       if (offset >= ONE_DAY_OFFSET) {

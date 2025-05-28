@@ -7,7 +7,7 @@ import BasicTable from "../../components/BasicTable";
 import { useDataSharePlan } from "../../hooks/dataSharePlan";
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
-import { TASK_TYPE_METADATA_DATA_DOWNLOAD } from "@/common";
+import { TASK_TYPE_METADATA_DATA_DOWNLOAD, TASK_TYPE_METADATA_DATA_MERGE } from "@/common";
 import styles from "./TaskDetailView.module.css";
 const fillSearchParam = (searchParam, values) => {
   const { createDatetimeRange, updateDatetimeRange, type, status } = values;
@@ -124,7 +124,6 @@ const TaskDetailView: React.FC = () => {
       dataIndex: 'detail',
       render: (value: any) => <>
         {isDownloadType(value.type) ? TASK_TYPE_METADATA_DATA_DOWNLOAD == value.type ?
-
           <Col>
             <div>
               <div className="i-fluent:book-number-16-regular inline-flex" />
@@ -174,24 +173,48 @@ const TaskDetailView: React.FC = () => {
           </div>
         </Col>
           : null}
-        {isMergeType(value.type) ? <Col>
-          <div>
-            <div className="i-mdi:git-repository inline-flex" />仓库：{value.username}/{
-              value.reponame
-            }
-          </div>
-          <div>
-            <div className="i-stash:data-date inline-flex" />日期：{
-              dateToStr(
-                value.datetime, "YYYY-MM-DD") ?? `N/A`}
-          </div>
-          <div>
-            <div className="i-mdi:database-plus inline-flex" />数据量：{value.dataCount ?? 0}
-          </div>
-          <div>
-            <div className="i-mdi:file inline-flex" />文件编号：<Text copyable>{value.dataId}</Text>
-          </div>
-        </Col>
+        {isMergeType(value.type) ? TASK_TYPE_METADATA_DATA_MERGE ?
+          <Col>
+            <div>
+              <div className="i-stash:data-date inline-flex" />日期：{
+                dateToStr(
+                  value.datetime, "YYYY-MM-DD") ?? `N/A`}
+            </div>
+            <div>
+              <div className="i-material-symbols:dataset inline-flex" />数据源编号：
+              <Popover
+                content={<Text copyable>{value.typeId}</Text>}
+                trigger="click"
+              >
+                <Text
+                  title={`${value.typeId}`}
+                  ellipsis
+                >{`${value.typeId?.length > 8 ? value.typeId.substring(0, 8) : value.typeId}`}</Text>
+              </Popover>
+            </div>
+            <div>
+              <div className="i-mdi:file inline-flex" />文件编号：<Text copyable>{value.dataId}</Text>
+            </div>
+          </Col>
+          :
+          <Col>
+            <div>
+              <div className="i-mdi:git-repository inline-flex" />仓库：{value.username}/{
+                value.reponame
+              }
+            </div>
+            <div>
+              <div className="i-stash:data-date inline-flex" />日期：{
+                dateToStr(
+                  value.datetime, "YYYY-MM-DD") ?? `N/A`}
+            </div>
+            <div>
+              <div className="i-mdi:database-plus inline-flex" />数据量：{value.dataCount ?? 0}
+            </div>
+            <div>
+              <div className="i-mdi:file inline-flex" />文件编号：<Text copyable>{value.dataId}</Text>
+            </div>
+          </Col>
           : null}
       </>,
       minWidth: 300,

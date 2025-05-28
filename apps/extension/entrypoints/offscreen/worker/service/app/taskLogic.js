@@ -45,11 +45,19 @@ export function filterAndSortAscDateList({ dateList, targetDay, retentionDay }) 
 
 export async function getFileData({
   userName, repoName, filePath,
+  getResponseAsyncFunction
+} = {}) {
+  return getFileDataByUrl({ url: `${GITHUB_URL}/${userName}/${repoName}`, filePath, getResponseAsyncFunction }
+  )
+}
+
+export async function getFileDataByUrl({
+  url, filePath,
   getResponseAsyncFunction = async ({ url, method, headers, body }) => {
     return githubFetch(url, { method, headers, body, authMode: "Basic" });
   }
 } = {}) {
-  const result = await sparseCheckout(`${GITHUB_URL}/${userName}/${repoName}`, `HEAD`, [filePath], {
+  const result = await sparseCheckout(`${url}`, `HEAD`, [filePath], {
     getResponseAsyncFunction
   });
   let keys = Object.keys(result);

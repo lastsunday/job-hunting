@@ -8,8 +8,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   RobotOutlined,
-  SettingOutlined,
-  ShareAltOutlined,
+  SettingOutlined
 } from '@ant-design/icons';
 import { Breadcrumb, Button, Flex, Layout, Menu, theme } from 'antd';
 import React, { useState } from 'react';
@@ -19,7 +18,6 @@ import logo from '../assets/logo.svg';
 import useAnalysisStore from '../store/AnalysisStore';
 import useJobSnapshotStore from '../store/JobSnapshotStore';
 import HeaderRight from './HeaderRight';
-import { Children } from 'react';
 const { Header, Sider, Content } = Layout;
 
 const siderStyle: React.CSSProperties = {
@@ -117,7 +115,7 @@ const RootLayout: React.FC = () => {
       },
       {
         key: 'dataSource',
-        icon: <DatabaseOutlined />,
+        icon: <div className='i-material-symbols:dataset'></div>,
         label: '数据源',
         children: [...genDataSharePlanMenu()],
       },
@@ -139,7 +137,7 @@ const RootLayout: React.FC = () => {
           },
           {
             key: 'dataManagement',
-            icon: <SettingOutlined />,
+            icon: <div className='i-fluent-mdl2:data-management-settings'></div>,
             label: '数据管理',
           },
           {
