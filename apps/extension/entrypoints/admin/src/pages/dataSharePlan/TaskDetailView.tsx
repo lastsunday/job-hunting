@@ -7,7 +7,8 @@ import BasicTable from "../../components/BasicTable";
 import { useDataSharePlan } from "../../hooks/dataSharePlan";
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
-
+import { TASK_TYPE_METADATA_DATA_DOWNLOAD } from "@/common";
+import styles from "./TaskDetailView.module.css";
 const fillSearchParam = (searchParam, values) => {
   const { createDatetimeRange, updateDatetimeRange, type, status } = values;
   searchParam.typeList = type;
@@ -122,17 +123,39 @@ const TaskDetailView: React.FC = () => {
       title: '任务摘要',
       dataIndex: 'detail',
       render: (value: any) => <>
-        {isDownloadType(value.type) ? <Col>
-          <div>
-            <div className="i-mdi:git-repository inline-flex" />仓库：{value.username}/{
-              value.reponame
-            }
-          </div>
-          <div>
-            <div className="i-fluent-mdl2:date-time inline-flex" />日期：{dateToStr(
-              value.datetime, "YYYY-MM-DD") ?? `N/A`}
-          </div>
-        </Col>
+        {isDownloadType(value.type) ? TASK_TYPE_METADATA_DATA_DOWNLOAD == value.type ?
+
+          <Col>
+            <div>
+              <div className="i-fluent:book-number-16-regular inline-flex" />
+              元数据编号：
+              <Popover
+                content={<Text copyable>{value.typeId}</Text>}
+                trigger="click"
+              >
+                <Text
+                  title={`${value.typeId}`}
+                  ellipsis
+                >{`${value.typeId?.length > 8 ? value.typeId.substring(0, 8) : value.typeId}`}</Text>
+              </Popover>
+            </div>
+            <div>
+              <div className="i-fluent-mdl2:date-time inline-flex" />日期：{dateToStr(
+                value.datetime, "YYYY-MM-DD") ?? `N/A`}
+            </div>
+          </Col>
+          :
+          <Col>
+            <div>
+              <div className="i-mdi:git-repository inline-flex" />仓库：{value.username}/{
+                value.reponame
+              }
+            </div>
+            <div>
+              <div className="i-fluent-mdl2:date-time inline-flex" />日期：{dateToStr(
+                value.datetime, "YYYY-MM-DD") ?? `N/A`}
+            </div>
+          </Col>
           : null}
         {isUploadType(value.type) ? <Col>
           <div>

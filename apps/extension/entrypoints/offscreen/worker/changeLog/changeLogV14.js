@@ -58,6 +58,15 @@ INSERT INTO data_source_metadata(id,name,description,icon,type,config,data,enabl
 '{"config":{"url":"https://github.com/lastsunday/job-hunting-data-source","filePath":"metadata.json"}}',null,true,0,true,'2025-05-24 00:00:00','2025-05-24 00:00:00');
 `
 
+const SQL_ALTER_TABLE_TASK_DATA_DOWNLOAD_ADD_COLUMN = `
+  ALTER TABLE task_data_download ADD COLUMN type_id VARCHAR(255);
+  ALTER TABLE task_data_download ADD COLUMN config JSONB;
+  `;
+
+const SQL_ALTER_TABLE_TASK_DATA_MERGE_ADD_COLUMN = `
+  ALTER TABLE task_data_merge ADD COLUMN type_id VARCHAR(255);
+  `;
+
 export class ChangeLogV14 extends ChangeLog {
   getSqlList() {
     const sqlList = [
@@ -66,6 +75,8 @@ export class ChangeLogV14 extends ChangeLog {
       SQL_CREATE_COMPANY_COMMENT,
       SQL_CREATE_DATA_SOURCE_METADATA,
       SQL_DATA_DATA_SOURCE_METADATA,
+      SQL_ALTER_TABLE_TASK_DATA_DOWNLOAD_ADD_COLUMN,
+      SQL_ALTER_TABLE_TASK_DATA_MERGE_ADD_COLUMN
     ];
     return sqlList;
   }

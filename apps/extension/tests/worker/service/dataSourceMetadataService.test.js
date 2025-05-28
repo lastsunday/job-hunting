@@ -132,6 +132,7 @@ test('data source metadata service crud logic correct', async () => {
     id: [itemId],
     enable: true,
     autoUpdateEnable: true,
+    type: TYPE_GIT_METADATA,
     startDatetimeForCreate: parse("2025-05-19"),
     endDatetimeForCreate: parse("2025-05-20"),
     startDatetimeForUpdate: parse("2025-05-19"),

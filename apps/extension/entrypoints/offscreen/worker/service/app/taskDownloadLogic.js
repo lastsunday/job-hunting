@@ -11,21 +11,23 @@ import { infoLog } from "@/common/log";
 import { _fileAddOrUpdate } from "../fileService";
 import { _taskDataMergeAddOrUpdate } from "../taskDataMergeService";
 
-export async function saveTask({ type, datetimeList, userName, repoName } = {}) {
+export async function saveTask({ type, datetimeList, userName, repoName, typeId, config } = {}) {
   await (await getDb()).transaction(async (tx) => {
     for (let i = 0; i < datetimeList.length; i++) {
       const day = datetimeList[i];
-      await addDataDownloadTask({ type, datetime: day, userName, repoName, connection: tx })
+      await addDataDownloadTask({ type, datetime: day, userName, repoName, typeId, config, connection: tx })
     }
   });
 }
 
-export async function addDataDownloadTask({ type, datetime, userName, repoName, connection = null } = {}) {
+export async function addDataDownloadTask({ type, datetime, userName, repoName, typeId, config, connection = null } = {}) {
   let taskDataDownload = new TaskDataDownload();
   taskDataDownload.type = type;
   taskDataDownload.username = userName;;
   taskDataDownload.reponame = repoName;
   taskDataDownload.datetime = datetime;
+  taskDataDownload.typeId = typeId;
+  taskDataDownload.config = config;
   let savedTaskDataDownload = await _taskDataDownloadAddOrUpdate({ param: taskDataDownload, connection });
   let task = new Task();
   task.type = type;

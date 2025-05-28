@@ -4,6 +4,8 @@ import {
   DATA_TYPE_NAME_JOB,
   DATA_TYPE_NAME_JOB_PUBLIC,
   DATA_TYPE_NAME_JOB_TAG,
+  isStandardDataDownloadType,
+  TASK_STATUS_CANCEL,
   TASK_TYPE_COMPANY_DATA_DOWNLOAD,
   TASK_TYPE_COMPANY_DATA_MERGE,
   TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD,
@@ -24,16 +26,65 @@ import { dateToStr } from "@/common/utils";
 import { bytesToBase64 } from "@/common/utils/base64";
 import { parse } from "@/common/utils/date";
 import dayjs from "dayjs";
-import { _searchTaskDataDownload, _taskDataDownloadGetById } from "../taskDataDownloadService";
+import { _queryLatestTaskDataDownload, _searchTaskDataDownload, _taskDataDownloadGetById } from "../taskDataDownloadService";
 import { getPathByDatetime, isLogin } from "./index";
 import { saveFileAndCalculateDataMergeTask, saveTask } from "./taskDownloadLogic";
 import { filterAndSortAscDateList, getFileData, queryRepoFileDateList } from "./taskLogic";
 import { shasum } from "@/common/utils/shasum";
+import { _updateTaskStatus } from "../taskService";
 // Calculate
-export async function calculateDownloadTask({ userName, repoName, taskType, getTargetDay = async () => {
+export async function calculateDownloadTask({ userName, repoName, taskType, typeId, config, getTargetDay = async () => {
   return dayjs();
 } }) {
   const targetDay = await getTargetDay();
+  if (isStandardDataDownloadType(taskType)) {
+    return await handleStandardDataCalcalate({ userName, repoName, taskType, targetDay });
+  } else {
+    return await handleDataCalcalate({ taskType, targetDay, typeId, config });
+  }
+}
+
+export async function handleDataCalcalate({ taskType, targetDay, typeId, config } = {}) {
+  const today = targetDay.startOf("day");
+  const latestTaskDataDownload = await _queryLatestTaskDataDownload({
+    param: {
+      typeId,
+      datetime: today,
+    }
+  });
+  let needAdd = false;
+  let needUpdateCancelStatusTaskId = [];
+  if (latestTaskDataDownload.length == 0) {
+    needAdd = true;
+  } else {
+    const latestItem = latestTaskDataDownload[0];
+    if (today.isSame(latestItem.datetime)) {
+      if (latestTaskDataDownload.length == 1) {
+        //skip,the only item is today
+      } else {
+        needUpdateCancelStatusTaskId.push(latestTaskDataDownload.slice(1, latestTaskDataDownload.length).map(item => item.id));
+      }
+    } else {
+      needAdd = true;
+      needUpdateCancelStatusTaskId.push(latestTaskDataDownload.slice(0, latestTaskDataDownload.length).map(item => item.id));
+    }
+  }
+  if (needUpdateCancelStatusTaskId.length > 0) {
+    await _updateTaskStatus({ param: { id: needUpdateCancelStatusTaskId, status: TASK_STATUS_CANCEL } })
+    infoLog(`[TASK DATA DOWNLOAD CALCULATE] update task status for cancel taskType = ${taskType},typeId = ${typeId},task ids = ${needUpdateCancelStatusTaskId}`);
+  }
+  if (needAdd) {
+    await saveTask({ type: taskType, datetimeList: [today], typeId, config });
+    infoLog(`[TASK DATA DOWNLOAD CALCULATE] save task taskType = ${taskType},typeId = ${typeId}, datetime = ${today}`);
+  }
+  const result = needUpdateCancelStatusTaskId.length > 0 || needAdd;
+  if (!result) {
+    infoLog(`[TASK DATA DOWNLOAD CALCULATE] sikp task taskType = ${taskType},typeId = ${typeId}, datetime = ${today}`);
+  }
+  return result;
+}
+
+export async function handleStandardDataCalcalate({ userName, repoName, taskType, targetDay } = {}) {
   let repoAllFileDateList = [];
   try {
     repoAllFileDateList = await queryRepoFileDateList({ userName, repoName, taskType });

@@ -5,6 +5,7 @@ export class DataSourceMetadataSearchBO extends PageBO {
   name;
   enable;
   autoUpdateEnable;
+  type;
   startDatetimeForCreate;
   endDatetimeForCreate;
   startDatetimeForUpdate;

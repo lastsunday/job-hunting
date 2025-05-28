@@ -1,11 +1,13 @@
+import { TASK_TYPE_METADATA_DATA_DOWNLOAD } from "@/common";
 import { Message } from "@/common/api/message";
 import { SearchTaskDataDownloadBO } from "@/common/data/bo/searchTaskDataDownloadBO";
 import { TaskDataDownload } from "@/common/data/domain/taskDataDownload";
 import { SearchTaskDataDownloadDTO } from "@/common/data/dto/searchTaskDataDownloadDTO";
 import { postSuccessMessage } from "@/common/extension/worker/util";
 import { dateToStr } from "@/common/utils/date";
+import { convertRows, getDb } from "../database";
 import { BaseService } from "./baseService";
-
+import { genEqTextConditionSql, genInTextSql } from "./sqlUtil";
 export const SERVICE_INSTANCE = new BaseService("task_data_download", "id",
   () => {
     return new TaskDataDownload();
@@ -24,6 +26,7 @@ export const SERVICE_INSTANCE = new BaseService("task_data_download", "id",
     if (param.type) {
       whereCondition += `AND type = '${param.type}'`;
     }
+    whereCondition += genInTextSql(param.typeId, "type_id");
     if (param.repoName) {
       whereCondition +=
         " AND reponame = '" +
@@ -125,3 +128,13 @@ export const _taskDataDownloadAddOrUpdate = async ({ param = null, connection = 
 export const _searchTaskDataDownload = async ({ param = null, connection = null } = {}) => {
   return await SERVICE_INSTANCE._search(param, { connection });
 }
+
+export const _queryLatestTaskDataDownload = async ({ param = null, connection = null } = {}) => {
+  connection ??= await getDb();
+  const typeId = param.typeId;
+  const datetime = dateToStr(param.datetime);
+  const sql = `SELECT t1.id AS id,t2.datetime AS datetime FROM task AS t1 LEFT JOIN task_data_download AS t2 ON t1.data_id = t2.id WHERE t1.type = '${TASK_TYPE_METADATA_DATA_DOWNLOAD}' ${genEqTextConditionSql(typeId, 't2.type_id')} AND (t1.status IN ('READY','RUNNING','ERROR') OR t2.datetime = '${datetime}') ORDER BY t2.datetime DESC`;
+  const { rows } = await connection.query(sql);
+  return convertRows(rows);
+}
+

@@ -11,7 +11,7 @@ import { EXCEPTION } from "@/common/api/github";
 const USER_NAME = "lastsunday";
 const REPO_NAME = "job-hunting-data";
 const TASK_TYPE = TASK_TYPE_JOB_DATA_DOWNLOAD;
-test('calculateDownloadTask in correct logic', async () => {
+test('calculate standard data download task in correct logic', async () => {
   vi.spyOn(modTaskLogic, 'queryRepoFileDateList').mockImplementation(async ({ userName, repoName, taskType }) => {
     expect(userName).toBe(USER_NAME);
     expect(repoName).toBe(REPO_NAME);

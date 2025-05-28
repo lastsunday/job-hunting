@@ -64,7 +64,9 @@ test('database init correct', async () => {
         'id',
         'type',
         'username',
-        'reponame'
+        'reponame',
+        'type_id',
+        'config'
       ]
     },
     task_data_merge: {
@@ -77,7 +79,8 @@ test('database init correct', async () => {
         'type',
         'username',
         'reponame',
-        'data_id'
+        'data_id',
+        'type_id'
       ]
     },
     job: {

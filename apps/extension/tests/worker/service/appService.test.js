@@ -1,6 +1,7 @@
 import { AppService } from "@/entrypoints/offscreen/worker/service/appService";
 import { test, vi, expect } from "vitest";
 import * as modUtil from "@/common/extension/worker/util";
+import * as modDataSourceMetadata from "@/entrypoints/offscreen/worker/service/app/dataSourceMetadata";
 import * as modDataSharePlan from "@/entrypoints/offscreen/worker/service/app/dataSharePlan";
 import * as modApp from "@/entrypoints/offscreen/worker/service/app";
 import * as modTaskUpload from "@/entrypoints/offscreen/worker/service/app/taskUpload";
@@ -11,7 +12,8 @@ import {
   TASK_TYPE_JOB_DATA_UPLOAD, TASK_TYPE_COMPANY_DATA_UPLOAD,
   TASK_TYPE_COMPANY_TAG_DATA_UPLOAD, TASK_TYPE_JOB_TAG_DATA_UPLOAD,
   TASK_TYPE_ALL_PRIVATE_DATA_DOWNLOAD,
-  TASK_TYPE_JOB_PUBLIC_DATA_UPLOAD, TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD, TASK_TYPE_ALL_PUBLIC_DATA_DOWNLOAD
+  TASK_TYPE_JOB_PUBLIC_DATA_UPLOAD, TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD, TASK_TYPE_ALL_PUBLIC_DATA_DOWNLOAD,
+  TASK_TYPE_METADATA_DATA_DOWNLOAD
 } from "@/common";
 test('appBackgroundTaskRun run in correct logic', async () => {
   vi.spyOn(modUtil, 'postErrorMessage').mockImplementation((message, error) => {
@@ -115,6 +117,12 @@ test('appBackgroundTaskRun run in correct logic', async () => {
       },
     ];
   });
+  vi.spyOn(modDataSourceMetadata, 'calculateDataSourceMetadataList').mockImplementation(async () => {
+    return [{
+      typeId: "2",
+      config: {}
+    }];
+  });
   const expectCaculateDownloadTaskResult = [
     { userName, repoName, taskType: TASK_TYPE_JOB_DATA_DOWNLOAD },
     { userName, repoName, taskType: TASK_TYPE_COMPANY_DATA_DOWNLOAD },
@@ -131,13 +139,16 @@ test('appBackgroundTaskRun run in correct logic', async () => {
     { userName: OTHER_2_USER_NAME, repoName, taskType: TASK_TYPE_JOB_TAG_DATA_DOWNLOAD },
     { userName: OTHER_1_USER_NAME, repoName: publicRepoName, taskType: TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD },
     { userName: OTHER_2_USER_NAME, repoName: publicRepoName, taskType: TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD },
+    { typeId: "2", config: {}, taskType: TASK_TYPE_METADATA_DATA_DOWNLOAD },
   ];
   const expectCaculateDownloadTaskIterator = expectCaculateDownloadTaskResult.values();
-  vi.spyOn(modTaskDownload, 'calculateDownloadTask').mockImplementation((async ({ userName, repoName, taskType }) => {
+  vi.spyOn(modTaskDownload, 'calculateDownloadTask').mockImplementation((async ({ userName, repoName, taskType, typeId, config }) => {
     const expectItem = expectCaculateDownloadTaskIterator.next().value;
     expect(userName).toBe(expectItem.userName);
     expect(repoName).toBe(expectItem.repoName);
     expect(taskType).toBe(expectItem.taskType);
+    expect(typeId).toBe(expectItem.taskId);
+    expect(config).toMatchObject(expectItem.config);
   }));
   vi.spyOn(modApp, 'runTask').mockImplementation((async () => {
 

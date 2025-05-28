@@ -5,6 +5,8 @@ import { _getUser, runScheduleTask, runTask } from "./app";
 import { calculateDataSharePartnerList, getDataSharePlanConfig } from "./app/dataSharePlan";
 import { calculateDownloadTask } from "./app/taskDownload";
 import { calculateUploadTask, createRepoIfNotExists } from "./app/taskUpload";
+import { calculateDataSourceMetadataList } from "./app/dataSourceMetadata";
+import { TASK_TYPE_METADATA_DATA_DOWNLOAD } from "@/common";
 const {
   getPrivateUploadTaskTypeFromConfig, getPrivateRepoName,
   getPrivateDownloadTaskTypeFromConfig, getTaskTypeListFromDataSharePartnerConfig,
@@ -89,7 +91,7 @@ export const AppService = {
         infoLog(`[TASK] skip public data sync`)
       }
       //从数据库中获取数据共享伙伴列表
-      let dataSharePartnerList = await calculateDataSharePartnerList();
+      const dataSharePartnerList = await calculateDataSharePartnerList();
       shareDataPlanList.push(...dataSharePartnerList);
       infoLog(`[TASK] Share data plan list length = ${shareDataPlanList.length}`);
       for (let i = 0; i < shareDataPlanList.length; i++) {
@@ -102,6 +104,18 @@ export const AppService = {
           } catch (e) {
             warnLog(`[Task] calculateDownloadTask failure,${shareItem.username}/${shareItem.reponame},taskType = ${taskType},message = ${e}`)
           }
+        }
+      }
+      //从数据库中获取数据源元数据自动更新列表
+      const dataSourceMetadataList = await calculateDataSourceMetadataList();
+      infoLog(`[TASK] data source metadata list length = ${dataSourceMetadataList.length}`);
+      for (let i = 0; i < dataSourceMetadataList.length; i++) {
+        const taskType = TASK_TYPE_METADATA_DATA_DOWNLOAD;
+        const item = dataSourceMetadataList[i];
+        try {
+          await calculateDownloadTask({ taskType, typeId: item.id, config: item.config });
+        } catch (e) {
+          warnLog(`[Task] calculateDownloadTask failure,id = ${item.id},taskType = ${taskType},message = ${e}`)
         }
       }
       infoLog(`[TASK] runTask`)

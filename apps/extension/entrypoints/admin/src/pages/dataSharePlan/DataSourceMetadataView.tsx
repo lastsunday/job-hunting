@@ -393,6 +393,10 @@ const DataSourceMetadataView: React.FC = () => {
         search: async (searchParam) => {
           return await DataSourceMetadataApi.dataSourceMetadataSearch(searchParam);
         },
+        searchParam: {
+          orderByColumn: "seq",
+          orderBy: "ASC"
+        }
       }}
       rowKeyFunction={(record) => { return record.id }}
       additionMenu={

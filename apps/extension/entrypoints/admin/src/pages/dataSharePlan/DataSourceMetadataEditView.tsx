@@ -4,7 +4,7 @@ import { Switch } from "antd/lib";
 import SubmitButton from "../../components/SubmitButton";
 import CodeMirror from '@uiw/react-codemirror';
 import { langs } from '@uiw/codemirror-extensions-langs';
-import { clone, toJSON } from "@/common/utils";
+import { clone, toJSON, isBlank } from "@/common/utils";
 export type DataSourceMetadataEditProps = {
   data: DataSourceMetadata,
   onSave: (data: DataSourceMetadata) => Promise<void>;
@@ -115,6 +115,9 @@ const DataSourceMetadataEditView: React.FC<DataSourceMetadataEditProps> = ({ dat
           rules={[{ required: false },
           ({ getFieldValue }) => ({
             validator(_, value) {
+              if (isBlank(value)) {
+                return Promise.resolve();
+              }
               try {
                 JSON.parse(value);
                 return Promise.resolve();
