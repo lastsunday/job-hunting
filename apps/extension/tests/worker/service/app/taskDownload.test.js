@@ -1,10 +1,11 @@
 import { expect, test } from "vitest";
 import { calculateDownloadTask, downloadDataByDataId } from "@/entrypoints/offscreen/worker/service/app/taskDownload";
-import { DATA_TYPE_NAME_JOB, TASK_TYPE_JOB_DATA_DOWNLOAD, TASK_TYPE_JOB_DATA_MERGE } from "@/common";
+import { DATA_TYPE_NAME_JOB, TASK_STATUS_CANCEL, TASK_TYPE_JOB_DATA_DOWNLOAD, TASK_TYPE_JOB_DATA_MERGE, TASK_TYPE_METADATA_DATA_DOWNLOAD, TASK_TYPE_METADATA_DATA_MERGE } from "@/common";
 import * as modApp from "@/entrypoints/offscreen/worker/service/app";
 import * as modTaskLogic from "@/entrypoints/offscreen/worker/service/app/taskLogic";
 import * as modTaskDownloadLogic from "@/entrypoints/offscreen/worker/service/app/taskDownloadLogic";
 import * as modTaskDataDownloadService from "@/entrypoints/offscreen/worker/service/taskDataDownloadService";
+import * as modTaskService from "@/entrypoints/offscreen/worker/service/taskService";
 import { vi } from "vitest";
 import { parse } from "@/common/utils/date";
 import { EXCEPTION } from "@/common/api/github";
@@ -151,4 +152,60 @@ test('downloadDataByDataId file not found', async () => {
   } catch (e) {
     expect(e).contains("not found");
   }
+});
+
+test('calculateDownloadTask for metadata', async () => {
+  vi.spyOn(modTaskDataDownloadService, '_queryLatestTaskDataDownload').mockImplementation(async ({ param }) => {
+    return [
+      { id: "1", datetime: parse('2025-01-14') }
+    ];
+  });
+  vi.spyOn(modTaskService, '_updateTaskStatus').mockImplementation(async ({ param, connection }) => {
+    expect(param.id.length).toBe(1);
+    expect(param.id[0]).toBe('1');
+    expect(param.status).toBe(TASK_STATUS_CANCEL);
+  });
+  vi.spyOn(modTaskDownloadLogic, 'saveTask').mockImplementation(async ({ type, datetimeList, userName, repoName, typeId, config }) => {
+    expect(type).toBe(TASK_TYPE_METADATA_DATA_DOWNLOAD);
+    expect(datetimeList).toMatchObject([parse('2025-01-15')]);
+    expect(typeId).toBe('typeId1');
+    expect(config).toMatchObject({});
+  });
+  const result = await calculateDownloadTask({
+    taskType: TASK_TYPE_METADATA_DATA_DOWNLOAD,
+    typeId: "typeId1",
+    config: {},
+    getTargetDay: async () => {
+      return parse("2025-01-15");
+    }
+  });
+  expect(result).toBeTruthy();
+});
+
+test('downloadDataByDataId for metadata merge', async () => {
+  const URL = "https://github.com/lastsunday/job-hunting-data-source";
+  const FILE_PATH = "metadata.json";
+  vi.spyOn(modTaskDataDownloadService, '_taskDataDownloadGetById').mockImplementation(async ({ param }) => {
+    return {
+      typeId: "typeId1",
+      datetime: parse("2025-01-01"),
+      config: {
+        config: {
+          url: URL,
+          filePath: FILE_PATH
+        }
+      }
+    };
+  });
+  vi.spyOn(modTaskLogic, 'getFileDataByUrl').mockImplementation(async ({ url, filePath }) => {
+    expect(url).toBe(URL);
+    expect(filePath).toBe(FILE_PATH);
+    return new TextEncoder().encode("Test Data");
+  });
+  vi.spyOn(modTaskDownloadLogic, 'saveFileAndCalculateDataMergeTask').mockImplementation(async ({ userName, repoName, taskType, file, datetime, typeId }) => {
+    expect(typeId).toBe("typeId1");
+    expect(parse(datetime)).toMatchObject(parse('2025-01-01'));
+  });
+  const result = await downloadDataByDataId('1', null, TASK_TYPE_METADATA_DATA_MERGE, { getTargetDay: async () => { return parse('2025-01-15') } });
+  expect(result).toBeNull();
 });

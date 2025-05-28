@@ -4,6 +4,7 @@ import {
   DATA_TYPE_NAME_JOB,
   DATA_TYPE_NAME_JOB_PUBLIC,
   DATA_TYPE_NAME_JOB_TAG,
+  isStandardDataMergeType,
   isStandardDataDownloadType,
   TASK_STATUS_CANCEL,
   TASK_TYPE_COMPANY_DATA_DOWNLOAD,
@@ -42,11 +43,11 @@ export async function calculateDownloadTask({ userName, repoName, taskType, type
   if (isStandardDataDownloadType(taskType)) {
     return await handleStandardDataCalcalate({ userName, repoName, taskType, targetDay });
   } else {
-    return await handleDataCalcalate({ taskType, targetDay, typeId, config });
+    return await handleDataCalculate({ taskType, targetDay, typeId, config });
   }
 }
 
-export async function handleDataCalcalate({ taskType, targetDay, typeId, config } = {}) {
+export async function handleDataCalculate({ taskType, targetDay, typeId, config } = {}) {
   const today = targetDay.startOf("day");
   const latestTaskDataDownload = await _queryLatestTaskDataDownload({
     param: {
@@ -64,11 +65,11 @@ export async function handleDataCalcalate({ taskType, targetDay, typeId, config 
       if (latestTaskDataDownload.length == 1) {
         //skip,the only item is today
       } else {
-        needUpdateCancelStatusTaskId.push(latestTaskDataDownload.slice(1, latestTaskDataDownload.length).map(item => item.id));
+        needUpdateCancelStatusTaskId.push(...latestTaskDataDownload.slice(1, latestTaskDataDownload.length).map(item => item.id));
       }
     } else {
       needAdd = true;
-      needUpdateCancelStatusTaskId.push(latestTaskDataDownload.slice(0, latestTaskDataDownload.length).map(item => item.id));
+      needUpdateCancelStatusTaskId.push(...latestTaskDataDownload.slice(0, latestTaskDataDownload.length).map(item => item.id));
     }
   }
   if (needUpdateCancelStatusTaskId.length > 0) {
@@ -171,7 +172,7 @@ export async function downloadDataByDataId(dataId, dataTypeName, taskType, { get
   return dayjs();
 } } = {}) {
   const targetDay = await getTargetDay();
-  if (isStandardDataDownloadType(taskType)) {
+  if (isStandardDataMergeType(taskType)) {
     return await handleDownloadStandardDataByDataId(dataId, dataTypeName, taskType, { targetDay });
   } else {
     return await handleDownloadDataByDataId(dataId, taskType);
