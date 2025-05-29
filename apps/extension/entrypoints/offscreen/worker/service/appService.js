@@ -98,9 +98,10 @@ export const AppService = {
         const shareItem = shareDataPlanList[i];
         const taskTypeList = getTaskTypeListFromDataSharePartnerConfig(shareItem.config);
         for (let n = 0; n < taskTypeList.length; n++) {
-          const taskType = taskTypeList[n].type;
+          const taskTypeData = taskTypeList[n];
+          const taskType = taskTypeData.type;
           try {
-            await calculateDownloadTask({ userName: shareItem.username, repoName: shareItem.reponame, taskType });
+            await calculateDownloadTask({ userName: shareItem.username, repoName: shareItem.reponame, taskType, config: taskTypeData });
           } catch (e) {
             warnLog(`[Task] calculateDownloadTask failure,${shareItem.username}/${shareItem.reponame},taskType = ${taskType},message = ${e}`)
           }

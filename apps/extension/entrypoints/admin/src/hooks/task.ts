@@ -16,7 +16,7 @@ import {
   TASK_TYPE_JOB_TAG_DATA_DOWNLOAD,
   TASK_TYPE_ALL_PUBLIC_DATA_DOWNLOAD,
   TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD,
-  TASK_TYPE_COMPANY_COMMENT_DOWNLOAD
+  TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
 } from "@/common";
 import dayjs from "dayjs";
 import { MissionLogData } from "../data/MissionLogData";
@@ -29,7 +29,7 @@ const TASK_TYPE_AND_DISPLAY_NAME_MAP = new Map([
   [TASK_TYPE_JOB_TAG_DATA_DOWNLOAD, "职位标签数据下载"],
   [TASK_TYPE_ALL_PUBLIC_DATA_DOWNLOAD, "全部公开数据下载"],
   [TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD, "职位公开数据下载"],
-  [TASK_TYPE_COMPANY_COMMENT_DOWNLOAD, "公司评论数据下载"],
+  [TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD, "公司评论数据下载"],
 ]);
 
 export function useTask() {

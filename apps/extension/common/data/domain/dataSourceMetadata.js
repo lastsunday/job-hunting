@@ -96,4 +96,5 @@ export class CustomTaskType {
   fileName;
   emotion;
   description;
+  retentionDay;
 }

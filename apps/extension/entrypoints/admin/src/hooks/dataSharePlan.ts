@@ -21,6 +21,8 @@ import {
   TASK_TYPE_JOB_PUBLIC_DATA_UPLOAD,
   TASK_TYPE_METADATA_DATA_DOWNLOAD,
   TASK_TYPE_METADATA_DATA_MERGE,
+  TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
+  TASK_TYPE_COMPANY_COMMENT_DATA_MERGE,
   isDownloadType,
   isMergeType,
   isUploadType
@@ -124,6 +126,8 @@ export function useDataSharePlan() {
     { value: "职位公开数据合并", code: TASK_TYPE_JOB_PUBLIC_DATA_MERGE },
     { value: "数据源元数据下载", code: TASK_TYPE_METADATA_DATA_DOWNLOAD },
     { value: "数据源元数据合并", code: TASK_TYPE_METADATA_DATA_MERGE },
+    { value: "公司评论数据下载", code: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD },
+    { value: "公司评论数据合并", code: TASK_TYPE_COMPANY_COMMENT_DATA_MERGE },
   ];
 
   const taskCodeNameMap = new Map();

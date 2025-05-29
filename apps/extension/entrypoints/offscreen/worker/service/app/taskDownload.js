@@ -4,8 +4,9 @@ import {
   DATA_TYPE_NAME_JOB,
   DATA_TYPE_NAME_JOB_PUBLIC,
   DATA_TYPE_NAME_JOB_TAG,
-  isStandardDataMergeType,
+  isDataSourceDataDownloadType,
   isStandardDataDownloadType,
+  isStandardDataMergeType,
   TASK_STATUS_CANCEL,
   TASK_TYPE_COMPANY_DATA_DOWNLOAD,
   TASK_TYPE_COMPANY_DATA_MERGE,
@@ -28,13 +29,13 @@ import { debugLog, errorLog, infoLog } from "@/common/log";
 import { dateToStr } from "@/common/utils";
 import { bytesToBase64 } from "@/common/utils/base64";
 import { parse } from "@/common/utils/date";
+import { shasum } from "@/common/utils/shasum";
 import dayjs from "dayjs";
 import { _queryLatestTaskDataDownload, _searchTaskDataDownload, _taskDataDownloadGetById } from "../taskDataDownloadService";
-import { getPathByDatetime, isLogin } from "./index";
+import { _updateTaskStatus } from "../taskService";
+import { getPathByDatetime } from "./index";
 import { saveFileAndCalculateDataMergeTask, saveTask } from "./taskDownloadLogic";
 import { filterAndSortAscDateList, getFileData, getFileDataByUrl, queryRepoFileDateList } from "./taskLogic";
-import { shasum } from "@/common/utils/shasum";
-import { _updateTaskStatus } from "../taskService";
 // Calculate
 export async function calculateDownloadTask({ userName, repoName, taskType, typeId, config, getTargetDay = async () => {
   return dayjs();
@@ -42,12 +43,78 @@ export async function calculateDownloadTask({ userName, repoName, taskType, type
   const targetDay = await getTargetDay();
   if (isStandardDataDownloadType(taskType)) {
     return await handleStandardDataCalcalate({ userName, repoName, taskType, targetDay });
+  } else if (isDataSourceDataDownloadType(taskType)) {
+    return await handleStandardDataCalcalate({ userName, repoName, taskType, targetDay, config });
+  } else if (taskType == TASK_TYPE_METADATA_DATA_DOWNLOAD) {
+    return await handleDataCalcalate({ taskType, targetDay, typeId, config });
   } else {
-    return await handleDataCalculate({ taskType, targetDay, typeId, config });
+    throw `unsupport download task taskType = ${taskType}`
   }
 }
 
-export async function handleDataCalculate({ taskType, targetDay, typeId, config } = {}) {
+export async function handleStandardDataCalcalate({ userName, repoName, taskType, targetDay, config } = {}) {
+  const typeId = config?.name;
+  const fileName = config?.fileName;
+  const retentionDay = config?.retentionDay;
+  let repoAllFileDateList = [];
+  try {
+    repoAllFileDateList = await queryRepoFileDateList({ userName, repoName, taskType, fileName });
+  } catch (e) {
+    if (e == EXCEPTION.UNAUTHORIZED) {
+      infoLog(`[TASK DATA DOWNLOAD CALCULATE] repo(${userName}/${repoName}) taskType = ${taskType},${fileName ? `fileName = ${fileName}` : ""} not found or unauthorized `);
+    } else {
+      throw e;
+    }
+    return false;
+  }
+  const repoFilterAndSortAscDateList = filterAndSortAscDateList({ dateList: repoAllFileDateList, targetDay, retentionDay: retentionDay ?? TASK_DATA_DOWNLOAD_MAX_DAY });
+  //查找缺失的日期
+  //获得数据库区间时间范围的记录
+  let endDatetimeForSearchTaskDownload = null;
+  let startDatetimeForSearchTaskDownload = null;
+  if (repoFilterAndSortAscDateList.length > 0) {
+    endDatetimeForSearchTaskDownload = repoFilterAndSortAscDateList[repoFilterAndSortAscDateList.length - 1];
+    startDatetimeForSearchTaskDownload = repoFilterAndSortAscDateList[0];
+    let searchParam = new SearchTaskDataDownloadBO();
+    searchParam.userName = userName;
+    searchParam.repoName = repoName;
+    searchParam.type = taskType;
+    searchParam.typeId = typeId;
+    searchParam.startDatetime = startDatetimeForSearchTaskDownload;
+    searchParam.endDatetime = endDatetimeForSearchTaskDownload.add(1, "day");
+    searchParam.orderByColumn = "createDatetime";
+    searchParam.orderBy = "ASC";
+    let taskDataDownloadResult = await _searchTaskDataDownload({ param: searchParam });
+    let taskDataDownloadMap = new Map();
+    let taskDataDownloadResultItems = taskDataDownloadResult.items;
+    if (taskDataDownloadResultItems.length > 0) {
+      for (let i = 0; i < taskDataDownloadResultItems.length; i++) {
+        let item = taskDataDownloadResultItems[i];
+        taskDataDownloadMap.set(dateToStr(item.datetime), null);
+      }
+    } else {
+      //skip
+    }
+    let filterDay = repoFilterAndSortAscDateList.filter(item => { return !taskDataDownloadMap.has(dateToStr(item)) });
+    infoLog(`[TASK DATA DOWNLOAD CALCULATE] filterDay length = ${filterDay.length} to add record`)
+    //将缺失的日期任务添加到数据
+    if (filterDay.length > 0) {
+      try {
+        await saveTask({ type: taskType, datetimeList: filterDay, userName, repoName, typeId, config })
+        infoLog(`[TASK DATA DOWNLOAD CALCULATE] save task ${userName}/${repoName},${taskType},length = ${filterDay.length}`);
+        return true;
+      } catch (e) {
+        errorLog(e);
+      }
+    } else {
+      infoLog(`[TASK DATA DOWNLOAD CALCULATE] no newer record for ${userName}/${repoName}`);
+    }
+  } else {
+    infoLog(`[TASK DATA DOWNLOAD CALCULATE] repo(${userName}/${repoName}) has't match record `);
+  }
+  return false;
+}
+export async function handleDataCalcalate({ taskType, targetDay, typeId, config } = {}) {
   const today = targetDay.startOf("day");
   const latestTaskDataDownload = await _queryLatestTaskDataDownload({
     param: {
@@ -85,65 +152,6 @@ export async function handleDataCalculate({ taskType, targetDay, typeId, config 
     infoLog(`[TASK DATA DOWNLOAD CALCULATE] sikp task taskType = ${taskType},typeId = ${typeId}, datetime = ${today}`);
   }
   return result;
-}
-
-export async function handleStandardDataCalcalate({ userName, repoName, taskType, targetDay } = {}) {
-  let repoAllFileDateList = [];
-  try {
-    repoAllFileDateList = await queryRepoFileDateList({ userName, repoName, taskType });
-  } catch (e) {
-    if (e == EXCEPTION.UNAUTHORIZED) {
-      infoLog(`[TASK DATA DOWNLOAD CALCULATE] repo(${userName}/${repoName}) taskType = ${taskType} not found or unauthorized `);
-    } else {
-      throw e;
-    }
-    return false;
-  }
-  const repoFilterAndSortAscDateList = filterAndSortAscDateList({ dateList: repoAllFileDateList, targetDay, retentionDay: TASK_DATA_DOWNLOAD_MAX_DAY });
-  //查找缺失的日期
-  //获得数据库区间时间范围的记录
-  let endDatetimeForSearchTaskDownload = null;
-  let startDatetimeForSearchTaskDownload = null;
-  if (repoFilterAndSortAscDateList.length > 0) {
-    endDatetimeForSearchTaskDownload = repoFilterAndSortAscDateList[repoFilterAndSortAscDateList.length - 1];
-    startDatetimeForSearchTaskDownload = repoFilterAndSortAscDateList[0];
-    let searchParam = new SearchTaskDataDownloadBO();
-    searchParam.userName = userName;
-    searchParam.repoName = repoName;
-    searchParam.type = taskType;
-    searchParam.startDatetime = startDatetimeForSearchTaskDownload;
-    searchParam.endDatetime = endDatetimeForSearchTaskDownload.add(1, "day");
-    searchParam.orderByColumn = "createDatetime";
-    searchParam.orderBy = "ASC";
-    let taskDataDownloadResult = await _searchTaskDataDownload({ param: searchParam });
-    let taskDataDownloadMap = new Map();
-    let taskDataDownloadResultItems = taskDataDownloadResult.items;
-    if (taskDataDownloadResultItems.length > 0) {
-      for (let i = 0; i < taskDataDownloadResultItems.length; i++) {
-        let item = taskDataDownloadResultItems[i];
-        taskDataDownloadMap.set(dateToStr(item.datetime), null);
-      }
-    } else {
-      //skip
-    }
-    let filterDay = repoFilterAndSortAscDateList.filter(item => { return !taskDataDownloadMap.has(dateToStr(item)) });
-    infoLog(`[TASK DATA DOWNLOAD CALCULATE] filterDay length = ${filterDay.length} to add record`)
-    //将缺失的日期任务添加到数据
-    if (filterDay.length > 0) {
-      try {
-        await saveTask({ type: taskType, datetimeList: filterDay, userName, repoName })
-        infoLog(`[TASK DATA DOWNLOAD CALCULATE] save task ${userName}/${repoName},${taskType},length = ${filterDay.length}`);
-        return true;
-      } catch (e) {
-        errorLog(e);
-      }
-    } else {
-      infoLog(`[TASK DATA DOWNLOAD CALCULATE] no newer record for ${userName}/${repoName}`);
-    }
-  } else {
-    infoLog(`[TASK DATA DOWNLOAD CALCULATE] repo(${userName}/${repoName}) has't match record `);
-  }
-  return false;
 }
 
 // Handle

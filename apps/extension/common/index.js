@@ -131,7 +131,8 @@ export const TASK_TYPE_ALL_PUBLIC_DATA_DOWNLOAD = "ALL_PUBLIC_DATA_DOWNLOAD";
 export const TASK_TYPE_METADATA_DATA_DOWNLOAD = "METADATA_DATA_DOWNLOAD";
 export const TASK_TYPE_METADATA_DATA_MERGE = "METADATA_DATA_MERGE";
 
-export const TASK_TYPE_COMPANY_COMMENT_DOWNLOAD = "COMPANY_COMMENT_DOWNLOAD";
+export const TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD = "COMPANY_COMMENT_DATA_DOWNLOAD";
+export const TASK_TYPE_COMPANY_COMMENT_DATA_MERGE = "COMPANY_COMMENT_DATA_MERGE";
 
 export const TASK_TYPE_AND_FILE_NAME_MAP = new Map([
   [TASK_TYPE_JOB_DATA_UPLOAD, DATA_TYPE_NAME_JOB],
@@ -152,8 +153,12 @@ export const isStandardDataDownloadType = (value) => {
     value == TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD;
 }
 
+export const isDataSourceDataDownloadType = (value) => {
+  return value == TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD;
+}
+
 export const isDownloadType = (value) => {
-  return isStandardDataDownloadType(value) || value == TASK_TYPE_METADATA_DATA_DOWNLOAD;
+  return isStandardDataDownloadType(value) || isDataSourceDataDownloadType(value) || value == TASK_TYPE_METADATA_DATA_DOWNLOAD;
 }
 
 export const isUploadType = (value) => {
@@ -168,8 +173,12 @@ export const isStandardDataMergeType = (value) => {
     value == TASK_TYPE_JOB_PUBLIC_DATA_MERGE;
 };
 
+export const isDataSourceDataMergeType = (value) => {
+  return value == TASK_TYPE_COMPANY_COMMENT_DATA_MERGE;
+}
+
 export const isMergeType = (value) => {
-  return isStandardDataMergeType(value) || value == TASK_TYPE_METADATA_DATA_MERGE;
+  return isStandardDataMergeType(value) || isDataSourceDataMergeType(value) || value == TASK_TYPE_METADATA_DATA_MERGE;
 };
 
 export const TASK_STATUS_READY = "READY";

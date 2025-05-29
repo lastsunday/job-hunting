@@ -10,7 +10,7 @@ import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'; // ES 2015
 dayjs.extend(isSameOrAfter);
 
 export async function queryRepoFileDateList({
-  userName, repoName, taskType,
+  userName, repoName, taskType, fileName,
   getPathMap = async ({ userName, repoName }) => {
     return await lsTree({
       url: `${GITHUB_URL}/${userName}/${repoName}`,
@@ -20,13 +20,13 @@ export async function queryRepoFileDateList({
       }
     })
   } }) {
-  if (TASK_TYPE_AND_FILE_NAME_MAP.has(taskType)) {
+  const actualFileName = fileName ?? TASK_TYPE_AND_FILE_NAME_MAP.get(taskType);
+  if (actualFileName) {
     const pathMap = await getPathMap({ userName, repoName });
-    const fileName = TASK_TYPE_AND_FILE_NAME_MAP.get(taskType);
     const pathKeys = pathMap.keys();
     const filterResult = [];
     pathKeys.forEach(path => {
-      const matchPath = path.match(new RegExp(`\\/(?<YYYY>[0-9]{4})\\/(?<MM>[0-1][0-9])-(?<DD>[0-3][0-9])\\/${fileName}\\..*`));
+      const matchPath = path.match(new RegExp(`\\/(?<YYYY>[0-9]{4})\\/(?<MM>[0-1][0-9])-(?<DD>[0-3][0-9])\\/${actualFileName}\\..*`));
       if (matchPath) {
         const { YYYY, MM, DD } = matchPath.groups;
         filterResult.push(parse(`${YYYY}-${MM}-${DD}`));
@@ -34,7 +34,7 @@ export async function queryRepoFileDateList({
     });
     return filterResult;
   } else {
-    throw `can't find file name by task type = ${taskType}`;
+    throw `can't find file name by task type = ${taskType},fileName = ${actualFileName}`;
   }
 }
 

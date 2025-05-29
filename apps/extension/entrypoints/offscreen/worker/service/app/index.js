@@ -66,7 +66,7 @@ export async function runTask() {
         errorLog(e);
         //执行异常，补充异常信息
         taskItem.status = TASK_STATUS_ERROR;
-        taskItem.errorReason = e ? e.stack : e;
+        taskItem.errorReason = e && e.stack ? e.stack : e;
         taskItem.costTime = dayjs().diff(startDatetime);
         await _taskAddOrUpdate({ param: taskItem });
       }

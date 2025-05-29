@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { calculateDownloadTask, downloadDataByDataId } from "@/entrypoints/offscreen/worker/service/app/taskDownload";
-import { DATA_TYPE_NAME_JOB, TASK_STATUS_CANCEL, TASK_TYPE_JOB_DATA_DOWNLOAD, TASK_TYPE_JOB_DATA_MERGE, TASK_TYPE_METADATA_DATA_DOWNLOAD, TASK_TYPE_METADATA_DATA_MERGE } from "@/common";
+import { DATA_TYPE_NAME_JOB, TASK_STATUS_CANCEL, TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD, TASK_TYPE_JOB_DATA_DOWNLOAD, TASK_TYPE_JOB_DATA_MERGE, TASK_TYPE_METADATA_DATA_DOWNLOAD, TASK_TYPE_METADATA_DATA_MERGE } from "@/common";
 import * as modApp from "@/entrypoints/offscreen/worker/service/app";
 import * as modTaskLogic from "@/entrypoints/offscreen/worker/service/app/taskLogic";
 import * as modTaskDownloadLogic from "@/entrypoints/offscreen/worker/service/app/taskDownloadLogic";
@@ -61,6 +61,71 @@ test('calculate standard data download task in correct logic', async () => {
     userName: USER_NAME, repoName: REPO_NAME, taskType: TASK_TYPE, getTargetDay: async () => {
       return parse("2025-01-15");
     }
+  });
+  expect(result).toBeTruthy();
+})
+
+test('calculate data source download task in correct logic', async () => {
+  const CONFIG = {
+    "name": "深圳避雷公司名单",
+    "type": TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
+    "emotion": "NEGATIVE",
+    "fileName": "mine_field_shenzhen",
+    "description": "来自网络收集",
+    "retentionDay": 3650,
+  };
+  vi.spyOn(modTaskLogic, 'queryRepoFileDateList').mockImplementation(async ({ userName, repoName, taskType, fileName }) => {
+    expect(userName).toBe(USER_NAME);
+    expect(repoName).toBe(REPO_NAME);
+    expect(taskType).toBe(TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD);
+    expect(fileName).toBe("mine_field_shenzhen");
+    return [
+      parse("2025-01-03"),
+      parse("2024-12-30"),
+      parse("2025-01-01"),
+      parse("2024-12-31"),
+    ]
+  });
+  vi.spyOn(modTaskDataDownloadService, "_searchTaskDataDownload").mockImplementation(async ({ param }) => {
+    expect(param).toMatchObject(
+      {
+        pageNum: undefined,
+        pageSize: undefined,
+        userName: USER_NAME,
+        repoName: REPO_NAME,
+        type: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
+        typeId: "深圳避雷公司名单",
+        startDatetime: parse("2024-12-30"),
+        endDatetime: parse("2025-01-04"),
+        orderByColumn: 'createDatetime',
+        orderBy: 'ASC'
+      }
+    );
+    return {
+      items: [{
+        id: "testid",
+        type: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
+        username: USER_NAME,
+        reponame: REPO_NAME,
+        datetime: parse("2024-12-30"),
+        createDatetime: parse("2024-12-30"),
+        updateDatetime: parse("2024-12-30"),
+      }],
+      total: 1
+    };
+  });
+  vi.spyOn(modTaskDownloadLogic, 'saveTask').mockImplementation(async ({ type, datetimeList, userName, repoName, typeId, config }) => {
+    expect(type).toBe(TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD);
+    expect(datetimeList).toMatchObject([parse("2024-12-31"), parse(("2025-01-01")), parse("2025-01-03")]);
+    expect(userName).toBe(USER_NAME);
+    expect(repoName).toBe(REPO_NAME);
+    expect(typeId).toBe("深圳避雷公司名单");
+    expect(config).toMatchObject(CONFIG);
+  });
+  const result = await calculateDownloadTask({
+    userName: USER_NAME, repoName: REPO_NAME, taskType: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD, getTargetDay: async () => {
+      return parse("2025-01-15");
+    }, config: CONFIG
   });
   expect(result).toBeTruthy();
 })

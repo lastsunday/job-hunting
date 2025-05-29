@@ -1,5 +1,6 @@
+import { TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD } from "@/common";
+import { TYPE_GIT_METADATA } from "@/common/data/domain/dataSourceMetadata";
 import * as modUtil from "@/common/extension/worker/util";
-import { genSha256 } from "@/common/utils";
 import { parse } from "@/common/utils/date";
 import { getDb } from "@/entrypoints/offscreen/worker/database";
 import {
@@ -8,7 +9,6 @@ import {
 } from "@/entrypoints/offscreen/worker/service/baseBridgeService";
 import Service from "@/entrypoints/offscreen/worker/service/dataSourceMetadataService";
 import { PGlite } from "@electric-sql/pglite";
-import { TYPE_GIT_METADATA, SOURCE_METADATA_FETCH_TYPE_EMBEDDED } from "@/common/data/domain/dataSourceMetadata";
 import { expect, test, vi } from "vitest";
 test('data source metadata service method name correct', async () => {
   const result = Service.getMethodNameMap();
@@ -37,13 +37,13 @@ test('data source metadata service crud logic correct', async () => {
           config: [
             {
               name: "深圳避雷公司名单",
-              type: "COMPANY_COMMENT_DOWNLOAD",
+              type: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
               fileName: "mine_field_shenzhen",
               emotion: -1,
             },
             {
               name: "广州避雷公司名单",
-              type: "COMPANY_COMMENT_DOWNLOAD",
+              type: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
               fileName: "mine_field_guangzhou",
               emotion: -1,
             }
@@ -78,17 +78,19 @@ test('data source metadata service crud logic correct', async () => {
           config: [
             {
               name: "深圳避雷公司名单",
-              type: "COMPANY_COMMENT_DOWNLOAD",
+              type: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
               fileName: "mine_field_shenzhen",
               emotion: -1,
               description: "来自网络收集",
+              retentionDay: 3650,
             },
             {
               name: "广州避雷公司名单",
-              type: "COMPANY_COMMENT_DOWNLOAD",
+              type: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
               fileName: "mine_field_guangzhou",
               emotion: -1,
               description: "来自网络收集",
+              retentionDay: 3650,
             }
           ]
         },
