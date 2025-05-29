@@ -80,7 +80,8 @@ test('database init correct', async () => {
         'username',
         'reponame',
         'data_id',
-        'type_id'
+        'type_id',
+        'config'
       ]
     },
     job: {

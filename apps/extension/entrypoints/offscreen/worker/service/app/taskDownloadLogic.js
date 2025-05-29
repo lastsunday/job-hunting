@@ -38,7 +38,7 @@ export async function addDataDownloadTask({ type, datetime, userName, repoName, 
   await _taskAddOrUpdate({ param: task, connection });
 }
 
-export async function saveFileAndCalculateDataMergeTask({ userName, repoName, taskType, file, datetime, typeId }) {
+export async function saveFileAndCalculateDataMergeTask({ userName, repoName, taskType, file, datetime, typeId, config }) {
   await (await getDb()).transaction(async (tx) => {
     const savedFile = await _fileAddOrUpdate({ param: file, connection: tx });
     infoLog(`[TASK DOWNLOAD DATA] save file to database from ${userName}.${repoName} datetime = ${datetime}, id = ${savedFile.id}, typeId = ${typeId}`);
@@ -49,6 +49,7 @@ export async function saveFileAndCalculateDataMergeTask({ userName, repoName, ta
     taskDataMerge.reponame = repoName;
     taskDataMerge.datetime = datetime;
     taskDataMerge.typeId = typeId;
+    taskDataMerge.config = config;
     taskDataMerge.dataId = savedFile.id;
     const savedTaskDataMerge = await _taskDataMergeAddOrUpdate({ param: taskDataMerge, connection: tx });
     infoLog(`[TASK DOWNLOAD DATA] merge task to database from ${userName}.${repoName} datetime = ${datetime}, id = ${savedTaskDataMerge.id}`);

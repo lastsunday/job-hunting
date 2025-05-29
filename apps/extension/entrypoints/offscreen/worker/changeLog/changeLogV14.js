@@ -65,6 +65,7 @@ const SQL_ALTER_TABLE_TASK_DATA_DOWNLOAD_ADD_COLUMN = `
 
 const SQL_ALTER_TABLE_TASK_DATA_MERGE_ADD_COLUMN = `
   ALTER TABLE task_data_merge ADD COLUMN type_id VARCHAR(255);
+  ALTER TABLE task_data_merge ADD COLUMN config JSONB;
   `;
 
 export class ChangeLogV14 extends ChangeLog {

@@ -1,4 +1,5 @@
 import { genSha256 } from "@/common/utils";
+import { EMOTION_NEGATIVE, EMOTION_NORMAL, EMOTION_POSITIVE } from "./dataSourceMetadata";
 export class CompanyComment {
   /**
   * 编号
@@ -48,3 +49,12 @@ export const genId = (item) => {
 }
 export const SOURCE_TYPE_CUSTOM = 0;
 export const SOURCE_TYPE_PLATFORM = 1;
+export const convertEmotionFromText = (text) => {
+  if (text == "NEGATIVE") {
+    return EMOTION_NEGATIVE;
+  } else if (text == "POSITIVE") {
+    return EMOTION_POSITIVE;
+  } else {
+    return EMOTION_NORMAL;
+  }
+}

@@ -1,8 +1,8 @@
-import { handleMetadataMerge } from "@/entrypoints/offscreen/worker/service/app/taskMerge";
-import { expect, test, vi } from "vitest";
 import { parse } from "@/common/utils/date";
-import * as modTaskDataMergeService from "@/entrypoints/offscreen/worker/service/taskDataMergeService";
+import { handleMetadataMerge } from "@/entrypoints/offscreen/worker/service/app/taskMerge";
 import * as modFileService from "@/entrypoints/offscreen/worker/service/fileService";
+import * as modTaskDataMergeService from "@/entrypoints/offscreen/worker/service/taskDataMergeService";
+import { expect, test, vi } from "vitest";
 test('handleMetadataMerge in correct logic', async () => {
   const taskDataMergeId = `2ea162d6-f5a5-4af4-8e70-ae5f48994a4c`;
   vi.spyOn(modTaskDataMergeService, '_taskDataMergeGetById').mockImplementation(async ({ param }) => {
@@ -42,3 +42,4 @@ test('handleMetadataMerge in correct logic', async () => {
   const result = await handleMetadataMerge({ dataId: taskDataMergeId });
   expect(result).toBeNull();
 });
+

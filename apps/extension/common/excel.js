@@ -6,7 +6,8 @@ import { JobSnapshot } from "./data/domain/jobSnapshot";
 import { JobPublic } from "./data/domain/jobPublic";
 import { convertDateStringToDateObject, dateToStr, genIdFromText, genSha256 } from "./utils";
 import { utils, writeXLSX } from "xlsx";
-import { CompanyComment, genId as companyCommentGenId } from "./data/domain/companyComment";
+import { CompanyComment, genId as companyCommentGenId, convertEmotionFromText } from "./data/domain/companyComment";
+import { genIdByCompanyName } from "./data/domain/company";
 
 const HEADER_VERSION_PREFIX = "__VERSION_";
 
@@ -381,12 +382,14 @@ export const companyCommentDataToExcelJSONArray = (list) => {
   return result;
 }
 
-export const companyCommentExcelDataToObjectArray = (data) => {
-  const jobList = [];
+export const companyCommentExcelDataToObjectArray = (data, datetime, { config } = {}) => {
+  const result = [];
   for (let i = 0; i < data.length; i++) {
     const dataItem = data[i];
     const companyNameString = dataItem['公司'];
     const comment = dataItem['评论'];
+    const emotion = convertEmotionFromText(config?.emotion);
+    const sourceDataName = config?.name;
     if (comment) {
       const splitCompanyArray = companyNameString.split("\n");
       for (let n = 0; n < splitCompanyArray.length; n++) {
@@ -394,14 +397,20 @@ export const companyCommentExcelDataToObjectArray = (data) => {
         if (companyName) {
           const item = new CompanyComment();
           item.companyName = companyName.trim();
+          item.companyId = genIdByCompanyName(companyName);
           item.comment = (comment + "").trim();
           item.id = companyCommentGenId(item);
-          jobList.push(item);
+          item.emotion = emotion;
+          item.sourceType = 0;
+          item.sourceDataName = sourceDataName;
+          item.createDatetime = datetime;
+          item.updateDatetime = datetime;
+          result.push(item);
         }
       }
     }
   }
-  return jobList;
+  return result;
 }
 
 export const COMPANY_TAG_FILE_HEADER = [

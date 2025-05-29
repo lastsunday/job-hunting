@@ -1,33 +1,40 @@
-import { CompanyApi, JobApi, JobSnapshotApi, JobPublicApi, CompanyCommentApi } from "@/common/api";
+import { CompanyApi, CompanyCommentApi, JobApi, JobPublicApi, JobSnapshotApi } from "@/common/api";
+import { JOB_SNAPSHOT_FULL_FETCH_OR_INSERT_MAX_BATCH_SIZE } from "@/common/config";
+import { CompanyCommentSearchBO } from "@/common/data/bo/companyCommentSearchBO";
 import { CompanyTagExportBO } from "@/common/data/bo/companyTagExportBO";
+import { JobSnapshotSearchBO } from "@/common/data/bo/jobSnapshotSearchBO";
 import { JobTagExportBO } from "@/common/data/bo/jobTagExportBO";
 import { SearchCompanyBO } from "@/common/data/bo/searchCompanyBO";
 import { SearchJobBO } from "@/common/data/bo/searchJobBO";
-import { JobSnapshotSearchBO } from "@/common/data/bo/jobSnapshotSearchBO";
-import { CompanyCommentSearchBO } from "@/common/data/bo/companyCommentSearchBO";
 import {
+  COMPANY_COMMENT_FILE_HEADER,
   COMPANY_FILE_HEADER, COMPANY_TAG_FILE_HEADER,
+  companyCommentDataToExcelJSONArray, companyCommentExcelDataToObjectArray,
   companyDataToExcelJSONArray, companyExcelDataToObjectArray,
   companyTagDataToExcelJSONArray, companyTagExcelDataToObjectArray,
   JOB_FILE_HEADER,
+  JOB_PUBLIC_FILE_HEADER,
+  JOB_SNAPSHOT_FILE_HEADER,
   JOB_TAG_FILE_HEADER,
   jobDataToExcelJSONArray, jobExcelDataToObjectArray,
+  jobPublicDataToExcelJSONArray, jobPublicExcelDataToObjectArray,
+  jobSnapshotDataToJSONArray, jobSnapshotDataToObjectArray,
   jobTagDataToExcelJSONArray, jobTagExcelDataToObjectArray,
-  JOB_SNAPSHOT_FILE_HEADER, jobSnapshotDataToJSONArray, jobSnapshotDataToObjectArray,
-  JOB_PUBLIC_FILE_HEADER, jobPublicDataToExcelJSONArray, jobPublicExcelDataToObjectArray,
-  COMPANY_COMMENT_FILE_HEADER, companyCommentDataToExcelJSONArray, companyCommentExcelDataToObjectArray,
 } from "@/common/excel";
+import { useCompanyComment } from "@/common/hooks/companyComment";
+import { useJobSnapshot } from '@/common/hooks/jobSnapshot';
 import {
   getMergeDataListForCompany,
-  getMergeDataListForJob, getMergeDataListForTag,
-  getMergeDataListForJobSnapshot, getMergeDataListForJobPublic,
-  getMergeDataListForCompanyComment
+  getMergeDataListForCompanyComment,
+  getMergeDataListForJob,
+  getMergeDataListForJobPublic,
+  getMergeDataListForJobSnapshot,
+  getMergeDataListForTag
 } from "@/common/service/dataSyncService";
 import { genIdFromText } from "@/common/utils";
-import { useJobSnapshot } from '@/common/hooks/jobSnapshot';
 const { getFullData: getSnapshotFullData } = useJobSnapshot();
-import { JOB_SNAPSHOT_FULL_FETCH_OR_INSERT_MAX_BATCH_SIZE } from "@/common/config";
-import { genId as companyCommentGenId } from "@/common/data/domain/companyComment";
+const { filterCompanyCommentId } = useCompanyComment();
+
 export function useData() {
 
   const getJobDataToExcelJsonArray = async (pageNum, pageSize) => {
@@ -181,17 +188,7 @@ export function useData() {
 
   const saveCompanyCommentData = async (data) => {
     const list = companyCommentExcelDataToObjectArray(data);
-    const existsMap = new Map();
-    const filterList = [];
-    for (let i = 0; i < list.length; i++) {
-      const item = list[i];
-      const id = companyCommentGenId(item);
-      if (!existsMap.has(id)) {
-        existsMap.set(id, null);
-        item.id = id;
-        filterList.push(item);
-      }
-    }
+    const filterList = filterCompanyCommentId(list);
     const targetList = await getMergeDataListForCompanyComment(filterList, "id", async (ids) => {
       return CompanyCommentApi.companyCommentGetByIds(ids);
     });
@@ -282,7 +279,8 @@ export function useData() {
     JOB_FILE_HEADER, COMPANY_FILE_HEADER, COMPANY_TAG_FILE_HEADER,
     JOB_TAG_FILE_HEADER, JOB_SNAPSHOT_FILE_HEADER, JOB_PUBLIC_FILE_HEADER,
     COMPANY_COMMENT_FILE_HEADER,
-    saveJobSnapshotData, getJobSnapshotDataTotal, getJobSnapshotDataToJsonArray
+    saveJobSnapshotData, getJobSnapshotDataTotal, getJobSnapshotDataToJsonArray,
+    filterCompanyCommentId
   }
 }
 

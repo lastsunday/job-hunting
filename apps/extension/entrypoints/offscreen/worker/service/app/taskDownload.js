@@ -5,9 +5,12 @@ import {
   DATA_TYPE_NAME_JOB_PUBLIC,
   DATA_TYPE_NAME_JOB_TAG,
   isDataSourceDataDownloadType,
+  isDataSourceDataMergeType,
   isStandardDataDownloadType,
   isStandardDataMergeType,
   TASK_STATUS_CANCEL,
+  TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
+  TASK_TYPE_COMPANY_COMMENT_DATA_MERGE,
   TASK_TYPE_COMPANY_DATA_DOWNLOAD,
   TASK_TYPE_COMPANY_DATA_MERGE,
   TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD,
@@ -174,6 +177,9 @@ export function setup(handleMap) {
   handleMap.set(TASK_TYPE_METADATA_DATA_DOWNLOAD, async (dataId) => {
     return downloadDataByDataId(dataId, null, TASK_TYPE_METADATA_DATA_MERGE);
   })
+  handleMap.set(TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD, async (dataId) => {
+    return downloadDataByDataId(dataId, null, TASK_TYPE_COMPANY_COMMENT_DATA_MERGE);
+  })
 }
 
 export async function downloadDataByDataId(dataId, dataTypeName, taskType, { getTargetDay = async () => {
@@ -182,6 +188,8 @@ export async function downloadDataByDataId(dataId, dataTypeName, taskType, { get
   const targetDay = await getTargetDay();
   if (isStandardDataMergeType(taskType)) {
     return await handleDownloadStandardDataByDataId(dataId, dataTypeName, taskType, { targetDay });
+  } else if (isDataSourceDataMergeType(taskType)) {
+    return await handleDownloadStandardDataByDataId(dataId, null, taskType, { targetDay });
   } else {
     return await handleDownloadDataByDataId(dataId, taskType);
   }
@@ -225,19 +233,25 @@ export async function handleDownloadStandardDataByDataId(dataId, dataTypeName, t
   let userName = taskData.username;
   let repoName = taskData.reponame;
   let datetime = taskData.datetime;
-  const path = getPathByDatetime({ datetime }) + `/${dataTypeName}.zip`;
+  const config = taskData.config;
+  const actualFileName = dataTypeName ?? config?.fileName;
+  infoLog(`[TASK DOWNLOAD DATA] file name = ${actualFileName}`);
+  if (!actualFileName) {
+    throw `can't find fileName,dataId = ${dataId}, taskType = ${taskType}`;
+  }
+  const path = getPathByDatetime({ datetime }) + `/${actualFileName}.zip`;
   try {
     try {
       infoLog(`[TASK DOWNLOAD DATA] get file from ${userName}.${repoName}.${path}`);
       const fileData = await getFileData({ userName, repoName, filePath: path });
       const file = new File();
-      file.name = `${dataTypeName}.zip`;
+      file.name = `${actualFileName}.zip`;
       file.sha = await shasum(fileData);
       file.encoding = "base64"
       file.content = bytesToBase64(fileData);
       file.size = fileData.byteLength;
       file.type = "file";
-      await saveFileAndCalculateDataMergeTask({ userName, repoName, taskType, file, datetime });
+      await saveFileAndCalculateDataMergeTask({ userName, repoName, taskType, file, datetime, config });
       return null;
     } catch (e) {
       throw e;

@@ -17,7 +17,7 @@ import { useCompanyComment } from "../../hooks/companyComment";
 import styles from "./CompanyCommentView.module.css";
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
-const { convertSortField } = useCompanyComment();
+const { convertSortField, emotionFormat } = useCompanyComment();
 dayjs.extend(duration)
 
 const fillSearchParam = (searchParam, values) => {
@@ -122,9 +122,9 @@ const CompanyCommentView: React.FC = () => {
         >
           <Text
             className={styles.comment}
-            title={`${value}`}
+            title={`${emotionFormat(value)}(${value})`}
             ellipsis
-          >{value}</Text>
+          >{emotionFormat(value)}</Text>
         </Popover>,
       minWidth: 100,
     },

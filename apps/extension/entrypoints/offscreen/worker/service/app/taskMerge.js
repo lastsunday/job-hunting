@@ -4,6 +4,7 @@ import {
   DATA_TYPE_NAME_JOB,
   DATA_TYPE_NAME_JOB_PUBLIC,
   DATA_TYPE_NAME_JOB_TAG,
+  TASK_TYPE_COMPANY_COMMENT_DATA_MERGE,
   TASK_TYPE_COMPANY_DATA_MERGE,
   TASK_TYPE_COMPANY_TAG_DATA_MERGE,
   TASK_TYPE_JOB_DATA_MERGE,
@@ -11,11 +12,14 @@ import {
   TASK_TYPE_JOB_TAG_DATA_MERGE,
   TASK_TYPE_METADATA_DATA_MERGE
 } from "@/common";
+import { CompanyCommentApi } from "@/common/api";
 import { CompanyTagExportBO } from "@/common/data/bo/companyTagExportBO";
 import { JobTagExportBO } from "@/common/data/bo/jobTagExportBO";
 import {
+  COMPANY_COMMENT_FILE_HEADER,
   COMPANY_FILE_HEADER,
   COMPANY_TAG_FILE_HEADER,
+  companyCommentExcelDataToObjectArray,
   companyExcelDataToObjectArray,
   companyTagExcelDataToObjectArray,
   JOB_FILE_HEADER,
@@ -26,8 +30,9 @@ import {
   jobTagExcelDataToObjectArray,
   validImportData
 } from "@/common/excel";
+import { useCompanyComment } from "@/common/hooks/companyComment";
 import { debugLog, infoLog } from "@/common/log";
-import { getMergeDataListForCompany, getMergeDataListForJob, getMergeDataListForJobPublic, getMergeDataListForTag } from "@/common/service/dataSyncService";
+import { getMergeDataListForCompany, getMergeDataListForCompanyComment, getMergeDataListForJob, getMergeDataListForJobPublic, getMergeDataListForTag } from "@/common/service/dataSyncService";
 import { genIdFromText } from "@/common/utils";
 import { base64decode } from "@/common/utils/base64";
 import { getExcelDataFromZipFile } from "@/common/zip";
@@ -43,7 +48,8 @@ import { _jobPublicBatchAddJobPublicAndUpdateJob, SERVICE_INSTANCE as JOB_PUBLIC
 import { _batchAddOrUpdateJob, _jobGetByIds } from "../jobService";
 import { _jobTagBatchAddOrUpdate, _jobTagExport } from "../jobTagService";
 import { _taskDataMergeAddOrUpdate, _taskDataMergeGetById } from "../taskDataMergeService";
-
+const { filterCompanyCommentId } = useCompanyComment();
+import { SERVICE_INSTANCE as COMPANY_COMMENT_SERVICE_INSTANCE } from "../companyCommentService";
 dayjs.extend(minMax);
 
 // Handle
@@ -116,7 +122,6 @@ export function setup(handleMap) {
       const targetObject = await getMergeDataListForJobPublic(items, "jobId", async (ids) => {
         return await _jobGetByIds({ param: ids, connection });
       }, async (ids) => {
-
         const result = await JOB_PUBLIC_SERVICE_INSTANCE._search({ jobIds: ids, sourceType: 0, source: taskDataMerge.username }, { connection });
         return result.items;
       });
@@ -126,6 +131,26 @@ export function setup(handleMap) {
   });
   handleMap.set(TASK_TYPE_METADATA_DATA_MERGE, async (dataId) => {
     return handleMetadataMerge({ dataId });
+  });
+  handleMap.set(TASK_TYPE_COMPANY_COMMENT_DATA_MERGE, async (dataId) => {
+    return handleCompanyCommentDataMerge({ dataId });
+  });
+}
+
+export async function handleCompanyCommentDataMerge({ dataId = null } = {}) {
+  return mergeDataByDataId(dataId, TASK_TYPE_COMPANY_COMMENT_DATA_MERGE, null, COMPANY_COMMENT_FILE_HEADER, companyCommentExcelDataToObjectArray, async (items, taskDataMerge, connection) => {
+    const filterList = filterCompanyCommentId(items);
+    const targetList = await getMergeDataListForCompanyComment(filterList, "id", async (ids) => {
+      return COMPANY_COMMENT_SERVICE_INSTANCE._getByIds(ids, { connection });
+    });
+    if (targetList.length > 0) {
+      //如果补充source信息
+      targetList.forEach(item => {
+        item.source = taskDataMerge.username;
+      });
+    }
+    await COMPANY_COMMENT_SERVICE_INSTANCE._batchAddOrUpdate(targetList, { connection, overrideCreateDatetime: true, overrideUpdateDatetime: true });
+    return targetList.length;
   });
 }
 
@@ -151,25 +176,27 @@ export async function handleMetadataMerge({ dataId = null } = {}) {
 }
 
 export async function mergeDataByDataId(dataId, taskType, dataTypeName, fileHeader, excelDataToObjectArrayFunction, dataInsertFunction) {
-  debugLog(`[TASK DATA MERGE] Task dataId = ${dataId},taskType = ${taskType}`);
+  infoLog(`[TASK DATA MERGE] Task dataId = ${dataId},taskType = ${taskType}`);
   const taskDataMerge = await _taskDataMergeGetById({ param: dataId });
-  debugLog(`[TASK DATA MERGE] taskDataMerge dataId = ${taskDataMerge.dataId},username = ${taskDataMerge.username},repoName = ${taskDataMerge.reponame},datetime = ${taskDataMerge.datetime}`);
+  const config = taskDataMerge.config;
+  const actualFileName = config?.fileName ?? dataTypeName;
+  infoLog(`[TASK DATA MERGE] taskDataMerge dataId = ${taskDataMerge.dataId},username = ${taskDataMerge.username},repoName = ${taskDataMerge.reponame},datetime = ${taskDataMerge.datetime}`);
   const file = await _fileGetById({ param: taskDataMerge.dataId });
-  debugLog(`[TASK DATA MERGE] file id = ${file.id},name = ${file.name}`);
+  infoLog(`[TASK DATA MERGE] file id = ${file.id},name = ${file.name}`);
   let base64Content = file.content;
-  let excelFileBufferData = await getExcelDataFromZipFile(base64Content, dataTypeName);
+  let excelFileBufferData = await getExcelDataFromZipFile(base64Content, actualFileName);
   let wb = read(excelFileBufferData, { type: "buffer", cellDates: true });
   let validResultObject = validImportData(utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, UTC: true }), fileHeader);
   if (!validResultObject.validResult) {
-    debugLog(`[TASK DATA MERGE] valid file name = ${file.name}, id = ${file.id} failure`);
+    infoLog(`[TASK DATA MERGE] valid file name = ${file.name}, id = ${file.id} failure`);
     return `文件校验失败，缺少数据列(${validResultObject.lackColumn.length}):${validResultObject.lackColumn.join(",")}`;
   }
-  debugLog(`[TASK DATA MERGE] valid file name = ${file.name}, id = ${file.id} success`);
+  infoLog(`[TASK DATA MERGE] valid file name = ${file.name}, id = ${file.id} success`);
   const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2, UTC: true });
   await (await getDb()).transaction(async (tx) => {
-    let count = await dataInsertFunction(excelDataToObjectArrayFunction(data, taskDataMerge.datetime), taskDataMerge, tx);
+    let count = await dataInsertFunction(excelDataToObjectArrayFunction(data, taskDataMerge.datetime, { config }), taskDataMerge, tx);
     taskDataMerge.dataCount = count;
     await _taskDataMergeAddOrUpdate({ param: taskDataMerge, connection: tx });
-    debugLog(`[TASK DATA MERGE] merge file name = ${file.name}, id = ${file.id} success,data count = ${count}`);
+    infoLog(`[TASK DATA MERGE] merge file name = ${file.name}, id = ${file.id} success,data count = ${count}`);
   });
 }

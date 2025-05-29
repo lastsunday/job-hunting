@@ -173,7 +173,7 @@ const TaskDetailView: React.FC = () => {
           </div>
         </Col>
           : null}
-        {isMergeType(value.type) ? TASK_TYPE_METADATA_DATA_MERGE ?
+        {isMergeType(value.type) ? TASK_TYPE_METADATA_DATA_MERGE == value.type ?
           <Col>
             <div>
               <div className="i-stash:data-date inline-flex" />日期：{

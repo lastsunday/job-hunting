@@ -6,6 +6,7 @@ export class TaskDataMerge {
   datetime;
   typeId;
   dataId;
+  config;
   dataCount;
   createDatetime;
   updateDatetime;
