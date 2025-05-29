@@ -8,7 +8,8 @@ import {
   TASK_TYPE_COMPANY_TAG_DATA_MERGE,
   TASK_TYPE_JOB_DATA_MERGE,
   TASK_TYPE_JOB_PUBLIC_DATA_MERGE,
-  TASK_TYPE_JOB_TAG_DATA_MERGE
+  TASK_TYPE_JOB_TAG_DATA_MERGE,
+  TASK_TYPE_METADATA_DATA_MERGE
 } from "@/common";
 import { CompanyTagExportBO } from "@/common/data/bo/companyTagExportBO";
 import { JobTagExportBO } from "@/common/data/bo/jobTagExportBO";
@@ -25,9 +26,10 @@ import {
   jobTagExcelDataToObjectArray,
   validImportData
 } from "@/common/excel";
-import { debugLog } from "@/common/log";
+import { debugLog, infoLog } from "@/common/log";
 import { getMergeDataListForCompany, getMergeDataListForJob, getMergeDataListForJobPublic, getMergeDataListForTag } from "@/common/service/dataSyncService";
 import { genIdFromText } from "@/common/utils";
+import { base64decode } from "@/common/utils/base64";
 import { getExcelDataFromZipFile } from "@/common/zip";
 import dayjs from "dayjs";
 import minMax from 'dayjs/plugin/minMax'; // ES 2015
@@ -35,11 +37,12 @@ import { read, utils } from "xlsx";
 import { getDb } from "../../database";
 import { _batchAddOrUpdateCompany, _companyGetByIds } from "../companyService";
 import { _batchAddOrUpdateCompanyTag, _companyTagExport } from "../companyTagService";
+import { SERVICE_INSTANCE as DATA_SOURCE_METADATA_SERVICE } from "../dataSourceMetadataService";
 import { _fileGetById } from "../fileService";
+import { _jobPublicBatchAddJobPublicAndUpdateJob, SERVICE_INSTANCE as JOB_PUBLIC_SERVICE_INSTANCE } from "../jobPublicService";
 import { _batchAddOrUpdateJob, _jobGetByIds } from "../jobService";
 import { _jobTagBatchAddOrUpdate, _jobTagExport } from "../jobTagService";
 import { _taskDataMergeAddOrUpdate, _taskDataMergeGetById } from "../taskDataMergeService";
-import { SERVICE_INSTANCE as JOB_PUBLIC_SERVICE_INSTANCE, _jobPublicBatchAddJobPublicAndUpdateJob } from "../jobPublicService";
 
 dayjs.extend(minMax);
 
@@ -120,10 +123,34 @@ export function setup(handleMap) {
       await _jobPublicBatchAddJobPublicAndUpdateJob(targetObject, { connection });
       return targetObject.jobPublicList.length;
     });
-  })
+  });
+  handleMap.set(TASK_TYPE_METADATA_DATA_MERGE, async (dataId) => {
+    return handleMetadataMerge({ dataId });
+  });
 }
 
-async function mergeDataByDataId(dataId, taskType, dataTypeName, fileHeader, excelDataToObjectArrayFunction, dataInsertFunction) {
+export async function handleMetadataMerge({ dataId = null } = {}) {
+  infoLog(`[TASK DATA MERGE] Task dataId = ${dataId}`);
+  const taskDataMerge = await _taskDataMergeGetById({ param: dataId });
+  infoLog(`[TASK DATA MERGE] taskDataMerge dataId = ${taskDataMerge.dataId},datetime = ${taskDataMerge.datetime},typeId = ${taskDataMerge.typeId}`);
+  const typeId = taskDataMerge.typeId;
+  const fileId = taskDataMerge.dataId;
+  const file = await _fileGetById({ param: fileId });
+  infoLog(`[TASK DATA MERGE] file id = ${file.id},name = ${file.name}`);
+  const text = base64decode(file.content);
+  const metadata = JSON.parse(text);
+  const data = metadata?.data;
+  if (!data) {
+    throw `can't found metadata data in file,file id = ${file.id}`;
+  }
+  const dataSourceMetadata = await DATA_SOURCE_METADATA_SERVICE._getById(typeId);
+  dataSourceMetadata.data = data;
+  await DATA_SOURCE_METADATA_SERVICE._addOrUpdate(dataSourceMetadata);
+  infoLog(`[TASK DATA MERGE] merge file name = ${file.name}, id = ${file.id} success`);
+  return null;
+}
+
+export async function mergeDataByDataId(dataId, taskType, dataTypeName, fileHeader, excelDataToObjectArrayFunction, dataInsertFunction) {
   debugLog(`[TASK DATA MERGE] Task dataId = ${dataId},taskType = ${taskType}`);
   const taskDataMerge = await _taskDataMergeGetById({ param: dataId });
   debugLog(`[TASK DATA MERGE] taskDataMerge dataId = ${taskDataMerge.dataId},username = ${taskDataMerge.username},repoName = ${taskDataMerge.reponame},datetime = ${taskDataMerge.datetime}`);
