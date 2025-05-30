@@ -365,6 +365,14 @@ export const COMPANY_COMMENT_FILE_HEADER = [
   [
     "公司",
     "评论",
+  ],
+  [
+    "公司",
+    "评论",
+    "情感",
+    "数据集",
+    "创建日期",
+    "更新日期",
   ]
 ];
 
@@ -375,6 +383,10 @@ export const companyCommentDataToExcelJSONArray = (list) => {
     const obj = {
       公司: item.companyName,
       评论: item.comment,
+      情感: item.emotion,
+      数据集: item.sourceDataName,
+      创建日期: item.createDatetime,
+      更新日期: item.updateDatetime,
     };
     fillDataVersion(obj, COMPANY_COMMENT_FILE_HEADER);
     result.push(obj);
@@ -388,8 +400,8 @@ export const companyCommentExcelDataToObjectArray = (data, datetime, { config } 
     const dataItem = data[i];
     const companyNameString = dataItem['公司'];
     const comment = dataItem['评论'];
-    const emotion = convertEmotionFromText(config?.emotion);
-    const sourceDataName = config?.name;
+    const emotion = dataItem['情感'] ?? convertEmotionFromText(config?.emotion);
+    const sourceDataName = dataItem['情感'] ?? config?.name;
     if (comment) {
       const splitCompanyArray = companyNameString.split("\n");
       for (let n = 0; n < splitCompanyArray.length; n++) {
@@ -403,8 +415,8 @@ export const companyCommentExcelDataToObjectArray = (data, datetime, { config } 
           item.emotion = emotion;
           item.sourceType = 0;
           item.sourceDataName = sourceDataName;
-          item.createDatetime = datetime;
-          item.updateDatetime = datetime;
+          item.createDatetime = convertDateStringToDateObject(dataItem['创建日期']) ?? convertDateStringToDateObject(datetime);
+          item.updateDatetime = convertDateStringToDateObject(dataItem['更新日期']) ?? convertDateStringToDateObject(datetime);
           result.push(item);
         }
       }
