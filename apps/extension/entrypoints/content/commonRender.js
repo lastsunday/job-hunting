@@ -39,9 +39,9 @@ import {
 dayjs.extend(minMax);
 
 import $ from "jquery";
-import { AuthApi, CompanyApi, JobApi, UserApi } from "../../common/api";
+import { AuthApi, CompanyApi, CompanyCommentApi, JobApi, UserApi } from "../../common/api";
 import { GithubApi } from "../../common/api/github";
-import { COMMENT_PAGE_SIZE, COMPANY_DATA_EXPRIE_DAY } from "../../common/config";
+import { COMMENT_PAGE_SIZE, COMPANY_DATA_EXPRIE_DAY, UI_DEFAULT_PAGE_SIZE } from "../../common/config";
 import { errorLog, infoLog } from "../../common/log";
 import { logoResource } from "./assets/logo";
 
@@ -237,6 +237,110 @@ export function finalRender(jobDTOList, { platform, isFinalRender = true, isReco
         jobCardItemDom.title = item.jobDescription;
       }
     }
+  }
+}
+
+export function createCompanyCommentButton(keyword, keywordSha256) {
+  const result = document.createElement("div");
+  result.className = "__company_info_quick_search_wrapper";
+  const root = $(`<div></div>`)[0];
+  root.className =
+    "__company_info_quick_search_item __company_info_other_channel";
+  const buttonAnchorName = genUniqueId();
+  const button = $(`<div class="__comment_button" style="anchor-name:--${buttonAnchorName};">公司评论</div>`)[0];
+  const menu = $(`<div
+    style="display:none;position-anchor: --${buttonAnchorName};max-width:50%;max-height:50%;overflow:scroll;overscroll-behavior:contain;" class="__modal"
+      ></div>`)[0];
+  const toggleMenu = () => {
+    if (menu.style.display == "none") {
+      menu.style.display = "block";
+    } else {
+      menu.style.display = "none";
+    }
+  };
+  menu.addEventListener('click', toggleMenu);
+  button.addEventListener('click', toggleMenu);
+  root.appendChild(button);
+
+  const badgeWrapper = $(`<div></div>`)[0];
+  button.append(badgeWrapper);
+
+  root.appendChild(menu);
+  result.appendChild(root);
+
+  const load = () => {
+    renderCompanyComment({ button, badgeWrapper, menu, companyName: keyword, companyIdSha256: keywordSha256 });
+  }
+  load();
+  return result;
+}
+
+const renderCompanyComment = async ({ button, badgeWrapper, menu, companyName, companyIdSha256 }) => {
+  button.title = "加载中";
+  try {
+    clearAllChildNode(badgeWrapper);
+    const searchResult = await queryCompanyComment({ pageNum: 1, pageSize: 0, companyIdSha256 });
+    const { total } = searchResult;
+    if (total > 0) {
+      badgeWrapper.appendChild($(`<div class="__comment_badge __comment_badge_exists">${total}</div>`)[0]);
+    } else {
+      badgeWrapper.appendChild($(`<div class="__comment_badge __comment_badge_not_found">0</div>`)[0]);
+    }
+    const pageSize = UI_DEFAULT_PAGE_SIZE;
+    const totalPage = Number.parseInt((total / pageSize) + "") + (total % pageSize > 0 ? 1 : 0);
+    let pageNum = 1;
+    renderCompanyCommentContent({ pageNum, pageSize, button, menu, companyIdSha256 });
+    let loading = false;
+    menu.addEventListener("scroll", async () => {
+      if (!loading) {
+        loading = true;
+        let scrollTop = menu.scrollTop;
+        let menuHeight = menu.scrollHeight;
+        if (scrollTop == menuHeight - menu.clientHeight) {
+          if (pageNum < totalPage) {
+            pageNum = pageNum + 1;
+            await renderCompanyCommentContent({ pageNum, pageSize, button, menu, companyIdSha256 });
+            loading = false;
+          }
+        } else {
+          loading = false;
+        }
+      }
+    })
+  } catch (e) {
+    //ERROR
+    clearAllChildNode(badgeWrapper);
+    button.title = "访问异常";
+    badgeWrapper.appendChild($(`<div class="__comment_badge __comment_badge_error">❕</div>`)[0]);
+    throw e
+  }
+}
+const queryCompanyComment = async ({ pageNum, pageSize, companyIdSha256 } = {}) => {
+  return await CompanyCommentApi.companyCommentSearch({
+    pageNum,
+    pageSize,
+    companyId: companyIdSha256,
+    emotion: -1,
+    orderByColumn: "updateDatetime",
+    orderBy: "DESC",
+  });
+}
+
+const renderCompanyCommentContent = async ({ pageNum, pageSize, companyIdSha256, button, menu }) => {
+  let summary = ``;
+  button.title = summary;
+  const queryResult = await queryCompanyComment({ pageNum, pageSize, companyIdSha256 });
+  const pageItems = queryResult.items;
+  if (pageItems.length > 0) {
+    pageItems.forEach((item, index) => {
+      const row = $(`<div class="__company_comment_row">
+<div class="__company_comment_row_header"><span>${(pageNum - 1) * pageSize + index + 1}. </span><span>${item.companyName}</span> 评论来自:<span><${item.sourceDataName}></span> 更新时间:${convertTimeToHumanReadable(item.updateDatetime)}</div>
+<div class="__company_comment_row_content">${item.comment}<div></div>`)[0];
+      menu.appendChild(row);
+    });
+  } else {
+    const noMore = $(`<div>没有更多评论</div>`)[0];
+    menu.appendChild(noMore);
   }
 }
 
@@ -974,10 +1078,10 @@ function createCompanyInfo(item, { getCompanyInfoFunction, platform, searchButto
         const commentWrapperDiv = document.createElement("div");
         commentWrapperDiv.className = `__comment_wrapper __${platform}_comment_wrapper`
         commentWrapperDiv.appendChild(createSearchCompanyLink(companyName));
-
+        commentWrapperDiv.appendChild(createCompanyCommentButton(companyName, companyIdSha256));
         const companyCommentButton = genCommentTextButton(
           commentWrapperDiv,
-          "公司评论",
+          "在线公司评论",
           companyName,
           companyIdSha256,
           { autoLoad: true, isRecommendPage, platform, jobCardItemDom }
