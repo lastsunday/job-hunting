@@ -1,20 +1,17 @@
-import { DATA_TYPE_NAME_JOB_SNAPSHOT } from '@/common';
 import {
-  APP_ID,
-  COMPANY_MAX_EXPORT_SIZE,
-  COMPANY_TAG_MAX_EXPORT_SIZE,
-  JOB_MAX_EXPORT_SIZE,
-  JOB_SNAPSHOT_MAX_EXPORT_SIZE,
-  JOB_TAG_MAX_EXPORT_SIZE,
+  APP_ID
 } from '@/common/config';
 import { CheckCard } from '@ant-design/pro-components';
 import {
   Button,
   Card,
   Flex,
+  Form,
   message,
   Modal,
+  Spin,
   Switch,
+  Tag,
   Tooltip,
   Typography,
 } from 'antd';
@@ -25,18 +22,38 @@ import { useData } from '../hooks/data';
 import useAnalysisStore from '../store/AnalysisStore';
 import useAuthStore from '../store/AuthStore';
 import useDataSharePlanStore from '../store/DataSharePlanStore';
-import useSystemStore from '../store/SystemStore';
-import DataBackupRestore from './setting/DataBackupRestore';
-import DatabaseBackupRestore from './setting/DatabaseBackupRestore';
 import useJobSnapshotStore from '../store/JobSnapshotStore';
+import useSystemStore from '../store/SystemStore';
 const { Text, Link } = Typography;
 
 const version = __APP_VERSION__;
 
 const SettingView: React.FC = () => {
-  const [enable, change] = useDataSharePlanStore(
-    useShallow((state) => [state.enable, state.change])
+  const [
+    enable,
+    change,
+    privateDataSyncEnableConfig,
+    updatePrivateDataSyncEnableConfig,
+    enablePublic,
+    changePublic,
+    publicDataSyncEnableConfig,
+    updatePublicDataSyncEnableConfig,
+  ] = useDataSharePlanStore(
+    useShallow((state) => [
+      state.enable,
+      state.change,
+      state.privateDataSyncEnableConfig,
+      state.updatePrivateDataSyncEnableConfig,
+      state.enablePublic,
+      state.changePublic,
+      state.publicDataSyncEnableConfig,
+      state.updatePublicDataSyncEnableConfig,
+    ])
   );
+  const [
+    updateDataSyncEnableConfigLoading,
+    setUpdateDataSyncEnableConfigLoading,
+  ] = useState(false);
   const [analysisConfig, updateAnalysis] = useAnalysisStore(
     useShallow((state) => [state.config, state.update])
   );
@@ -44,32 +61,18 @@ const SettingView: React.FC = () => {
     useShallow((state) => [state.installAndLogin])
   );
   const [dataSharePlanEnable, setDataSharePlanEnable] = useState(false);
+  const [dataPublicEnable, setDataPublicEnable] = useState(false);
   const [analysisEnable, setAnalysisEnable] = useState(false);
   const [jobSnapshotEnable, setJobSnapshotEnable] = useState(false);
   const [jobSnapshotConfig, updateJobSnapshotConfig] = useJobSnapshotStore(
     useShallow((state) => [state.config, state.update])
   );
   const {
-    getJobDataToExcelJsonArray,
-    getJobDataTotal,
-    saveJobData,
-    getCompanyDataToExcelJsonArray,
-    getCompanyDataTotal,
-    saveCompanyData,
-    getCompanyTagDataToExcelJsonArray,
-    saveCompanyTagData,
-    getCompanyTagDataTotal,
-    getJobTagDataToExcelJsonArray,
-    saveJobTagData,
-    getJobTagDataTotal,
     JOB_FILE_HEADER,
+    JOB_PUBLIC_FILE_HEADER,
     COMPANY_FILE_HEADER,
     COMPANY_TAG_FILE_HEADER,
     JOB_TAG_FILE_HEADER,
-    JOB_SNAPSHOT_FILE_HEADER,
-    saveJobSnapshotData,
-    getJobSnapshotDataTotal,
-    getJobSnapshotDataToJsonArray,
   } = useData();
   const [isHowToUpdateModalOpen, setIsHowToUpdateModalOpen] = useState(false);
   const [isVersionDescModalOpen, setIsVersionDescModalOpen] = useState(false);
@@ -106,14 +109,39 @@ const SettingView: React.FC = () => {
       state.downloadLatest,
     ])
   );
+  const private_data_setting = [
+    { label: '职位数据', name: 'job', value: false, header: JOB_FILE_HEADER },
+    {
+      label: '公司数据',
+      name: 'company',
+      header: COMPANY_FILE_HEADER,
+    },
+    {
+      label: '职位标签数据',
+      name: 'jobTag',
+      header: JOB_TAG_FILE_HEADER,
+    },
+    {
+      label: '公司标签数据',
+      name: 'companyTag',
+      header: COMPANY_TAG_FILE_HEADER,
+    },
+  ];
+
+  const [privateDataSettingForm] = Form.useForm();
+
+  const public_data_setting = [
+    { label: '职位公开数据', name: 'jobPublic', value: false, header: JOB_PUBLIC_FILE_HEADER },
+  ];
+
+  const [publicDataSettingForm] = Form.useForm();
+
 
   useEffect(() => {
     setDataSharePlanEnable(enable);
+    setDataPublicEnable(enablePublic);
     setAnalysisEnable(analysisConfig.enable);
     setJobSnapshotEnable(jobSnapshotConfig.enable);
-    if (enable) {
-      setIsDangerDataShareMenuOpen(true);
-    }
   }, []);
 
   useEffect(() => {
@@ -132,22 +160,11 @@ const SettingView: React.FC = () => {
     }
   };
 
-  const [isDangerDataShareMenuOpen, setIsDangerDataShareMenuOpen] =
-    useState(false);
-
-  const getSwitchStyle = () => {
-    if (isDangerDataShareMenuOpen) {
-      return { backgroundColor: 'red' };
-    } else {
-      return null;
-    }
-  };
-
   return (
     <>
       {contextHolder}
       <Flex gap="small" wrap vertical>
-        <Card title="程序信息" bordered={false} size="small">
+        <Card title="程序信息" variant="borderless" size="small">
           <Flex gap={10} vertical>
             <Flex gap={10}>
               <Text type="success">版本 {version}</Text>
@@ -273,10 +290,10 @@ const SettingView: React.FC = () => {
             </Flex>
           </Flex>
         </Card>
-        <Card title="GitHub App" bordered={false} size="small">
+        <Card title="GitHub App" variant="borderless" size="small">
           <Flex vertical gap={5}>
             <Flex>
-              <Tooltip title="安装GitHubApp获得评论、数据共享计划能力">
+              <Tooltip title="安装GitHubApp获得评论、数据云备份和分享的能力">
                 <Button
                   onClick={() => {
                     installAndLogin();
@@ -360,104 +377,167 @@ const SettingView: React.FC = () => {
         </Card>
         <Card
           title=<Flex align="center" gap={5}>
-            <Text>数据共享计划</Text>
-            <Switch
-              style={getSwitchStyle()}
-              checkedChildren="风险操作开启"
-              unCheckedChildren="风险操作关闭"
-              size="small"
-              checked={isDangerDataShareMenuOpen}
-              onChange={(checked) => {
-                setIsDangerDataShareMenuOpen(checked);
-              }}
-            ></Switch>
+            <Text>数据云备份和分享</Text>
           </Flex>
           variant="borderless"
           size="small"
         >
-          {isDangerDataShareMenuOpen ? (
-            <CheckCard.Group
-              onChange={async (value) => {
-                if (value) {
-                  await change(true);
-                  setDataSharePlanEnable(true);
-                } else {
-                  await change(false);
-                  setDataSharePlanEnable(false);
-                }
-              }}
-              value={dataSharePlanEnable}
+          <Spin spinning={updateDataSyncEnableConfigLoading}>
+            <Card
+              title=<Flex align="center" gap={5}>
+                <Text>私有数据</Text>
+                <Switch
+                  checkedChildren="私有数据云备份开启"
+                  unCheckedChildren="私有数据云备份关闭"
+                  size="small"
+                  checked={dataSharePlanEnable}
+                  onChange={async (checked) => {
+                    try {
+                      setUpdateDataSyncEnableConfigLoading(true);
+                      if (checked) {
+                        await change(true);
+                        setDataSharePlanEnable(true);
+                      } else {
+                        await change(false);
+                        setDataSharePlanEnable(false);
+                      }
+                    } finally {
+                      setUpdateDataSyncEnableConfigLoading(false);
+                    }
+                  }}
+                ></Switch>
+              </Flex>
+              variant="borderless"
+              size="small"
             >
-              <CheckCard
-                title="开启"
-                description="开启数据共享计划，请遵守相关法律法规"
-                value={true}
-              />
-              <CheckCard
-                title="关闭"
-                description="关闭数据共享计划"
-                value={false}
-              />
-            </CheckCard.Group>
-          ) : null}
-        </Card>
-        <Card title="数据管理" bordered={false} size="small">
-          <Flex vertical gap={5}>
-            <DatabaseBackupRestore />
-            <DataBackupRestore
-              title="职位"
-              getExcelJsonArrayFunction={getJobDataToExcelJsonArray}
-              fileHeader={JOB_FILE_HEADER}
-              saveDataFunction={saveJobData}
-              getDataTotalFunction={getJobDataTotal}
-              getMaxExportCount={async () => {
-                return JOB_MAX_EXPORT_SIZE;
-              }}
-            />
-            <DataBackupRestore
-              title="公司"
-              getExcelJsonArrayFunction={getCompanyDataToExcelJsonArray}
-              fileHeader={COMPANY_FILE_HEADER}
-              saveDataFunction={saveCompanyData}
-              getDataTotalFunction={getCompanyDataTotal}
-              getMaxExportCount={async () => {
-                return COMPANY_MAX_EXPORT_SIZE;
-              }}
-            />
-            <DataBackupRestore
-              title="职位标签"
-              getExcelJsonArrayFunction={getJobTagDataToExcelJsonArray}
-              fileHeader={JOB_TAG_FILE_HEADER}
-              saveDataFunction={saveJobTagData}
-              getDataTotalFunction={getJobTagDataTotal}
-              getMaxExportCount={async () => {
-                return JOB_TAG_MAX_EXPORT_SIZE;
-              }}
-            />
-            <DataBackupRestore
-              title="公司标签"
-              getExcelJsonArrayFunction={getCompanyTagDataToExcelJsonArray}
-              fileHeader={COMPANY_TAG_FILE_HEADER}
-              saveDataFunction={saveCompanyTagData}
-              getDataTotalFunction={getCompanyTagDataTotal}
-              getMaxExportCount={async () => {
-                return COMPANY_TAG_MAX_EXPORT_SIZE;
-              }}
-            />
-            <DataBackupRestore
-              title="职位快照"
-              getExcelJsonArrayFunction={getJobSnapshotDataToJsonArray}
-              fileHeader={JOB_SNAPSHOT_FILE_HEADER}
-              saveDataFunction={saveJobSnapshotData}
-              getDataTotalFunction={getJobSnapshotDataTotal}
-              getMaxExportCount={async () => {
-                return JOB_SNAPSHOT_MAX_EXPORT_SIZE;
-              }}
-              dataType={DATA_TYPE_NAME_JOB_SNAPSHOT}
-              format="json"
-              accept=".tar.xz"
-            />
-          </Flex>
+              <Form
+                form={privateDataSettingForm}
+                labelCol={{ span: 4 }}
+                wrapperCol={{ span: 14 }}
+                layout="horizontal"
+                disabled={!dataSharePlanEnable}
+                initialValues={privateDataSyncEnableConfig}
+              >
+                {private_data_setting.map((item) => {
+                  return (
+                    <Form.Item
+                      key={item.name}
+                      label={item.label}
+                      name={item.name}
+                      tooltip={{
+                        color: 'white',
+                        placement: 'right',
+                        title: (
+                          <Flex wrap gap={3}>
+                            {item.header[item.header.length - 1].map((name) => {
+                              return (
+                                <Tag
+                                  key={`${item.name}${name}`}
+                                  color="magenta"
+                                >
+                                  {name}
+                                </Tag>
+                              );
+                            })}
+                          </Flex>
+                        ),
+                      }}
+                    >
+                      <Switch
+                        onChange={async () => {
+                          try {
+                            setUpdateDataSyncEnableConfigLoading(true);
+                            await updatePrivateDataSyncEnableConfig(
+                              privateDataSettingForm.getFieldsValue()
+                            );
+                          } finally {
+                            setUpdateDataSyncEnableConfigLoading(false);
+                          }
+                        }}
+                      ></Switch>
+                    </Form.Item>
+                  );
+                })}
+              </Form>
+            </Card>
+            <Card
+              title=<Flex align="center" gap={5}>
+                <Text>公开数据</Text>
+                <Switch
+                  checkedChildren="公开数据共享开启"
+                  unCheckedChildren="公开数据共享关闭"
+                  size="small"
+                  checked={dataPublicEnable}
+                  onChange={async (checked) => {
+                    try {
+                      setUpdateDataSyncEnableConfigLoading(true);
+                      if (checked) {
+                        await changePublic(true);
+                        setDataPublicEnable(true);
+                      } else {
+                        await changePublic(false);
+                        setDataPublicEnable(false);
+                      }
+                    } finally {
+                      setUpdateDataSyncEnableConfigLoading(false);
+                    }
+                  }}
+                ></Switch>
+              </Flex>
+              variant="borderless"
+              size="small"
+            >
+              <Form
+                form={publicDataSettingForm}
+                labelCol={{ span: 4 }}
+                wrapperCol={{ span: 14 }}
+                layout="horizontal"
+                disabled={!dataPublicEnable}
+                initialValues={publicDataSyncEnableConfig}
+              >
+                {public_data_setting.map((item) => {
+                  return (
+                    <Form.Item
+                      key={item.name}
+                      label={item.label}
+                      name={item.name}
+                      tooltip={{
+                        color: 'white',
+                        placement: 'right',
+                        title: (
+                          <Flex wrap gap={3}>
+                            {item.header[item.header.length - 1].map((name) => {
+                              return (
+                                <Tag
+                                  key={`${item.name}${name}`}
+                                  color="magenta"
+                                >
+                                  {name}
+                                </Tag>
+                              );
+                            })}
+                          </Flex>
+                        ),
+                      }}
+                    >
+                      <Switch
+                        onChange={async () => {
+                          try {
+                            setUpdateDataSyncEnableConfigLoading(true);
+                            await updatePublicDataSyncEnableConfig(
+                              publicDataSettingForm.getFieldsValue()
+                            );
+                          } finally {
+                            setUpdateDataSyncEnableConfigLoading(false);
+                          }
+                        }}
+                      ></Switch>
+                    </Form.Item>
+                  );
+                })}
+              </Form>
+            </Card>
+          </Spin>
         </Card>
       </Flex>
       <Modal

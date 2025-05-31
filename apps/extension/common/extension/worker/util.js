@@ -7,7 +7,7 @@ import { debugLog } from "@/common/log";
 /**
  *  [OffScreen] <- (message) [this@[WebWorker]]
  */
-export function postSuccessMessage(message, data) {
+export async function postSuccessMessage(message, data) {
   const { postSuccessMessage: _postSuccessMessage } = useMessage();
   _postSuccessMessage(message, data, {
     from: WEB_WORKER, to: OFFSCREEN, sendMessageFunction: (obj) => {
@@ -19,7 +19,7 @@ export function postSuccessMessage(message, data) {
 /**
  *  [OffScreen] <- (message) [this@[WebWorker]]
  */
-export function postErrorMessage(message, error) {
+export async function postErrorMessage(message, error) {
   const { postErrorMessage: _postErrorMessage } = useMessage();
   _postErrorMessage(message, error, {
     from: WEB_WORKER, to: OFFSCREEN, sendMessageFunction: (obj) => {

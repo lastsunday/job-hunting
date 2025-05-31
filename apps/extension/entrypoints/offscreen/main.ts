@@ -1,9 +1,9 @@
 import { onMessageHandle, onMessageHandleForWorker } from "@/common/extension/offscreen/util";
-import { debugLog } from "../../common/log";
+import { infoLog } from "../../common/log";
 // @ts-expect-error: Query params not typed
 import MyWorker from "./worker?worker&url";
 
-debugLog("offscreen ready");
+infoLog("offscreen ready");
 
 const worker = new Worker(new URL(MyWorker, import.meta.url), {
   type: "module",

@@ -3,9 +3,10 @@ import { SearchTaskDataUploadBO } from "@/common/data/bo/searchTaskDataUploadBO"
 import { TaskDataUpload } from "@/common/data/domain/taskDataUpload";
 import { SearchTaskDataUploadDTO } from "@/common/data/dto/searchTaskDataUploadDTO";
 import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
-import dayjs from "dayjs";
+import { dateToStr } from "@/common/utils/date";
 import { getDb } from "../database";
 import { BaseService } from "./baseService";
+import { genWhereSql } from "./sqlUtil";
 
 export const SERVICE_INSTANCE = new BaseService("task_data_upload", "id",
     () => {
@@ -90,13 +91,19 @@ export const _taskDataUploadGetById = async ({ param = null, connection = null }
 }
 
 export const _taskDataUploadAddOrUpdate = async ({ param = null, connection = null } = {}) => {
-    param.startDatetime = dayjs(param.startDatetime).format();
-    param.endDatetime = dayjs(param.endDatetime).format();
+    param.startDatetime = dateToStr(param.startDatetime);
+    param.endDatetime = dateToStr(param.endDatetime);
     return await SERVICE_INSTANCE._addOrUpdate(param, { connection });
 }
 
-export const _taskDataUploadGetMaxEndDatetime = async ({ connection = null } = {}) => {
+export const _taskDataUploadGetMaxEndDatetime = async ({ connection = null, username = null, reponame = null, type = null } = {}) => {
     connection ??= await getDb();
-    const { rows } = await connection.query("SELECT MAX(end_datetime) AS datetime FROM task_data_upload;");
+    const whereCondition = genWhereSql([
+        { include: username, sql: `AND username = '${username}'` },
+        { include: reponame, sql: `AND reponame = '${reponame}'` },
+        { include: type, sql: `AND type = '${type}'` }
+    ]
+    );
+    const { rows } = await connection.query(`SELECT MAX(end_datetime) AS datetime FROM task_data_upload ${whereCondition}`);
     return rows[0].datetime;
 }

@@ -8,6 +8,7 @@ import { ChangeLogV10 } from './changeLog/changeLogV10';
 import { ChangeLogV11 } from './changeLog/changeLogV11';
 import { ChangeLogV12 } from './changeLog/changeLogV12';
 import { ChangeLogV13 } from './changeLog/changeLogV13';
+import { ChangeLogV14 } from './changeLog/changeLogV14';
 import { ChangeLogV2 } from "./changeLog/changeLogV2";
 import { ChangeLogV3 } from './changeLog/changeLogV3';
 import { ChangeLogV4 } from './changeLog/changeLogV4';
@@ -28,8 +29,8 @@ const JOB_DB_PATH = "/" + DATA_DIR + "/" + JOB_DIR + "/";
 let db;
 let initializing = false;
 
-export async function getDb() {
-  return await Database.innerInit();
+export async function getDb({ dataDir } = {}) {
+  return await Database.innerInit({ dataDir });
 }
 
 export async function getOne(sql, bind, obj, { connection = null } = {}) {
@@ -163,6 +164,8 @@ function genInsertValueBindValue(obj, params, { overrideCreateDatetime = false, 
         } else {
           values.push(`${dayjs(now).format()}`);
         }
+      } else if (param[`${key}`] && typeof param[`${key}`] == 'object') {
+        values.push(JSON.stringify(param[`${key}`]));
       } else {
         const value = convertEmptyStringToNull(param[`${key}`]);
         values.push(value);
@@ -332,20 +335,21 @@ export const Database = {
    */
   init: async function (message, param) {
     try {
-      await Database.innerInit();
+      await Database.innerInit({ dataDir: param.dataDir });
     } catch (e) {
       postErrorMessage(message, "init database error : " + e.message);
     }
     postSuccessMessage(message);
   },
 
-  innerInit: async function () {
+  innerInit: async function ({ dataDir } = {}) {
     return new Promise(async (resolve, reject) => {
       if (initializing) {
         resolve(db);
       }
       if (!initializing) {
         try {
+          initializing = true;
           debugLog("Loading and initializing...");
           const changelogList = [];
           changelogList.push(new ChangeLogV1());
@@ -361,9 +365,9 @@ export const Database = {
           changelogList.push(new ChangeLogV11());
           changelogList.push(new ChangeLogV12());
           changelogList.push(new ChangeLogV13());
+          changelogList.push(new ChangeLogV14());
           initChangeLog(changelogList);
-          initDb();
-          initializing = true;
+          await initDb({ dataDir });
           debugLog("Done initializing. Running app...");
           resolve(db);
         } catch (e) {
@@ -495,8 +499,7 @@ const _dbDelete = async () => {
  *
  * @returns
  */
-const initDb = async function () {
-  const dataDir = `opfs-ahp://${JOB_DB_PATH}`;
+const initDb = async function ({ dataDir = `opfs-ahp://${JOB_DB_PATH}` } = {}) {
   if (isDevEnv() && ENABLE_SQL_AUTO_EXPLAIN) {
     db = new PGlite(dataDir, {
       extensions: { auto_explain },

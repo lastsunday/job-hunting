@@ -1,0 +1,17 @@
+.partnerExists {
+    color: green;
+}
+
+.partnerAdd {
+    color: #1677ff;
+}
+
+.headerTitle{
+  display:flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.tag{
+  margin-bottom:5px;
+}
