@@ -1,4 +1,4 @@
-import { Flex, Tag, Typography } from 'antd';
+import { Badge, Flex, Tag, Typography } from 'antd';
 const { Text } = Typography;
 
 import {
@@ -18,6 +18,7 @@ import { useTag } from '../hooks/tag';
 import { TAG_SOURCE_TYPE_CUSTOM } from '@/common';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { JobData } from '../data/JobData';
+import { CompanyComment } from "@/common/data/domain/companyComment";
 import CustomTag from './CustomTag';
 import './JobItemCard.css';
 //TODO 直接引用analysis包的JobAnalysisComponent会报错,这里使用的由项目重新lit react包装的组件，需要研究
@@ -64,6 +65,7 @@ export type JobItemCardProps = {
     auto?: boolean;
   };
   historyElement?: React.ReactNode;
+  companyCommentElement?: React.ReactNode;
 };
 const JobItemCard: React.FC<JobItemCardProps> = (props) => {
   const {
@@ -182,22 +184,24 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
         <Flex className={styles.marginTop} wrap={true} gap={2}>
           {genCompanyTag(companyTagList)}
         </Flex>
-        <Flex className={styles.marginTop}>
+        <Flex className={styles.marginTop} justify='space-between'>
           {companyUrl ? (
-            <Link
-              onClick={(event) => {
-                event.stopPropagation();
-              }}
-              ellipsis
-              type="warning"
-              underline
-              href={companyUrl}
-              target="_blank"
-            >
-              {companyName}
-            </Link>
+            <Flex>
+              <Link
+                onClick={(event) => {
+                  event.stopPropagation();
+                }}
+                ellipsis
+                type="warning"
+                underline
+                href={companyUrl}
+                target="_blank"
+              >
+                {companyName}
+              </Link>
+            </Flex>
           ) : (
-            <>
+            <Flex>
               <QuestionCircleOutlined />
               <Link
                 onClick={(event) => {
@@ -213,8 +217,9 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
               >
                 {companyName}
               </Link>
-            </>
+            </Flex>
           )}
+          {<div>{props.companyCommentElement}</div>}
         </Flex>
         <Flex className={styles.marginTop} wrap={true} gap={2}>
           {skillTagList &&

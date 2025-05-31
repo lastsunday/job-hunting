@@ -1,10 +1,12 @@
-import { AssistantApi, JobSnapshotApi, TagApi } from '@/common/api';
+import { AssistantApi, JobSnapshotApi, TagApi, CompanyCommentApi } from '@/common/api';
 import { JobSnapshotSearchBO } from '@/common/data/bo/jobSnapshotSearchBO';
 import { SearchFaviousJobBO } from '@/common/data/bo/searchFaviousJobBO';
 import { JobSnapshot } from '@/common/data/domain/jobSnapshot';
+import { genIdByCompanyName } from '@/common/data/domain/company';
 import { AnalysisConfigDTO } from '@/common/data/dto/analysisConfigDTO';
 import { toLine } from '@/common/utils';
 import JobSnapshotHistory from '@/entrypoints/components/JobSnapshotHistory';
+import { CompanyComment } from '@/common/data/domain/companyComment';
 import { SearchOutlined } from '@ant-design/icons';
 import {
   Empty,
@@ -30,6 +32,7 @@ import './FavoriteJobView.css';
 import styles from './FavoriteJobView.module.css';
 import useJobSnapshotStore from '../../store/JobSnapshotStore';
 import { useShallow } from 'zustand/shallow';
+import CompanyCommentWidget from '@/entrypoints/components/CompanyCommentWidget';
 const { queryAnalysisConfig } = useAnalysis();
 
 const { convertToJobDataList, convertToJobData } = useJob();
@@ -66,6 +69,8 @@ const FavoriteJobView: React.FC = () => {
   const [jobSnapshotConfig] = useJobSnapshotStore(
     useShallow((state) => [state.config])
   );
+
+  const [companyCommentItems, setCompanyCommentItems] = useState<CompanyComment>([]);
 
   const onStart = (_event: DraggableEvent, uiData: DraggableData) => {
     const { clientWidth, clientHeight } = window.document.documentElement;
@@ -165,12 +170,16 @@ const FavoriteJobView: React.FC = () => {
           );
           setSnapshotItems(result);
         }
+        const companyCommentResult = await CompanyCommentApi.companyCommentSearch({
+          companyId: searchResult.items.map(item => genIdByCompanyName(item.jobCompanyName))
+        });
+        setCompanyCommentItems([...companyCommentResult.items]);
       } finally {
         setLoading(false);
       }
     };
     search();
-    return () => {};
+    return () => { };
   }, [
     //这里的值改变时，会执行上面return的匿名函数
     page,
@@ -261,15 +270,15 @@ const FavoriteJobView: React.FC = () => {
                         analysisConfig={
                           analysisConfig
                             ? Object.assign(
-                                { demand: `${item.name}\n${item.desc}` },
-                                analysisConfig
-                              )
+                              { demand: `${item.name}\n${item.desc}` },
+                              analysisConfig
+                            )
                             : null
                         }
                         historyElement={
                           jobSnapshotConfig.enable ? (
                             <JobSnapshotHistory
-                              key={snapshotItems.length}
+                              key={item.id}
                               jobId={item.id}
                               getSnapshotTotalCallback={async () => {
                                 return snapshotItems.filter(
@@ -290,7 +299,19 @@ const FavoriteJobView: React.FC = () => {
                             />
                           ) : null
                         }
+                        companyCommentElement={
+                          <CompanyCommentWidget
+                            companyName={item?.company?.name}
+                            companyCommentList={
+                              companyCommentItems
+                                ? companyCommentItems.filter(companyComment => {
+                                  return companyComment.companyId == genIdByCompanyName(item.company.name)
+                                })
+                                : []
+                            }></CompanyCommentWidget>
+                        }
                       ></JobItemCard>
+
                     ))
                   ) : (
                     <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} />
@@ -326,7 +347,7 @@ const FavoriteJobView: React.FC = () => {
             />
           </Spin>
         </Flex>
-      </Flex>
+      </Flex >
       <JobModal data={jobModalData} refresh={refresh}></JobModal>
       <Modal
         title={
@@ -342,9 +363,9 @@ const FavoriteJobView: React.FC = () => {
             }}
             // fix eslintjsx-a11y/mouse-events-have-key-events
             // https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/master/docs/rules/mouse-events-have-key-events.md
-            onFocus={() => {}}
-            onBlur={() => {}}
-            // end
+            onFocus={() => { }}
+            onBlur={() => { }}
+          // end
           >
             职位偏好设置
           </div>
