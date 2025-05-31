@@ -42,15 +42,31 @@ const RootLayout: React.FC = () => {
 
   const genDataSharePlanMenu = () => {
     return [
-      { key: 'list', label: '列表' },
-      { key: 'metadata', label: '元数据' },
+      {
+        key: 'list',
+        icon: <div className="i-material-symbols-light:view-list-outline-sharp" />,
+        label: '列表'
+      },
+      {
+        key: 'metadata',
+        icon: <div className="i-uil:list-ul" />,
+        label: '元数据'
+      },
     ];
   };
 
   const genTaskMenu = () => {
     return [
-      { key: 'taskStatistic', label: '统计' },
-      { key: 'taskDetail', label: '详情' },
+      {
+        key: 'taskStatistic',
+        icon: <div className="i-wpf:statistics" />,
+        label: '统计'
+      },
+      {
+        key: 'taskDetail',
+        icon: <div className="i-bx:detail" />,
+        label: '详情'
+      },
     ];
   };
 
@@ -78,9 +94,21 @@ const RootLayout: React.FC = () => {
         icon: <RobotOutlined />,
         label: '个人助理',
         children: [
-          { key: 'favoriteJob', label: '职位偏好' },
-          { key: 'historyJob', label: '浏览历史' },
-          { key: 'automate', label: '自动化' },
+          {
+            key: 'favoriteJob',
+            icon: <div className="i-f7:square-favorites-alt"></div>,
+            label: '职位偏好'
+          },
+          {
+            key: 'historyJob',
+            icon: <div className="i-material-symbols:history"></div>,
+            label: '浏览历史'
+          },
+          {
+            key: 'automate',
+            icon: <div className="i-meteor-icons:robot"></div>,
+            label: '自动化'
+          },
           ...genAnalysisMenu(),
           jobSnapshotConfig.enable
             ? { key: 'jobSnapshot', icon: <HistoryOutlined />, label: '职位快照' }
@@ -101,16 +129,48 @@ const RootLayout: React.FC = () => {
         icon: <DatabaseOutlined />,
         label: '数据',
         children: [
-          { key: 'job', label: '职位' },
+          {
+            key: 'job',
+            icon: <div className="i-hugeicons:job-search"></div>,
+            label: '职位'
+          },
           jobSnapshotConfig.enable
-            ? { key: 'jobSnapshot', label: '职位快照' }
+            ? {
+              key: 'jobSnapshot',
+              icon: <div className="i-qlementine-icons:snapshot-16"></div>,
+              label: '职位快照'
+            }
             : null,
-          { key: 'company', label: '公司' },
-          { key: 'tag', label: '标签' },
-          { key: 'companyTag', label: '公司标签' },
-          { key: 'jobTag', label: '职位标签' },
-          { key: 'jobPublic', label: '职位公开数据' },
-          { key: 'companyComment', label: '公司评论' },
+          {
+            key: 'company',
+            icon: <div className="i-mdi:company"></div>,
+            label: '公司'
+          },
+          {
+            key: 'tag',
+            icon: <div className="i-mingcute:tag-line"></div>,
+            label: '标签'
+          },
+          {
+            key: 'companyTag',
+            icon: <div className="i-mingcute:tag-line"></div>,
+            label: '公司标签'
+          },
+          {
+            key: 'jobTag',
+            icon: <div className="i-mingcute:tag-line"></div>,
+            label: '职位标签'
+          },
+          {
+            key: 'jobPublic',
+            icon: <div className="i-material-symbols:public"></div>,
+            label: '职位公开数据'
+          },
+          {
+            key: 'companyComment',
+            icon: <div className="i-mingcute:comment-line"></div>,
+            label: '公司评论'
+          },
         ],
       },
       {
