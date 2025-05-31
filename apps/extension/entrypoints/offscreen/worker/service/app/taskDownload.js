@@ -110,10 +110,10 @@ export async function handleStandardDataCalcalate({ userName, repoName, taskType
         errorLog(e);
       }
     } else {
-      infoLog(`[TASK DATA DOWNLOAD CALCULATE] no newer record for ${userName}/${repoName}`);
+      infoLog(`[TASK DATA DOWNLOAD CALCULATE] no newer record repo(${userName}/${repoName}) taskType = ${taskType}`);
     }
   } else {
-    infoLog(`[TASK DATA DOWNLOAD CALCULATE] repo(${userName}/${repoName}) has't match record `);
+    infoLog(`[TASK DATA DOWNLOAD CALCULATE] has't match record repo(${userName}/${repoName}) taskType = ${taskType}`);
   }
   return false;
 }

@@ -50,6 +50,7 @@ import { _jobTagBatchAddOrUpdate, _jobTagExport } from "../jobTagService";
 import { _taskDataMergeAddOrUpdate, _taskDataMergeGetById } from "../taskDataMergeService";
 const { filterCompanyCommentId } = useCompanyComment();
 import { SERVICE_INSTANCE as COMPANY_COMMENT_SERVICE_INSTANCE } from "../companyCommentService";
+import { DEFAULT_MAX_MERGE_SIZE } from "@/common/config";
 dayjs.extend(minMax);
 
 // Handle
@@ -194,9 +195,29 @@ export async function mergeDataByDataId(dataId, taskType, dataTypeName, fileHead
   infoLog(`[TASK DATA MERGE] valid file name = ${file.name}, id = ${file.id} success`);
   const data = utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 2, UTC: true });
   await (await getDb()).transaction(async (tx) => {
-    let count = await dataInsertFunction(excelDataToObjectArrayFunction(data, taskDataMerge.datetime, { config }), taskDataMerge, tx);
+    let count = await mergeByChunk({
+      taskDataMerge, items: data, mergeFunction: async ({ items }) => {
+        return await dataInsertFunction(excelDataToObjectArrayFunction(items, taskDataMerge.datetime, { config }), taskDataMerge, tx);
+      }
+    })
     taskDataMerge.dataCount = count;
     await _taskDataMergeAddOrUpdate({ param: taskDataMerge, connection: tx });
     infoLog(`[TASK DATA MERGE] merge file name = ${file.name}, id = ${file.id} success,data count = ${count}`);
   });
+}
+
+const mergeByChunk = async ({ taskDataMerge, items, mergeFunction } = {}) => {
+  let totalResult = 0;
+  const total = items.length;
+  const perSize = DEFAULT_MAX_MERGE_SIZE;
+  const stepCount = Number.parseInt(total / perSize + "") + (total % perSize > 0 ? 1 : 0)
+  infoLog(`[TASK DATA MERGE] Task dataId = ${taskDataMerge.id},taskType = ${taskDataMerge.type},total = ${total},perSize = ${perSize},stepCount = ${stepCount}`);
+  for (let i = 0; i < stepCount; i++) {
+    const start = i * perSize;
+    const end = Math.min(total, (i + 1) * perSize);
+    const perStepItems = items.slice(start, end);
+    infoLog(`[TASK DATA MERGE] Task dataId = ${taskDataMerge.id},taskType = ${taskDataMerge.type},start = ${start},end = ${end},perStepItems.length = ${perStepItems.length}`);
+    totalResult += await mergeFunction({ items: perStepItems });
+  }
+  return totalResult;
 }
