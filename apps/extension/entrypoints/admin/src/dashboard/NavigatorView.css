@@ -17,3 +17,9 @@
   justify-content: center;
   align-items: start;
 }
+
+.functionIcon {
+  width: 60px;
+  height: 60px;
+  color: dodgerblue;
+}

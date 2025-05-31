@@ -68,30 +68,11 @@ const SettingView: React.FC = () => {
     useShallow((state) => [state.config, state.update])
   );
   const {
-    getJobDataToExcelJsonArray,
-    getJobDataTotal,
-    saveJobData,
-    getJobPublicDataToExcelJsonArray,
-    getJobPublicDataTotal,
-    saveJobPublicData,
-    getCompanyDataToExcelJsonArray,
-    getCompanyDataTotal,
-    saveCompanyData,
-    getCompanyTagDataToExcelJsonArray,
-    saveCompanyTagData,
-    getCompanyTagDataTotal,
-    getJobTagDataToExcelJsonArray,
-    saveJobTagData,
-    getJobTagDataTotal,
     JOB_FILE_HEADER,
     JOB_PUBLIC_FILE_HEADER,
     COMPANY_FILE_HEADER,
     COMPANY_TAG_FILE_HEADER,
     JOB_TAG_FILE_HEADER,
-    JOB_SNAPSHOT_FILE_HEADER,
-    saveJobSnapshotData,
-    getJobSnapshotDataTotal,
-    getJobSnapshotDataToJsonArray,
   } = useData();
   const [isHowToUpdateModalOpen, setIsHowToUpdateModalOpen] = useState(false);
   const [isVersionDescModalOpen, setIsVersionDescModalOpen] = useState(false);

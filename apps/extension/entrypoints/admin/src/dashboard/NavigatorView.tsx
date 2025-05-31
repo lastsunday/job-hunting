@@ -1,7 +1,48 @@
-import { Card, Col, Flex, Row } from 'antd';
+import { Card, Col, Flex, Popover, Row, Typography } from 'antd';
+const { Text } = Typography;
 import { logo } from '../assets';
 import Link from 'antd/lib/typography/Link';
 import "./NavigatorView.css";
+
+const functionList = [
+  {
+    url: 'data/companyComment',
+    label: '查询公司评论',
+    icon: `i-mingcute:comment-line`,
+    desc: `可根据公司名查询公司评论，数据来自数据源`,
+  },
+  {
+    url: 'bbs',
+    label: '讨论区',
+    icon: `i-ri:kakao-talk-line`,
+    desc: `登录Github帐号，写下你想说的`,
+  },
+  {
+    url: 'assistant/favoriteJob',
+    label: '职位偏好',
+    icon: `i-f7:square-favorites-alt`,
+    desc: `根据个人偏好，快速筛选扫描过的职位`,
+  },
+  {
+    url: 'assistant/historyJob',
+    label: '浏览历史',
+    icon: `i-material-symbols:history`,
+    desc: `显示最近浏览的职位`,
+  },
+  {
+    url: 'task/taskStatistic',
+    label: '任务统计',
+    icon: `i-akar-icons:statistic-up`,
+    desc: `查看系统后台任务运行状态`,
+  },
+  {
+    url: 'dataSource/list',
+    label: '数据源',
+    icon: `i-material-symbols:dataset`,
+    desc: `数据源管理，可追加自定义数据源，如公司评论，公开数据，私有数据`,
+  },
+];
+
 
 const publicJobWebsiteList = [
   {
@@ -89,17 +130,72 @@ const companyWebsiteList = [
   { url: 'https://xwqy.gsxt.gov.cn', label: '个体私营', desc: `` },
 ];
 
+import { useNavigate } from "react-router";
+import useAnalysisStore from '../store/AnalysisStore';
+import useJobSnapshotStore from '../store/JobSnapshotStore';
+import { useShallow } from 'zustand/shallow';
 const NavigatorView: React.FC = () => {
 
+  const [analysisConfig, updateAnalysis] = useAnalysisStore(
+    useShallow((state) => [state.config, state.update])
+  );
+  const [analysisEnable, setAnalysisEnable] = useState(false);
+  const [jobSnapshotEnable, setJobSnapshotEnable] = useState(false);
+  const [jobSnapshotConfig] = useJobSnapshotStore(
+    useShallow((state) => [state.config])
+  );
+  const navigate = useNavigate();
+  const [advancedFunctionList, setAdvancedFunctionList] = useState([]);
+
+  useEffect(() => {
+    setAnalysisEnable((analysisConfig.enable));
+    setJobSnapshotEnable(jobSnapshotConfig.enable);
+  }, []);
+
+  useEffect(() => {
+    setAdvancedFunctionList(
+      [
+        {
+          url: analysisEnable ? "assistant/analysisSetting" : 'assistant/analysisWelcome',
+          label: '职位分析',
+          icon: `i-eos-icons:ai`,
+          desc: `使用大模型技术，根据预设的简历分析职位的匹配度`,
+        },
+        {
+          url: jobSnapshotEnable ? "assistant/jobSnapshotSetting" : 'data/jobSnapshot',
+          label: '职位快照',
+          icon: `i-qlementine-icons:snapshot-16`,
+          desc: `持久化职位详情页`,
+        },
+        {
+          url: 'assistant/automate',
+          label: '自动化',
+          icon: `i-meteor-icons:robot`,
+          desc: `可自动化浏览职位搜索页面`,
+        },
+        {
+          url: 'system/dataManagement',
+          label: '数据管理',
+          icon: `i-streamline:database-setting`,
+          desc: `可对数据进行导入，导出操作`,
+        },
+        {
+          url: 'system/setting',
+          label: '系统设置',
+          icon: `i-uil:setting`,
+          desc: `可开启数据云备份,分享和其他高级功能`,
+        },
+      ]
+    )
+  }, [analysisEnable]);
   return (
     <>
       <Row gutter={2}>
         <Col sm={24} xl={24}>
-          <Card size="small" title="公共招聘网站" style={{ margin: 10 }}>
+          <Card size="small" title="常用功能" style={{ margin: 10 }}>
             <Row>
-              {publicJobWebsiteList.map((item, index) => (
+              {functionList.map((item, index) => (
                 <Col
-                  title={item.desc}
                   key={index}
                   xs={12}
                   sm={8}
@@ -107,31 +203,33 @@ const NavigatorView: React.FC = () => {
                   lg={4}
                   className="cardItem flexCenter"
                 >
-                  <Link href={item.url} target="_blank" className="flexCenter">
-                    <Row>
-                      <Col xs={24} className="flexCenter">
-                        <img
-                          className="companyLogo"
-                          src={item.logo}
-                          alt="logo"
-                        />
-                      </Col>
-                      <Col xs={24} className="cardLabel flexCenter">
-                        <Flex>{item.label}</Flex>
-                      </Col>
-                    </Row>
-                  </Link>
+                  <Popover
+                    content={<Text>{item.desc}</Text>}
+                    trigger="hover"
+                  >
+                    <Link onClick={() => {
+                      navigate(item.url);
+                    }} className="flexCenter">
+                      <Row>
+                        <Col xs={24} className="flexCenter">
+                          <div className={`${item.icon} functionIcon`}></div>
+                        </Col>
+                        <Col xs={24} className="cardLabel flexCenter">
+                          <Flex>{item.label}</Flex>
+                        </Col>
+                      </Row>
+                    </Link>
+                  </Popover>
                 </Col>
               ))}
             </Row>
           </Card>
         </Col>
         <Col sm={24} xl={24}>
-          <Card size="small" title="公共职业培训网站" style={{ margin: 10 }}>
+          <Card size="small" title="高级功能" style={{ margin: 10 }}>
             <Row>
-              {publicJobTrainList.map((item, index) => (
+              {advancedFunctionList.map((item, index) => (
                 <Col
-                  title={item.desc}
                   key={index}
                   xs={12}
                   sm={8}
@@ -139,20 +237,23 @@ const NavigatorView: React.FC = () => {
                   lg={4}
                   className="cardItem flexCenter"
                 >
-                  <Link href={item.url} target="_blank" className="flexCenter">
-                    <Row>
-                      <Col xs={24} className="flexCenter">
-                        <img
-                          className="companyLogo"
-                          src={item.logo}
-                          alt="logo"
-                        />
-                      </Col>
-                      <Col xs={24} className="cardLabel flexCenter">
-                        <Flex>{item.label}</Flex>
-                      </Col>
-                    </Row>
-                  </Link>
+                  <Popover
+                    content={<Text>{item.desc}</Text>}
+                    trigger="hover"
+                  >
+                    <Link onClick={() => {
+                      navigate(item.url);
+                    }} className="flexCenter">
+                      <Row>
+                        <Col xs={24} className="flexCenter">
+                          <div className={`${item.icon} functionIcon`}></div>
+                        </Col>
+                        <Col xs={24} className="cardLabel flexCenter">
+                          <Flex>{item.label}</Flex>
+                        </Col>
+                      </Row>
+                    </Link>
+                  </Popover>
                 </Col>
               ))}
             </Row>
@@ -207,6 +308,70 @@ const NavigatorView: React.FC = () => {
                     <Row>
                       <Col xs={24} className="flexCenter">
                         <div className="i-mdi-web w-10 h-10" />
+                      </Col>
+                      <Col xs={24} className="cardLabel flexCenter">
+                        <Flex>{item.label}</Flex>
+                      </Col>
+                    </Row>
+                  </Link>
+                </Col>
+              ))}
+            </Row>
+          </Card>
+        </Col>
+        <Col sm={24} xl={24}>
+          <Card size="small" title="公共招聘网站" style={{ margin: 10 }}>
+            <Row>
+              {publicJobWebsiteList.map((item, index) => (
+                <Col
+                  title={item.desc}
+                  key={index}
+                  xs={12}
+                  sm={8}
+                  md={6}
+                  lg={4}
+                  className="cardItem flexCenter"
+                >
+                  <Link href={item.url} target="_blank" className="flexCenter">
+                    <Row>
+                      <Col xs={24} className="flexCenter">
+                        <img
+                          className="companyLogo"
+                          src={item.logo}
+                          alt="logo"
+                        />
+                      </Col>
+                      <Col xs={24} className="cardLabel flexCenter">
+                        <Flex>{item.label}</Flex>
+                      </Col>
+                    </Row>
+                  </Link>
+                </Col>
+              ))}
+            </Row>
+          </Card>
+        </Col>
+        <Col sm={24} xl={24}>
+          <Card size="small" title="公共职业培训网站" style={{ margin: 10 }}>
+            <Row>
+              {publicJobTrainList.map((item, index) => (
+                <Col
+                  title={item.desc}
+                  key={index}
+                  xs={12}
+                  sm={8}
+                  md={6}
+                  lg={4}
+                  className="cardItem flexCenter"
+                >
+                  <Link href={item.url} target="_blank" className="flexCenter">
+                    <Row>
+                      <Col xs={24} className="flexCenter">
+                        <img
+                          className="companyLogo"
+                          src={item.logo}
+                          alt="logo"
+                        />
                       </Col>
                       <Col xs={24} className="cardLabel flexCenter">
                         <Flex>{item.label}</Flex>

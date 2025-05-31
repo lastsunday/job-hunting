@@ -193,13 +193,25 @@ const RootLayout: React.FC = () => {
     refreshBreadcrumb();
   }, [location, pathTitleMap]);
 
+  const [selectedKeys, setSelectedKeys] = useState(['']);
+  const [openKeys, setOpenKeys] = useState(['']);
+
   const refreshBreadcrumb = () => {
+    setSelectedKeys(getKeysFromPath(location.pathname));
+    setOpenKeys(getKeysFromPath(location.pathname));
     setBreadcrumbItem(
       pathTitleMap.get(location.pathname)?.map((item) => {
         return { title: item };
       })
     );
   };
+
+  const getKeysFromPath = (path) => {
+    const splitPathArray = path.split("/");
+    //skip index 0 path
+    return splitPathArray.slice(1, splitPathArray.length);
+  }
+
 
   return (
     <Layout className="root" hasSider>
@@ -220,9 +232,14 @@ const RootLayout: React.FC = () => {
         <Menu
           theme="dark"
           mode="inline"
-          defaultSelectedKeys={['1']}
+          selectedKeys={selectedKeys}
+          openKeys={openKeys}
           onSelect={({ keyPath }) => {
+            setSelectedKeys(keyPath);
             navigate(`/${keyPath.reverse().join('/')}`);
+          }}
+          onOpenChange={(openKeys) => {
+            setOpenKeys(openKeys);
           }}
           items={menuItems}
         />
