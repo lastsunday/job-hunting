@@ -1,4 +1,4 @@
-import { Badge, Flex, Tag, Typography } from 'antd';
+import { Button, Badge, Dropdown, Flex, Space, Tag, Typography, Modal } from 'antd';
 const { Text } = Typography;
 
 import {
@@ -16,7 +16,7 @@ import { useJob } from '../hooks/job';
 import { useTag } from '../hooks/tag';
 
 import { TAG_SOURCE_TYPE_CUSTOM } from '@/common';
-import { QuestionCircleOutlined } from '@ant-design/icons';
+import { DownOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import { JobData } from '../data/JobData';
 import { CompanyComment } from "@/common/data/domain/companyComment";
 import CustomTag from './CustomTag';
@@ -24,6 +24,11 @@ import './JobItemCard.css';
 //TODO 直接引用analysis包的JobAnalysisComponent会报错,这里使用的由项目重新lit react包装的组件，需要研究
 import { JobAnalysisComponent } from './JobAnalysisComponent';
 import { Source } from '../hooks/analysis';
+import JobTagEdit from '../pages/data/JobTagEdit';
+import { JobTagEditData } from '../data/JobTagEditData';
+import { WhitelistData } from '../data/WhitelistData';
+import { CompanyTagEditData } from '../data/CompanyTagEditData';
+import CompanyTagEdit from '../pages/data/CompanyTagEdit';
 
 const { platformLogo, platformFormat } = useJob();
 const { convertToTagData } = useTag();
@@ -66,9 +71,15 @@ export type JobItemCardProps = {
   };
   historyElement?: React.ReactNode;
   companyCommentElement?: React.ReactNode;
+  validJobId: (value: string) => Promise<boolean>;
+  getAllTagFunction: () => Promise<WhitelistData[]>;
+  onJobTagSave: (data: JobTagEditData) => Promise<void>;
+  validCompanyName: (value: string) => Promise<boolean>;
+  onCompanyTagSave: (data: CompanyTagEditData) => Promise<void>;
 };
 const JobItemCard: React.FC<JobItemCardProps> = (props) => {
   const {
+    id,
     name,
     url,
     salaryMin,
@@ -87,7 +98,16 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
     welfareTagList,
   } = props.data;
   const { name: companyName, companyTagList, url: companyUrl } = company;
-  const { onLocate } = props;
+  const { onLocate, validJobId, getAllTagFunction, onJobTagSave, validCompanyName, onCompanyTagSave } = props;
+
+  const [isJobTagEditModalOpen, setIsJobTagEditModalOpen] = useState(false);
+  const [editJobTagData, setEditJobTagData] = useState<JobTagEditData>();
+
+
+  const [isCompanyTagEditModalOpen, setIsCompanyTagEditModalOpen] =
+    useState(false);
+  const [editCompanyTagData, setEditCompanyTagData] =
+    useState<CompanyTagEditData>();
 
   const genJobTag = (jobTagList) => {
     if (jobTagList) {
@@ -285,8 +305,90 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
             justify="end"
             style={{ overflow: 'visible' }}
           >
-            <Flex flex={1}>
+            <Flex flex={1} gap={10} onClick={(e) => {
+              e.stopPropagation();
+            }}>
               <div>{props.historyElement}</div>
+              <Dropdown menu={
+                {
+                  items: [
+                    { label: "职位标签", key: "jobTag" },
+                    companyUrl ? { label: "公司标签", key: "companyTag" } : null,
+                  ], onClick: (e) => {
+                    e.domEvent.stopPropagation();
+                    const key = e.key;
+                    if (key == "jobTag") {
+                      setEditJobTagData({
+                        id: id,
+                        name: name,
+                        tags: jobTagList?.filter(item => (item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source == null)).map(item => item.tagName)
+                      });
+                      setIsJobTagEditModalOpen(true);
+                    } else {
+                      setEditCompanyTagData({
+                        name: company.name,
+                        tags: company.companyTagList?.map((item) => item.tagName),
+                      });
+                      setIsCompanyTagEditModalOpen(true);
+                    }
+                  }
+                }
+              }>
+                <Button size='small' color='primary' variant='dashed' onClick={(e) => {
+                  e.stopPropagation();
+                }}>
+                  <Space>
+                    编辑
+                    <DownOutlined />
+                  </Space>
+                </Button>
+              </Dropdown>
+              <Modal
+                title={"编辑职位标签"}
+                open={isJobTagEditModalOpen}
+                onCancel={(e) => {
+                  setIsJobTagEditModalOpen(false);
+                }}
+                maskClosable={false}
+                footer={null}
+                style={{ maxWidth: "1000px" }}
+                width="80%"
+                destroyOnClose
+              >
+                <JobTagEdit
+                  data={editJobTagData}
+                  onSave={async (data) => {
+                    const result = await onJobTagSave(data);
+                    setIsJobTagEditModalOpen(false);
+                    return result;
+                  }}
+                  getWhitelistFunction={getAllTagFunction}
+                  validJobId={validJobId}
+                ></JobTagEdit>
+              </Modal>
+              <Modal
+                title={'编辑公司标签'}
+                open={isCompanyTagEditModalOpen}
+                onCancel={() => {
+                  setIsCompanyTagEditModalOpen(false);
+                }}
+                maskClosable={false}
+                footer={null}
+                style={{ maxWidth: '1000px' }}
+                width="80%"
+                destroyOnClose
+              >
+                <CompanyTagEdit
+                  data={editCompanyTagData}
+                  onSave={async (data) => {
+                    const result = await onCompanyTagSave(data);
+                    setIsCompanyTagEditModalOpen(false);
+                    return result;
+                  }}
+                  getWhitelistFunction={getAllTagFunction}
+                  validCompanyName={validCompanyName}
+                ></CompanyTagEdit>
+              </Modal>
             </Flex>
             <Text ellipsis>{`${bossName ?? ''}【${bossPosition ?? ''}】`}</Text>
             <img

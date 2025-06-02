@@ -1,7 +1,6 @@
 import { CompanyApi, TagApi } from '@/common/api';
 import { CompanyTagBO } from '@/common/data/bo/companyTagBO';
 import { companyDataToExcelJSONArray } from '@/common/excel';
-import { dateToStr } from '@/common/utils';
 import {
   Button,
   Col,
@@ -35,6 +34,7 @@ import { CompanyTagDTO } from '@/common/data/dto/companyTagDTO';
 
 import { useTag } from '../../hooks/tag';
 import { Popover } from 'antd/lib';
+import { dateToStr, genIdFromText } from "@/common/utils";
 const { convertToTagData } = useTag();
 
 const searchFields = {
@@ -268,6 +268,9 @@ const CompanyView: React.FC = () => {
           data={editCompanyTagData}
           whitelist={whitelist}
           onSave={onCompanyTagSave}
+          validCompanyName={async (value) => {
+            return (await CompanyApi.getAllCompanyTagDTOByCompanyId(genIdFromText(value))).length <= 0;
+          }}
         ></CompanyTagEdit>
       </Modal>
     </>

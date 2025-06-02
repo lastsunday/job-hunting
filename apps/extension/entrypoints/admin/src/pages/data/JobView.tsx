@@ -345,6 +345,9 @@ const JobView: React.FC = () => {
         data={editJobTagData}
         whitelist={whitelist}
         onSave={onJobTagSave}
+        validJobId={async (value) => {
+          return (await JobApi.jobTagGetAllDTOByJobIds([value])).length <= 0;
+        }}
       ></JobTagEdit>
     </Modal>
   </>
