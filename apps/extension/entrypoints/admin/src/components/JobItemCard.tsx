@@ -139,6 +139,22 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
     }
   };
 
+  const setEditJobTagDataAndOpenModal = () => {
+    setEditJobTagData({
+      id: id,
+      name: name,
+      tags: jobTagList?.filter(item => (item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source == null)).map(item => item.tagName)
+    });
+    setIsJobTagEditModalOpen(true);
+  }
+
+  const setEditCompanyTagDataAndOpenModal = () => {
+    setEditCompanyTagData({
+      name: company.name,
+      tags: company.companyTagList?.map((item) => item.tagName),
+    });
+    setIsCompanyTagEditModalOpen(true);
+  }
   return (
     <>
       <Card
@@ -318,24 +334,16 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
                     e.domEvent.stopPropagation();
                     const key = e.key;
                     if (key == "jobTag") {
-                      setEditJobTagData({
-                        id: id,
-                        name: name,
-                        tags: jobTagList?.filter(item => (item.sourceType == TAG_SOURCE_TYPE_CUSTOM && item.source == null)).map(item => item.tagName)
-                      });
-                      setIsJobTagEditModalOpen(true);
+                      setEditJobTagDataAndOpenModal();
                     } else {
-                      setEditCompanyTagData({
-                        name: company.name,
-                        tags: company.companyTagList?.map((item) => item.tagName),
-                      });
-                      setIsCompanyTagEditModalOpen(true);
+                      setEditCompanyTagDataAndOpenModal();
                     }
                   }
                 }
               }>
                 <Button size='small' color='primary' variant='dashed' onClick={(e) => {
                   e.stopPropagation();
+                  setEditJobTagDataAndOpenModal();
                 }}>
                   <Space>
                     编辑
