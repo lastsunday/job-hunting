@@ -1,3 +1,14 @@
+## 3.14.0 (2025-06-02)
+
+### 🚀 Features
+
+- 新增职位卡片职位标签，公司标签编辑功能
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+- Tiara0w0y @Tiara0w0y
+
 ## 3.13.1 (2025-05-31)
 
 ### 🩹 Fixes
