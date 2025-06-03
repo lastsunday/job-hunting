@@ -7,7 +7,7 @@ import * as modTaskDownloadLogic from "@/entrypoints/offscreen/worker/service/ap
 import * as modTaskDataDownloadService from "@/entrypoints/offscreen/worker/service/taskDataDownloadService";
 import * as modTaskService from "@/entrypoints/offscreen/worker/service/taskService";
 import { vi } from "vitest";
-import { parse } from "@/common/utils/date";
+import { parse, dateToStr } from "@/common/utils/date";
 import { EXCEPTION } from "@/common/api/github";
 const USER_NAME = "lastsunday";
 const REPO_NAME = "job-hunting-data";
@@ -269,7 +269,7 @@ test('downloadDataByDataId for metadata merge', async () => {
   });
   vi.spyOn(modTaskDownloadLogic, 'saveFileAndCalculateDataMergeTask').mockImplementation(async ({ userName, repoName, taskType, file, datetime, typeId }) => {
     expect(typeId).toBe("typeId1");
-    expect(parse(datetime)).toMatchObject(parse('2025-01-01'));
+    expect(dateToStr(parse(datetime))).toBe(dateToStr(parse('2025-01-01')));
   });
   const result = await downloadDataByDataId('1', null, TASK_TYPE_METADATA_DATA_MERGE, { getTargetDay: async () => { return parse('2025-01-15') } });
   expect(result).toBeNull();

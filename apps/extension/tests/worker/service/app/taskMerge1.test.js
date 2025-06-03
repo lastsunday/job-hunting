@@ -1,6 +1,6 @@
 import { handleMetadataMerge, handleCompanyCommentDataMerge } from "@/entrypoints/offscreen/worker/service/app/taskMerge";
 import { expect, test, vi } from "vitest";
-import { parse } from "@/common/utils/date";
+import { parse,dateToStr } from "@/common/utils/date";
 import * as modTaskDataMergeService from "@/entrypoints/offscreen/worker/service/taskDataMergeService";
 import * as modFileService from "@/entrypoints/offscreen/worker/service/fileService";
 import { TASK_TYPE_COMPANY_COMMENT_DATA_MERGE } from "@/common";
@@ -43,5 +43,5 @@ test('handleCompanyCommentDataMerge in correct logic', async () => {
   expect(taskDataMerge.dataCount).toBe(916);
   const searchResult = await COMPANY_COMMENT_SERVICE_INSTANCE._search({});
   expect(searchResult.total).toBe(916);
-  expect(parse(searchResult.items[0].createDatetime)).toMatchObject(parse('2025-05-29'));
+  expect(dateToStr(parse(searchResult.items[0].createDatetime))).toBe(dateToStr(parse('2025-05-29')));
 });

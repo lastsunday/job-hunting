@@ -1,4 +1,4 @@
-import { parse } from "@/common/utils/date";
+import { parse, dateToStr } from "@/common/utils/date";
 import { getDb } from "@/entrypoints/offscreen/worker/database";
 import { _queryLatestTaskDataDownload } from "@/entrypoints/offscreen/worker/service/taskDataDownloadService";
 import { PGlite } from "@electric-sql/pglite";
@@ -78,7 +78,7 @@ test('query and cancel download task by typeId logic correct', async () => {
     }
   });
   expect(result.length).toBe(1);
-  expect(parse(result[0].datetime)).toMatchObject(parse(`2025-05-05`));
+  expect(dateToStr(parse(result[0].datetime))).toBe(dateToStr(parse(`2025-05-05`)));
   await calculateDownloadTask({
     getTargetDay: () => { return today }, userName: "lastsunday",
     repoName: "job-hunting-data-source", taskType: TASK_TYPE_METADATA_DATA_DOWNLOAD, typeId: "typeId1", config: {}
@@ -90,5 +90,5 @@ test('query and cancel download task by typeId logic correct', async () => {
     }
   });
   expect(secondResult.length).toBe(1);
-  expect(parse(secondResult[0].datetime)).toMatchObject(parse(`2025-05-05`));
+  expect(dateToStr(parse(secondResult[0].datetime))).toBe(dateToStr(parse(`2025-05-05`)));
 })
