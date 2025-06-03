@@ -24,7 +24,7 @@ const WelcomeView: React.FC = () => {
   const enable = async () => {
     config.enable = true;
     await update(config);
-    navigate(`/jobSnapshot`);
+    navigate(`/data/jobSnapshot`);
   };
 
   return (

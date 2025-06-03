@@ -43,7 +43,7 @@ export const AssistantService = {
                 limit = " limit " + limitEnd + " OFFSET " + limitStart;
             }
             sqlQuery += genSqlJobSearchQuery(param);
-            sqlQuery += whereCondition;
+            sqlQuery += ` ${whereCondition}`;
             sqlQuery = genFilterSQL(sqlQuery, param);
             let sqlQueryCountSubSql = sqlQuery;
             sqlQuery += orderBy;

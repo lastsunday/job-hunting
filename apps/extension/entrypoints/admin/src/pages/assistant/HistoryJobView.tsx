@@ -1,21 +1,29 @@
-import { JobApi, JobSnapshotApi } from '@/common/api';
+import { CompanyApi, CompanyCommentApi, JobApi, JobSnapshotApi, TagApi } from '@/common/api';
+import { CompanyTagBO } from '@/common/data/bo/companyTagBO';
+import { JobSnapshotSearchBO } from '@/common/data/bo/jobSnapshotSearchBO';
+import { JobTagBO } from '@/common/data/bo/jobTagBO';
 import { SearchJobBO } from '@/common/data/bo/searchJobBO';
+import { genIdByCompanyName } from '@/common/data/domain/company';
+import { CompanyComment } from '@/common/data/domain/companyComment';
+import { JobSnapshot } from '@/common/data/domain/jobSnapshot';
 import { AnalysisConfigDTO } from '@/common/data/dto/analysisConfigDTO';
+import { genIdFromText } from '@/common/utils';
+import CompanyCommentWidget from '@/entrypoints/components/CompanyCommentWidget';
+import JobSnapshotHistory from '@/entrypoints/components/JobSnapshotHistory';
 import { Empty, Flex, Pagination, Spin, Splitter } from 'antd';
 import React from 'react';
+import { useShallow } from 'zustand/shallow';
 import BasicMap from '../../components/BasicMap';
 import JobItemCard from '../../components/JobItemCard';
 import JobModal from '../../components/JobModal';
+import { CompanyTagEditData } from '../../data/CompanyTagEditData';
 import { JobData } from '../../data/JobData';
+import { JobTagEditData } from '../../data/JobTagEditData';
 import { Page, useAnalysis } from '../../hooks/analysis';
 import { useJob } from '../../hooks/job';
+import useJobSnapshotStore from '../../store/JobSnapshotStore';
 import './FavoriteJobView.css';
 import styles from './FavoriteJobView.module.css';
-import JobSnapshotHistory from '@/entrypoints/components/JobSnapshotHistory';
-import { JobSnapshotSearchBO } from '@/common/data/bo/jobSnapshotSearchBO';
-import { JobSnapshot } from '@/common/data/domain/jobSnapshot';
-import useJobSnapshotStore from '../../store/JobSnapshotStore';
-import { useShallow } from 'zustand/shallow';
 const { queryAnalysisConfig } = useAnalysis();
 
 const { convertToJobDataList, convertToJobData } = useJob();
@@ -23,6 +31,7 @@ const { convertToJobDataList, convertToJobData } = useJob();
 const HistoryJobView: React.FC = () => {
   const [data, setData] = useState([]);
   const [total, setTotal] = useState(0);
+  const [dataRefresh, setDataRefresh] = useState(true);
   const [jobModalData, setJobModalData] = useState<JobData>();
   const [refresh, setRefresh] = useState(false);
 
@@ -38,6 +47,8 @@ const HistoryJobView: React.FC = () => {
   const [jobSnapshotConfig] = useJobSnapshotStore(
     useShallow((state) => [state.config])
   );
+
+  const [companyCommentItems, setCompanyCommentItems] = useState<CompanyComment>([]);
 
   const getSearchParam = () => {
     const searchParam = new SearchJobBO();
@@ -91,16 +102,21 @@ const HistoryJobView: React.FC = () => {
           );
           setSnapshotItems(result);
         }
+        const companyCommentResult = await CompanyCommentApi.companyCommentSearch({
+          companyId: searchResult.items.map(item => genIdByCompanyName(item.jobCompanyName))
+        });
+        setCompanyCommentItems([...companyCommentResult.items]);
       } finally {
         setLoading(false);
       }
     };
     search();
-    return () => {};
+    return () => { };
   }, [
     //这里的值改变时，会执行上面return的匿名函数
     page,
     pageSize,
+    dataRefresh,
   ]);
 
   const onCardClickHandle = (data: JobData) => {
@@ -130,6 +146,33 @@ const HistoryJobView: React.FC = () => {
 
   const getSnapshotItemByIdCallback = async (id: string) => {
     return await JobSnapshotApi.jobSnapshotGetById(id);
+  };
+
+  const onJobTagSave = async (data: JobTagEditData) => {
+    const { id, tags } = data;
+    let bo = new JobTagBO();
+    bo.jobId = id;
+    bo.tags = tags;
+    await JobApi.jobTagAddOrUpdate(bo);
+    setDataRefresh(!dataRefresh);
+  }
+
+  const getAllTagFunction = async () => {
+    let allTags = await TagApi.getAllTag();
+    let tagItems = [];
+    allTags.forEach((item) => {
+      tagItems.push({ value: item.tagName, code: item.tagId });
+    });
+    return tagItems;
+  }
+
+  const onCompanyTagSave = async (data: CompanyTagEditData) => {
+    const { name, tags } = data;
+    const companyTagBO = new CompanyTagBO();
+    companyTagBO.companyName = name;
+    companyTagBO.tags = tags;
+    await CompanyApi.addOrUpdateCompanyTag(companyTagBO);
+    setDataRefresh(!dataRefresh);
   };
 
   return (
@@ -171,9 +214,9 @@ const HistoryJobView: React.FC = () => {
                         analysisConfig={
                           analysisConfig
                             ? Object.assign(
-                                { demand: `${item.name}\n${item.desc}` },
-                                analysisConfig
-                              )
+                              { demand: `${item.name}\n${item.desc}` },
+                              analysisConfig
+                            )
                             : null
                         }
                         historyElement={
@@ -200,6 +243,26 @@ const HistoryJobView: React.FC = () => {
                             />
                           ) : null
                         }
+                        companyCommentElement={
+                          <CompanyCommentWidget
+                            companyName={item?.company?.name}
+                            companyCommentList={
+                              companyCommentItems
+                                ? companyCommentItems.filter(companyComment => {
+                                  return companyComment.companyId == genIdByCompanyName(item.company.name)
+                                })
+                                : []
+                            }></CompanyCommentWidget>
+                        }
+                        validJobId={async (value) => {
+                          return (await JobApi.jobTagGetAllDTOByJobIds([value])).length <= 0;
+                        }}
+                        onJobTagSave={onJobTagSave}
+                        getAllTagFunction={getAllTagFunction}
+                        validCompanyName={async (value) => {
+                          return (await CompanyApi.getAllCompanyTagDTOByCompanyId(genIdFromText(value))).length <= 0;
+                        }}
+                        onCompanyTagSave={onCompanyTagSave}
                       ></JobItemCard>
                     ))
                   ) : (

@@ -1,3 +1,13 @@
+import { DataSharePartnerApi } from '@/common/api';
+import { GithubApi } from '@/common/api/github';
+import {
+  COMMENT_PAGE_SIZE,
+  DEFAULT_REPO_TYPE
+} from '@/common/config';
+import { SearchDataSharePartnerBO } from '@/common/data/bo/searchDataSharePartnerBO';
+import { Config, DataSharePartner } from '@/common/data/domain/dataSharePartner';
+import { useTask } from "@/common/hooks/task";
+import { dateToStr } from '@/common/utils';
 import {
   Avatar,
   Button,
@@ -9,29 +19,24 @@ import {
   TableColumnsType,
   Tooltip,
   Typography,
+  message,
 } from 'antd';
-const { Text } = Typography;
-
-import { DataSharePartnerApi } from '@/common/api';
-import { GithubApi } from '@/common/api/github';
-import {
-  COMMENT_PAGE_SIZE,
-  DEFAULT_DATA_REPO,
-  DEFAULT_REPO_TYPE,
-} from '@/common/config';
-import { SearchDataSharePartnerBO } from '@/common/data/bo/searchDataSharePartnerBO';
-import { DataSharePartner } from '@/common/data/domain/dataSharePartner';
-import { dateToStr } from '@/common/utils';
+import { Tag } from 'antd/lib';
 import { TableRowSelection } from 'antd/lib/table/interface';
 import dayjs from 'dayjs';
 import { useShallow } from 'zustand/shallow';
-import { PageInfo } from '../../data/PageInfo';
-import { Owner, RepositoryData } from '../../data/RepositoryData';
-import useAuthStore from '../../store/AuthStore';
-import styles from './PartnerFind.module.css';
-
-export type PartnerFindProps = {};
-const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
+import { PageInfo } from '../../../data/PageInfo';
+import { Owner, RepositoryData } from '../../../data/RepositoryData';
+import { useTask as useTaskInner } from "../../../hooks/task";
+import useAuthStore from '../../../store/AuthStore';
+import styles from './StandardData.module.css';
+const { Text } = Typography;
+export type StandardDataProps = {
+  repo: string;
+  config: Config;
+  onAddCallback?: () => void;
+};
+const StandardData: React.FC<StandardDataProps> = ({ repo, config, onAddCallback }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [dataSource, setDataSource] = useState<RepositoryData[]>([]);
   const [refresh, setRefresh] = useState(false);
@@ -40,7 +45,7 @@ const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
     after: null,
     last: null,
     before: null,
-    repo: DEFAULT_DATA_REPO,
+    repo,
   });
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [idObjectMap, setIdObjectMap] = useState<Map<string, RepositoryData>>(
@@ -53,10 +58,14 @@ const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(COMMENT_PAGE_SIZE);
   const [pageInfo, setPageInfo] = useState<PageInfo>();
-  const topRef = useRef();
+  const topRef = useRef(null);
   const [addLoading, setAddLoading] = useState(false);
-  const [username] = useAuthStore(useShallow((state) => [state.username]));
+  const [auth, username] = useAuthStore(useShallow((state) => [state.auth, state.username]));
+  const [messageApi, contextHolder] = message.useMessage();
 
+  const { getTaskTypeListFromDataSharePartnerConfig } = useTask();
+  const { getDisplayNameByTaskType } = useTaskInner();
+  let _loading = false;
   const genState = (id: string) => {
     if (!idObjectMap.has(id)) {
       return null;
@@ -70,7 +79,7 @@ const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
           </Tooltip>
         </>
       );
-    } else if (item.name != DEFAULT_DATA_REPO) {
+    } else if (item.name != repo) {
       return (
         <>
           <Tooltip title="仓库名不符合条件">
@@ -79,7 +88,7 @@ const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
         </>
       );
     } else {
-      if (dataSharePartnerMap.has(item.owner.login)) {
+      if (dataSharePartnerMap.has(`${item.owner.login}${repo}`)) {
         return (
           <>
             <Tooltip title="已添加到伙伴列表">
@@ -114,12 +123,13 @@ const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
       title: '头像',
       dataIndex: 'owner',
       render: (value: Owner) => <Avatar src={value.avatarUrl} />,
+      minWidth: 70,
     },
     {
       title: '用户名',
       dataIndex: 'owner',
       render: (value: Owner) => <Text>{value.login}</Text>,
-      minWidth: 100,
+      minWidth: 160,
     },
     {
       title: '仓库名',
@@ -127,9 +137,18 @@ const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
       render: (value: string) => <Text>{value}</Text>,
     },
     {
-      title: '星数',
+      title: <div className={styles.headerTitle}>星数<div className='i-fluent-emoji-flat:star'></div></div>,
       dataIndex: 'stargazerCount',
       render: (value: number) => <Text>{value}</Text>,
+      minWidth: 100,
+    },
+    {
+      title: '数据任务',
+      dataIndex: "id",
+      render: (value: string) => {
+        return [...getTaskTypeListFromDataSharePartnerConfig(config).map(item => <Tag key={item.type} className={styles.tag} color="#108ee9">{getDisplayNameByTaskType(item.type)}</Tag>)];
+      },
+      minWidth: 150,
     },
     {
       title: '最近更新时间',
@@ -137,7 +156,7 @@ const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
       render: (value: string) => (
         <Text>{dateToStr(dayjs(value), 'YYYY-MM-DD')}</Text>
       ),
-      minWidth: 100,
+      minWidth: 120,
     },
     {
       title: '创建时间',
@@ -145,50 +164,68 @@ const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
       render: (value: string) => (
         <Text>{dateToStr(dayjs(value), 'YYYY-MM-DD')}</Text>
       ),
-      minWidth: 100,
+      minWidth: 120,
     },
   ];
 
   const fetchData = () => {
+    if (_loading) {
+      return;
+    }
+    _loading = true;
+    setLoading(true);
     (async () => {
-      scrollToTop();
-      setLoading(true);
-      const result = await GithubApi.queryRepository(searchParam);
-      const { nodes } = result.search;
-      const map = new Map<string, RepositoryData>();
-      nodes.map((item, index) => {
-        map.set(item.id, item);
-      });
-      setIdObjectMap(map);
-      if (nodes.length > 0) {
-        //获取数据共享计划伙伴
-        const searchDataSharePartnerParam = new SearchDataSharePartnerBO();
-        searchDataSharePartnerParam.usernameList = nodes.flatMap(
-          (item) => item.owner.login
-        );
-        searchDataSharePartnerParam.orderByColumn = 'updateDatetime';
-        searchDataSharePartnerParam.orderBy = 'DESC';
-        const partnerResult = await DataSharePartnerApi.searchDataSharePartner(
-          searchDataSharePartnerParam
-        );
-        const partnerResultItems = partnerResult.items;
-        const dataSharePartnerMap = new Map();
-        for (let i = 0; i < partnerResultItems.length; i++) {
-          const item = partnerResultItems[i];
-          dataSharePartnerMap.set(item.username, null);
-        }
-        setDataSharePartnerMap(dataSharePartnerMap);
+      if (!auth) {
+        messageApi.open({
+          key: "needLogin",
+          type: 'warning',
+          content: `需要登录后查看`,
+        });
+        return;
       }
-      setDataSource(nodes);
-      setTotal(result.search.repositoryCount);
-      setPageInfo(result.search.pageInfo);
-      setLoading(false);
+      scrollToTop();
+      try {
+        const result = await GithubApi.queryRepository(searchParam);
+        const { nodes } = result.search;
+        const map = new Map<string, RepositoryData>();
+        nodes.map((item, index) => {
+          map.set(item.id, item);
+        });
+        setIdObjectMap(map);
+        if (nodes.length > 0) {
+          //获取数据共享计划伙伴
+          const searchDataSharePartnerParam = new SearchDataSharePartnerBO();
+          searchDataSharePartnerParam.usernameList = nodes.flatMap(
+            (item) => item.owner.login
+          );
+          searchDataSharePartnerParam.orderByColumn = 'updateDatetime';
+          searchDataSharePartnerParam.orderBy = 'DESC';
+          const partnerResult = await DataSharePartnerApi.searchDataSharePartner(
+            searchDataSharePartnerParam
+          );
+          const partnerResultItems = partnerResult.items;
+          const dataSharePartnerMap = new Map();
+          for (let i = 0; i < partnerResultItems.length; i++) {
+            const item = partnerResultItems[i];
+            dataSharePartnerMap.set(`${item.username}${item.reponame}`, null);
+          }
+          setDataSharePartnerMap(dataSharePartnerMap);
+        }
+        setDataSource(nodes);
+        setTotal(result.search.repositoryCount);
+        setPageInfo(result.search.pageInfo);
+      } catch (e) {
+        messageApi.open({
+          key: "queryFailure",
+          type: 'error',
+          content: `查询失败`,
+        });
+      } finally {
+        _loading = false;
+        setLoading(false);
+      }
     })();
   };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   useEffect(fetchData, [searchParam, currentPage, pageSize, refresh]);
 
@@ -202,7 +239,7 @@ const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
     getCheckboxProps: (record) => ({
       disabled:
         record.owner.login === username ||
-        record.name != DEFAULT_DATA_REPO ||
+        record.name != repo ||
         dataSharePartnerMap.has(record.owner.login),
     }),
   };
@@ -242,9 +279,12 @@ const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
         entity.username = item.owner.login;
         entity.reponame = item.name;
         entity.repoType = DEFAULT_REPO_TYPE;
+        entity.config = config;
+        entity.enable = true;
         entityList.push(entity);
       }
       await DataSharePartnerApi.dataSharePartnerBatchAddOrUpdate(entityList);
+      onAddCallback ? onAddCallback() : null;
     } finally {
       setAddLoading(false);
     }
@@ -255,20 +295,21 @@ const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
 
   return (
     <>
+      {contextHolder}
       <Spin spinning={loading}>
         <Flex vertical gap={10}>
-          <Flex justify="end">
-            <Button
-              type="primary"
-              loading={addLoading}
-              disabled={!hasSelected}
-              onClick={onAdd}
-            >
-              添加
-            </Button>
-          </Flex>
           <Flex ref={topRef} vertical gap={10}>
             <Flex justify="end">
+              <Button
+                type="primary"
+                loading={addLoading}
+                disabled={!hasSelected}
+                onClick={onAdd}
+              >
+                添加
+              </Button>
+            </Flex>
+            <Flex justify='end'>
               <Pagination
                 simple
                 current={currentPage}
@@ -299,8 +340,8 @@ const PartnerFind: React.FC<PartnerFindProps> = ({}) => {
             </Space>
           </Flex>
         </Flex>
-      </Spin>
+      </Spin >
     </>
   );
 };
-export default PartnerFind;
+export default StandardData;

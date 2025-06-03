@@ -1257,3 +1257,50 @@ export const JobSnapshotApi = {
   },
 
 }
+
+const fillBridgeApi = ({ api = {} } = {}) => {
+  const keys = Object.keys(api);
+  keys.forEach(invokeName => {
+    api[invokeName] = async (param) => {
+      const result = await invoke(invokeName, param);
+      return result.data;
+    }
+  });
+  return api;
+}
+
+const mockFunction = async (param) => { throw "not implement yet" }
+export const JobPublicApi = {
+  jobPublicSearch: mockFunction,
+  jobPublicAddOrUpdate: mockFunction,
+  jobPublicBatchAddOrUpdate: mockFunction,
+  jobPublicGetById: mockFunction,
+  jobPublicGetByIds: mockFunction,
+  jobPublicDeleteById: mockFunction,
+  jobPublicDeleteByIds: mockFunction,
+  jobPublicBatchAddJobPublicAndUpdateJob: mockFunction,
+};
+fillBridgeApi({ api: JobPublicApi });
+
+export const CompanyCommentApi = {
+  companyCommentSearch: mockFunction,
+  companyCommentAddOrUpdate: mockFunction,
+  companyCommentBatchAddOrUpdate: mockFunction,
+  companyCommentGetById: mockFunction,
+  companyCommentGetByIds: mockFunction,
+  companyCommentDeleteById: mockFunction,
+  companyCommentDeleteByIds: mockFunction,
+};
+fillBridgeApi({ api: CompanyCommentApi });
+
+export const DataSourceMetadataApi = {
+  dataSourceMetadataSearch: mockFunction,
+  dataSourceMetadataAddOrUpdate: mockFunction,
+  dataSourceMetadataBatchAddOrUpdate: mockFunction,
+  dataSourceMetadataGetById: mockFunction,
+  dataSourceMetadataGetByIds: mockFunction,
+  dataSourceMetadataDeleteById: mockFunction,
+  dataSourceMetadataDeleteByIds: mockFunction,
+};
+fillBridgeApi({ api: DataSourceMetadataApi });
+

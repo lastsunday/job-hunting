@@ -24,7 +24,7 @@ import {
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 import StatisticCard from '../components/StatisticCard';
-import styles from './SystemView.module.css';
+import styles from './DatabaseView.module.css';
 import React from 'react';
 const { Text } = Typography;
 dayjs.extend(duration);
@@ -37,7 +37,7 @@ import {
   STORAGE_KEY_SQL_EDITOR_VALUE,
 } from '@/common/config';
 
-const SystemView: React.FC = () => {
+const DatabaseView: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [databaseSize, setDatabaseSize] = useState();
   const [schemaVersion, setSchemaVersion] = useState();
@@ -146,14 +146,14 @@ const SystemView: React.FC = () => {
             return (
               <Popover
                 key={index}
-                content={<Text copyable>{value}</Text>}
+                content={<Text copyable>{typeof value == 'object' ? JSON.stringify(value) : value}</Text>}
                 trigger="click"
               >
                 <Text
                   key={index}
-                  title={`${value}`}
+                  title={`${typeof value == 'object' ? JSON.stringify(value) : value}`}
                   ellipsis
-                >{`${value}`}</Text>
+                >{`${typeof value == 'object' ? JSON.stringify(value) : value}`}</Text>
               </Popover>
             );
           },
@@ -365,9 +365,9 @@ const SystemView: React.FC = () => {
                   initialState={
                     serializedState
                       ? {
-                          json: JSON.parse(serializedState || ''),
-                          fields: stateFields,
-                        }
+                        json: JSON.parse(serializedState || ''),
+                        fields: stateFields,
+                      }
                       : undefined
                   }
                   onChange={onSqlChange}
@@ -390,11 +390,10 @@ const SystemView: React.FC = () => {
               {sqlExecError != null ? (
                 sqlExecError == '' ? (
                   <Alert
-                    message={`执行成功,耗时${sqlCostTime}ms${
-                      affectedRows != null
-                        ? ',影响' + affectedRows + '条数据'
-                        : ''
-                    }`}
+                    message={`执行成功,耗时${sqlCostTime}ms${affectedRows != null
+                      ? ',影响' + affectedRows + '条数据'
+                      : ''
+                      }`}
                     type="success"
                     showIcon
                     closable
@@ -414,7 +413,7 @@ const SystemView: React.FC = () => {
                   pagination={{
                     showTotal: (total, range) =>
                       `${range[0]}-${range[1]} 共 ${total} 条记录`,
-                    pageSize: 10,
+                    showSizeChanger: true,
                     pageSizeOptions: [10, 50, 100, 200, 500, 1000],
                   }}
                   scroll={{ x: '100%' }}
@@ -432,4 +431,4 @@ const SystemView: React.FC = () => {
   );
 };
 
-export default SystemView;
+export default DatabaseView;

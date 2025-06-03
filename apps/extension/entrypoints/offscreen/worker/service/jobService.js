@@ -20,11 +20,12 @@ import { BaseService } from "./baseService";
 import { _getCompanyDTOByIds } from "./companyService";
 import { _getAllCompanyTagDTOByCompanyIds } from "./companyTagService";
 import { _getAllJobTagDTOByJobIds, _jobTagBatchAddOrUpdate } from "./jobTagService";
-
+import { _queryMinCreateDatetimeGroupByJobId } from "./jobPublicService.js";
+import { parse } from "@/common/utils/date";
 const JOB_VISIT_TYPE_SEARCH = "SEARCH";
 const JOB_VISIT_TYPE_DETAIL = "DETAIL";
 
-const SERVICE_INSTANCE = new BaseService("job", "job_id",
+export const SERVICE_INSTANCE = new BaseService("job", "job_id",
   () => {
     return new Job();
   },
@@ -534,8 +535,14 @@ async function _batchInsertJobTag(jobs, { connection = null } = {}) {
   await _jobTagBatchAddOrUpdate(jobTags, false, { connection });
 }
 
-async function _batchInsertOrUpdateJob(jobs, { connection = null } = {}) {
+export async function _batchInsertOrUpdateJob(jobs, { connection = null } = {}) {
   const jobIds = jobs.map(item => item.jobId);
+  //get job public data min createDatetime to serve for new record
+  const minCreateDatetimeJobList = await _queryMinCreateDatetimeGroupByJobId(jobIds, { connection });
+  const jobIdAndMinCreateDatetimeMap = new Map();
+  minCreateDatetimeJobList.forEach(item => {
+    jobIdAndMinCreateDatetimeMap.set(item.jobId, item.createDatetime);
+  });
   let oldJobs = await SERVICE_INSTANCE._getByIds(jobIds, { connection });
   const oldJobsIdMap = new Map(oldJobs.map((obj) => [obj.jobId, obj]));
   let needToUpdateJobs = [];
@@ -547,10 +554,14 @@ async function _batchInsertOrUpdateJob(jobs, { connection = null } = {}) {
         needToUpdateJobs.push(addItem);
       }
     } else {
+      // new record will handle by job public data
+      if (jobIdAndMinCreateDatetimeMap.has(newRecord.jobId) && parse(newRecord.createDatetime).isAfter(parse(jobIdAndMinCreateDatetimeMap.get(newRecord.jobId)))) {
+        newRecord.createDatetime = parse(jobIdAndMinCreateDatetimeMap.get(newRecord.jobId));
+      }
       needToUpdateJobs.push(newRecord);
     }
   })
-  await SERVICE_INSTANCE._batchAddOrUpdate(needToUpdateJobs, { overrideCreateDatetime: true, overrideUpdateDatetime: true, connection });
+  return await SERVICE_INSTANCE._batchAddOrUpdate(needToUpdateJobs, { overrideCreateDatetime: true, overrideUpdateDatetime: true, connection });
 }
 
 async function batchAddJobBrowseHistory(jobs, date, type, { connection = null } = {}) {

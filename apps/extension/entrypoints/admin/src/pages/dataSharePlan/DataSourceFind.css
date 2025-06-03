@@ -1,0 +1,16 @@
+.ant-tabs-tab-btn {
+  display:flex;
+  flex-direction:row;
+}
+
+.ant-tabs-tab-icon{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin-inline-end: 2px;
+}
+
+.tab-icon{
+  width:24px;
+  height:24px;
+}

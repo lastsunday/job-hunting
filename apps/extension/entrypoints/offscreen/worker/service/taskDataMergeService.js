@@ -2,7 +2,7 @@ import { Message } from "@/common/api/message";
 import { SearchTaskDataMergeBO } from "@/common/data/bo/searchTaskDataMergeBO";
 import { TaskDataMerge } from "@/common/data/domain/taskDataMerge";
 import { SearchTaskDataMergeDTO } from "@/common/data/dto/searchTaskDataMergeDTO";
-import dayjs from "dayjs";
+import { dateToStr } from "@/common/utils/date";
 import { BaseService } from "./baseService";
 
 export const SERVICE_INSTANCE = new BaseService("task_data_merge", "id",
@@ -73,6 +73,6 @@ export const _taskDataMergeGetById = async ({ param = null, connection = null } 
 }
 
 export const _taskDataMergeAddOrUpdate = async ({ param = null, connection = null } = {}) => {
-    param.datetime = dayjs(param.datetime).format();
+    param.datetime = dateToStr(param.datetime);
     return await SERVICE_INSTANCE._addOrUpdate(param, { connection });;
 }

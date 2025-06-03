@@ -15,7 +15,7 @@ import { setUser, UserService } from "./service/userService";
 import { onMessageHandle as onSingleFileMessageHandle } from "@/lib/single-file/background.js";
 
 export default defineBackground(() => {
-  debugLog("background ready");
+  infoLog("background ready");
   chrome.runtime.onInstalled.addListener(async () => {
     debugLog("updateDynamicRules ready");
     //https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest

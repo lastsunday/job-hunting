@@ -22,6 +22,7 @@ export const EXCEPTION = {
   NOT_FOUND: "NOT_FOUND",
   NO_PERMISSION: "NO_PERMISSION",
   CREATION_FAILED: "CREATION_FAILED",
+  UNAUTHORIZED: "UNAUTHORIZED",
 }
 
 export const GithubApi = {
@@ -141,8 +142,8 @@ export const GithubApi = {
    * @param {*} param
    * @returns 
    */
-  async newRepo(repo, { getTokenFunction, setTokenFunction }) {
-    return await fetchJson(`${GITHUB_URL_API}/user/repos`, { "name": repo }, { method: "POST", getTokenFunction, setTokenFunction });
+  async newRepo(repo, { isPrivate = true, getTokenFunction, setTokenFunction } = {}) {
+    return await fetchJson(`${GITHUB_URL_API}/user/repos`, { "name": repo, "private": isPrivate }, { method: "POST", getTokenFunction, setTokenFunction });
   },
   async createFileContent(owner, repo, path, base64Data, msg, { getTokenFunction, setTokenFunction }) {
     return await fetchJson(`${GITHUB_URL_API}/repos/${owner}/${repo}/contents${path}`, { "message": msg, "content": base64Data }, { method: "PUT", getTokenFunction, setTokenFunction });
@@ -156,6 +157,28 @@ export const GithubApi = {
         "Accept": "application/vnd.github.raw+json"
       }
     });
+  },
+  /**
+   * 
+   * @param {*} owner 
+   * @param {*} repo 
+   * @param {*} treeSha The SHA1 value or ref (branch or tag) name of the tree.
+   * @param {*} param3 
+   * @returns 
+   */
+  async getTree(owner, repo, treeSha, { getTokenFunction, setTokenFunction }) {
+    try {
+      return await fetchJson(`${GITHUB_URL_API}/repos/${owner}/${repo}/git/trees/${treeSha}?recursive=true&t=${new Date().getTime()}`, null, {
+        method: "GET", getTokenFunction, setTokenFunction, headers: {
+        }
+      });
+    } catch (e) {
+      if (e == EXCEPTION.NOT_FOUND) {
+        return { tree: [] };
+      } else {
+        throw e;
+      }
+    }
   },
 }
 
@@ -182,7 +205,7 @@ function genQueryRepositoryHQL({ first, after, last, before, repo }) {
   return {
     query: `
     {
-      search(query:"${repo} in:name sort:updated-desc",type:REPOSITORY,first: ${first ?? null}, after: ${after ? "\"" + after + "\"" : null},last:${last ?? null},before:${before ? "\"" + before + "\"" : null}) {
+      search(query:"\\"${repo}\\" in:name sort:updated-desc",type:REPOSITORY,first: ${first ?? null}, after: ${after ? "\"" + after + "\"" : null},last:${last ?? null},before:${before ? "\"" + before + "\"" : null}) {
         nodes{
           ... on Repository{
             id
@@ -248,7 +271,14 @@ function isRaw(header) {
   return header && header["Accept"] == "application/vnd.github.raw+json";
 }
 
-async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin, getTokenFunction, setTokenFunction, headers } = { method: "POST", skipLogin: false }) {
+/**
+ * authMode: Bearer | Basic
+ */
+export async function _fetch(url, { method = "GET", getTokenFunction, setTokenFunction, headers, body, authMode } = {}) {
+  return fetchJson(url, null, { method, getTokenFunction, setTokenFunction, headers, isReturnResponseObject: true, body, authMode });
+}
+
+async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin, getTokenFunction, setTokenFunction, headers, isReturnResponseObject = false, body, authMode } = { method: "POST", skipLogin: false, isRawFetch: false }) {
   try {
     let oauthDTO = null;
     if (getTokenFunction) {
@@ -256,17 +286,18 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
     } else {
       oauthDTO = await AuthApi.authGetToken();
     }
-    if (!oauthDTO && !skipLogin) {
-      throw EXCEPTION.NO_LOGIN;
-    }
-    let response = await fetchJsonReturnResponse(url, data, { method, skipLogin, getTokenFunction, headers });
+    let response = await fetchJsonReturnResponse(url, data, { method, token: oauthDTO?.accessToken, skipLogin, getTokenFunction, headers, body, authMode });
     let status = response.status;
     if (isStatusNoError(response)) {
       let result = null;
-      if (isRaw(headers)) {
-        result = await response.arrayBuffer();
+      if (isReturnResponseObject) {
+        result = response;
       } else {
-        result = await response.json();
+        if (isRaw(headers)) {
+          result = await response.arrayBuffer();
+        } else {
+          result = await response.json();
+        }
       }
       if (responseHeaderCallback) {
         return responseHeaderCallback(result, response.headers);
@@ -316,13 +347,17 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
           }
           infoLog("continue request");
           //再次发出请求
-          response = await fetchJsonReturnResponse(url, data, { method, getTokenFunction });
+          response = await fetchJsonReturnResponse(url, data, { method, getTokenFunction, body, authMode });
           if (isStatusNoError(response)) {
             let result = null;
-            if (isRaw(headers)) {
-              result = await response.arrayBuffer();
+            if (isReturnResponseObject) {
+              result = response;
             } else {
-              result = await response.json();
+              if (isRaw(headers)) {
+                result = await response.arrayBuffer();
+              } else {
+                result = await response.json();
+              }
             }
             if (responseHeaderCallback) {
               return responseHeaderCallback(result, response.headers);
@@ -336,6 +371,8 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
       } catch (e) {
         throw e;
       }
+    } else if (status == 401) {
+      throw EXCEPTION.UNAUTHORIZED;
     } else if (status == 403) {
       throw EXCEPTION.NO_PERMISSION;
     } else if (status == 404) {
@@ -350,8 +387,8 @@ async function fetchJson(url, data, { method, responseHeaderCallback, skipLogin,
   }
 }
 
-async function fetchJsonWithToken(url, data, { method, token, responseHeaderCallback }) {
-  let response = await fetchJsonReturnResponse(url, data, { method, token });
+async function fetchJsonWithToken(url, data, { method, token, responseHeaderCallback, authMode }) {
+  let response = await fetchJsonReturnResponse(url, data, { method, token, authMode });
   let status = response.status;
   if (isStatusNoError(response)) {
     const jsonResult = await response.json();
@@ -364,7 +401,7 @@ async function fetchJsonWithToken(url, data, { method, token, responseHeaderCall
   }
 }
 
-async function fetchJsonReturnResponse(url, data, { method, token, skipLogin, getTokenFunction, headers } = { method: "POST", skipLogin: false }) {
+async function fetchJsonReturnResponse(url, data, { method, token, skipLogin, getTokenFunction, headers, body, authMode = "Bearer" } = { method: "POST", skipLogin: false }) {
   let targetToken = token;
   if (!targetToken) {
     let oauthDTO = null;
@@ -375,9 +412,6 @@ async function fetchJsonReturnResponse(url, data, { method, token, skipLogin, ge
     }
     targetToken = oauthDTO?.accessToken;
   }
-  if (!targetToken && !skipLogin) {
-    throw EXCEPTION.NO_LOGIN;
-  }
   let targetHeaders = {
     "Content-Type": "application/json",
   };
@@ -385,13 +419,19 @@ async function fetchJsonReturnResponse(url, data, { method, token, skipLogin, ge
     targetHeaders = { ...targetHeaders, ...headers };
   }
   if (targetToken) {
-    targetHeaders["Authorization"] = `Bearer ${targetToken}`;
+    if (authMode == "Basic") {
+      targetHeaders["Authorization"] = `Basic ${Buffer.from(` :${targetToken}`).toString('base64')}`;
+    } else {
+      targetHeaders["Authorization"] = `Bearer ${targetToken}`;
+    }
   }
   let option = {
     method,
     headers: targetHeaders,
   };
-  if (data) {
+  if (body) {
+    option.body = body;
+  } else if (data) {
     option.body = JSON.stringify(data);
   }
   let response = await fetch(url, option);

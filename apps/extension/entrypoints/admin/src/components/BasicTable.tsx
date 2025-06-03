@@ -35,11 +35,11 @@ interface TableParams {
 export type BasicTableProps = {
   searchProps: {
     columns: TableColumnsType<any>;
-    searchFields: {
-      common: JSX.Element[];
+    searchFields?: {
+      common?: JSX.Element[];
       expand?: JSX.Element[];
     };
-    fillSearchParam: (searchParam, values: any) => any;
+    fillSearchParam?: (searchParam, values: any) => any;
     convertSortField?: (key: any) => string;
     search: (searchParam) => Promise<any>;
     convertToDataList?: (data: any) => any;
@@ -47,6 +47,7 @@ export type BasicTableProps = {
     searchParam?: any;
   };
   rowKeyFunction?: (record) => string;
+  onCheckboxDisableCheck?: (record) => boolean;
   expandedRowRender?: (record) => JSX.Element;
   exportProps?: {
     dataToExcelJSONArray: (originalData: any) => any;
@@ -56,9 +57,10 @@ export type BasicTableProps = {
     title: string;
     dataFileName?: string;
   };
-  mode?: Array<'c' | 'r' | 'u' | 'd'>;
+  mode?: Array<'c' | 'r' | 'u' | 'd' | 'a'>;
   onAdd?: () => void;
-  onDelete?: (keys: React.Key[]) => void;
+  onAppend?: (keys: React.Key[]) => Promise<void>;
+  onDelete?: (keys: React.Key[]) => Promise<void>;
   additionMenu?: JSX.Element;
 };
 
@@ -69,8 +71,10 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
     exportProps,
     mode,
     onAdd,
+    onAppend,
     onDelete,
     rowKeyFunction,
+    onCheckboxDisableCheck,
     additionMenu,
   } = props;
 
@@ -126,6 +130,7 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
   const [exportLoading, setExportLoading] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [addLoading, setAddLoading] = useState(false);
+  const [appendLoading, setAppendLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   useImperativeHandle(ref, () => ({
@@ -166,9 +171,9 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
   ) => {
     searchParam.pageNum = pagination.current;
     searchParam.pageSize = pagination.pageSize;
-    if (tableParams.sortField && tableParams.sortOrder && convertSortField) {
-      searchParam.orderByColumn = convertSortField(tableParams.sortField);
-      if (tableParams.sortOrder === 'descend') {
+    if (sorter.field && sorter.order && convertSortField) {
+      searchParam.orderByColumn = convertSortField(sorter.field);
+      if (sorter.order === 'descend') {
         searchParam.orderBy = 'DESC';
       } else {
         searchParam.orderBy = 'ASC';
@@ -193,7 +198,7 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
   const onFinish = (values: any) => {
     tableParams.pagination.current = 1;
     searchParam.pageNum = 1;
-    fillSearchParam(searchParam, values);
+    fillSearchParam ? fillSearchParam(searchParam, values) : null;
     setSearchParam(searchParam);
     setTableParams(tableParams);
     setRefresh(!refresh);
@@ -237,10 +242,18 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
   };
 
   const createSearchField = () => {
-    if (searchFields.expand && expand) {
-      return [...searchFields.common, ...searchFields.expand];
+    if (searchFields) {
+      if (searchFields.expand && expand) {
+        return [...searchFields.common, ...searchFields.expand];
+      } else {
+        if (searchFields.common) {
+          return [...searchFields.common];
+        } else {
+          return []
+        }
+      }
     } else {
-      return [...searchFields.common];
+      return [];
     }
   };
 
@@ -251,6 +264,9 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
   const rowSelection: TableRowSelection<any> = {
     selectedRowKeys,
     onChange: onSelectChange,
+    getCheckboxProps: (record) => ({
+      disabled: onCheckboxDisableCheck ? onCheckboxDisableCheck(record) : false
+    }),
   };
 
   const hasSelected = selectedRowKeys.length > 0;
@@ -262,7 +278,6 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
             <Form
               form={form}
               initialValues={defaultSearchParam}
-              name="advanced_search"
               style={{
                 maxWidth: 'none',
                 background: token.colorFillAlter,
@@ -279,7 +294,8 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
                   <Flex>{additionMenu ? additionMenu : null}</Flex>
                   {mode?.includes('c') ? (
                     <Button
-                      type="primary"
+                      variant='dashed'
+                      color='default'
                       loading={addLoading}
                       onClick={async () => {
                         if (onAdd) {
@@ -294,6 +310,34 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
                     >
                       新增
                     </Button>
+                  ) : null}
+                  {mode?.includes('a') ? (
+                    <Popconfirm
+                      title="添加"
+                      description="确定添加选定的记录？"
+                      onConfirm={async () => {
+                        if (onAppend) {
+                          try {
+                            setAppendLoading(true);
+                            await onAppend(selectedRowKeys);
+                            setSelectedRowKeys([]);
+                          } finally {
+                            setAppendLoading(false);
+                          }
+                        }
+                      }}
+                      okText="确定"
+                      cancelText="取消"
+                    >
+                      <Button
+                        variant='dashed'
+                        loading={appendLoading}
+                        disabled={!hasSelected}
+                        type="primary"
+                      >
+                        添加
+                      </Button>
+                    </Popconfirm>
                   ) : null}
                   {mode?.includes('d') ? (
                     <Popconfirm
@@ -315,7 +359,6 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
                     >
                       <Button
                         loading={deleteLoading}
-                        type="primary"
                         disabled={!hasSelected}
                         danger
                       >
@@ -344,7 +387,7 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
                       >
                         清除
                       </Button>
-                      {searchFields.expand && searchFields.expand.length > 0 ? (
+                      {searchFields?.expand && searchFields.expand.length > 0 ? (
                         <a
                           style={{ fontSize: 12 }}
                           onClick={() => {
@@ -364,8 +407,8 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
             rowKey={
               rowKeyFunction
                 ? (record) => {
-                    return rowKeyFunction(record);
-                  }
+                  return rowKeyFunction(record);
+                }
                 : (record) => record.id
             }
             columns={[
@@ -377,7 +420,7 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
                       {index +
                         1 +
                         (tableParams.pagination.current - 1) *
-                          tableParams.pagination.pageSize}
+                        tableParams.pagination.pageSize}
                     </Text>
                   ),
                   minWidth: 50,
@@ -393,7 +436,7 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
             expandable={{
               expandedRowRender,
             }}
-            rowSelection={mode?.includes('d') ? rowSelection : null}
+            rowSelection={mode?.includes('d') || mode?.includes("a") ? rowSelection : null}
           />
         </Space>
       </Flex>

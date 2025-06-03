@@ -1,7 +1,6 @@
 import { CompanyApi, TagApi } from '@/common/api';
 import { CompanyTagBO } from '@/common/data/bo/companyTagBO';
 import { companyDataToExcelJSONArray } from '@/common/excel';
-import { dateToStr } from '@/common/utils';
 import {
   Button,
   Col,
@@ -34,6 +33,8 @@ dayjs.extend(duration);
 import { CompanyTagDTO } from '@/common/data/dto/companyTagDTO';
 
 import { useTag } from '../../hooks/tag';
+import { Popover } from 'antd/lib';
+import { dateToStr, genIdFromText } from "@/common/utils";
 const { convertToTagData } = useTag();
 
 const searchFields = {
@@ -77,11 +78,16 @@ const CompanyView: React.FC = () => {
     {
       title: '编号',
       dataIndex: 'id',
-      render: (value: string) => (
-        <Text copyable style={{ width: 100 }} title={value}>{`${
-          value && value.length > 5 ? value.slice(0, 5) + '...' : value
-        }`}</Text>
-      ),
+      render: (value: string) =>
+        <Popover
+          content={<Text copyable>{value}</Text>}
+          trigger="click"
+        >
+          <Text
+            title={`${value}`}
+            ellipsis
+          >{`${value?.length > 8 ? value.substring(0, 8) : value}`}</Text>
+        </Popover>,
       minWidth: 100,
     },
     {
@@ -262,6 +268,9 @@ const CompanyView: React.FC = () => {
           data={editCompanyTagData}
           whitelist={whitelist}
           onSave={onCompanyTagSave}
+          validCompanyName={async (value) => {
+            return (await CompanyApi.getAllCompanyTagDTOByCompanyId(genIdFromText(value))).length <= 0;
+          }}
         ></CompanyTagEdit>
       </Modal>
     </>

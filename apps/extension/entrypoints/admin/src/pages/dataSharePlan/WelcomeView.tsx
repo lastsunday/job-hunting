@@ -25,7 +25,7 @@ const WelcomeView: React.FC = () => {
 
     const enable = async () => {
         await change(true);
-        navigate(`/dataSharePlanStatistic`);
+        navigate(`/task/taskStatistic`);
     }
 
     return <>
