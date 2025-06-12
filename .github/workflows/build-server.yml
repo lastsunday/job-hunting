@@ -58,7 +58,7 @@ jobs:
         run: pnpm exec nx run server:build --verbose
 
       - name: Run tests
-        run: pnpm exec nx run server:test --verbose
+        run: pnpm exec nx run server:test --workspace --verbose
 
   server-release:
     runs-on: ubuntu-latest
