@@ -1,9 +1,9 @@
-use sea_orm_migration::{prelude::*, schema::*};
+use sea_orm_migration::{async_trait::async_trait, prelude::*, schema::*};
 
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
-#[async_trait::async_trait]
+#[async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
@@ -35,19 +35,54 @@ impl MigrationTrait for Migration {
                     .col(boolean_null(Job::IsFullCompanyName))
                     .col(string_null(Job::SkillTag))
                     .col(string_null(Job::WelfareTag))
-                    .primary_key(
-                        Index::create().name("pk-job-id")
-                        .col(Job::Id)
-                    )
+                    .primary_key(Index::create().name("pk-job-id").col(Job::Id))
                     .to_owned(),
             )
-            .await
+            .await?;
+        manager
+            .create_table(
+                Table::create()
+                    .table(Tag::Table)
+                    .if_not_exists()
+                    .col(string(Tag::Id))
+                    .col(string_null(Tag::Name))
+                    .col(timestamp_with_time_zone_null(Tag::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(Tag::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-tag-id").col(Tag::Id))
+                    .to_owned(),
+            )
+            .await?;
+        manager
+            .create_table(
+                Table::create()
+                    .table(JobTag::Table)
+                    .if_not_exists()
+                    .col(string(JobTag::Id))
+                    .col(string(JobTag::JobId))
+                    .col(string(JobTag::TagId))
+                    .col(integer_null(JobTag::SourceType))
+                    .col(string_null(JobTag::Source))
+                    .col(integer_null(JobTag::Seq))
+                    .col(timestamp_with_time_zone_null(JobTag::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(JobTag::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-job-tag-id").col(JobTag::Id))
+                    .to_owned(),
+            )
+            .await?;
+        Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
             .drop_table(Table::drop().table(Job::Table).to_owned())
-            .await
+            .await?;
+        manager
+            .drop_table(Table::drop().table(Tag::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(JobTag::Table).to_owned())
+            .await?;
+        Ok(())
     }
 }
 
@@ -75,7 +110,29 @@ enum Job {
     BossPosition,
     CreateDatetime,
     UpdateDatetime,
-    IsFullCompanyName, 
-    SkillTag, 
+    IsFullCompanyName,
+    SkillTag,
     WelfareTag,
+}
+
+#[derive(DeriveIden)]
+enum Tag {
+    Table,
+    Id,
+    Name,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum JobTag {
+    Table,
+    Id,
+    JobId,
+    TagId,
+    SourceType,
+    Source,
+    Seq,
+    CreateDatetime,
+    UpdateDatetime,
 }
