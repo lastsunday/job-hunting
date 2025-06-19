@@ -1,4 +1,4 @@
-server:
-  port: 3000
-database:
-  url: postgres://postgres:changeme@127.0.0.1/postgres
+#server:
+#  port: 3000
+#database:
+#  url: postgres://postgres:changeme@127.0.0.1/postgres

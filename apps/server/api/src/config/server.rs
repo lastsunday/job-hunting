@@ -6,6 +6,10 @@ pub struct ServerConfig {
 }
 
 impl ServerConfig {
+    pub fn new() -> Self {
+        Self { port: Some(3000) }
+    }
+
     pub fn port(&self) -> u16 {
         self.port.unwrap_or(3000)
     }

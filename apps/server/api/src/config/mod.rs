@@ -20,11 +20,11 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn load() -> anyhow::Result<Self> {
-        Config::builder()
+        match Config::builder()
             .add_source(
                 config::File::with_name("application")
                     .format(FileFormat::Yaml)
-                    .required(true),
+                    .required(false),
             )
             .add_source(
                 config::Environment::with_prefix("APP")
@@ -35,7 +35,29 @@ impl AppConfig {
             .build()
             .with_context(|| anyhow::anyhow!("Failed to load config"))?
             .try_deserialize()
-            .with_context(|| anyhow::anyhow!("Failed to deserialize config"))
+        {
+            Ok(config) => {
+                tracing::info!("Load config file successfully");
+                tracing::info!("{:#?}", config);
+                Ok(config)
+            }
+            Err(e) => {
+                tracing::warn!(
+                    "Failed to load config file,using default config,error = {:?}",
+                    e
+                );
+                let config = Self::new();
+                tracing::info!("{:#?}", config);
+                Ok(config)
+            }
+        }
+    }
+
+    pub fn new() -> Self {
+        Self {
+            server: ServerConfig::new(),
+            database: DatabaseConfig::new(),
+        }
     }
 
     pub fn server(&self) -> &ServerConfig {
