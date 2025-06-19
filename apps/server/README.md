@@ -50,6 +50,25 @@ cargo test --workspace
 5. Log
    1.
 
+### Setup flow
+
+1. web framework
+1. router
+1. logger(tracing)
+1. configuration(config)
+1. database(sea-orm)
+1. error(thiserror)
+1. request/response tracing(info_span,xid)
+1. layer(timeout,body_limit,cors)
+1. request,response
+   1. ApiResponse
+   2. ApiParam
+   3. ApiPageParam
+   4. ApiPageResult
+1. validator(validator,axum-valid)
+1. custom valid structure(query,path,json)
+1. custom valid message
+
 ### App
 
 1. Database upgrade

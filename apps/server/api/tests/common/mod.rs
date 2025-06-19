@@ -22,11 +22,10 @@ pub async fn setup_database() -> (Option<ContainerAsync<Postgres>>, AppState) {
 
     // sqlite
     let container = None;
-    let database_url = &"sqlite::memory:".to_string();
-    let conn: sea_orm::DatabaseConnection =
-        service::database::establish_connection(Some(database_url.to_string()))
-            .await
-            .unwrap();
+    let database_url = &"sqlite::memory:";
+    let conn: sea_orm::DatabaseConnection = service::database::establish_connection(database_url)
+        .await
+        .unwrap();
     migration::Migrator::up(&conn, None).await.unwrap();
     let state = AppState { conn };
     (container, state)
@@ -48,7 +47,14 @@ pub async fn response_to_json(response: Response<Body>) -> Value {
 
 #[allow(dead_code)]
 pub fn get_json_paging_result_items(value: &Value) -> Vec<Value> {
-    value["items"].as_array().unwrap().clone()
+    value["data"]
+        .as_object()
+        .unwrap()
+        .get("items")
+        .unwrap()
+        .as_array()
+        .unwrap()
+        .clone()
 }
 
 #[allow(dead_code)]

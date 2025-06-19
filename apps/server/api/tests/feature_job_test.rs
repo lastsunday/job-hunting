@@ -62,7 +62,7 @@ async fn job_list_with_salary(world: &mut JobWorld, step: &Step) {
 
 #[when(expr = "小明查询能给到{float}元每月薪资的职位")]
 async fn search_by_salary(world: &mut JobWorld, salary: f32) {
-    let param_json = json!({"page":{"page":1,"page_size":10},"param":{"salary":salary}});
+    let param_json = json!({"page": {"num":1,"size":10},"salary":salary});
     let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
     assert_eq!(response.status(), StatusCode::OK);
     let jobs = get_json_paging_result_items(&response_to_json(response).await);
@@ -70,8 +70,8 @@ async fn search_by_salary(world: &mut JobWorld, salary: f32) {
     for job in jobs.iter() {
         result.push(JobItem {
             job_name: get_from_value(job, "name").unwrap(),
-            job_salary_min: get_from_value(job, "salary_min").unwrap(),
-            job_salary_max: get_from_value(job, "salary_max").unwrap(),
+            job_salary_min: get_from_value(job, "salaryMin").unwrap(),
+            job_salary_max: get_from_value(job, "salaryMax").unwrap(),
             ..Default::default()
         });
     }
@@ -120,7 +120,7 @@ async fn job_list_only_name(world: &mut JobWorld, step: &Step) {
 
 #[when(expr = "小明查询职位名含有 {} 的职位")]
 async fn search_by_name(world: &mut JobWorld, name: String) {
-    let param_json = json!({"page":{"page":1,"page_size":10},"param":{"name":name}});
+    let param_json = json!({"page":{"num":1,"size":10},"name":name});
     let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
     assert_eq!(response.status(), StatusCode::OK);
     let jobs = get_json_paging_result_items(&response_to_json(response).await);
@@ -173,7 +173,7 @@ async fn job_list_with_address(world: &mut JobWorld, step: &Step) {
 
 #[when(expr = "小明查询地址含有 {} 的职位")]
 async fn search_by_address(world: &mut JobWorld, name: String) {
-    let param_json = json!({"page":{"page":1,"page_size":10},"param":{"address":name}});
+    let param_json = json!({"page":{"num":1,"size":10},"address":name});
     let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
     assert_eq!(response.status(), StatusCode::OK);
     let jobs = get_json_paging_result_items(&response_to_json(response).await);
@@ -236,11 +236,9 @@ async fn search_by_publish_datetime(
     let end_datetime = str_to_datetime(end_datetime);
     // tracing::info!("{:?},{:?}",start_datetime,end_datetime);
     let param_json = json!({
-        "page":{"page":1,"page_size":10},
-        "param":{
-            "publish_datetime_start":datetime_to_str(start_datetime),
-            "publish_datetime_end":datetime_to_str(end_datetime)
-        }
+        "page":{"num":1,"size":10},
+        "publishDatetimeStart":datetime_to_str(start_datetime),
+        "publishDatetimeEnd":datetime_to_str(end_datetime)
     });
     let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
     // tracing::info!("{:?}",from_utf8(&response.into_body().collect().await.unwrap().to_bytes()));
@@ -251,7 +249,7 @@ async fn search_by_publish_datetime(
         result.push(JobItem {
             job_name: get_from_value(job, "name").unwrap(),
             first_publish_datetime: str_to_datetime(
-                get_from_value(job, "first_publish_datetime").unwrap(),
+                get_from_value(job, "firstPublishDatetime").unwrap(),
             ),
             ..Default::default()
         });
@@ -306,11 +304,9 @@ async fn search_by_create_datetime(
     let end_datetime = str_to_datetime(end_datetime);
     // tracing::info!("{:?},{:?}",start_datetime,end_datetime);
     let param_json = json!({
-        "page":{"page":1,"page_size":10},
-        "param":{
-            "create_datetime_start":datetime_to_str(start_datetime),
-            "create_datetime_end":datetime_to_str(end_datetime)
-        }
+        "page":{ "num":1,"size":10},
+        "createDatetimeStart":datetime_to_str(start_datetime),
+        "createDatetimeEnd":datetime_to_str(end_datetime)
     });
     let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
     // tracing::info!("{:?}",from_utf8(&response.into_body().collect().await.unwrap().to_bytes()));
@@ -320,7 +316,7 @@ async fn search_by_create_datetime(
     for job in jobs.iter() {
         result.push(JobItem {
             job_name: get_from_value(job, "name").unwrap(),
-            create_datetime: str_to_datetime(get_from_value(job, "create_datetime").unwrap()),
+            create_datetime: str_to_datetime(get_from_value(job, "createDatetime").unwrap()),
             ..Default::default()
         });
     }
