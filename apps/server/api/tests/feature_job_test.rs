@@ -1,4 +1,6 @@
+use api::setup_default;
 use api::setup_job;
+use axum::extract::connect_info::MockConnectInfo;
 use chrono::DateTime;
 use chrono::Duration;
 use chrono::FixedOffset;
@@ -17,6 +19,7 @@ use cucumber::{World, given};
 use futures::FutureExt;
 use serde_json::json;
 use service::AppState;
+use std::net::SocketAddr;
 mod common;
 use common::{setup_database, tear_down};
 use entity::job::{ActiveModel, Entity as Job};
@@ -365,6 +368,8 @@ async fn main() {
                 world.state = Some(state.clone());
                 let app = Router::new();
                 let app = setup_job(app, state);
+                let app = setup_default(app);
+                let app = app.layer(MockConnectInfo(SocketAddr::from(([0, 0, 0, 0], 1337))));
                 world.app = Some(app);
             }
             .boxed()

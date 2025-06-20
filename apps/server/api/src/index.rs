@@ -7,6 +7,12 @@ use crate::common::{
     error::ApiResult,
 };
 
+pub fn routes() -> Router {
+    Router::new()
+        .route("/", get(root))
+        .route("/testPathQuery", get(test_path_query))
+}
+
 #[debug_handler]
 pub async fn root() -> &'static str {
     "Hello, World!"
@@ -25,10 +31,4 @@ pub async fn test_path_query(
     ValidQuery(param): ValidQuery<TestQueryParam>,
 ) -> ApiResult<ApiResponse<TestQueryParam>> {
     Ok(ApiResponse::success(Some(param)))
-}
-
-pub fn routes() -> Router {
-    Router::new()
-        .route("/", get(root))
-        .route("/testPathQuery", get(test_path_query))
 }

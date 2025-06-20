@@ -1,6 +1,3 @@
-use axum::{Router, debug_handler, extract::State, routing::post};
-use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait};
-
 use crate::{
     AppState,
     common::{
@@ -8,7 +5,18 @@ use crate::{
         error::ApiResult,
     },
 };
+use axum::{Router, debug_handler, extract::State, routing::post};
 use entity::job::{self, Entity as Job};
+use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait};
+
+pub fn routes(state: AppState) -> Router {
+    Router::new().nest(
+        "/job",
+        Router::new()
+            .route("/search", post(search))
+            .with_state(state),
+    )
+}
 
 #[debug_handler]
 pub async fn search(
@@ -51,17 +59,10 @@ pub async fn search(
     Ok(ApiResponse::success(Some(ApiPageResult::new(items, total))))
 }
 
-pub fn routes(state: AppState) -> Router {
-    Router::new()
-        .route("/job/search", post(search))
-        .with_state(state)
-}
-
+use crate::common::data::PageParam;
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-
-use crate::common::data::PageParam;
 
 #[derive(Default, Deserialize, Serialize, Debug, Clone, Validate)]
 #[serde(rename_all = "camelCase")]

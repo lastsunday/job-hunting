@@ -58,6 +58,11 @@ pub fn get_json_paging_result_items(value: &Value) -> Vec<Value> {
 }
 
 #[allow(dead_code)]
+pub fn get_json_result(value: &Value) -> Value {
+    value["data"].clone()
+}
+
+#[allow(dead_code)]
 pub fn get_from_value<T: FromStr>(value: &Value, name: &str) -> Result<T, T::Err> {
     if value.get(name).unwrap().is_string() {
         value
@@ -74,16 +79,47 @@ pub fn get_from_value<T: FromStr>(value: &Value, name: &str) -> Result<T, T::Err
 
 #[allow(dead_code)]
 pub async fn post_json(app: Router, uri: &str, json: &Value) -> Response<Body> {
-    app.oneshot(
-        Request::builder()
-            .method("POST")
-            .uri(uri)
-            .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref())
-            .body(Body::from(serde_json::to_string(json).unwrap()))
-            .unwrap(),
-    )
-    .await
-    .unwrap()
+    post_json_with_token(app, uri, json, None).await
+}
+
+#[allow(dead_code)]
+pub async fn post_json_with_token(
+    app: Router,
+    uri: &str,
+    json: &Value,
+    token: Option<String>,
+) -> Response<Body> {
+    let builder = Request::builder()
+        .method("POST")
+        .uri(uri)
+        .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
+    let builder = match token {
+        Some(token) => builder.header(http::header::AUTHORIZATION, format!("Bearer {token}")),
+        None => builder,
+    };
+    let request = builder
+        .body(Body::from(serde_json::to_string(json).unwrap()))
+        .unwrap();
+    app.oneshot(request).await.unwrap()
+}
+
+#[allow(dead_code)]
+pub async fn get_json(app: Router, uri: &str) -> Response<Body> {
+    get_json_with_token(app, uri, None).await
+}
+
+#[allow(dead_code)]
+pub async fn get_json_with_token(app: Router, uri: &str, token: Option<String>) -> Response<Body> {
+    let builder = Request::builder()
+        .method("GET")
+        .uri(uri)
+        .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
+    let builder = match token {
+        Some(token) => builder.header(http::header::AUTHORIZATION, format!("Bearer {token}")),
+        None => builder,
+    };
+    let request = builder.body(Body::from(())).unwrap();
+    app.oneshot(request).await.unwrap()
 }
 
 #[allow(dead_code)]

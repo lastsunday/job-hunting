@@ -1,8 +1,10 @@
-mod common;
-mod config;
+pub mod auth;
+pub mod common;
+pub mod config;
 pub mod index;
 pub mod job;
 
+use std::net::SocketAddr;
 use std::time::Duration;
 
 use axum::Router;
@@ -43,7 +45,11 @@ async fn start() -> anyhow::Result<()> {
     // app start
     let listener = TcpListener::bind(format!("0.0.0.0:{port}")).await?;
     tracing::info!("listening on http://0.0.0.0:{port}");
-    axum::serve(listener, app).await?;
+    axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<SocketAddr>(),
+    )
+    .await?;
     Ok(())
 }
 
@@ -51,7 +57,12 @@ pub fn create_router(state: AppState) -> Router {
     let mut app = Router::new();
     app = setup_index(app);
     app = setup_job(app, state.clone());
-    app = app
+    app = setup_auth(app, state.clone());
+    setup_default(app)
+}
+
+pub fn setup_default(router: Router) -> Router {
+    let app = router
         .fallback(async || -> ApiResult<()> {
             tracing::warn!("Not found");
             Err(ApiError::NotFound)
@@ -79,13 +90,11 @@ pub fn create_router(state: AppState) -> Router {
         .on_request(())
         .on_failure(())
         .on_response(LatencyOnResponse);
-    app = app
-        .layer(timeout)
+    app.layer(timeout)
         .layer(body_limit)
         .layer(tracing)
         .layer(cors)
-        .layer(normalize_path);
-    app
+        .layer(normalize_path)
 }
 
 pub fn setup_index(router: Router) -> Router {
@@ -94,6 +103,10 @@ pub fn setup_index(router: Router) -> Router {
 
 pub fn setup_job(router: Router, state: AppState) -> Router {
     router.nest("/api", job::routes(state))
+}
+
+pub fn setup_auth(router: Router, state: AppState) -> Router {
+    router.nest("/api", auth::routes(state))
 }
 
 pub fn main() {

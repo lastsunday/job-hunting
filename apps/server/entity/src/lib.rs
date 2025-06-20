@@ -2,6 +2,8 @@
 
 pub mod prelude;
 
+pub mod config;
 pub mod job;
 pub mod job_tag;
 pub mod tag;
+pub mod user;

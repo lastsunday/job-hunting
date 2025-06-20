@@ -68,6 +68,9 @@ cargo test --workspace
 1. validator(validator,axum-valid)
 1. custom valid structure(query,path,json)
 1. custom valid message
+1. auth(jwt,jsonwebtoken)
+1. user schema(password(bcrypt,id(xid)))
+1. auth api(login,user info)
 
 ### App
 

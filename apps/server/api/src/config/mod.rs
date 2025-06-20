@@ -12,7 +12,7 @@ use crate::config::database::DatabaseConfig;
 static CONFIG: LazyLock<AppConfig> =
     LazyLock::new(|| AppConfig::load().expect("Failed to initialize config"));
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct AppConfig {
     server: ServerConfig,
     database: DatabaseConfig,
