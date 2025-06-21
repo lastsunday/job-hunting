@@ -8,10 +8,12 @@
       "vite/client",
       "node",
       "vitest",
-      "@vitest/browser/providers/playwright"
+      "@nx/react/typings/cssmodule.d.ts",
+      "@nx/react/typings/image.d.ts"
     ],
-    "experimentalDecorators": true,
-    "useDefineForClassFields": false,
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "moduleResolution": "bundler"
   },
   "include": [
     "vite.config.ts",
@@ -30,7 +32,7 @@
   ],
   "references": [
     {
-      "path": "./tsconfig.lib.json"
+      "path": "./tsconfig.app.json"
     }
   ]
 }

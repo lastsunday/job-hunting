@@ -2,12 +2,7 @@
   "name": "server-ui-e2e",
   "version": "0.0.1",
   "private": true,
-  "scripts": {
-    "e2e:install": "playwright install --with-deps"
-  },
   "nx": {
-    "projectType": "application",
-    "sourceRoot": "apps/server-ui-e2e/src",
     "implicitDependencies": [
       "server-ui"
     ]
