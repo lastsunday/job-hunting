@@ -30,21 +30,16 @@ export default defineConfig({
     cwd: workspaceRoot,
   },
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
-    },
 
     {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
+      name: "chromium",
+      //channel: "chromium" -> https://github.com/microsoft/playwright/issues/33682
+      use: { ...devices["Desktop Chrome"], channel: "chromium" },
     },
-
     {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
+      name: 'Microsoft Edge',
+      use: { ...devices['Desktop Edge'], channel: 'msedge' },
     },
-
     // Uncomment for mobile browsers support
     /* {
       name: 'Mobile Chrome',
