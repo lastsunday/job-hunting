@@ -53,3 +53,5 @@ storybook-static
 out
 test-output
 lua
+
+*.sqlite

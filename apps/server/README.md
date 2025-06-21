@@ -71,6 +71,8 @@ cargo test --workspace
 1. auth(jwt,jsonwebtoken)
 1. user schema(password(bcrypt,id(xid)))
 1. auth api(login,user info)
+1. web app
+1. include web app to server(rust-embed)
 
 ### App
 

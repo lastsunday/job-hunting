@@ -9,7 +9,7 @@ use crate::common::{
 
 pub fn routes() -> Router {
     Router::new()
-        .route("/", get(root))
+        .route("/hello", get(root))
         .route("/version", get(version))
         .route("/testPathQuery", get(test_path_query))
 }

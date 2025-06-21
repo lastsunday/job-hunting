@@ -13,7 +13,12 @@ async fn hello_world() {
     let app = Router::new();
     let app = setup_index(app);
     let response = app
-        .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+        .oneshot(
+            Request::builder()
+                .uri("/hello")
+                .body(Body::empty())
+                .unwrap(),
+        )
         .await
         .unwrap();
     assert_eq!(response.status(), StatusCode::OK);

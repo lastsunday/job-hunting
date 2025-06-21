@@ -10,6 +10,7 @@ use std::time::Duration;
 use axum::Router;
 use axum::extract::DefaultBodyLimit;
 use axum::extract::Request;
+use axum::routing::get;
 use bytesize::ByteSize;
 use migration::MigratorTrait;
 use service::AppState;
@@ -18,6 +19,7 @@ use tokio::net::TcpListener;
 use common::error::*;
 use common::trace::*;
 use common::*;
+use tower_http::compression::CompressionLayer;
 use tower_http::cors;
 use tower_http::cors::CorsLayer;
 use tower_http::normalize_path::NormalizePathLayer;
@@ -56,6 +58,8 @@ async fn start() -> anyhow::Result<()> {
 pub fn create_router(state: AppState) -> Router {
     let mut app = Router::new();
     app = setup_index(app);
+    app = setup_web(app);
+    app = setup_api_fallback(app);
     app = setup_job(app, state.clone());
     app = setup_auth(app, state.clone());
     setup_default(app)
@@ -63,10 +67,7 @@ pub fn create_router(state: AppState) -> Router {
 
 pub fn setup_default(router: Router) -> Router {
     let app = router
-        .fallback(async || -> ApiResult<()> {
-            tracing::warn!("Not found");
-            Err(ApiError::NotFound)
-        })
+        .fallback(web::index_handler)
         .method_not_allowed_fallback(async || -> ApiResult<()> {
             tracing::warn!("Method not allowed");
             Err(ApiError::MethodNotAllowed)
@@ -102,11 +103,34 @@ pub fn setup_index(router: Router) -> Router {
 }
 
 pub fn setup_job(router: Router, state: AppState) -> Router {
-    router.nest("/api", job::routes(state))
+    api_setup(router, job::routes(state))
 }
 
 pub fn setup_auth(router: Router, state: AppState) -> Router {
-    router.nest("/api", auth::routes(state))
+    api_setup(router, auth::routes(state))
+}
+
+fn api_setup(router: Router, api_router: Router) -> Router {
+    router.nest("/api", api_router)
+}
+
+fn setup_api_fallback(router: Router) -> Router {
+    router.nest(
+        "/api",
+        Router::new().fallback(async || -> ApiResult<()> {
+            tracing::warn!("Not found");
+            Err(ApiError::NotFound)
+        }),
+    )
+}
+
+pub fn setup_web(router: Router) -> Router {
+    router.nest(
+        "/assets",
+        Router::new()
+            .route("/{*file}", get(web::assets_handler))
+            .route_layer(CompressionLayer::new()),
+    )
 }
 
 pub fn main() {

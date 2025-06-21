@@ -28,6 +28,7 @@ tower-http = { version = "0.6.6", features = [
   "cors",
   "normalize-path",
   "auth",
+  "compression-full",
 ] }
 xid = { version = "1.1.1" }
 bytesize = { version = "2.0.1" }
@@ -53,6 +54,7 @@ entity = { path = "../entity" }
 migration = { path = "../migration" }
 service = { path = "../service" }
 common = { path = "../common" }
+web = { path = "../web" }
 
 [dev-dependencies]
 tower = { version = "0.5.2", features = ["util"] }

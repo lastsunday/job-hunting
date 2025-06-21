@@ -1,52 +1,34 @@
-// Uncomment this line to use CSS modules
 // import styles from './app.module.css';
-import NxWelcome from './nx-welcome';
+// Import styles of packages that you've installed.
+// All packages except `@mantine/hooks` require styles imports
+import '@mantine/core/styles.css';
 
-import { Route, Routes, Link } from 'react-router-dom';
+import { MantineProvider } from '@mantine/core';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient, version } from '../api';
+import { useEffect, useState } from 'react';
 
 export function App() {
-  return (
-    <div>
-      <NxWelcome title="server-ui" />
 
-      {/* START: routes */}
-      {/* These routes and navigation have been generated for you */}
-      {/* Feel free to move and update them to fit your needs */}
-      <br />
-      <hr />
-      <br />
-      <div role="navigation">
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          <li>
-            <Link to="/page-2">Page 2</Link>
-          </li>
-        </ul>
+  const [versionValue, setVersionValue] = useState("");
+
+  const init = async () => {
+    const v = await version();
+    setVersionValue(v);
+  }
+
+  useEffect(() => {
+    init();
+  }, []);
+
+  return <MantineProvider>
+    <QueryClientProvider client={queryClient}>
+      <div>
+        Hello World!
       </div>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <div>
-              This is the generated root route.{' '}
-              <Link to="/page-2">Click here for page 2.</Link>
-            </div>
-          }
-        />
-        <Route
-          path="/page-2"
-          element={
-            <div>
-              <Link to="/">Click here to go back to root page.</Link>
-            </div>
-          }
-        />
-      </Routes>
-      {/* END: routes */}
-    </div>
-  );
+      <div>V{versionValue}</div>
+    </QueryClientProvider>
+  </MantineProvider>
 }
 
 export default App;

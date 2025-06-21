@@ -1,0 +1,18 @@
+[package]
+name = "web"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = { version = "0.8.4", features = ["macros"] }
+rust-embed = { version = "8.7.2", features = [
+  "axum",
+  "axum-ex",
+  "tokio",
+  "compression",
+  "debug-embed",
+  "include-exclude",
+  "include-flate",
+  "interpolate-folder-path",
+  "mime-guess",
+] }
