@@ -73,6 +73,7 @@ cargo test --workspace
 1. auth api(login,user info)
 1. web app
 1. include web app to server(rust-embed)
+1. build release(profile.releases)
 
 ### App
 
