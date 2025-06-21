@@ -1,5 +1,5 @@
 {
-  "name": "server-ui-e2e",
+  "name": "@job-hunting/server-ui-e2e",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -8,7 +8,7 @@
   },
   "nx": {
     "implicitDependencies": [
-      "server-ui"
+      "@job-hunting/server-ui"
     ]
   }
 }
