@@ -10,12 +10,17 @@ use crate::common::{
 pub fn routes() -> Router {
     Router::new()
         .route("/", get(root))
+        .route("/version", get(version))
         .route("/testPathQuery", get(test_path_query))
 }
 
 #[debug_handler]
 pub async fn root() -> &'static str {
     "Hello, World!"
+}
+
+pub async fn version() -> &'static str {
+    env!("CARGO_PKG_VERSION")
 }
 
 #[derive(Default, Deserialize, Serialize, Debug, Clone, Validate)]
