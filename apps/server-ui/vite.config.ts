@@ -1,6 +1,7 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from "@vitejs/plugin-react";
+import { resolve } from 'path';
 
 export default defineConfig(() => ({
   root: __dirname,
@@ -31,6 +32,7 @@ export default defineConfig(() => ({
     globals: true,
     environment: 'jsdom',
     include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    setupFiles: [resolve(__dirname, 'tests/setup.ts')],
     reporters: ['default'],
     coverage: {
       reportsDirectory: './test-output/vitest/coverage',
