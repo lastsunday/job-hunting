@@ -1,5 +1,5 @@
 {
-  "name": "server",
+  "name": "job-hunting-server",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
   "sourceRoot": "apps/server/src",
@@ -7,9 +7,12 @@
     "build": {
       "cache": true,
       "executor": "@monodon/rust:build",
-      "outputs": ["{options.target-dir}"],
+      "outputs": [
+        "{options.target-dir}"
+      ],
       "options": {
-        "target-dir": "dist/target/server"
+        "target-dir": "dist/target/job-hunting-server",
+        "release": true
       },
       "configurations": {
         "production": {
@@ -20,9 +23,11 @@
     "test": {
       "cache": true,
       "executor": "@monodon/rust:test",
-      "outputs": ["{options.target-dir}"],
+      "outputs": [
+        "{options.target-dir}"
+      ],
       "options": {
-        "target-dir": "dist/target/server"
+        "target-dir": "dist/target/job-hunting-server"
       },
       "configurations": {
         "production": {
@@ -33,16 +38,20 @@
     "lint": {
       "cache": true,
       "executor": "@monodon/rust:lint",
-      "outputs": ["{options.target-dir}"],
+      "outputs": [
+        "{options.target-dir}"
+      ],
       "options": {
-        "target-dir": "dist/target/server"
+        "target-dir": "dist/target/job-hunting-server"
       }
     },
     "run": {
       "executor": "@monodon/rust:run",
-      "outputs": ["{options.target-dir}"],
+      "outputs": [
+        "{options.target-dir}"
+      ],
       "options": {
-        "target-dir": "dist/target/server"
+        "target-dir": "dist/target/job-hunting-server"
       },
       "configurations": {
         "production": {

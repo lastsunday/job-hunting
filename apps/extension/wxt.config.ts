@@ -1,4 +1,4 @@
-import react from "@vitejs/plugin-react-swc";
+import reactOxc from '@vitejs/plugin-react-oxc';
 import { copyFileSync } from "fs";
 import { resolve } from "path";
 import wasm from "vite-plugin-wasm";
@@ -83,7 +83,7 @@ export default defineConfig({
         }
       },
       plugins: () => {
-        [react(), wasm()]
+        [reactOxc(), wasm()]
       },
       worker: {
         plugins: () => [wasm()],

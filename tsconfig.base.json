@@ -13,7 +13,9 @@
     "importHelpers": true,
     "incremental": true,
     "isolatedModules": true,
-    "lib": ["es2022"],
+    "lib": [
+      "es2022"
+    ],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmitOnError": true,
@@ -31,9 +33,15 @@
     "target": "es2022",
     "verbatimModuleSyntax": false,
     "paths": {
-      "@apps/*": ["/apps/*"],
-      "@libs/*": ["/libs/*"],
-      "@packages/*": ["/packages/*"]
+      "@apps/*": [
+        "/apps/*"
+      ],
+      "@libs/*": [
+        "/libs/*"
+      ],
+      "@packages/*": [
+        "/packages/*"
+      ]
     }
   }
 }

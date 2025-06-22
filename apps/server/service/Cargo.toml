@@ -1,0 +1,34 @@
+[package]
+name = "service"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+sea-orm = { version = "1.1.12", features = [
+  "sqlx-postgres",
+  "sqlx-sqlite",
+  "runtime-tokio-rustls",
+  "macros",
+  "debug-print",
+] }
+anyhow = { version = "1.0.98" }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+git2 = "0.20.2"
+ssh-key = { version = "0.6.7", features = ["getrandom", "ed25519"] }
+chrono = "0.4.41"
+testcontainers = "0.24.0"
+testcontainers-modules = { version = "0.12.1", features = [
+  "postgres",
+  "gitea",
+] }
+uuid = { version = "1.17.0", features = ["v4"] }
+tokio = { version = "1.45.1", features = ["full"] }
+num_cpus = { version = "1.17.0" }
+openssl = { version = "0.10.73", features = ["vendored"] }
+migration = { path = "../migration" }
+entity = { path = "../entity" }
+
+[features]
+default = []
+vendored-openssl = ["git2/vendored-openssl"]
