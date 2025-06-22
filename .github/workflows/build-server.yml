@@ -13,9 +13,15 @@ on:
       - dev
     tags:
       - "job-hunting-server@*"
+    paths:
+      - "apps/server*"
+      - ".github/**"
   pull_request:
     branches:
       - dev
+    paths:
+      - "apps/server*"
+      - ".github/**"
 
 env:
   CARGO_TERM_COLOR: always
