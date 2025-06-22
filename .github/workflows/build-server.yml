@@ -94,6 +94,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build ui
+        run: |
+          pnpm exec nx run @job-hunting/server-ui:build
+
       - name: Run tests
         run: pnpm exec nx run job-hunting-server:test --workspace --verbose
 
