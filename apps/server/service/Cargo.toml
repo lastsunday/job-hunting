@@ -25,5 +25,10 @@ testcontainers-modules = { version = "0.12.1", features = [
 uuid = { version = "1.17.0", features = ["v4"] }
 tokio = { version = "1.45.1", features = ["full"] }
 num_cpus = { version = "1.17.0" }
+openssl = { version = "0.10.73", features = ["vendored"] }
 migration = { path = "../migration" }
 entity = { path = "../entity" }
+
+[features]
+default = []
+vendored-openssl = ["git2/vendored-openssl"]
