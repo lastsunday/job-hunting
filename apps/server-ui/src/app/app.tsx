@@ -32,7 +32,7 @@ export function App() {
 
   return <MantineProvider>
     <QueryClientProvider client={queryClient}>
-      <div>
+      <div className="app">
         Hello World!
       </div>
       <div>V{versionValue}</div>
