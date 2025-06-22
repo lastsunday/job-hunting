@@ -6,7 +6,6 @@
 
 [![build-extension](https://github.com/lastsunday/job-hunting/actions/workflows/build-extension.yml/badge.svg)](https://github.com/lastsunday/job-hunting/actions/workflows/build-extension.yml)
 [![build-server](https://github.com/lastsunday/job-hunting/actions/workflows/build-server.yml/badge.svg)](https://github.com/lastsunday/job-hunting/actions/workflows/build-server.yml)
-[![build-server](https://github.com/lastsunday/job-hunting/actions/workflows/build-server-ui.yml/badge.svg)](https://github.com/lastsunday/job-hunting/actions/workflows/build-server-ui.yml)
 
 > **免责声明：**
 >
@@ -178,4 +177,3 @@
 关于本项目的最终解释权归开发者所有。开发者保留随时更改或更新本免责声明的权利，恕不另行通知。
 
 </div>
-

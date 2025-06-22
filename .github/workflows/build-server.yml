@@ -54,6 +54,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: (UI)Run unit tests
+        run: |
+          pnpm exec nx run @job-hunting/server-ui:test
+
+      - name: (UI)Build server ui
+        run: |
+          pnpm exec nx run @job-hunting/server-ui:build
+
+      - name: (UI)Setup e2e tests
+        run: |
+          pnpm exec nx run @job-hunting/server-ui-e2e:e2e:install
+
+      - name: (UI)Run e2e tests
+        run: |
+          pnpm exec nx run @job-hunting/server-ui-e2e:e2e
+
       - name: Build
         run: pnpm exec nx run job-hunting-server:build --verbose
 
