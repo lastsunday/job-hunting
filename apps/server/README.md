@@ -74,6 +74,8 @@ cargo test --workspace
 1. web app
 1. include web app to server(rust-embed)
 1. build release(profile.releases)
+1. upload assets to github, docker image to docker hub
+1. openapi + ui(scalar)
 
 ### App
 

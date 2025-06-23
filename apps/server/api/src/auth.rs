@@ -1,13 +1,14 @@
 use std::net::SocketAddr;
 
 use axum::{
-    Extension, Router, debug_handler,
+    Extension, debug_handler,
     extract::{ConnectInfo, State},
-    routing::{get, post},
 };
 use common::password::verify;
 use serde::{Deserialize, Serialize};
 use service::AppState;
+use utoipa::ToSchema;
+use utoipa_axum::{router::OpenApiRouter, routes};
 use validator::Validate;
 
 use crate::common::{
@@ -19,18 +20,18 @@ use crate::common::{
 use entity::{prelude::*, user};
 use sea_orm::prelude::*;
 
-pub fn routes(state: AppState) -> Router {
-    Router::new().nest(
-        "/auth",
-        Router::new()
-            .route("/user", get(user))
-            .route_layer(get_auth_layer())
-            .route("/login", post(login))
-            .with_state(state),
-    )
+const TAG: &str = "auth";
+
+pub fn create_routes(state: AppState) -> OpenApiRouter {
+    OpenApiRouter::new()
+        .routes(routes!(user))
+        .route_layer(get_auth_layer())
+        .routes(routes!(login))
+        .with_state(state)
 }
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, ToSchema)]
+#[schema(example = json!({"account": "root", "password": "Change_Me"}))]
 pub struct LoginParam {
     #[validate(length(min = 4, max = 16, message = "account length between 4 - 16"))]
     account: String,
@@ -38,7 +39,7 @@ pub struct LoginParam {
     password: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct LoginResult {
     access_token: String,
@@ -46,6 +47,9 @@ pub struct LoginResult {
 
 #[debug_handler]
 #[tracing::instrument(name="login",skip_all,fields(account = %param.account,ip = %addr))]
+#[utoipa::path(post, path = "/auth/login",tag=TAG,security(()),request_body = LoginParam,responses(
+    (status=OK,body=ApiResponse<LoginResult>)
+))]
 async fn login(
     State(AppState { conn }): State<AppState>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
@@ -71,6 +75,9 @@ async fn login(
 }
 
 #[debug_handler]
+#[utoipa::path(get, path = "/auth/user",tag=TAG,security(()),responses(
+    (status=OK,body=ApiResponse<Principal>)
+))]
 async fn user(Extension(principal): Extension<Principal>) -> ApiResult<ApiResponse<Principal>> {
     Ok(ApiResponse::success(Some(principal)))
 }

@@ -3,6 +3,7 @@ use jsonwebtoken::{
 };
 use serde::{Deserialize, Serialize};
 use std::{borrow::Cow, sync::LazyLock, time::Duration};
+use utoipa::ToSchema;
 
 const DEFAULT_SECRET: &str = "QLjJTeVblAlM47de";
 const DEFAULT_AUDIENCE: &str = "audience";
@@ -10,7 +11,7 @@ const DEFAULT_ISSUER: &str = "issuer";
 
 static DEFAULT_JWT: LazyLock<Jwt> = LazyLock::new(Jwt::default);
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct Principal {
     pub id: String,
     pub name: String,

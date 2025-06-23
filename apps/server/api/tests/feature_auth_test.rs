@@ -13,6 +13,7 @@ use futures::FutureExt;
 use serde_json::json;
 use service::AppState;
 use std::net::SocketAddr;
+use utoipa_axum::router::OpenApiRouter;
 mod common;
 use common::{setup_database, tear_down};
 use testcontainers::ContainerAsync;
@@ -56,12 +57,12 @@ async fn auth_login(world: &mut TestWorld) {
 }
 
 #[then(expr = "超级用户应该能获得访问令牌")]
-async fn get_access_token(world: &mut TestWorld, step: &Step) {
+async fn get_access_token(world: &mut TestWorld) {
     assert!(!world.access_token.is_empty())
 }
 
 #[given("超级用户的登录凭证")]
-async fn give_root_access_token(world: &mut TestWorld, step: &Step) {
+async fn give_root_access_token(world: &mut TestWorld) {
     let principal = Principal {
         id: String::from("testid"),
         name: String::from("root"),
@@ -84,7 +85,7 @@ async fn root_get_user_info(world: &mut TestWorld) {
 }
 
 #[then(expr = "超级用户应该能获得个人信息")]
-async fn root_user_info(world: &mut TestWorld, step: &Step) {
+async fn root_user_info(world: &mut TestWorld) {
     assert_eq!("root", world.name);
 }
 
@@ -112,8 +113,8 @@ async fn main() {
                 let (container, state) = setup_database().await;
                 world.container = container;
                 world.state = Some(state.clone());
-                let app = Router::new();
-                let app = setup_auth(app, state);
+                let app = OpenApiRouter::new();
+                let app = setup_auth(app, state).split_for_parts().0;
                 let app = setup_default(app);
                 let app = app.layer(MockConnectInfo(SocketAddr::from(([0, 0, 0, 0], 1337))));
                 world.app = Some(app);

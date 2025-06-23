@@ -5,20 +5,25 @@ use crate::{
         error::ApiResult,
     },
 };
-use axum::{Router, debug_handler, extract::State, routing::post};
+use axum::{debug_handler, extract::State};
 use entity::job::{self, Entity as Job};
 use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait};
+use utoipa::ToSchema;
+use utoipa_axum::{
+    router::{OpenApiRouter, UtoipaMethodRouterExt},
+    routes,
+};
 
-pub fn routes(state: AppState) -> Router {
-    Router::new().nest(
-        "/job",
-        Router::new()
-            .route("/search", post(search))
-            .with_state(state),
-    )
+const TAG: &str = "job";
+
+pub fn create_routes(state: AppState) -> OpenApiRouter {
+    OpenApiRouter::new().routes(routes!(search).with_state(state))
 }
 
 #[debug_handler]
+#[utoipa::path(post, path = "/job/search",tag=TAG,security(()),request_body = SearchParam,responses(
+    (status=OK,body=ApiResponse<ApiPageResult<job::Model>>)
+))]
 pub async fn search(
     State(AppState { conn }): State<AppState>,
     ValidJson(param): ValidJson<SearchParam>,
@@ -64,7 +69,7 @@ use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-#[derive(Default, Deserialize, Serialize, Debug, Clone, Validate)]
+#[derive(Default, Deserialize, Serialize, Debug, Clone, Validate, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SearchParam {
     #[validate(nested)]

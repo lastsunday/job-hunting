@@ -1,17 +1,17 @@
 use api::setup_index;
 
 use axum::{
-    Router,
     body::Body,
     http::{Request, StatusCode},
 };
 use http_body_util::BodyExt; // for `collect`
-use tower::ServiceExt; // for `call`, `oneshot`, and `ready`
+use tower::ServiceExt;
+use utoipa_axum::router::OpenApiRouter; // for `call`, `oneshot`, and `ready`
 
 #[tokio::test]
 async fn hello_world() {
-    let app = Router::new();
-    let app = setup_index(app);
+    let app = OpenApiRouter::new();
+    let app = setup_index(app).split_for_parts().0;
     let response = app
         .oneshot(
             Request::builder()
@@ -28,8 +28,8 @@ async fn hello_world() {
 
 #[tokio::test]
 async fn version() {
-    let app = Router::new();
-    let app = setup_index(app);
+    let app = OpenApiRouter::new();
+    let app = setup_index(app).split_for_parts().0;
     let response = app
         .oneshot(
             Request::builder()

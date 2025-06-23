@@ -11,4 +11,5 @@ path = "src/lib.rs"
 serde = { version = "1.0.219", features = ["derive"] }
 sea-orm = { version = "1.1.12" }
 chrono = "0.4.41"
+utoipa = { version = "5.4.0", features = ["axum_extras", "debug", "chrono"] }
 common = { path = "../common" }

@@ -2,15 +2,20 @@
 
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
+use crate::schema::date_time_with_time_zone_or_null_schema;
+
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, ToSchema)]
 #[sea_orm(table_name = "tag")]
 #[serde(rename_all = "camelCase")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
     pub name: Option<String>,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub create_datetime: Option<DateTimeWithTimeZone>,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub update_datetime: Option<DateTimeWithTimeZone>,
 }
 

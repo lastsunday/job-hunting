@@ -6,9 +6,10 @@ pub mod valid;
 use axum::response::IntoResponse;
 use serde::{Deserialize, Serialize};
 use serder::deserialize_number;
+use utoipa::ToSchema;
 use validator::Validate;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ApiResponse<T> {
     pub code: i32,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -44,7 +45,8 @@ impl<T: Serialize> IntoResponse for ApiResponse<T> {
 const DEFAULT_PAGE_NUM: u64 = 1;
 const DEFAULT_PAGE_SIZE: u64 = 10;
 
-#[derive(Default, Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Validate)]
+#[derive(Default, Deserialize, Serialize, Debug, Clone, PartialEq, Eq, Validate, ToSchema)]
+#[schema(example = json!({"num": DEFAULT_PAGE_NUM, "size": DEFAULT_PAGE_SIZE}))]
 pub struct PageParam {
     #[serde(default = "default_page_num", deserialize_with = "deserialize_number")]
     #[validate(range(min = 1, message = "page must more than 0"))]
@@ -61,7 +63,7 @@ fn default_page_size() -> u64 {
     DEFAULT_PAGE_SIZE
 }
 
-#[derive(Default, Deserialize, Serialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Default, Deserialize, Serialize, Debug, Clone, PartialEq, Eq, ToSchema)]
 pub struct ApiPageResult<T> {
     pub items: Vec<T>,
     pub total: u64,

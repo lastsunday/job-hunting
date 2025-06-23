@@ -38,6 +38,9 @@ regex = { version = "1.11.1" }
 idgenerator = { version = "2.0.0" }
 bcrypt = { version = "0.17.0" }
 jsonwebtoken = { version = "9.3.1" }
+utoipa = { version = "5.4.0", features = ["axum_extras", "debug", "chrono"] }
+utoipa-axum = { version = "0.2.0", features = ["debug"] }
+utoipa-scalar = { version = "0.3.0", features = ["axum"] }
 
 serde_json = "1.0.140"
 http-body-util = "0.1.3"

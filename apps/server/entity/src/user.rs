@@ -4,8 +4,11 @@ use chrono::Local;
 use common::id::gen_id;
 use sea_orm::{ActiveValue, entity::prelude::*, prelude::async_trait::async_trait};
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
+use crate::schema::date_time_with_time_zone_or_null_schema;
+
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, ToSchema)]
 #[sea_orm(table_name = "user")]
 #[serde(rename_all = "camelCase")]
 pub struct Model {
@@ -17,7 +20,9 @@ pub struct Model {
     #[sea_orm(unique)]
     pub email: Option<String>,
     pub enable: bool,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub create_datetime: Option<DateTimeWithTimeZone>,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub update_datetime: Option<DateTimeWithTimeZone>,
 }
 

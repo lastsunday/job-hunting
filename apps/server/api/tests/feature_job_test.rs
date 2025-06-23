@@ -20,6 +20,7 @@ use futures::FutureExt;
 use serde_json::json;
 use service::AppState;
 use std::net::SocketAddr;
+use utoipa_axum::router::OpenApiRouter;
 mod common;
 use common::{setup_database, tear_down};
 use entity::job::{ActiveModel, Entity as Job};
@@ -366,8 +367,8 @@ async fn main() {
                 let (container, state) = setup_database().await;
                 world.container = container;
                 world.state = Some(state.clone());
-                let app = Router::new();
-                let app = setup_job(app, state);
+                let app = OpenApiRouter::new();
+                let app = setup_job(app, state).split_for_parts().0;
                 let app = setup_default(app);
                 let app = app.layer(MockConnectInfo(SocketAddr::from(([0, 0, 0, 0], 1337))));
                 world.app = Some(app);

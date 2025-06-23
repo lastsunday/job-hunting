@@ -25,6 +25,12 @@ use tower_http::cors::CorsLayer;
 use tower_http::normalize_path::NormalizePathLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
+use utoipa::OpenApi;
+use utoipa::openapi::security::Http;
+use utoipa::openapi::security::HttpAuthScheme;
+use utoipa::openapi::security::SecurityScheme;
+use utoipa_axum::router::OpenApiRouter;
+use utoipa_scalar::{Scalar, Servable as ScalarServable};
 
 #[tokio::main]
 async fn start() -> anyhow::Result<()> {
@@ -55,14 +61,26 @@ async fn start() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[derive(OpenApi)]
+#[openapi()]
+struct ApiDoc;
+
 pub fn create_router(state: AppState) -> Router {
-    let mut app = Router::new();
-    app = setup_index(app);
+    let mut api = ApiDoc::openapi();
+    api.components.as_mut().unwrap().add_security_scheme(
+        "AccessToken",
+        SecurityScheme::Http(Http::new(HttpAuthScheme::Bearer)),
+    );
+    let mut api_router = OpenApiRouter::with_openapi(api);
+    api_router = setup_index(api_router);
+    api_router = setup_job(api_router, state.clone());
+    api_router = setup_auth(api_router, state.clone());
+    let (mut app, api) = api_router.split_for_parts();
     app = setup_web(app);
     app = setup_api_fallback(app);
-    app = setup_job(app, state.clone());
-    app = setup_auth(app, state.clone());
-    setup_default(app)
+    app = setup_default(app);
+    app = app.merge(Scalar::with_url("/docs", api));
+    app
 }
 
 pub fn setup_default(router: Router) -> Router {
@@ -98,19 +116,19 @@ pub fn setup_default(router: Router) -> Router {
         .layer(normalize_path)
 }
 
-pub fn setup_index(router: Router) -> Router {
-    router.merge(index::routes())
+pub fn setup_index(router: OpenApiRouter) -> OpenApiRouter {
+    router.merge(index::create_routes())
 }
 
-pub fn setup_job(router: Router, state: AppState) -> Router {
-    api_setup(router, job::routes(state))
+pub fn setup_job(router: OpenApiRouter, state: AppState) -> OpenApiRouter {
+    api_setup(router, job::create_routes(state))
 }
 
-pub fn setup_auth(router: Router, state: AppState) -> Router {
-    api_setup(router, auth::routes(state))
+pub fn setup_auth(router: OpenApiRouter, state: AppState) -> OpenApiRouter {
+    api_setup(router, auth::create_routes(state))
 }
 
-fn api_setup(router: Router, api_router: Router) -> Router {
+fn api_setup(router: OpenApiRouter, api_router: OpenApiRouter) -> OpenApiRouter {
     router.nest("/api", api_router)
 }
 
