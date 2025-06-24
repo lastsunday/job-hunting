@@ -14,13 +14,13 @@ on:
     tags:
       - "job-hunting-server@*"
     paths:
-      - "apps/server*"
+      - "apps/server**"
       - ".github/**"
   pull_request:
     branches:
       - dev
     paths:
-      - "apps/server*"
+      - "apps/server**"
       - ".github/**"
 
 env:
