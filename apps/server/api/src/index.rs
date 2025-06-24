@@ -45,7 +45,6 @@ pub async fn datetime() -> String {
 }
 
 #[derive(Default, Deserialize, Serialize, Debug, Clone, Validate, ToSchema)]
-#[serde(rename_all = "camelCase")]
 pub struct TestQueryParam {
     #[validate(nested)]
     #[serde(flatten)]

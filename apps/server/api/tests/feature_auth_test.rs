@@ -54,7 +54,7 @@ async fn auth_login(world: &mut TestWorld) {
     let response = post_json(world.app.clone().unwrap(), LOGIN_API_URL, &param_json).await;
     assert_eq!(response.status(), StatusCode::OK);
     let data = get_json_result(&response_to_json(response).await);
-    world.access_token = get_from_value(&data, "accessToken").unwrap();
+    world.access_token = get_from_value(&data, "access_token").unwrap();
 }
 
 #[then(expr = "超级用户应该能获得访问令牌")]
@@ -114,6 +114,7 @@ async fn main() {
                 let (container, state) = setup_database().await;
                 world.container = container;
                 world.state = Some(state.clone());
+                Jwt::init(api::config::get().auth().clone());
                 let app = OpenApiRouter::new();
                 let app = setup_auth(app, state).split_for_parts().0;
                 let app = setup_default(app);

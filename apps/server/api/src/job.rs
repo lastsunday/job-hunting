@@ -70,7 +70,6 @@ use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 #[derive(Default, Deserialize, Serialize, Debug, Clone, Validate, ToSchema)]
-#[serde(rename_all = "camelCase")]
 pub struct SearchParam {
     #[validate(nested)]
     pub page: PageParam,

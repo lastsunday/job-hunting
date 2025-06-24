@@ -74,8 +74,8 @@ async fn search_by_salary(world: &mut JobWorld, salary: f32) {
     for job in jobs.iter() {
         result.push(JobItem {
             job_name: get_from_value(job, "name").unwrap(),
-            job_salary_min: get_from_value(job, "salaryMin").unwrap(),
-            job_salary_max: get_from_value(job, "salaryMax").unwrap(),
+            job_salary_min: get_from_value(job, "salary_min").unwrap(),
+            job_salary_max: get_from_value(job, "salary_max").unwrap(),
             ..Default::default()
         });
     }
@@ -241,8 +241,8 @@ async fn search_by_publish_datetime(
     // tracing::info!("{:?},{:?}",start_datetime,end_datetime);
     let param_json = json!({
         "page":{"num":1,"size":10},
-        "publishDatetimeStart":datetime_to_str(start_datetime),
-        "publishDatetimeEnd":datetime_to_str(end_datetime)
+        "publish_datetime_start":datetime_to_str(start_datetime),
+        "publish_datetime_end":datetime_to_str(end_datetime)
     });
     let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
     // tracing::info!("{:?}",from_utf8(&response.into_body().collect().await.unwrap().to_bytes()));
@@ -253,7 +253,7 @@ async fn search_by_publish_datetime(
         result.push(JobItem {
             job_name: get_from_value(job, "name").unwrap(),
             first_publish_datetime: str_to_datetime(
-                get_from_value(job, "firstPublishDatetime").unwrap(),
+                get_from_value(job, "first_publish_datetime").unwrap(),
             ),
             ..Default::default()
         });
@@ -309,8 +309,8 @@ async fn search_by_create_datetime(
     // tracing::info!("{:?},{:?}",start_datetime,end_datetime);
     let param_json = json!({
         "page":{ "num":1,"size":10},
-        "createDatetimeStart":datetime_to_str(start_datetime),
-        "createDatetimeEnd":datetime_to_str(end_datetime)
+        "create_datetime_start":datetime_to_str(start_datetime),
+        "create_datetime_end":datetime_to_str(end_datetime)
     });
     let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
     // tracing::info!("{:?}",from_utf8(&response.into_body().collect().await.unwrap().to_bytes()));
@@ -320,7 +320,7 @@ async fn search_by_create_datetime(
     for job in jobs.iter() {
         result.push(JobItem {
             job_name: get_from_value(job, "name").unwrap(),
-            create_datetime: str_to_datetime(get_from_value(job, "createDatetime").unwrap()),
+            create_datetime: str_to_datetime(get_from_value(job, "create_datetime").unwrap()),
             ..Default::default()
         });
     }

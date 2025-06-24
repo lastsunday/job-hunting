@@ -40,7 +40,6 @@ pub struct LoginParam {
 }
 
 #[derive(Debug, Serialize, ToSchema)]
-#[serde(rename_all = "camelCase")]
 pub struct LoginResult {
     access_token: String,
 }
