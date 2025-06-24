@@ -59,7 +59,7 @@ impl AsyncAuthorizeRequest<Body> for JwtAuth {
                     ApiError::Unauthenticated(String::from("Authorization header must exists"))
                 })?;
             let pricipal = jwt
-                .decode(token)
+                .access_token_decode(token)
                 .map_err(|err| -> ApiError { ApiError::Internal(err) })?;
             request.extensions_mut().insert(pricipal);
             Ok(request)

@@ -4,7 +4,11 @@
 #  #  url: postgres://postgres:changeme@127.0.0.1/postgres
 #  url: sqlite://db.sqlite?mode=rwc
 #auth:
-#  secret: QLjJTeVblAlM47de
-#  expiration: 3600
+#  access_token_secret: QLjJTeVblAlM47de
+#  access_token_expires_in: 28800
+#  refresh_token_secret: N8lI0uitNzJl6vYK
+#  refresh_token_expires_in: 15897600
 #  audience: audience
 #  issuer: issuer
+#  client_id: d1aicsr57dijo7h963ig
+#  client_secret: ujTgh2lEQYy0PXhK

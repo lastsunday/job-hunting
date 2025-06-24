@@ -24,11 +24,13 @@ use axum::{Router, http::StatusCode};
 
 use crate::common::get_json_result;
 use crate::common::get_json_with_token;
+use crate::common::post_json_without_body;
 
 use api::common::auth::Principal;
 
 const LOGIN_API_URL: &str = "/api/auth/login";
 const USER_API_URL: &str = "/api/auth/user";
+const ACCESS_TOKEN_API_URL: &str = "/api/auth/access_token";
 
 #[given("含有预设的超级用户凭证信息")]
 async fn auth_info(world: &mut TestWorld, step: &Step) {
@@ -55,11 +57,21 @@ async fn auth_login(world: &mut TestWorld) {
     assert_eq!(response.status(), StatusCode::OK);
     let data = get_json_result(&response_to_json(response).await);
     world.access_token = get_from_value(&data, "access_token").unwrap();
+    world.expires_in = get_from_value(&data, "expires_in").unwrap();
+    world.refresh_token = get_from_value(&data, "refresh_token").unwrap();
+    world.refresh_token_expires_in = get_from_value(&data, "refresh_token_expires_in").unwrap();
+    world.scope = get_from_value(&data, "scope").unwrap();
+    world.token_type = get_from_value(&data, "token_type").unwrap();
 }
 
 #[then(expr = "超级用户应该能获得访问令牌")]
 async fn get_access_token(world: &mut TestWorld) {
-    assert!(!world.access_token.is_empty())
+    assert!(!world.access_token.is_empty());
+    assert_eq!(world.expires_in, 28800);
+    assert!(!world.refresh_token.is_empty());
+    assert_eq!(world.refresh_token_expires_in, 15897600);
+    assert_eq!(world.scope, String::from(""));
+    assert_eq!(world.token_type, String::from("bearer"));
 }
 
 #[given("超级用户的登录凭证")]
@@ -68,7 +80,7 @@ async fn give_root_access_token(world: &mut TestWorld) {
         id: String::from("testid"),
         name: String::from("root"),
     };
-    let access_token = Jwt::global().encode(principal).unwrap();
+    let access_token = Jwt::global().access_token_encode(principal).unwrap();
     world.access_token = access_token;
 }
 
@@ -90,6 +102,35 @@ async fn root_user_info(world: &mut TestWorld) {
     assert_eq!("root", world.name);
 }
 
+#[given("刷新令牌")]
+async fn give_root_refresh_token(world: &mut TestWorld) {
+    let principal = Principal {
+        id: String::from("testid"),
+        name: String::from("root"),
+    };
+    let refresh_token = Jwt::global().refresh_token_encode(principal).unwrap();
+    world.refresh_token = refresh_token;
+}
+
+#[when(expr = "使用刷新令牌获取新的访问令牌和刷新令牌")]
+async fn root_refresh_token(world: &mut TestWorld) {
+    let response = post_json_without_body(
+        world.app.clone().unwrap(),
+        format!("{}?client_id=d1aicsr57dijo7h963ig&client_secret=ujTgh2lEQYy0PXhK&grant_type=refresh_token&refresh_token={}",ACCESS_TOKEN_API_URL,world.refresh_token).as_str(),
+    )
+    .await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let data = get_json_result(&response_to_json(response).await);
+    world.access_token = get_from_value(&data, "access_token").unwrap();
+    world.refresh_token = get_from_value(&data, "refresh_token").unwrap();
+}
+
+#[then(expr = "获得刷新后的访问令牌和刷新令牌")]
+async fn root_access_token_and_refresh_token_get(world: &mut TestWorld) {
+    assert!(!world.access_token.is_empty());
+    assert!(!world.refresh_token.is_empty());
+}
+
 #[derive(Debug, Default)]
 struct UserItem {
     pub account: String,
@@ -100,6 +141,11 @@ struct UserItem {
 pub struct TestWorld {
     users: Vec<UserItem>,
     access_token: String,
+    expires_in: u64,
+    refresh_token: String,
+    refresh_token_expires_in: u64,
+    scope: String,
+    token_type: String,
     name: String,
     container: Option<ContainerAsync<Postgres>>,
     app: Option<Router>,

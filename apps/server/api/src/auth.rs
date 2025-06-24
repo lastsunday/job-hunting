@@ -7,13 +7,18 @@ use axum::{
 use common::password::verify;
 use serde::{Deserialize, Serialize};
 use service::AppState;
-use utoipa::ToSchema;
+use utoipa::{IntoParams, ToSchema};
 use utoipa_axum::{router::OpenApiRouter, routes};
 use validator::Validate;
 
+use super::config;
+
 use crate::common::{
     auth::{Jwt, Principal},
-    data::{ApiResponse, valid::ValidJson},
+    data::{
+        ApiResponse,
+        valid::{ValidJson, ValidQuery},
+    },
     error::{ApiError, ApiResult},
     middleware::get_auth_layer,
 };
@@ -26,6 +31,7 @@ pub fn create_routes(state: AppState) -> OpenApiRouter {
     OpenApiRouter::new()
         .routes(routes!(user))
         .route_layer(get_auth_layer())
+        .routes(routes!(access_token))
         .routes(routes!(login))
         .with_state(state)
 }
@@ -42,6 +48,11 @@ pub struct LoginParam {
 #[derive(Debug, Serialize, ToSchema)]
 pub struct LoginResult {
     access_token: String,
+    expires_in: u64,
+    refresh_token: String,
+    refresh_token_expires_in: u64,
+    scope: String,
+    token_type: String,
 }
 
 #[debug_handler]
@@ -68,9 +79,68 @@ async fn login(
         id: user.id,
         name: user.account,
     };
-    let access_token = Jwt::global().encode(principal)?;
+    let access_token = Jwt::global().access_token_encode(principal.clone())?;
+    let expires_in = Jwt::global().access_token_expires_in();
+    let refresh_token = Jwt::global().refresh_token_encode(principal.clone())?;
+    let refresh_token_expires_in = Jwt::global().refresh_token_expires_in();
     tracing::info!("Login success");
-    Ok(ApiResponse::success(Some(LoginResult { access_token })))
+    Ok(ApiResponse::success(Some(LoginResult {
+        access_token,
+        expires_in,
+        refresh_token,
+        refresh_token_expires_in,
+        scope: String::from(""),
+        token_type: String::from("bearer"),
+    })))
+}
+
+#[derive(Debug, Deserialize, Validate, IntoParams)]
+#[into_params(parameter_in = Query)]
+pub struct AccessTokenParam {
+    #[param(example = "d1aicsr57dijo7h963ig")]
+    client_id: String,
+    #[param(example = "ujTgh2lEQYy0PXhK")]
+    client_secret: String,
+    #[param(example = "refresh_token")]
+    grant_type: String,
+    #[param(example = "")]
+    refresh_token: String,
+}
+
+#[debug_handler]
+#[tracing::instrument(name="access_token",skip_all,fields(param = %param.refresh_token,ip = %addr))]
+#[utoipa::path(post, path = "/auth/access_token",tag=TAG,security(()),params(AccessTokenParam),responses(
+    (status=OK,body=ApiResponse<LoginResult>)
+))]
+async fn access_token(
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
+    ValidQuery(param): ValidQuery<AccessTokenParam>,
+) -> ApiResult<ApiResponse<LoginResult>> {
+    let auth = config::get().auth();
+    if !param.client_id.eq(auth.client_id()) || !param.client_secret.eq(auth.client_secret()) {
+        return Err(ApiError::Biz(String::from(
+            "client_id or client_secret invalid",
+        )));
+    } else if !param.grant_type.eq("refresh_token") {
+        return Err(ApiError::Biz(String::from(
+            "grant_type must be refresh_token",
+        )));
+    } else {
+        let refresh_token_principal = Jwt::global().refresh_token_decode(&param.refresh_token)?;
+        let access_token = Jwt::global().access_token_encode(refresh_token_principal.clone())?;
+        let expires_in = Jwt::global().access_token_expires_in();
+        let refresh_token = Jwt::global().refresh_token_encode(refresh_token_principal.clone())?;
+        let refresh_token_expires_in = Jwt::global().refresh_token_expires_in();
+        tracing::info!("Login success");
+        Ok(ApiResponse::success(Some(LoginResult {
+            access_token,
+            expires_in,
+            refresh_token,
+            refresh_token_expires_in,
+            scope: String::from(""),
+            token_type: String::from("bearer"),
+        })))
+    }
 }
 
 #[debug_handler]

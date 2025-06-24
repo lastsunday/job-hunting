@@ -83,6 +83,16 @@ pub async fn post_json(app: Router, uri: &str, json: &Value) -> Response<Body> {
 }
 
 #[allow(dead_code)]
+pub async fn post_json_without_body(app: Router, uri: &str) -> Response<Body> {
+    let builder = Request::builder()
+        .method("POST")
+        .uri(uri)
+        .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
+    let request = builder.body(Body::from(())).unwrap();
+    app.oneshot(request).await.unwrap()
+}
+
+#[allow(dead_code)]
 pub async fn post_json_with_token(
     app: Router,
     uri: &str,
