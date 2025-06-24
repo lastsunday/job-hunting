@@ -2,14 +2,12 @@ use jsonwebtoken::{
     DecodingKey, EncodingKey, Header, Validation, decode, encode, get_current_timestamp,
 };
 use serde::{Deserialize, Serialize};
-use std::{borrow::Cow, sync::LazyLock, time::Duration};
+use std::{sync::OnceLock, time::Duration};
 use utoipa::ToSchema;
 
-const DEFAULT_SECRET: &str = "QLjJTeVblAlM47de";
-const DEFAULT_AUDIENCE: &str = "audience";
-const DEFAULT_ISSUER: &str = "issuer";
+use crate::config::auth::AuthConfig;
 
-static DEFAULT_JWT: LazyLock<Jwt> = LazyLock::new(Jwt::default);
+static JWT_INSTANCE: OnceLock<Jwt> = OnceLock::new();
 
 #[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct Principal {
@@ -27,26 +25,6 @@ pub struct Claims {
     exp: u64,
 }
 
-#[derive(Debug)]
-pub struct JwtConfig {
-    pub secret: Cow<'static, str>,
-    pub expiration: Duration,
-    pub audience: String,
-    pub issuer: String,
-}
-
-impl Default for JwtConfig {
-    fn default() -> Self {
-        Self {
-            // TODO: need config by random gen or yaml or env
-            secret: Cow::Borrowed(DEFAULT_SECRET),
-            expiration: Duration::from_secs(60 * 60),
-            audience: DEFAULT_AUDIENCE.to_string(),
-            issuer: DEFAULT_ISSUER.to_string(),
-        }
-    }
-}
-
 pub struct Jwt {
     encode_secret: EncodingKey,
     decode_secret: DecodingKey,
@@ -58,21 +36,21 @@ pub struct Jwt {
 }
 
 impl Jwt {
-    pub fn new(config: JwtConfig) -> Self {
+    fn new(config: AuthConfig) -> Self {
         let mut validation = Validation::new(jsonwebtoken::Algorithm::HS256);
-        validation.set_audience(&[&config.audience]);
-        validation.set_issuer(&[&config.issuer]);
+        validation.set_audience(&[String::from(config.audience())]);
+        validation.set_issuer(&[String::from(config.issuer())]);
         validation.set_required_spec_claims(&["jti", "sub", "aud", "iss", "iat", "exp"]);
 
-        let secret = config.secret.as_bytes();
+        let secret = config.secret().as_bytes();
         Self {
             encode_secret: EncodingKey::from_secret(secret),
             decode_secret: DecodingKey::from_secret(secret),
             header: Header::new(jsonwebtoken::Algorithm::HS256),
             validation,
-            expiration: config.expiration,
-            audience: config.audience,
-            issuer: config.issuer,
+            expiration: Duration::from_secs(config.expiration()),
+            audience: String::from(config.audience()),
+            issuer: String::from(config.issuer()),
         }
     }
 
@@ -91,6 +69,7 @@ impl Jwt {
 
     pub fn decode(&self, token: &str) -> anyhow::Result<Principal> {
         let claims: Claims = decode(token, &self.decode_secret, &self.validation)?.claims;
+
         let mut parts = claims.sub.splitn(2, ':');
         let principal = Principal {
             id: parts.next().unwrap().to_string(),
@@ -98,14 +77,12 @@ impl Jwt {
         };
         Ok(principal)
     }
-}
 
-impl Default for Jwt {
-    fn default() -> Self {
-        Self::new(JwtConfig::default())
+    pub fn init(config: AuthConfig) -> &'static Jwt {
+        JWT_INSTANCE.get_or_init(|| -> Self { Self::new(config) })
     }
-}
 
-pub fn get_jwt() -> &'static Jwt {
-    &DEFAULT_JWT
+    pub fn global() -> &'static Jwt {
+        JWT_INSTANCE.get().unwrap()
+    }
 }

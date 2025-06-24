@@ -1,3 +1,4 @@
+pub mod auth;
 pub mod database;
 pub mod server;
 use std::sync::LazyLock;
@@ -7,7 +8,7 @@ use config::{Config, FileFormat};
 use serde::Deserialize;
 pub use server::ServerConfig;
 
-use crate::config::database::DatabaseConfig;
+use crate::config::{auth::AuthConfig, database::DatabaseConfig};
 
 static CONFIG: LazyLock<AppConfig> =
     LazyLock::new(|| AppConfig::load().expect("Failed to initialize config"));
@@ -16,6 +17,7 @@ static CONFIG: LazyLock<AppConfig> =
 pub struct AppConfig {
     server: ServerConfig,
     database: DatabaseConfig,
+    auth: AuthConfig,
 }
 
 impl AppConfig {
@@ -57,6 +59,7 @@ impl AppConfig {
         Self {
             server: ServerConfig::new(),
             database: DatabaseConfig::new(),
+            auth: AuthConfig::new(),
         }
     }
 
@@ -66,6 +69,10 @@ impl AppConfig {
 
     pub fn database(&self) -> &DatabaseConfig {
         &self.database
+    }
+
+    pub fn auth(&self) -> &AuthConfig {
+        &self.auth
     }
 }
 

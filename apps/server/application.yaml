@@ -1,5 +1,10 @@
 #server:
 #  port: 3000
 #database:
-##  url: postgres://postgres:changeme@127.0.0.1/postgres
+#  #  url: postgres://postgres:changeme@127.0.0.1/postgres
 #  url: sqlite://db.sqlite?mode=rwc
+#auth:
+#  secret: QLjJTeVblAlM47de
+#  expiration: 3600
+#  audience: audience
+#  issuer: issuer

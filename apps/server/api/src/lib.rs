@@ -32,6 +32,8 @@ use utoipa::openapi::security::SecurityScheme;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_scalar::{Scalar, Servable as ScalarServable};
 
+use crate::common::auth::Jwt;
+
 #[tokio::main]
 async fn start() -> anyhow::Result<()> {
     //init logger
@@ -39,6 +41,8 @@ async fn start() -> anyhow::Result<()> {
     // config
     let port = config::get().server().port();
     let database_url = config::get().database().url();
+    // auth
+    Jwt::init(config::get().auth().clone());
     // database init
     let conn: sea_orm::DatabaseConnection =
         service::database::establish_connection(database_url).await?;

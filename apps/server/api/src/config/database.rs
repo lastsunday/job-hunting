@@ -2,7 +2,7 @@ use serde::Deserialize;
 
 #[derive(Debug, Default, Deserialize)]
 pub struct DatabaseConfig {
-    pub url: Option<String>,
+    url: Option<String>,
 }
 
 impl DatabaseConfig {

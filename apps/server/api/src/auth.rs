@@ -12,7 +12,7 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 use validator::Validate;
 
 use crate::common::{
-    auth::{Principal, get_jwt},
+    auth::{Jwt, Principal},
     data::{ApiResponse, valid::ValidJson},
     error::{ApiError, ApiResult},
     middleware::get_auth_layer,
@@ -69,7 +69,7 @@ async fn login(
         id: user.id,
         name: user.account,
     };
-    let access_token = get_jwt().encode(principal)?;
+    let access_token = Jwt::global().encode(principal)?;
     tracing::info!("Login success");
     Ok(ApiResponse::success(Some(LoginResult { access_token })))
 }

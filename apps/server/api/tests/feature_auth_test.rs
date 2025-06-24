@@ -1,3 +1,4 @@
+use api::common::auth::Jwt;
 use api::setup_auth;
 use api::setup_default;
 use axum::extract::connect_info::MockConnectInfo;
@@ -24,7 +25,7 @@ use axum::{Router, http::StatusCode};
 use crate::common::get_json_result;
 use crate::common::get_json_with_token;
 
-use api::common::auth::{Principal, get_jwt};
+use api::common::auth::Principal;
 
 const LOGIN_API_URL: &str = "/api/auth/login";
 const USER_API_URL: &str = "/api/auth/user";
@@ -67,7 +68,7 @@ async fn give_root_access_token(world: &mut TestWorld) {
         id: String::from("testid"),
         name: String::from("root"),
     };
-    let access_token = get_jwt().encode(principal).unwrap();
+    let access_token = Jwt::global().encode(principal).unwrap();
     world.access_token = access_token;
 }
 
