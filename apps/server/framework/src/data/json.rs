@@ -1,7 +1,7 @@
 use axum::extract::FromRequest;
 use axum_valid::HasValidate;
 
-use crate::common::error::ApiError;
+use crate::error::ApiError;
 
 #[derive(Debug, Clone, Default, FromRequest)]
 #[from_request(via(axum::extract::Json), rejection(ApiError))]

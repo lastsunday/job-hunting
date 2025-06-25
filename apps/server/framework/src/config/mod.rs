@@ -1,9 +1,14 @@
+pub mod auth;
+pub mod database;
+pub mod server;
 use std::sync::LazyLock;
 
 use anyhow::Context;
 use config::{Config, FileFormat};
-use framework::config::{ServerConfig, auth::AuthConfig, database::DatabaseConfig};
 use serde::Deserialize;
+pub use server::ServerConfig;
+
+use crate::config::{auth::AuthConfig, database::DatabaseConfig};
 
 static CONFIG: LazyLock<AppConfig> =
     LazyLock::new(|| AppConfig::load().expect("Failed to initialize config"));

@@ -16,6 +16,7 @@ use cucumber::gherkin::Step;
 use cucumber::then;
 use cucumber::when;
 use cucumber::{World, given};
+use framework::id::gen_id;
 use futures::FutureExt;
 use serde_json::json;
 use service::AppState;
@@ -29,7 +30,6 @@ use sea_orm::EntityTrait;
 use sea_orm::Set;
 use testcontainers::ContainerAsync;
 use testcontainers_modules::postgres::Postgres;
-use uuid::Uuid;
 
 use axum::{Router, http::StatusCode};
 
@@ -49,7 +49,7 @@ async fn job_list_with_salary(world: &mut JobWorld, step: &Step) {
             let job_salary_min = &row[1];
             let job_salary_max = &row[2];
             Job::insert(ActiveModel {
-                id: Set(Uuid::new_v4().to_string()),
+                id: Set(gen_id()),
                 name: Set(Some(job_name.to_owned())),
                 salary_min: Set(Some(job_salary_min.parse::<f32>().unwrap())),
                 salary_max: Set(Some(job_salary_max.parse::<f32>().unwrap())),
@@ -109,7 +109,7 @@ async fn job_list_only_name(world: &mut JobWorld, step: &Step) {
             // NOTE: skip header
             let job_name: &String = &row[0];
             Job::insert(ActiveModel {
-                id: Set(Uuid::new_v4().to_string()),
+                id: Set(gen_id()),
                 name: Set(Some(job_name.to_owned())),
                 create_datetime: Set(Some(dt)),
                 update_datetime: Set(Some(dt)),
@@ -161,7 +161,7 @@ async fn job_list_with_address(world: &mut JobWorld, step: &Step) {
             let dt = (now + Duration::seconds(index)).fixed_offset();
             // NOTE: skip header
             Job::insert(ActiveModel {
-                id: Set(Uuid::new_v4().to_string()),
+                id: Set(gen_id()),
                 name: Set(Some(row[0].to_string())),
                 address: Set(Some(row[1].to_string())),
                 create_datetime: Set(Some(dt)),
@@ -216,7 +216,7 @@ async fn job_list_with_publish_datetime(world: &mut JobWorld, step: &Step) {
             let dt = (now + Duration::seconds(index)).fixed_offset();
             // NOTE: skip header
             Job::insert(ActiveModel {
-                id: Set(Uuid::new_v4().to_string()),
+                id: Set(gen_id()),
                 name: Set(Some(row[0].to_string())),
                 first_publish_datetime: Set(str_to_datetime(row[1].clone())),
                 create_datetime: Set(Some(dt)),
@@ -285,7 +285,7 @@ async fn job_list_with_create_datetime(world: &mut JobWorld, step: &Step) {
             let dt = (now + Duration::seconds(index)).fixed_offset();
             // NOTE: skip header
             Job::insert(ActiveModel {
-                id: Set(Uuid::new_v4().to_string()),
+                id: Set(gen_id()),
                 name: Set(Some(row[0].to_string())),
                 create_datetime: Set(str_to_datetime(row[1].clone())),
                 update_datetime: Set(Some(dt)),

@@ -4,7 +4,16 @@ use axum::{
     Extension, debug_handler,
     extract::{ConnectInfo, State},
 };
-use common::password::verify;
+use framework::{
+    auth::{Jwt, Principal},
+    data::{
+        ApiResponse,
+        valid::{ValidJson, ValidQuery},
+    },
+    error::{ApiError, ApiResult},
+    middleware::get_auth_layer,
+    password::verify,
+};
 use serde::{Deserialize, Serialize};
 use service::AppState;
 use utoipa::{IntoParams, ToSchema};
@@ -13,15 +22,6 @@ use validator::Validate;
 
 use super::config;
 
-use crate::common::{
-    auth::{Jwt, Principal},
-    data::{
-        ApiResponse,
-        valid::{ValidJson, ValidQuery},
-    },
-    error::{ApiError, ApiResult},
-    middleware::get_auth_layer,
-};
 use entity::{prelude::*, user};
 use sea_orm::prelude::*;
 

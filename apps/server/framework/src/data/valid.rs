@@ -1,6 +1,6 @@
-use crate::common::data::path::Path;
-use crate::common::data::query::Query;
-use crate::common::{data::json::Json, error::ApiError};
+use crate::data::path::Path;
+use crate::data::query::Query;
+use crate::{data::json::Json, error::ApiError};
 use axum::extract::{FromRequest, FromRequestParts, Request};
 use axum::http::request::Parts;
 

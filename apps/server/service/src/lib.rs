@@ -1,6 +1,5 @@
 use sea_orm::DatabaseConnection;
 
-pub mod database;
 pub mod util;
 
 #[derive(Clone, Debug)]

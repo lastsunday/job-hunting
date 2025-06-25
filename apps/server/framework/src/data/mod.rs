@@ -3,11 +3,13 @@ pub mod path;
 pub mod query;
 pub mod serder;
 pub mod valid;
+
 use axum::response::IntoResponse;
 use serde::{Deserialize, Serialize};
-use serder::deserialize_number;
 use utoipa::ToSchema;
 use validator::Validate;
+
+use serder::deserialize_number;
 
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ApiResponse<T> {

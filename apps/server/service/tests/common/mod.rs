@@ -1,4 +1,5 @@
 use chrono::{DateTime, FixedOffset};
+use framework::database;
 use migration::MigratorTrait;
 use testcontainers::ContainerAsync;
 use testcontainers_modules::postgres::Postgres;
@@ -13,9 +14,8 @@ pub async fn setup_database() -> (Option<ContainerAsync<Postgres>>, AppState) {
     // sqlite
     let container = None;
     let database_url = &"sqlite::memory:";
-    let conn: sea_orm::DatabaseConnection = service::database::establish_connection(database_url)
-        .await
-        .unwrap();
+    let conn: sea_orm::DatabaseConnection =
+        database::establish_connection(database_url).await.unwrap();
     migration::Migrator::up(&conn, None).await.unwrap();
     let state = AppState { conn };
     (container, state)

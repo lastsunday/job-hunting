@@ -1,4 +1,3 @@
-use api::common::auth::Jwt;
 use api::setup_auth;
 use api::setup_default;
 use axum::extract::connect_info::MockConnectInfo;
@@ -10,6 +9,8 @@ use cucumber::gherkin::Step;
 use cucumber::then;
 use cucumber::when;
 use cucumber::{World, given};
+use framework::auth::Jwt;
+use framework::auth::Principal;
 use futures::FutureExt;
 use serde_json::json;
 use service::AppState;
@@ -25,8 +26,6 @@ use axum::{Router, http::StatusCode};
 use crate::common::get_json_result;
 use crate::common::get_json_with_token;
 use crate::common::post_json_without_body;
-
-use api::common::auth::Principal;
 
 const LOGIN_API_URL: &str = "/api/auth/login";
 const USER_API_URL: &str = "/api/auth/user";

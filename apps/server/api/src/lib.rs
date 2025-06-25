@@ -1,5 +1,4 @@
 pub mod auth;
-pub mod common;
 pub mod config;
 pub mod index;
 pub mod job;
@@ -16,9 +15,9 @@ use migration::MigratorTrait;
 use service::AppState;
 use tokio::net::TcpListener;
 
-use common::error::*;
-use common::trace::*;
-use common::*;
+use framework::error::*;
+use framework::trace::*;
+use framework::*;
 use tower_http::compression::CompressionLayer;
 use tower_http::cors;
 use tower_http::cors::CorsLayer;
@@ -32,7 +31,7 @@ use utoipa::openapi::security::SecurityScheme;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_scalar::{Scalar, Servable as ScalarServable};
 
-use crate::common::auth::Jwt;
+use framework::auth::Jwt;
 
 #[tokio::main]
 async fn start() -> anyhow::Result<()> {
@@ -45,7 +44,7 @@ async fn start() -> anyhow::Result<()> {
     Jwt::init(config::get().auth().clone());
     // database init
     let conn: sea_orm::DatabaseConnection =
-        service::database::establish_connection(database_url).await?;
+        framework::database::establish_connection(database_url).await?;
     conn.ping().await?;
     tracing::info!("Database connected successfully");
     // database schema init or upgrade

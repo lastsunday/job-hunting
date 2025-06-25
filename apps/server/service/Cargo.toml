@@ -28,6 +28,7 @@ num_cpus = { version = "1.17.0" }
 openssl = { version = "0.10.73", features = ["vendored"] }
 migration = { path = "../migration" }
 entity = { path = "../entity" }
+framework = { path = "../framework" }
 
 [features]
 default = []

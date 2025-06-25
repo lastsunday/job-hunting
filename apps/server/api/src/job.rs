@@ -1,12 +1,10 @@
-use crate::{
-    AppState,
-    common::{
-        data::{ApiPageResult, ApiResponse, valid::ValidJson},
-        error::ApiResult,
-    },
-};
+use crate::AppState;
 use axum::{debug_handler, extract::State};
 use entity::job::{self, Entity as Job};
+use framework::{
+    data::{ApiPageResult, ApiResponse, PageParam, valid::ValidJson},
+    error::ApiResult,
+};
 use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait};
 use utoipa::ToSchema;
 use utoipa_axum::{
@@ -64,7 +62,6 @@ pub async fn search(
     Ok(ApiResponse::success(Some(ApiPageResult::new(items, total))))
 }
 
-use crate::common::data::PageParam;
 use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use validator::Validate;

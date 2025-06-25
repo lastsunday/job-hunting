@@ -5,7 +5,7 @@ use utoipa::ToSchema;
 use utoipa_axum::{router::OpenApiRouter, routes};
 use validator::Validate;
 
-use crate::common::{
+use framework::{
     data::{ApiResponse, PageParam, valid::ValidQuery},
     error::ApiResult,
 };
