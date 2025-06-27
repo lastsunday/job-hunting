@@ -4,6 +4,7 @@ use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum_valid::ValidRejection;
 use bcrypt::BcryptError;
+use jsonwebtoken::errors::Error;
 
 pub type ApiResult<T> = Result<T, ApiError>;
 
@@ -24,7 +25,7 @@ pub enum ApiError {
     #[error("Param invalid: {0}")]
     Validation(String),
     #[error("JWT error: {0}")]
-    Jwt(#[from] jsonwebtoken::errors::Error),
+    Jwt(#[from] Error),
     #[error("Unauthenticated: {0}")]
     Unauthenticated(String),
     #[error("Bcrypt error: {0}")]

@@ -2,6 +2,9 @@
 import { defineConfig } from 'vite';
 import react from "@vitejs/plugin-react";
 import { resolve } from 'path';
+import { tanstackRouter } from '@tanstack/router-plugin/vite'
+import UnoCSS from 'unocss/vite'
+import viteTsConfigPaths from 'vite-tsconfig-paths'
 
 export default defineConfig(() => ({
   root: __dirname,
@@ -14,7 +17,18 @@ export default defineConfig(() => ({
     port: 4300,
     host: 'localhost',
   },
-  plugins: [react()],
+  plugins: [
+    // Please make sure that '@tanstack/router-plugin' is passed before '@vitejs/plugin-react'
+    tanstackRouter({
+      target: 'react',
+      autoCodeSplitting: true,
+    }),
+    viteTsConfigPaths({
+      projects: ['./tsconfig.json'],
+    }),
+    react(),
+    UnoCSS(),
+  ],
   // Uncomment this if you are using workers.
   // worker: {
   //  plugins: [ nxViteTsPaths() ],

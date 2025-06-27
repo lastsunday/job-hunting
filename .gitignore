@@ -55,3 +55,4 @@ test-output
 lua
 
 *.sqlite
+application.yaml

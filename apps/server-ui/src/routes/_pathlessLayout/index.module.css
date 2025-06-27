@@ -1,0 +1,39 @@
+.title {
+  font-size: 34px;
+  font-weight: 500;
+
+  @media (max-width: $mantine-breakpoint-sm) {
+    font-size: 24px;
+  }
+}
+
+.description {
+  max-width: 600px;
+  margin: auto;
+
+  &::after {
+    content: '';
+    display: block;
+    background-color: var(--mantine-color-blue-filled);
+    width: 45px;
+    height: 2px;
+    margin-top: var(--mantine-spacing-sm);
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+.card {
+  border: 1px solid light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
+}
+
+.cardTitle {
+  &::after {
+    content: '';
+    display: block;
+    background-color: var(--mantine-color-blue-filled);
+    width: 45px;
+    height: 2px;
+    margin-top: var(--mantine-spacing-sm);
+  }
+}
