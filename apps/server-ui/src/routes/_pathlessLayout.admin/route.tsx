@@ -46,7 +46,7 @@ function RouteComponent() {
     if (window.confirm('确认登出？')) {
       auth.logout().then(() => {
         router.invalidate().finally(() => {
-          navigate({ to: '/admin' })
+          navigate({ to: '/login' })
         })
       })
     }
@@ -70,7 +70,7 @@ function RouteComponent() {
 
   const { data: user, isLoading, isSuccess } = useQuery({
     queryKey: [],
-    queryFn: getUser
+    queryFn: getUser,
   })
 
   return (
