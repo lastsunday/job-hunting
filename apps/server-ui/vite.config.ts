@@ -1,7 +1,6 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from "@vitejs/plugin-react-oxc";
-import { resolve } from 'path';
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import UnoCSS from 'unocss/vite'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
@@ -39,18 +38,6 @@ export default defineConfig(() => ({
     reportCompressedSize: true,
     commonjsOptions: {
       transformMixedEsModules: true,
-    },
-  },
-  test: {
-    watch: false,
-    globals: true,
-    environment: 'jsdom',
-    include: ['{src,tests}/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
-    setupFiles: [resolve(__dirname, 'tests/setup.ts')],
-    reporters: ['default'],
-    coverage: {
-      reportsDirectory: './test-output/vitest/coverage',
-      provider: 'v8' as const,
     },
   },
 }));
