@@ -1,6 +1,6 @@
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
-import react from "@vitejs/plugin-react";
+import react from "@vitejs/plugin-react-oxc";
 import { resolve } from 'path';
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import UnoCSS from 'unocss/vite'
