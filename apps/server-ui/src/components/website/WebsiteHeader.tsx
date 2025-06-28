@@ -16,7 +16,7 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import logo from '../../assets/logo.svg';
-import { data } from "../../data/feature";
+import { data } from "../../components/feature";
 import classes from './WebsiteHeader.module.css';
 import { EXTENSION_PLUGIN_URL } from '../../config';
 
@@ -29,7 +29,7 @@ export function WebsiteHeader() {
     <UnstyledButton className={classes.subLink} key={item.title}>
       <Group wrap="nowrap" align="flex-start">
         <ThemeIcon size={34} variant="default" radius="md">
-          <div className={`${item.icon}`}></div>
+          {item.icon}
         </ThemeIcon>
         <div>
           <Text size="sm" fw={500}>

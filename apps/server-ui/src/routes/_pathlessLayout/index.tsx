@@ -9,7 +9,7 @@ import {
   useMantineTheme,
 } from '@mantine/core';
 import { createFileRoute } from '@tanstack/react-router';
-import { data } from "../../data/feature";
+import { data } from "../../components/feature";
 import classes from './index.module.css';
 import { WebsiteHeader } from '../../components/website/WebsiteHeader';
 import { WebsiteFooter } from '../../components/website/WebsiteFooter';
@@ -22,7 +22,7 @@ function HomeComponent() {
   const theme = useMantineTheme();
   const features = data.map((feature) => (
     <Card key={feature.title} shadow="md" radius="md" className={classes.card} padding="xl">
-      <div className={`${feature.icon}`}></div>
+      {feature.icon}
       <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">
         {feature.title}
       </Text>
