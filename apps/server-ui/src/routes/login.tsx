@@ -1,20 +1,20 @@
+import { getVersion } from "@/api";
 import {
-  Text,
   Button,
   Container,
   Paper,
   PasswordInput,
+  Text,
   TextInput,
   Title
 } from '@mantine/core';
-import { redirect, createFileRoute, useRouter, useRouterState } from '@tanstack/react-router';
-import classes from './login.module.css';
-import { useAuth } from '../hooks/auth';
-import React, { useEffect, useState } from 'react';
-import { z } from 'zod'
-import { getVersion } from "@/api"
 import { showNotification } from '@mantine/notifications';
 import { useQuery } from '@tanstack/react-query';
+import { createFileRoute, redirect, useRouter, useRouterState } from '@tanstack/react-router';
+import React, { useState } from 'react';
+import { z } from 'zod';
+import { useAuth } from '../hooks/auth';
+import classes from './login.module.css';
 
 const fallback = '/admin' as const
 
@@ -85,7 +85,7 @@ function RouteComponent() {
         <form className="mt-4 max-w-lg" onSubmit={onFormSubmit}>
           <TextInput name="account" label="账户" placeholder="请输入账号" required radius="md" minLength={4} maxLength={16} />
           <PasswordInput name="password" label="密码" placeholder="请输入密码" required mt="md" radius="md" minLength={6} maxLength={16} />
-          <Button type='submit' fullWidth mt="xl" radius="md">
+          <Button type='submit' fullWidth mt="xl" radius="md" disabled={isSubmitting}>
             {isLoggingIn ? '加载中...' : '登录'}
           </Button>
         </form>

@@ -9,7 +9,7 @@ import {
   useMantineTheme,
 } from '@mantine/core';
 import { createFileRoute } from '@tanstack/react-router';
-import { data } from "../../components/feature";
+import { creatFeature } from "../../components/feature";
 import classes from './index.module.css';
 import { WebsiteHeader } from '../../components/website/WebsiteHeader';
 import { WebsiteFooter } from '../../components/website/WebsiteFooter';
@@ -20,7 +20,7 @@ export const Route = createFileRoute('/_pathlessLayout/')({
 
 function HomeComponent() {
   const theme = useMantineTheme();
-  const features = data.map((feature) => (
+  const features = creatFeature("size-10 color-blue").map((feature) => (
     <Card key={feature.title} shadow="md" radius="md" className={classes.card} padding="xl">
       {feature.icon}
       <Text fz="lg" fw={500} className={classes.cardTitle} mt="md">

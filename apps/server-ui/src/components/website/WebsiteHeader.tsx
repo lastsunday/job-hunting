@@ -11,21 +11,19 @@ import {
   SimpleGrid,
   Text,
   ThemeIcon,
-  UnstyledButton,
-  useMantineTheme
+  UnstyledButton
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import logo from '../../assets/logo.svg';
-import { data } from "../../components/feature";
-import classes from './WebsiteHeader.module.css';
+import { creatFeature } from "../../components/feature";
 import { EXTENSION_PLUGIN_URL } from '../../config';
+import classes from './WebsiteHeader.module.css';
 
 export function WebsiteHeader() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
   const [linksOpened, { toggle: toggleLinks }] = useDisclosure(false);
-  const theme = useMantineTheme();
 
-  const links = data.map((item) => (
+  const links = creatFeature("color-blue").map((item) => (
     <UnstyledButton className={classes.subLink} key={item.title}>
       <Group wrap="nowrap" align="flex-start">
         <ThemeIcon size={34} variant="default" radius="md">
