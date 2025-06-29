@@ -12,7 +12,7 @@ use framework::{
     },
     error::{ApiError, ApiResult},
     middleware::get_auth_layer,
-    password::verify,
+    password::{hash, verify},
 };
 use serde::{Deserialize, Serialize};
 use service::AppState;
@@ -23,13 +23,14 @@ use validator::Validate;
 use super::config;
 
 use entity::{prelude::*, user};
-use sea_orm::prelude::*;
+use sea_orm::{ActiveValue::Set, prelude::*};
 
 const TAG: &str = "auth";
 
 pub fn create_routes(state: AppState) -> OpenApiRouter {
     OpenApiRouter::new()
         .routes(routes!(user))
+        .routes(routes!(reset_password))
         .route_layer(get_auth_layer())
         .routes(routes!(access_token))
         .routes(routes!(login))
@@ -141,6 +142,41 @@ async fn access_token(
             token_type: String::from("bearer"),
         })))
     }
+}
+
+#[derive(Default, Deserialize, Serialize, Debug, Clone, Validate, ToSchema)]
+pub struct ResetPasswordParam {
+    #[validate(length(min = 6, max = 16, message = "password length must bewteen 6 - 16"))]
+    pub password: String,
+    #[validate(length(min = 6, max = 16, message = "password length must bewteen 6 - 16"))]
+    pub old_password: String,
+}
+
+#[debug_handler]
+#[utoipa::path(post, path = "/auth/reset_password",tag=TAG,security(()),request_body = ResetPasswordParam,responses(
+    (status=OK,body=ApiResponse<String>)
+))]
+async fn reset_password(
+    State(AppState { conn }): State<AppState>,
+    Extension(principal): Extension<Principal>,
+    ValidJson(param): ValidJson<ResetPasswordParam>,
+) -> ApiResult<ApiResponse<()>> {
+    let user = User::find()
+        .filter(user::Column::Id.eq(principal.id.clone()))
+        .one(&conn)
+        .await?
+        .ok_or_else(|| ApiError::Biz(String::from("Account not found")))?;
+    if !verify(&param.old_password, &user.password)? {
+        return Err(ApiError::Biz(String::from("Old password not correct")));
+    }
+    let hash_password = hash(param.password.as_str())?;
+    let model = user::ActiveModel {
+        id: Set(principal.id),
+        password: Set(hash_password),
+        ..Default::default()
+    };
+    User::update(model).exec(&conn).await?;
+    Ok(ApiResponse::success(None))
 }
 
 #[debug_handler]

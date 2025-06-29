@@ -60,7 +60,7 @@ impl AsyncAuthorizeRequest<Body> for JwtAuth {
                 })?;
             let pricipal = jwt
                 .access_token_decode(token)
-                .map_err(|err| -> ApiError { ApiError::Internal(err) })?;
+                .map_err(|err| -> ApiError { ApiError::Unauthenticated(format!("{:?}", err)) })?;
             request.extensions_mut().insert(pricipal);
             Ok(request)
         })

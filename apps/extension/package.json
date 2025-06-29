@@ -112,7 +112,7 @@
     "sass": "^1.89.2",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.34.1",
-    "unocss": "^65.5.0",
+    "unocss": "^66.3.2",
     "vite": "npm:rolldown-vite@latest",
     "vite-plugin-wasm": "^3.4.1",
     "vite-plugin-web-extension": "^4.4.4",
