@@ -1,3 +1,13 @@
+## 3.14.1 (2025-07-01)
+
+### 🩹 Fixes
+
+- 修复公司评论数据导入异常的问题
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.14.0 (2025-06-02)
 
 ### 🚀 Features
