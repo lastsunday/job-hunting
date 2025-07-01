@@ -153,13 +153,13 @@ function genInsertValueBindValue(obj, params, { overrideCreateDatetime = false, 
     for (let n = 0; n < keys.length; n++) {
       const key = keys[n];
       if (key == "createDatetime") {
-        if (overrideCreateDatetime) {
+        if (overrideCreateDatetime && param[`${key}`]) {
           values.push(`${dayjs(param[`${key}` ?? now]).format()}`);
         } else {
           values.push(`${dayjs(now).format()}`);
         }
       } else if (key == "updateDatetime") {
-        if (overrideUpdateDatetime) {
+        if (overrideUpdateDatetime && param[`${key}`]) {
           values.push(`${dayjs(param[`${key}` ?? now]).format()}`);
         } else {
           values.push(`${dayjs(now).format()}`);

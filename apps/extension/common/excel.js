@@ -402,7 +402,7 @@ export const companyCommentExcelDataToObjectArray = (data, datetime, { config } 
     const comment = dataItem['评论'];
     const emotion = dataItem['情感'] ?? convertEmotionFromText(config?.emotion);
     const sourceDataName = dataItem['数据集'] ?? config?.name;
-    if (comment) {
+    if (companyNameString && comment) {
       const splitCompanyArray = companyNameString.split("\n");
       for (let n = 0; n < splitCompanyArray.length; n++) {
         const companyName = splitCompanyArray[n];
