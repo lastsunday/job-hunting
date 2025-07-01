@@ -106,6 +106,10 @@
     <img src="docs\introduction\sidepanel_admin_home.png" alt="sidepanel_admin_home" width="1000px"/>
 </div>
 
+## 数据源
+
+1. [数据源仓库说明](./docs/datasource.md)
+
 ## Roadmap（饼）
 
 ### Extension
