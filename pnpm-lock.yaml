@@ -250,8 +250,8 @@ importers:
         specifier: ^3.2.2
         version: 3.2.2(react@19.1.1)
       '@electric-sql/pglite':
-        specifier: ^0.3.6
-        version: 0.3.6
+        specifier: ^0.2.17
+        version: 0.2.17
       '@lit/react':
         specifier: ^1.0.8
         version: 1.0.8(@types/react@19.1.8)
@@ -1667,8 +1667,8 @@ packages:
     peerDependencies:
       react: '>=16.8.0'
 
-  '@electric-sql/pglite@0.3.6':
-    resolution: {integrity: sha512-KFIoLIhiOzYQzT2TOxqWH9eAMZcZd4tzSGXDY+6qRboZY2P76yFDNTKS4SB2c3hy6vRqIrHSh24VDPi9FyNhlA==}
+  '@electric-sql/pglite@0.2.17':
+    resolution: {integrity: sha512-qEpKRT2oUaWDH6tjRxLHjdzMqRUGYDnGZlKrnL4dJ77JVMcP2Hpo3NYnOSPKdZdeec57B6QPprCUFg0picx5Pw==}
 
   '@emnapi/core@1.4.5':
     resolution: {integrity: sha512-XsLw1dEOpkSX/WucdqUhPWP7hDxSvZiY+fsUC14h+FtQ2Ifni4znbBt8punRX+Uj2JG/uDb8nEHVKvrVlvdZ5Q==}
@@ -15414,7 +15414,7 @@ snapshots:
       react: 19.1.1
       tslib: 2.8.1
 
-  '@electric-sql/pglite@0.3.6': {}
+  '@electric-sql/pglite@0.2.17': {}
 
   '@emnapi/core@1.4.5':
     dependencies:
