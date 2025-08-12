@@ -4,27 +4,27 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@mantine/core": "^8.2.1",
-    "@mantine/hooks": "^8.2.1",
-    "@mantine/notifications": "^8.2.1",
-    "@tanstack/react-query": "^5.83.0",
-    "@tanstack/react-query-devtools": "^5.83.0",
-    "@tanstack/react-router": "^1.129.8",
-    "@tanstack/react-router-devtools": "^1.129.8",
+    "@mantine/core": "^8.2.4",
+    "@mantine/hooks": "^8.2.4",
+    "@mantine/notifications": "^8.2.4",
+    "@tanstack/react-query": "^5.84.2",
+    "@tanstack/react-query-devtools": "^5.84.2",
+    "@tanstack/react-router": "^1.131.5",
+    "@tanstack/react-router-devtools": "^1.131.5",
     "axios": "^1.11.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@iconify/json": "^2.2.362",
-    "@tanstack/router-plugin": "^1.129.8",
+    "@iconify/json": "^2.2.371",
+    "@tanstack/router-plugin": "^1.131.5",
     "@unocss/preset-icons": "66.1.0-beta.10",
     "@unocss/preset-uno": "^65.5.0",
     "@vitejs/plugin-react-oxc": "^0.2.3",
     "postcss": "^8.5.6",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
-    "unocss": "^66.3.3",
-    "vite": "npm:rolldown-vite@^7.0.10",
+    "unocss": "^66.4.2",
+    "vite": "npm:rolldown-vite@^7.1.1",
     "vite-tsconfig-paths": "^5.1.4"
   }
 }
