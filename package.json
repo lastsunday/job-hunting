@@ -74,7 +74,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "next": "^15.4.6",
+    "next": "^15.4.7",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-router-dom": "6.29.0"
