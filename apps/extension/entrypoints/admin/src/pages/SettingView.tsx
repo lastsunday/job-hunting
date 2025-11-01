@@ -24,6 +24,8 @@ import useAuthStore from '../store/AuthStore';
 import useDataSharePlanStore from '../store/DataSharePlanStore';
 import useJobSnapshotStore from '../store/JobSnapshotStore';
 import useSystemStore from '../store/SystemStore';
+import { Source } from '../hooks/analysis';
+import { LlmApi } from "@/common/api";
 const { Text, Link } = Typography;
 
 const version = __APP_VERSION__;
@@ -53,6 +55,9 @@ const SettingView: React.FC = () => {
   const [
     updateDataSyncEnableConfigLoading,
     setUpdateDataSyncEnableConfigLoading,
+  ] = useState(false);
+  const [updateAnalysisLoading,
+    setUpdateAnalysisLoading,
   ] = useState(false);
   const [analysisConfig, updateAnalysis] = useAnalysisStore(
     useShallow((state) => [state.config, state.update])
@@ -337,25 +342,35 @@ const SettingView: React.FC = () => {
             </Flex>
           </Flex>
         </Card>
-        <Card title="职位分析" variant="borderless" size="small">
-          <CheckCard.Group
-            onChange={async (value) => {
-              if (value) {
-                analysisConfig.enable = true;
-                await updateAnalysis(analysisConfig);
-                setAnalysisEnable(true);
-              } else {
-                analysisConfig.enable = false;
-                await updateAnalysis(analysisConfig);
-                setAnalysisEnable(false);
-              }
-            }}
-            value={analysisEnable}
-          >
-            <CheckCard title="开启" description="开启职位分析" value={true} />
-            <CheckCard title="关闭" description="关闭职位分析" value={false} />
-          </CheckCard.Group>
-        </Card>
+        <Spin spinning={updateAnalysisLoading}>
+          <Card title="职位分析" variant="borderless" size="small">
+            <CheckCard.Group
+              onChange={async (value) => {
+                setUpdateAnalysisLoading(true);
+                if (value) {
+                  analysisConfig.enable = true;
+                  if (analysisConfig.source === Source.EXTENSION) {
+                    await LlmApi.llmInit();
+                    await LlmApi.llmReset({ model: analysisConfig.model });
+                  }
+                  await updateAnalysis(analysisConfig);
+                  setAnalysisEnable(true);
+                } else {
+                  analysisConfig.enable = false;
+                  await LlmApi.llmUnload();
+                  await LlmApi.llmClear();
+                  await updateAnalysis(analysisConfig);
+                  setAnalysisEnable(false);
+                }
+                setUpdateAnalysisLoading(false);
+              }}
+              value={analysisEnable}
+            >
+              <CheckCard title="开启" description="开启职位分析" value={true} />
+              <CheckCard title="关闭" description="关闭职位分析" value={false} />
+            </CheckCard.Group>
+          </Card>
+        </Spin>
         <Card title="职位快照" variant="borderless" size="small">
           <CheckCard.Group
             onChange={async (value) => {

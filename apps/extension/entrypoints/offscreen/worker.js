@@ -1,7 +1,7 @@
 // Work around for: https://github.com/wxt-dev/wxt/issues/942
 // @ts-ignore
 globalThis._content = undefined;
-import userService from "@/common/extension/hooks/service.js";
+import useService from "@/common/extension/hooks/service.js";
 import { onMessageHandle, postSuccessMessage } from "@/common/extension/worker/util";
 import { infoLog } from "@/common/log";
 import { Database } from "./worker/database";
@@ -27,6 +27,7 @@ import { JobSnapshotService } from "./worker/service/jobSnapshotService";
 import JobPublicService from "./worker/service/jobPublicService";
 import CompanyCommentService from "./worker/service/companyCommentService";
 import DataSourceMetadataService from "./worker/service/dataSourceMetadataService";
+import { LlmService } from "./worker/service/llmService";
 
 infoLog("worker ready");
 const ACTION_FUNCTION = new Map();
@@ -37,7 +38,7 @@ export const WorkerBridge = {
   },
 };
 
-const { mergeServiceMethod } = userService();
+const { mergeServiceMethod } = useService();
 
 mergeServiceMethod(ACTION_FUNCTION, WorkerBridge);
 mergeServiceMethod(ACTION_FUNCTION, Database);
@@ -63,6 +64,7 @@ mergeServiceMethod(ACTION_FUNCTION, JobSnapshotService);
 mergeServiceMethod(ACTION_FUNCTION, JobPublicService);
 mergeServiceMethod(ACTION_FUNCTION, CompanyCommentService);
 mergeServiceMethod(ACTION_FUNCTION, DataSourceMetadataService);
+mergeServiceMethod(ACTION_FUNCTION, LlmService);
 
 onmessage = function (e) {
   onMessageHandle(e, ACTION_FUNCTION);

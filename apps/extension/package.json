@@ -36,6 +36,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@electric-sql/pglite": "^0.3.7",
     "@lit/react": "^1.0.8",
+    "@mlc-ai/web-llm": "^0.2.79",
     "@pansy/lnglat-transform": "^1.0.3",
     "@tsparticles/react": "^3.0.0",
     "@types/geojson": "^7946.0.16",

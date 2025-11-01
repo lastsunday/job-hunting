@@ -1,4 +1,4 @@
-import { CompanyApi, CompanyCommentApi, JobApi, JobSnapshotApi, TagApi } from '@/common/api';
+import { CompanyApi, CompanyCommentApi, JobApi, JobSnapshotApi, TagApi, LlmApi } from '@/common/api';
 import { CompanyTagBO } from '@/common/data/bo/companyTagBO';
 import { JobSnapshotSearchBO } from '@/common/data/bo/jobSnapshotSearchBO';
 import { JobTagBO } from '@/common/data/bo/jobTagBO';
@@ -219,6 +219,9 @@ const HistoryJobView: React.FC = () => {
                             )
                             : null
                         }
+                        onLlmRequest={async (_url: string, body: string | object) => {
+                          return await LlmApi.llmCompletion(body);
+                        }}
                         historyElement={
                           jobSnapshotConfig.enable ? (
                             <JobSnapshotHistory

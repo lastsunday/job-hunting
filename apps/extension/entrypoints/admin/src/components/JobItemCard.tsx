@@ -76,6 +76,7 @@ export type JobItemCardProps = {
   onJobTagSave: (data: JobTagEditData) => Promise<void>;
   validCompanyName: (value: string) => Promise<boolean>;
   onCompanyTagSave: (data: CompanyTagEditData) => Promise<void>;
+  onLlmRequest?: (url: string, body: string | object) => Promise<object>;
 };
 const JobItemCard: React.FC<JobItemCardProps> = (props) => {
   const {
@@ -183,14 +184,29 @@ const JobItemCard: React.FC<JobItemCardProps> = (props) => {
               : ` 发布时间未知`}
           </Tag>
           {props.analysisConfig ? (
-            <JobAnalysisComponent
-              {...props.analysisConfig}
-              className={styles.analysis}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-              }}
-            />
+            props.analysisConfig.source == Source.EXTENSION ?
+              <JobAnalysisComponent
+                {...props.analysisConfig}
+                className={styles.analysis}
+                getResponse={async (url: string, body: string | object) => {
+                  return {
+                    json: async () => {
+                      return await props.onLlmRequest(url, body);
+                    }
+                  }
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+              /> : <JobAnalysisComponent
+                {...props.analysisConfig}
+                className={styles.analysis}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+              />
           ) : null}
         </Flex>
         <Flex className={styles.item}>

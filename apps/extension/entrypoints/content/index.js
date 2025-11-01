@@ -7,6 +7,7 @@ import "@yaireo/tagify/dist/tagify.css";
 import "../assets/css/app.css";
 import { initBridge } from "../../common/api/common.js";
 import "analysis";
+import { TcBar } from "@weblogin/trendchart-elements";
 
 export default defineContentScript({
   // Set manifest options

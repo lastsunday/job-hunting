@@ -19,6 +19,7 @@ import React, { useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 import SubmitButton from '../../components/SubmitButton';
 import { Page, Source, useAnalysis } from '../../hooks/analysis';
+import { LlmApi } from "@/common/api";
 
 const { getLabelBySource, getLableByPage } = useAnalysis();
 import useAnalysisStore from '../../store/AnalysisStore';
@@ -35,6 +36,7 @@ const SettingView: React.FC = () => {
     useShallow((state) => [state.config, state.update])
   );
   const [loading, setLoading] = useState(false);
+  const [sourceData, setSourceData] = useState({});
 
   const onChange = (value: number) => {
     setCurrent(value);
@@ -67,98 +69,6 @@ const SettingView: React.FC = () => {
       value: key,
     });
   });
-
-  const sourceData = {
-    OPENAI: {
-      url: {
-        rules: { required: false },
-        default: 'http://127.0.0.1:1234',
-      },
-      model: {
-        rules: { required: false },
-        default: 'mradermacher/DeepSeek-R1-Distill-Llama-8B-Abliterated-GGUF',
-      },
-      token: { rules: { required: false }, default: '' },
-      info: (
-        <Alert
-          message={getLabelBySource(source ?? Source.OPENAI)}
-          description=<Markdown>
-            {`OpenAI兼容协议，符合[OpenAI接口协议](https://platform.openai.com/docs/api-reference/chat)的都支持。
-### 注意事项
-
-- 可使用本地部署工具，如[LM Studio](https://lmstudio.ai/)
-
-- 使用外部服务时注意敏感信息的泄漏，如[OpenAI](https://openai.com/)
-
-LM Studio安装和使用请见 [LM Studio](https://lmstudio.ai/)，下面是简要步骤：
-
-- 从[LM Studio](https://lmstudio.ai/)下载lmstudio并安装
-- 打开后，在窗体最下面找到UI切换按钮，切换到Developer模式的UI
-- 切换到Discover菜单，查找并下载模型，如 **mradermacher/DeepSeek-R1-Distill-Llama-8B-Abliterated-GGUF**
-- 切换到Developer菜单，启动服务器（在上方的 **Status:** 字样旁边的按钮）
-- 点击 **Settings** 按钮 -> 打开 **Enable CORS** 选项 
-- 启动后可以看到右边的访问地址
-
-            `}
-          </Markdown>
-          type="warning"
-          showIcon
-        />
-      ),
-    },
-    OLLAMA: {
-      url: { rules: { required: false }, default: 'http://localhost:11434' },
-      model: { rules: { required: false }, default: 'deepseek-r1:7b' },
-      token: { rules: { required: false }, default: '' },
-      info: (
-        <Alert
-          message={getLabelBySource(source ?? Source.OLLAMA)}
-          description=<Markdown>
-            {`可本地部署的大模型工具。
-              
-安装详情请访问 [ollama官网](https://ollama.com/)
-
-服务器启动步骤（以Window为例）
-
-  1. 执行跨域配置
-      \`\`\`shell
-      set OLLAMA_ORIGINS=*
-      \`\`\`
-  2. 启动ollama服务器
-      \`\`\`shell
-      ollama serve
-      \`\`\`
-`}
-          </Markdown>
-          type="info"
-          showIcon
-        />
-      ),
-    },
-    SILICONFLOW: {
-      url: {
-        rules: { required: false },
-        default: 'https://api.siliconflow.cn',
-      },
-      model: {
-        rules: { required: false },
-        default: 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B',
-      },
-      token: { rules: { required: true }, default: '' },
-      info: (
-        <Alert
-          message={getLabelBySource(source ?? Source.SILICONFLOW)}
-          description=<Markdown>
-            {`（注意敏感信息的泄漏）第三方大模型接口。
-              
-模型名称，令牌的获取请访问 [硅基流动用户手册](https://docs.siliconflow.cn/cn/userguide/quickstart)`}
-          </Markdown>
-          type="warning"
-          showIcon
-        />
-      ),
-    },
-  };
 
   const defaultResume = `## 个人信息
 - 学历：本科
@@ -193,9 +103,9 @@ LM Studio安装和使用请见 [LM Studio](https://lmstudio.ai/)，下面是简�
     [
       <Col key={0}>
         <Form.Item<FieldType>
-          label="人工智能厂商"
+          label="人工智能引擎"
           name="source"
-          initialValue={Source.OPENAI}
+          initialValue={Source.EXTENSION}
           rules={[{ required: true }]}
         >
           <Radio.Group optionType="button">
@@ -206,20 +116,21 @@ LM Studio安装和使用请见 [LM Studio](https://lmstudio.ai/)，下面是简�
             ))}
           </Radio.Group>
         </Form.Item>
-        {sourceData[source ?? Source.OPENAI]['info']}
+        {sourceData[source]?.info}
         <Form.Item<FieldType>
           label="访问地址"
           name="url"
+          hidden={sourceData[source]?.url.hidden}
           rules={[
             {
-              ...sourceData[source ?? Source.OPENAI]['url'].rules,
+              ...sourceData[source]?.url.rules,
               message: '请输入访问地址',
             },
           ]}
         >
           <Input
             allowClear
-            placeholder={sourceData[source ?? Source.OPENAI]['url'].default}
+            placeholder={sourceData[source]?.url.default}
           />
         </Form.Item>
         <Form.Item<FieldType>
@@ -227,29 +138,39 @@ LM Studio安装和使用请见 [LM Studio](https://lmstudio.ai/)，下面是简�
           name="model"
           rules={[
             {
-              ...sourceData[source ?? Source.OPENAI]['model'].rules,
+              ...sourceData[source]?.model.rules,
               message: '请输入模型名称',
             },
           ]}
         >
-          <Input
-            allowClear
-            placeholder={sourceData[source ?? Source.OPENAI]['model'].default}
-          />
+          {
+            sourceData[source]?.model.options ?
+              <Select
+                placeholder={sourceData[source]?.model.options[0].label}
+                options={sourceData[source]?.model.options}
+                allowClear
+              ></Select>
+              : <Input
+                allowClear
+                placeholder={sourceData[source]?.model.default}
+              />
+
+          }
         </Form.Item>
         <Form.Item<FieldType>
           label="令牌(API Key)"
           name="token"
+          hidden={sourceData[source]?.url.hidden}
           rules={[
             {
-              ...sourceData[source ?? Source.OPENAI]['token'].rules,
+              ...sourceData[source]?.token.rules,
               message: '请输入令牌',
             },
           ]}
         >
           <Input.Password
             allowClear
-            placeholder={sourceData[source ?? Source.OPENAI]['token'].default}
+            placeholder={sourceData[source]?.token.default}
           />
         </Form.Item>
       </Col>,
@@ -297,6 +218,130 @@ LM Studio安装和使用请见 [LM Studio](https://lmstudio.ai/)，下面是简�
   useEffect(() => {
     const init = async () => {
       form.setFieldsValue(config);
+      let llmSupportInfo = await LlmApi.llmSupportInfo();
+      const sourceData = {
+        EXTENSION: {
+          url: {
+            rules: { required: false },
+            default: '',
+            hidden: true
+          },
+          model: {
+            rules: { required: false },
+            default: 'Qwen3-0.6B-q4f32_1-MLC',
+            options: llmSupportInfo.model_list,
+          },
+          token: { rules: { required: false }, default: '', hidden: true },
+          info: (
+            <Alert
+              message={getLabelBySource(source ?? Source.EXTENSION)}
+              description=<Markdown>
+                {`内嵌于浏览器内的大模型，基于[web-llm](https://github.com/mlc-ai/web-llm)
+### 注意事项
+
+- 模型文件来源于[hunggingface](https://huggingface.co/)，请确保网络条件能访问该网站
+- 一般同等架构下的大模型体积越大，其分析和推理能力会越强，但占用的资源（内存和硬盘空间）会越多，处理速度会越慢
+- 模型加载会占用一定量的内存(RAM)空间
+- 关闭职位分析，系统会清理大模型缓存文件和驻于内存的数据
+            `}
+              </Markdown>
+              type="success"
+              showIcon
+            />
+          ),
+        },
+        OPENAI: {
+          url: {
+            rules: { required: false },
+            default: 'http://127.0.0.1:1234',
+          },
+          model: {
+            rules: { required: false },
+            default: 'mradermacher/DeepSeek-R1-Distill-Llama-8B-Abliterated-GGUF',
+          },
+          token: { rules: { required: false }, default: '' },
+          info: (
+            <Alert
+              message={getLabelBySource(source ?? Source.OPENAI)}
+              description=<Markdown>
+                {`OpenAI兼容协议，符合[OpenAI接口协议](https://platform.openai.com/docs/api-reference/chat)的都支持。
+### 注意事项
+
+- 可使用本地部署工具，如[LM Studio](https://lmstudio.ai/)
+
+- 使用外部服务时注意敏感信息的泄漏，如[OpenAI](https://openai.com/)
+
+LM Studio安装和使用请见 [LM Studio](https://lmstudio.ai/)，下面是简要步骤：
+
+- 从[LM Studio](https://lmstudio.ai/)下载lmstudio并安装
+- 打开后，在窗体最下面找到UI切换按钮，切换到Developer模式的UI
+- 切换到Discover菜单，查找并下载模型，如 **mradermacher/DeepSeek-R1-Distill-Llama-8B-Abliterated-GGUF**
+- 切换到Developer菜单，启动服务器（在上方的 **Status:** 字样旁边的按钮）
+- 点击 **Settings** 按钮 -> 打开 **Enable CORS** 选项 
+- 启动后可以看到右边的访问地址
+
+            `}
+              </Markdown>
+              type="warning"
+              showIcon
+            />
+          ),
+        },
+        OLLAMA: {
+          url: { rules: { required: false }, default: 'http://localhost:11434' },
+          model: { rules: { required: false }, default: 'deepseek-r1:7b' },
+          token: { rules: { required: false }, default: '' },
+          info: (
+            <Alert
+              message={getLabelBySource(source ?? Source.OLLAMA)}
+              description=<Markdown>
+                {`可本地部署的大模型工具。
+              
+安装详情请访问 [ollama官网](https://ollama.com/)
+
+服务器启动步骤（以Window为例）
+
+  1. 执行跨域配置
+      \`\`\`shell
+      set OLLAMA_ORIGINS=*
+      \`\`\`
+  2. 启动ollama服务器
+      \`\`\`shell
+      ollama serve
+      \`\`\`
+`}
+              </Markdown>
+              type="info"
+              showIcon
+            />
+          ),
+        },
+        SILICONFLOW: {
+          url: {
+            rules: { required: false },
+            default: 'https://api.siliconflow.cn',
+          },
+          model: {
+            rules: { required: false },
+            default: 'deepseek-ai/DeepSeek-R1-Distill-Llama-8B',
+          },
+          token: { rules: { required: true }, default: '' },
+          info: (
+            <Alert
+              message={getLabelBySource(source ?? Source.SILICONFLOW)}
+              description=<Markdown>
+                {`（注意敏感信息的泄漏）第三方大模型接口。
+              
+模型名称，令牌的获取请访问 [硅基流动用户手册](https://docs.siliconflow.cn/cn/userguide/quickstart)`}
+              </Markdown>
+              type="warning"
+              showIcon
+            />
+          ),
+        },
+      };
+      setSourceData(sourceData);
+      console.log(sourceData);
     };
     init();
   }, []);
@@ -305,6 +350,12 @@ LM Studio安装和使用请见 [LM Studio](https://lmstudio.ai/)，下面是简�
     try {
       setLoading(true);
       const result = Object.assign(config, values);
+      await LlmApi.llmUnload();
+      await LlmApi.llmClear();
+      if (result.source === Source.EXTENSION) {
+        await LlmApi.llmInit();
+        await LlmApi.llmReset({ model: result.model });
+      }
       await update(result);
       messageApi.open({
         type: 'success',
