@@ -39,7 +39,7 @@ import {
 dayjs.extend(minMax);
 
 import $ from "jquery";
-import { AuthApi, CompanyApi, CompanyCommentApi, JobApi, UserApi } from "../../common/api";
+import { AuthApi, CompanyApi, CompanyCommentApi, JobApi, UserApi, LlmApi } from "../../common/api";
 import { GithubApi } from "../../common/api/github";
 import { COMMENT_PAGE_SIZE, COMPANY_DATA_EXPRIE_DAY, UI_DEFAULT_PAGE_SIZE } from "../../common/config";
 import { errorLog, infoLog } from "../../common/log";
@@ -60,7 +60,8 @@ const { convertToTagData } = useTag();
 
 import { useJob } from "@/common/hooks/job";
 const { isAgeLimitFromDescription, isAgeLimitFromDescriptionBy35 } = useJob();
-import { TcBar } from "@weblogin/trendchart-elements";
+// TODO: fix tc bar define failure
+// import { TcBar } from "@weblogin/trendchart-elements";
 
 export function renderTimeTag(
   divElement,
@@ -200,6 +201,16 @@ export function renderTimeTag(
     element.resume = resume;
     element.source = source;
     element.auto = auto;
+    if (source === "EXTENSION") {
+      element.getResponse = async (_url, body) => {
+        return {
+          json: async () => {
+            return await LlmApi.llmCompletion(body);
+          }
+        }
+
+      }
+    }
     element.addEventListener("click", (e) => {
       e.stopPropagation();
       e.preventDefault();

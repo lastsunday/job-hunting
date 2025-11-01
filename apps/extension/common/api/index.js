@@ -1304,3 +1304,12 @@ export const DataSourceMetadataApi = {
 };
 fillBridgeApi({ api: DataSourceMetadataApi });
 
+export const LlmApi = {
+  llmInit: mockFunction,
+  llmReset: mockFunction,
+  llmCompletion: mockFunction,
+  llmUnload: mockFunction,
+  llmClear: mockFunction,
+  llmSupportInfo: mockFunction,
+}
+fillBridgeApi({ api: LlmApi })

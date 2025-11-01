@@ -15,7 +15,7 @@ import './BasicMap.css';
 import JobPin from './map/JobPin';
 import JobPopup from './map/JobPopup';
 
-import { JobSnapshotApi } from '@/common/api';
+import { JobSnapshotApi, LlmApi } from '@/common/api';
 import { JobSnapshotSearchBO } from '@/common/data/bo/jobSnapshotSearchBO';
 import { JobSnapshot } from '@/common/data/domain/jobSnapshot';
 import JobSnapshotHistory from '@/entrypoints/components/JobSnapshotHistory';
@@ -322,6 +322,9 @@ const BasicMap: React.FC<BasicMapProps> = ({
                     data={item}
                     onCardClick={onCardClickHandle}
                     onLocate={locate}
+                    onLlmRequest={async (_url: string, body: string | object) => {
+                      return await LlmApi.llmCompletion(body);
+                    }}
                     historyElement={
                       jobSnapshotConfig.enable ? (
                         <JobSnapshotHistory

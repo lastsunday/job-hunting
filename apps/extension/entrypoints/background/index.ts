@@ -1,10 +1,11 @@
 import { onMessageHandle, postErrorMessage, postSuccessMessage } from "@/common/extension/background/util";
 import useService from "@/common/extension/hooks/service";
-import { AppApi, JobApi } from "../../common/api";
+import { AppApi, JobApi, LlmApi, ConfigApi } from "../../common/api";
 import { httpFetchGetText, httpFetchJson } from "../../common/api/common";
-import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_APP_INSTALL_CALLBACK_URL, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_URL_GET_USER, TASK_LOOP_DELAY } from "../../common/config";
+import { GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_APP_INSTALL_CALLBACK_URL, GITHUB_URL_GET_ACCESS_TOKEN, GITHUB_URL_GET_USER, TASK_LOOP_DELAY, CONFIG_KEY_ANALYSIS } from "../../common/config";
 import { OauthDTO } from "../../common/data/dto/oauthDTO";
 import { UserDTO } from "../../common/data/dto/userDTO";
+import { AnalysisConfigDTO } from "../../common/data/dto/analysisConfigDTO";
 import { debugLog, errorLog, infoLog } from "../../common/log";
 import { convertPureJobDetailUrl, paramsToObject, parseToLineObjectToToHumpObject, randomDelay } from "../../common/utils";
 import { AuthService, getOauth2LoginMessageMap, getToken, setToken } from "./service/authService";
@@ -202,5 +203,28 @@ export default defineBackground(() => {
     });
   }
 
-  setupOffscreenDocument("offscreen.html");
+  async function setup() {
+    await setupOffscreenDocument("offscreen.html");
+    let analysisConfig = await getAnalysisConfig();
+    if (analysisConfig.enable && analysisConfig.source === 'EXTENSION') {
+      const llmSetup = async () => {
+        await LlmApi.llmInit();
+        await LlmApi.llmReset({ model: analysisConfig.model });
+      }
+      llmSetup();
+    }
+  }
+  setup();
+
 });
+
+export const getAnalysisConfig = async () => {
+  const configValue = await ConfigApi.getConfigByKey(CONFIG_KEY_ANALYSIS);
+  if (configValue && configValue.value) {
+    const config = JSON.parse(configValue.value);
+    return Object.assign(new AnalysisConfigDTO(), config);
+  } else {
+    return new AnalysisConfigDTO();
+  }
+}
+

@@ -97,4 +97,35 @@ describe('analysis', () => {
     })
   });
 
+  it('should work extension', async () => {
+    const { analyze } = useAnalysis();
+    const result = await analyze({
+      source: Source.EXTENSION, url: "", model: "", demand, resume, getResponse: async () => {
+        return {
+          json: () => {
+            return {
+              choices: [
+                {
+                  message: {
+                    content: "```json\n{\n  \"matchValue\": 55,\n  \"rulesMatch\": [\n    {\n      \"demand\": \"大专以上学历\", \n      \"resume\": \"本科学历（符合要求）\"\n    },\n    {\n      \"demand\": \"熟悉Linux操作系统的管理及常用工具\",\n      \"resume\": \"了解 Linux/Shell（部分匹配）\"\n    },\n    {\n      \"demand\": \"计算机相关设备维护\",\n      \"resume\": \"处理硬件外设故障、标准化镜像部署（直接相关经验）\"\n    },\n    {\n      \"demand\": \"桌面维护/技术支持经验\",\n      \"resume\": \"1年桌面运维工程师经验（但年限低于2年要求）\"\n    },\n    {\n      \"demand\": \"Windows操作系统及办公软件精通\",\n      \"resume\": \"处理系统问题及软件安装（间接匹配）\"\n    }\n  ],\n  \"thinking\": \"候选人具备基础学历和技术适配性（Linux基础、设备维护），但存在明显短板：1. 工作经验仅1年（要求≥2年）；2. 缺乏Cisco/H3C等设备实操经验（简历仅提及‘了解网络’）；3. 未有呼叫系统维护相关描述。优势在于：标准化运维流程经验及终端故障处理的完整闭环能力。需考察其网络知识自学潜力及应急响应能力。\"\n}\n```",
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    });
+    expect(result).not.toBeNull();
+    const { matchValue, rulesMatch, thinking } = result;
+    assert.isNumber(matchValue);
+    assert.equal(matchValue, 55);
+    assert.isArray(rulesMatch);
+    assert.isString(thinking);
+    rulesMatch.forEach(item => {
+      const { demand, resume } = item;
+      assert.isString(demand);
+      assert.isString(resume);
+    })
+  });
 });
