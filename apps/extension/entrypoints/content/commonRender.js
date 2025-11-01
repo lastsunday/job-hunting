@@ -60,8 +60,6 @@ const { convertToTagData } = useTag();
 
 import { useJob } from "@/common/hooks/job";
 const { isAgeLimitFromDescription, isAgeLimitFromDescriptionBy35 } = useJob();
-// TODO: fix tc bar define failure
-// import { TcBar } from "@weblogin/trendchart-elements";
 
 export function renderTimeTag(
   divElement,
