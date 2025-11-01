@@ -1,3 +1,17 @@
+## 3.15.0 (2025-11-01)
+
+### 🚀 Features
+
+- 新增内置大模型引擎[web-llm](https://github.com/mlc-ai/web-llm)
+
+### 🩹 Fixes
+
+- 修复TcBar加载问题
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.14.1 (2025-07-01)
 
 ### 🩹 Fixes
