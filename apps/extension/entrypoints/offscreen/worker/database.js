@@ -22,10 +22,13 @@ import { isDevEnv } from "@/common";
 import { ENABLE_SQL_AUTO_EXPLAIN } from "@/common/config";
 import { PGlite } from '@electric-sql/pglite';
 import { auto_explain } from '@electric-sql/pglite/contrib/auto_explain';
+import { pgDump } from '@electric-sql/pglite-tools/pg_dump'
+import { zipFileToBlob, unzipAdvanceFileToText } from "@/common/zip";
 
 const DATA_DIR = "data";
 const JOB_DIR = "job";
 const JOB_DB_PATH = "/" + DATA_DIR + "/" + JOB_DIR + "/";
+const DUMP_FILE_NAME = "db.sql";
 let db;
 let initializing = false;
 
@@ -385,8 +388,8 @@ export const Database = {
    */
   dbExport: async function (message, param) {
     try {
-      const file = await db.dumpDataDir();
-      postSuccessMessage(message, URL.createObjectURL(file));
+      const file = await pgDump({ pg: await getDb() })
+      postSuccessMessage(message, URL.createObjectURL(await zipFileToBlob(DUMP_FILE_NAME, file)));
     } catch (e) {
       postErrorMessage(message, "[worker] dbExport error : " + e.message);
     }
@@ -399,16 +402,13 @@ export const Database = {
    */
   dbImport: async function (message, param) {
     try {
-      // let blob = await fetch(param).then(r => r.blob());
-      // await (await getDb()).close();
-      // await _dbDelete();
-      // await PGlite.create({
-      //   dataDir: `opfs-ahp://${JOB_DB_PATH}`,
-      //   loadDataDir: blob,
-      // });
-      // postSuccessMessage(message, {});
-      // TODO throw No more file handles available in the pool
-      postErrorMessage(message, "not implemented yet");
+      let blob = await fetch(param).then(r => r.blob());
+      let sqlText = await unzipAdvanceFileToText({ fileName: DUMP_FILE_NAME, file: blob });
+      await (await getDb()).close();
+      await _dbDelete();
+      let restoredPG = await PGlite.create(`opfs-ahp://${JOB_DB_PATH}`);
+      await restoredPG.exec(sqlText);
+      postSuccessMessage(message, {});
     } catch (e) {
       postErrorMessage(message, "[worker] dbImport error : " + e.message);
     }
