@@ -59,7 +59,7 @@ export class JobAnalysisElement extends LitElement {
   auto?: boolean;
 
   @property({ type: Function })
-  getResponse?: (url: string, bodyString: string) => Promise<{
+  getResponse?: (url: string, body: string | object) => Promise<{
     json: () => object;
   }>;
 
