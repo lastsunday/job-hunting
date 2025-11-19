@@ -95,7 +95,7 @@ jobs:
           ref: gh-pages
           path: gh-pages
       - name: (allure-report)Build test report
-        uses: simple-elf/allure-report-action@f841fec0e421b5d7d8e807dedfb03efb8cf30303
+        uses: simple-elf/allure-report-action@53ebb757a2097edc77c53ecef4d454fc2f2f774c
         if: ${{ !cancelled() }}
         with:
           gh_pages: gh-pages
