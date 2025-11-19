@@ -1,4 +1,15 @@
-## 3.15.0 (2025-11-01)
+## 3.15.1 (2025-11-19)
+
+### 🩹 Fixes
+
+- 修复应用初始化失败的问题(回滚 pglite 版本到 0.2.17)
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+- Zhang-S-g @Zhang-S-g
+
+## 3.15.0 (2025-11-01)(Deprecated)
 
 ### 🚀 Features
 
@@ -6,7 +17,7 @@
 
 ### 🩹 Fixes
 
-- 修复TcBar加载问题
+- 修复 TcBar 加载问题
 
 ### ❤️ Thank You
 
