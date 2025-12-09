@@ -31,8 +31,12 @@ const JOB_DB_PATH = "/" + DATA_DIR + "/" + JOB_DIR + "/";
 const DUMP_FILE_NAME = "db.sql";
 let db;
 let initializing = false;
+let recoveryMode = false;
 
 export async function getDb({ dataDir } = {}) {
+  if (recoveryMode) {
+    throw "get database error while current database in recovery mode";
+  }
   return await Database.innerInit({ dataDir });
 }
 
@@ -404,7 +408,6 @@ export const Database = {
     try {
       let blob = await fetch(param).then(r => r.blob());
       let sqlText = await unzipAdvanceFileToText({ fileName: DUMP_FILE_NAME, file: blob });
-      await (await getDb()).close();
       await _dbDelete();
       let restoredPG = await PGlite.create(`opfs-ahp://${JOB_DB_PATH}`);
       await restoredPG.exec(sqlText);
@@ -490,6 +493,7 @@ export const Database = {
 
 const _dbDelete = async () => {
   (await getDb()).close();
+  recoveryMode = true;
   const root = await navigator.storage.getDirectory();
   const fileHandle = await root.getDirectoryHandle(DATA_DIR);
   await fileHandle.removeEntry(JOB_DIR, { recursive: true });
