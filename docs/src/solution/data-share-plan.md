@@ -4,18 +4,20 @@
 
 ## 背景
 
-    招聘网站展示给应聘者的岗位存在某些问题，例如：
-        1. 职位并不是最新的，有可能是挂职几个月的，一页展示的只有大概三分之一是最近的；
-        2. 部分职位因为使用某种手段，使其展示的优先级往上靠；
-        3. 某些招聘网站没有提供按职位发布时间进行排序的功能；
-        4. 招聘网站提供的职位搜索条件较少，一般只通过职位关键字来进行搜索；
-    基于上述的原因，实现数据共享计划并结合JobHutting内置的职位偏好功能是部分痛点的解决方案。
+招聘网站展示给应聘者的岗位存在某些问题
+
+1. 职位并不是最新的,有可能是挂职几个月的,一页展示的只有大概三分之一是最近的
+2. 部分职位因为使用某种手段,使其展示的优先级往上靠
+3. 某些招聘网站没有提供按职位发布时间进行排序的功能
+4. 招聘网站提供的职位搜索条件较少,一般只通过职位关键字来进行搜索
+
+基于上述的原因,实现数据共享计划并结合 JobHutting 内置的职位偏好功能是部分痛点的解决方案
 
 ## 数据字段
 
 ### 职位数据字段
 
-```
+```txt
   职位自编号
   发布平台
   职位访问地址
@@ -41,7 +43,7 @@
 
 ### 公司数据字段
 
-```
+```txt
   公司
   公司描述
   成立时间
@@ -67,7 +69,7 @@
 
 ### 公司标签数据字段
 
-```
+```txt
   公司
   标签
 ```
@@ -76,19 +78,23 @@
 
 ### 官方数据流（数据上传）
 
+```txt
     招聘网站 -> JobHunting Extension -> Git(个人GitHub仓库)
+```
 
 ### 共享数据流（数据下载）
 
+```txt
     共享数据仓库列表 -> Git(个人GitHub仓库) -> JobHunting Extension
+```
 
 ## 数据提交流程
 
-```
-最多每天提交一次（插件启动时开启定时检查任务）
+```txt
+最多每天提交一次,插件启动时开启定时检查任务
 查询仓库最近一次提交时间
 提交的记录的范围条件：记录更新时间 < 今天0点0分 和记录更新时间 >= 最近一次提交时间
-    备注：针对公司标签，现在是全量提交
+    备注：针对公司标签,现在是全量提交
 提交的目录
     提交时间（YYYY）
         提交时间（MM-DD）
@@ -99,17 +105,16 @@
 
 ## 数据获取和同步流程
 
-```
-
-查询仓库60天内的记录
-下载60天内缺失的数据文件
-根据数据文件进行数据同步
-针对不同类型数据进行处理
+```txt
+1. 查询仓库60天内的记录
+2. 下载60天内缺失的数据文件
+3. 根据数据文件进行数据同步
+4. 针对不同类型数据进行处理
     职位数据
         如果是新数据
             新增记录
         如果是重复数据
-            根据创建时间来处理，并且需要处理公司名全称问题
+            根据创建时间来处理,并且需要处理公司名全称问题
     公司数据
         如果是新数据
             新增记录
@@ -126,7 +131,7 @@
 
 ### 相关表
 
-```
+```txt
 task 任务表
     id 编号
     type 任务类型
@@ -139,7 +144,7 @@ task 任务表
     update_datetime 更新时间
 ```
 
-```
+```txt
 task_data_upload 任务数据表（上传）
     id 编号
     type 任务类型
@@ -152,7 +157,7 @@ task_data_upload 任务数据表（上传）
     update_datetime 更新时间
 ```
 
-```
+```txt
 task_data_download 任务数据表（下载）
     id 编号
     type 任务类型
@@ -163,7 +168,7 @@ task_data_download 任务数据表（下载）
     update_datetime 更新时间
 ```
 
-```
+```txt
 file 文件表
     id 编号
     name 文件名
@@ -176,7 +181,7 @@ file 文件表
     update_datetime 更新时间
 ```
 
-```
+```txt
 task_data_merge 任务数据表（数据合并）
     id 编号
     type 任务类型
@@ -189,7 +194,7 @@ task_data_merge 任务数据表（数据合并）
     update_datetime 更新时间
 ```
 
-```
+```txt
 data_share_partner 数据共享伙伴信息表
     id 编号
     username 用户名
@@ -200,7 +205,7 @@ data_share_partner 数据共享伙伴信息表
 
 ```
 
-```
+```txt
 附表：
 任务类型
     职位数据上传:TASK_TYPE_JOB_DATA_UPLOAD
@@ -223,7 +228,7 @@ data_share_partner 数据共享伙伴信息表
 
 ### 数据存储目录结构
 
-```
+```txt
 提交时间（YYYY）
     提交时间（MM-DD）
         job.zip
@@ -233,20 +238,21 @@ data_share_partner 数据共享伙伴信息表
 
 ### GitHub
 
-```
+```txt
     仓库的建立
         所需权限："Administration" repository permissions (write)
         https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-for-the-authenticated-user
             /user/repos
-            
+
     仓库目录的提交&数据文件的提交
         所需权限："Contents" repository permissions (write)
         https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#create-or-update-file-contents
             /repos/{owner}/{repo}/contents/{path}
-            
+
     仓库目录的查询&仓库文件的下载
         所需权限：无
         特别事项：This API has an upper limit of 1,000 files for a directory. If you need to retrieve more files,
         https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content
             /repos/{owner}/{repo}/contents/{path}
 ```
+

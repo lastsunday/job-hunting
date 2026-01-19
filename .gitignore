@@ -56,3 +56,7 @@ lua
 
 *.sqlite
 application.yaml
+
+# book
+docs/book/
+
