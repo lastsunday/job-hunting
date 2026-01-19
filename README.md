@@ -1,5 +1,5 @@
 <p align="center">
-    <img width="180" src="docs\logo.svg" alt="Vite logo">
+    <img width="180" src="docs\src\assets\logo.svg" alt="logo">
 </p>
 
 # Job Hunting(职位猎人) - 一款协助找工作的浏览器插件
@@ -69,31 +69,31 @@
 #### 搜索页（前程无忧）
 
 <div style="margin-top:30px">
-    <img src="docs\introduction\job-item-51job.jpg" alt="51job" width="1000px"/>
+    <img src="docs\src\assets\introduction\job-item-51job.jpg" alt="51job" width="1000px"/>
 </div>
 
 #### 推荐页（BOSS 直聘）
 
 <div style="margin-top:30px">
-    <img src="docs\introduction\job-recommend-boss.jpg" alt="51job" width="1000px"/>
+    <img src="docs\src\assets\introduction\job-recommend-boss.jpg" alt="51job" width="1000px"/>
 </div>
 
 ### 详情页
 
 <div style="margin-top:30px">
-    <img src="docs\introduction\job-snapshot-51job.jpg" alt="job-snapshot-51job" width="1000px"/>
+    <img src="docs\src\assets\introduction\job-snapshot-51job.jpg" alt="job-snapshot-51job" width="1000px"/>
 </div>
 
 ### 职位快照
 
 <div style="margin-top:30px">
-    <img src="docs\introduction\job-snapshot-history-51job.jpg" alt="job-snapshot-history-51job" width="1000px"/>
+    <img src="docs\src\assets\introduction\job-snapshot-history-51job.jpg" alt="job-snapshot-history-51job" width="1000px"/>
 </div>
 
 #### 爱企查
 
 <div style="margin-top:30px">
-    <img src="docs\introduction\company-aiqicha.jpg" alt="aiqicha" width="1000px"/>
+    <img src="docs\src\assets\introduction\company-aiqicha.jpg" alt="aiqicha" width="1000px"/>
 </div>
 
 ### 管理页面
@@ -101,46 +101,18 @@
 #### 打开管理页面
 
 <div style="margin-top:30px">
-    <img src="docs\introduction\chrome_extension_sidepanel_open.png" alt="chrome_extension_sidepanel_open" width="1000px"/>
+    <img src="docs\src\assets\introduction\chrome_extension_sidepanel_open.png" alt="chrome_extension_sidepanel_open" width="1000px"/>
 </div>
 
 #### 管理页面（需点击插件图标打开）
 
 <div style="margin-top:30px">
-    <img src="docs\introduction\sidepanel_admin_home.png" alt="sidepanel_admin_home" width="1000px"/>
+    <img src="docs\src\assets\introduction\sidepanel_admin_home.png" alt="sidepanel_admin_home" width="1000px"/>
 </div>
 
 ## 数据源
 
 1. [数据源仓库说明](./docs/datasource.md)
-
-## Roadmap（饼）
-
-### Extension
-
-#### 个人助理模块
-
-- [ ] 简历编写
-- [ ] 助理提醒
-  - [ ] 今日感觉
-  - [ ] 查看新职位
-  - [ ] 简历投递
-  - [ ] 一日三餐
-  - [ ] 间歇提醒
-  - [ ] 外出/运动
-  - [ ] 社交互动
-- [ ] 薪酬查询？
-- [ ] 职业发展？
-
-#### 个人建设模块
-
-- [ ] 心理建设
-  - [ ] 书本推荐
-- [ ] 身体建设？
-  - [ ] 运动推荐
-- [ ] 待业期？
-- [ ] 职业之路？
-  - [ ] 学习路线【Roadmap】
 
 ### Server & Server-UI
 

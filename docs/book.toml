@@ -1,0 +1,14 @@
+[book]
+title = "Job Hunting"
+authors = ["lastsunday"]
+language = "zh"
+src = "src"
+
+[preprocessor]
+
+[preprocessor.mermaid]
+
+[output]
+
+[output.html]
+additional-js = ["mermaid.min.js", "mermaid-init.js"]
