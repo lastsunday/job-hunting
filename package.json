@@ -61,7 +61,7 @@
     "nx": "21.3.5",
     "postcss": "^8.5.6",
     "prettier": "^2.8.8",
-    "storybook": "9.0.9",
+    "storybook": "9.1.17",
     "tailwindcss": "^3.4.19",
     "ts-jest": "29.4.0",
     "ts-node": "10.9.1",
