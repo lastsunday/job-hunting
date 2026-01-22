@@ -8,3 +8,9 @@
 ```shell
 pnpm exec nx run analysis:build
 ```
+
+## 文档
+
+```shell
+pnpm exec nx run analysis:storybook
+```
