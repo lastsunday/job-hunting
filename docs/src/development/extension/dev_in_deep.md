@@ -24,8 +24,13 @@ block
    - Chrome,Edge
 1. 职位猎人浏览器插件
 1. 外部服务
+
    1. 数据同步服务
-      > Git
+
+      ```text
+      Git
+      ```
+
       - 基础信息
         - 职位信息
         - 公司信息
@@ -39,12 +44,25 @@ block
       - 风评
    1. 公司评论查询服务
    1. LLM 服务
-      > 内嵌 LLM(Web llm)，远程 LLM
+
+      ```text
+      内嵌 LLM(Web llm)，远程 LLM
+      ```
+
       - 职位分析
+
    1. Oauth 服务
-      > Github Oauth2
+
+      ```text
+      Github Oauth2
+      ```
+
    1. BBS 服务
-      > Github Issues API
+
+      ```text
+      Github Issues API
+      ```
+
       - 讨论区
       - 评论(职位，公司)
 

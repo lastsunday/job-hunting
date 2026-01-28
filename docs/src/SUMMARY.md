@@ -8,6 +8,7 @@
 - [开发](./development/README.md)
   - [浏览器插件](./development/extension/README.md)
     - [深入开发](./development/extension/dev_in_deep.md)
+    - [核心逻辑](./development/extension/core_logic_flow.md)
   - [独立 UI 组件]()
     - [职位分析组件](./development/component/analysis.md)
   - [服务器端]()
