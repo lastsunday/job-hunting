@@ -143,6 +143,79 @@ sequenceDiagram
 
 ## 内部 API 调用
 
+### 从 ContentScript 调用
+
+```mermaid
+sequenceDiagram
+  participant Api
+  participant ContentScript
+  participant Background
+  participant Offscreen
+  participant WebWorker
+  autonumber
+  ContentScript ->>  Api: 调用Api方法
+  Api ->> ContentScript: 调用invoke方法
+  ContentScript ->> ContentScript: 生成callbackId和Promise
+  ContentScript ->> ContentScript: 关联callbackId和当前生成的Promise
+  ContentScript ->> Background: 发送Message
+  alt 如果Background可以处理该Message
+    Background ->> Background: 处理Message
+    Background -->> ContentScript: 返回处理后的Message
+  else
+    Background ->> Offscreen: 转发Message
+    Offscreen ->> WebWorker: 转发Message
+    WebWorker ->> WebWorker: 处理Message
+    WebWorker -->> Offscreen: 返回处理后的Message
+    Offscreen -->> Background: 转发处理后的Message
+    Background -->> ContentScript: 转发处理后的Message
+  end
+  ContentScript ->> ContentScript:根据返回Message的callbadkId查找Promise
+  alt 如果Message含有error
+    ContentScript ->> Api:调用Promise.reject返回错误
+  else
+    ContentScript ->> Api:调用Promise.resolve返回结果
+  end
+```
+
+### 从 Background 调用
+
+```mermaid
+sequenceDiagram
+  participant Api
+  participant Background
+  participant Offscreen
+  participant WebWorker
+  autonumber
+  Background ->>  Api: 调用Api方法
+  Api ->> Background: 调用invoke方法
+  Background ->> Background: 生成callbackId和Promise
+  Background ->> Background: 关联callbackId和当前生成的Promise
+  Background ->> Offscreen: 发送Message
+  Offscreen ->> WebWorker: 转发Message
+  WebWorker ->> WebWorker: 处理Message
+  WebWorker -->> Offscreen: 返回处理后的Message
+  Offscreen -->> Background: 转发处理后的Message
+  Background ->> Background:根据返回Message的callbadkId查找Promise
+  alt 如果Message含有error
+    Background ->> Api:调用Promise.reject返回错误
+  else
+    Background ->> Api:调用Promise.resolve返回结果
+  end
+```
+
+### 从 Webworker 调用
+
+> [!IMPORTANT]
+>
+> - Webworker 发起的 Api 调用不会经过 ContentScript,Background,Offscreen 这些模块的处理流程
+> - 调用的方法仅限于 Github Api (仅执行网络访问)
+
+### 对大 Message 传递的处理
+
+> [!IMPORTANT]
+>
+> <https://github.com/lastsunday/job-hunting/commit/ae0cee1>
+
 ## 内嵌数据库
 
 ### SQL API
@@ -164,3 +237,7 @@ sequenceDiagram
 ## 自动化
 
 ## LLM
+
+```
+
+```
