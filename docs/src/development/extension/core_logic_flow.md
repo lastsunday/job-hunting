@@ -141,9 +141,100 @@ sequenceDiagram
    1. 职位评论按钮渲染
    1. 职位卡片渲染完成标识
 
-## 内部 API 调用
+## 内部 API
 
-### 从 ContentScript 调用
+### 内部 API 注册与使用
+
+#### 1. Service 注册(worker.js)
+
+```js
+const ACTION_FUNCTION = new Map();
+
+export const WorkerBridge = {
+  ping: function (message, param) {
+    postSuccessMessage(message, 'pong');
+  },
+};
+
+const { mergeServiceMethod } = useService();
+
+mergeServiceMethod(ACTION_FUNCTION, WorkerBridge);
+mergeServiceMethod(ACTION_FUNCTION, DataSourceMetadataService);
+```
+
+#### 2. API 注册(api/index.js)
+
+```js
+export const DataSourceMetadataApi = {
+  dataSourceMetadataSearch: mockFunction,
+  dataSourceMetadataAddOrUpdate: mockFunction,
+  dataSourceMetadataBatchAddOrUpdate: mockFunction,
+  dataSourceMetadataGetById: mockFunction,
+  dataSourceMetadataGetByIds: mockFunction,
+  dataSourceMetadataDeleteById: mockFunction,
+  dataSourceMetadataDeleteByIds: mockFunction,
+};
+fillBridgeApi({ api: DataSourceMetadataApi });
+```
+
+#### 3. API 使用
+
+> [!IMPORTANT]
+> 通过 API 方法来调用 Service 方法
+
+```js
+const param = new DataSourceMetadataSearchBO();
+param.enable = true;
+param.orderByColumn = 'seq';
+param.orderBy = 'ASC';
+const result = await DataSourceMetadataApi.dataSourceMetadataSearch(param);
+```
+
+#### 约束
+
+1. 方法名约定： ClassName+MethodName，如 DataSourceMetadataApi
+   - ClassName: DataSourceMetadata
+   - MethodName: Search
+   - 结果为: dataSourceMetadataSearch
+1. 方法传入参数类型约定: JSONObject 或其他基本数据类型
+1. 方法都为 async function
+
+#### 原理
+
+- 利用 JSONObject 的 keys,value 进行 Service 方法的绑定
+
+```js
+const fillBridgeApi = ({ api = {} } = {}) => {
+  const keys = Object.keys(api);
+  keys.forEach((invokeName) => {
+    api[invokeName] = async (param) => {
+      const result = await invoke(invokeName, param);
+      return result.data;
+    };
+  });
+  return api;
+};
+```
+
+- 手动声明进行 Service 方法绑定
+
+```js
+export const JobSnapshotApi = {
+  jobSnapshotDeleteByIds: async function (param) {
+    const result = await invoke(this.jobSnapshotDeleteByIds.name, param);
+    return result.data;
+  },
+};
+```
+
+- 利用方法名来定位 Service 和 Service 方法: className+MethodName
+
+### 内部 API 调用原理
+
+> [!IMPORTANT]
+> action = className+MethodName
+
+#### 从 ContentScript 调用
 
 ```mermaid
 sequenceDiagram
@@ -154,7 +245,7 @@ sequenceDiagram
   participant WebWorker
   autonumber
   ContentScript ->>  Api: 调用Api方法
-  Api ->> ContentScript: 调用invoke方法
+  Api ->> ContentScript: 调用invoke方法，传递action,param
   ContentScript ->> ContentScript: 生成callbackId和Promise
   ContentScript ->> ContentScript: 关联callbackId和当前生成的Promise
   ContentScript ->> Background: 发送Message
@@ -177,7 +268,7 @@ sequenceDiagram
   end
 ```
 
-### 从 Background 调用
+#### 从 Background 调用
 
 ```mermaid
 sequenceDiagram
@@ -187,7 +278,7 @@ sequenceDiagram
   participant WebWorker
   autonumber
   Background ->>  Api: 调用Api方法
-  Api ->> Background: 调用invoke方法
+  Api ->> Background: 调用invoke方法，传递action,param
   Background ->> Background: 生成callbackId和Promise
   Background ->> Background: 关联callbackId和当前生成的Promise
   Background ->> Offscreen: 发送Message
@@ -203,14 +294,14 @@ sequenceDiagram
   end
 ```
 
-### 从 Webworker 调用
+#### 从 WebWorker 调用
 
 > [!IMPORTANT]
 >
 > - Webworker 发起的 Api 调用不会经过 ContentScript,Background,Offscreen 这些模块的处理流程
 > - 调用的方法仅限于 Github Api (仅执行网络访问)
 
-### 对大 Message 传递的处理
+#### 对大 Message 传递的处理
 
 > [!IMPORTANT]
 >
@@ -218,11 +309,272 @@ sequenceDiagram
 
 ## 内嵌数据库
 
-### SQL API
+### SQL Class
+
+```mermaid
+---
+title: Database
+---
+classDiagram
+    class Database
+    Database: +initDb$({ dataDir } = {})
+    Database: +getOne$(sql, bind, obj, { connection = null } = {})
+    Database: +getAll$(sql, bind, obj, { connection = null } = {})
+    Database: +batchInsert$(obj, tableName, params, { overrideCreateDatetime = false, overrideUpdateDatetime = false, connection = null } = {})
+    Database: +batchInsertOrReplace$(obj, tableName, tableIdColumn, params, { replace = true, overrideCreateDatetime = false, overrideUpdateDatetime = false, connection = null } = {})
+    Database: +one$(entity, tableName, idColumn, id, { connection = null } = {})
+    Database: +all$(entity, tableName, orderBy, { connection = null } = {})
+    Database: +batchGet$(obj, tableName, idColumnName, ids, { connection = null } = {})
+    Database: +del$(tableName, idColumn, id, { otherCondition = null, connection = null } = {})
+    Database: +batchDel$(tableName, idColumn, ids, { otherCondition = null, connection = null } = {})
+    Database: +search$(entity, tableName, param, whereConditionFunction, { connection = null } = {})
+    Database: +searchCount$(entity, tableName, param, whereConditionFunction, { connection = null } = {})
+    Database: +sort$(tableName, idColumnName, param, { connection = null } = {})
+    Database: +innerInit({ dataDir } = {})
+    Database: +dbExport(message, param)
+    Database: +dbImport(message, param)
+    Database: +dbClose(message, param)
+    Database: +dbDelete(message, param)
+    Database: +dbSize(message, param)
+    Database: +dbSchemaVersion(message, param)
+    Database: +dbExec(message, param)
+    Database: +dbGetAllTableName(message, param)
+
+    class BaseService
+    BaseService: +constructor(tableName, tableIdColumn, entityClassCreateFunction, searchDTOCreateFunction, whereConditionFunction)
+    BaseService: +search(message, param, { detailInjectAsyncCallback = null, entityClassCreateFunction = null } = {})
+    BaseService: +count(message, param)
+    BaseService: +getOne(message, param, column)
+    BaseService: +getById(message, param)
+    BaseService: +getByIds(message, param)
+    BaseService: +addOrUpdate(message, param)
+    BaseService: +deleteById(message, id, column)
+    BaseService: +deleteByIds(message, ids, column)
+    BaseService: #_search(param, { detailInjectAsyncCallback = null, connection = null, entityClassCreateFunction = null } = {})
+    BaseService: #_count()
+    BaseService: #_getOne(param, column)
+    BaseService: #_getById(param, { connection = null } = {})
+    BaseService: #_getByIds(param, { connection = null } = {})
+    BaseService: #_deleteById(id, column, { otherCondition, connection = null } = {})
+    BaseService: #_deleteByIds(ids, column, { connection = null, otherCondition = null } = {})
+    BaseService: #_updateByIds(ids, column, { otherCondition })
+    BaseService: #_addOrUpdate(param, { overrideUpdateDatetime = false, overrideCreateDatetime = false, connection = null } = {})
+    BaseService: #_batchAddOrUpdate(params, { connection = null, overrideCreateDatetime = false, overrideUpdateDatetime = false, genIdFunction = null, entityClassCreateFunction = null } = {})
+
+    class BaseBridgeService
+    BaseBridgeService: +constructor(baseServiceInstance, serviceName)
+    BaseBridgeService: +getMethodName(name)
+    BaseBridgeService: +getMethodNameMap()
+    BaseBridgeService: +addServiceMethod$({ bridgeService = null, methodName = null, methodFunction = async ({ param = null } = {}) => { } } = {})
+    BaseBridgeService: +addTransactionServiceMethod$({ bridgeService = null, methodName = null, methodFunction = async ({ param = null, tx = null } = {}) => { } } = {})
+    BaseBridgeService: +fillBaseServiceMethod$({ bridgeService = null, overrideUpdateDatetime = false, overrideCreateDatetime = false } = {})
+
+    BaseService ..> Database
+    BaseBridgeService ..> BaseService
+
+```
+
+#### Service 实现
+
+```js
+import { DataSourceMetadataSearchBO } from '@/common/data/bo/dataSourceMetadataSearchBO';
+import { DataSourceMetadata } from '@/common/data/domain/dataSourceMetadata';
+import BaseBridgeService, { fillBaseServiceMethod } from './baseBridgeService';
+import { BaseService } from './baseService';
+import {
+  genEqValueConditionSql,
+  genInTextSql,
+  genLikeSql,
+  genRangeDatetimeConditionSql,
+} from './sqlUtil';
+const TABLE_NAME = 'data_source_metadata';
+const TABLE_ID_COLUMN = 'id';
+const SERVICE_NAME = 'dataSourceMetadata';
+export const SERVICE_INSTANCE = new BaseService(
+  TABLE_NAME,
+  TABLE_ID_COLUMN,
+  () => {
+    return new DataSourceMetadata();
+  },
+  () => {
+    return new DataSourceMetadataSearchBO();
+  },
+  (param) => {
+    let whereCondition = ''.concat(
+      genInTextSql(param.id, 'id'),
+      genLikeSql(param.name, 'name'),
+      genEqValueConditionSql(param.enable, 'enable'),
+      genInTextSql(param.type, 'type'),
+      genEqValueConditionSql(param.autoUpdateEnable, 'auto_update_enable'),
+      genRangeDatetimeConditionSql(
+        param.startDatetimeForCreate,
+        param.endDatetimeForCreate,
+        'create_datetime'
+      ),
+      genRangeDatetimeConditionSql(
+        param.startDatetimeForUpdate,
+        param.endDatetimeForUpdate,
+        'update_datetime'
+      )
+    );
+    return whereCondition;
+  }
+);
+const DataSourceMetadataService = new BaseBridgeService(
+  SERVICE_INSTANCE,
+  SERVICE_NAME
+);
+fillBaseServiceMethod({
+  bridgeService: DataSourceMetadataService,
+  overrideCreateDatetime: true,
+  overrideUpdateDatetime: true,
+});
+
+export default DataSourceMetadataService;
+```
+
+#### ORM 机制
+
+1. 例子
+
+```js
+const company = new Company();
+await CompanyApi.addOrUpdateCompany(company);
+
+//companyService
+const SERVICE_INSTANCE = new BaseService(
+  'company',
+  'company_id',
+  () => {
+    return new Company();
+  },
+  () => {
+    return new SearchCompanyDTO();
+  },
+  null
+);
+
+export const CompanyService = {
+  addOrUpdateCompany: async function (message, param) {
+    try {
+      await SERVICE_INSTANCE._batchAddOrUpdate([param]);
+      postSuccessMessage(message, {});
+    } catch (e) {
+      postErrorMessage(
+        message,
+        '[worker] addOrUpdateCompany error : ' + e.message
+      );
+    }
+  },
+};
+```
+
+1. 当前实现的特性
+
+   1. 根据 JSONObject 进行 SQL 查询，新增，更新，删除
+
+1. 底层原理
+
+   1. 利用 JSONObject 的 keys,value 来识别列名，字段类型和内容。通过此来进行 SQL 的生成和返回结果 JSONObject 的生成
+   1. JSONObject 属性名采用小驼峰命名法（lowerCamelCase）
+   1. 表字段名采用下划线命名法（Snake Case）
+   1. SQL 插入字段的值位置采用下标定位的方式，如$1
+   1. 分页采用 LIMIT,OFFSET
 
 ### Schema Changes
 
+```js
+const changelogList = getChangeLogList();
+let oldVersion = 0;
+const newVersion = changelogList.length;
+try {
+  await db.transaction(async (tx) => {
+    const SQL_CREATE_TABLE_VERSION = `
+          CREATE TABLE IF NOT EXISTS version(
+          num INTEGER
+        )
+      `;
+    await tx.exec(SQL_CREATE_TABLE_VERSION);
+    const SQL_QUERY_VERSION = 'SELECT num FROM version';
+    const result = await tx.query(SQL_QUERY_VERSION);
+    const rows = result.rows;
+    if (rows.length > 0) {
+      oldVersion = rows[0].num;
+    } else {
+      const SQL_INSERT_VERSION = `INSERT INTO version(num) values($1)`;
+      await tx.query(SQL_INSERT_VERSION, [0]);
+    }
+    infoLog(
+      '[DB] schema oldVersion = ' + oldVersion + ', newVersion = ' + newVersion
+    );
+    if (newVersion > oldVersion) {
+      infoLog('[DB] schema upgrade start');
+      for (let i = oldVersion; i < newVersion; i++) {
+        const currentVersion = i + 1;
+        const changelog = changelogList[i];
+        const sqlList = changelog.getSqlList();
+        infoLog(
+          '[DB] schema upgrade changelog version = ' +
+            currentVersion +
+            ', sql total = ' +
+            sqlList.length
+        );
+        for (let seq = 0; seq < sqlList.length; seq++) {
+          infoLog(
+            '[DB] schema upgrade changelog version = ' +
+              currentVersion +
+              ', execute sql = ' +
+              (seq + 1) +
+              '/' +
+              sqlList.length
+          );
+          const sql = sqlList[seq];
+          await tx.exec(sql);
+        }
+      }
+      const SQL_UPDATE_VERSION = `UPDATE version SET num = $1`;
+      await tx.query(SQL_UPDATE_VERSION, [newVersion]);
+      infoLog('[DB] schema upgrade finish to version = ' + newVersion);
+      infoLog('[DB] current schema version = ' + newVersion);
+    } else {
+      infoLog('[DB] skip schema upgrade');
+      infoLog('[DB] current schema version = ' + oldVersion);
+    }
+  });
+} catch (e) {
+  errorLog('[DB] schema upgrade fail,' + e.message);
+}
+```
+
+1. ChangeLog 文件
+
+   1. 文件格式: ChangeLog+V+版本号 = ChangeLogVxxx.js
+   1. 例子
+
+      ```js
+      export class ChangeLogV1 extends ChangeLog {
+        getSqlList() {
+          let sqlList = [
+            SQL_CREATE_TABLE_JOB,
+            SQL_CREATE_TABLE_JOB_BROWSE_HISTORY,
+          ];
+          return sqlList;
+        }
+      }
+      ```
+
+1. ChangeLog 执行规则
+   1. 将需要执行的 ChangeLog 存放到列表中
+   1. 开启事务，以确保 ChangeLog 的执行的原子性
+   1. 通过计算 ChangeLog 列表的总数与当前数据库版本号（版本号为上一次执行 ChangLog 的数量）进行对比计算，来获取当前需要执行的 ChangeLog
+   1. 执行完成后，更新数据库版本号（版本号即为已执行 ChangeLog 的数量）
+
 ### 备份
+
+> [!IMPORTANT]
+> 当前使用 pglite dump 备份大量数据的数据库会出错
+
+TODO
 
 ## 内部任务系统
 
