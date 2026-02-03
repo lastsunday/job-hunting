@@ -797,12 +797,35 @@ export const TASK_TYPE_COMPANY_COMMENT_DATA_MERGE =
 
 ## 数据同步
 
+1. 数据仓库文件结构
+1. Git 读取数据仓库文件结构
+1. 数据合并文件
+   1. 版本格式
+   1. 版本识别规则
+1. 数据递增规则
+   1. 以记录更新时间为递增规则
+
 ## 数据导入与导出
+
+> [!IMPORTANT]
+> 数据导入逻辑与数据同步逻辑一样
+
+1. 数据拆分导出
 
 ## Oauth
 
+1. 采用 Oauth2 流程
+
 ## BBS 系统
+
+1. 采用 Github Issues 作为服务端
 
 ## 自动化
 
+1. 采用 puppeteer 类库在 debug 模式下运行
+1. 当前用于自动浏览职位页面
+
 ## LLM
+
+1. 外部 LLM
+1. 内嵌 LLM
