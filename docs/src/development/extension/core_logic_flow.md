@@ -578,6 +578,109 @@ TODO
 
 ## 内部任务系统
 
+```mermaid
+---
+title: Task System
+---
+sequenceDiagram
+  participant Service
+  participant Database
+  participant GitHubApi
+  participant GitService
+
+  Note right of Service: 计算和保存下载和上传任务
+  Service ->> Database: 获取数据同步配置
+  Database -->> Service: 返回数据同步配置
+  opt if 开启私有数据同步
+    Service ->> Database: 获取用户信息
+    Database -->> Service: 返回用户信息
+    Service ->> Service: 获取私有数据上传任务类型
+    opt if 需要同步私有的数据
+      Service ->> Service: 获取私有数据仓库名
+      Service ->> GitHubApi: 尝试根据用户名和仓库名创建私有数据仓库
+      loop 私有数据上传任务类型
+        rect rgb(191, 223, 255)
+          Note right of Service: 计算并保存上传任务
+          Service ->> Database: 根据用户名，仓库名获取指定任务类型最近上传任务截至时间
+          Database -->> Service: 返回最近上传任务截至时间
+          opt if 最近上传任务截至时间不为今天
+            Service ->> GitService: 根据用户名，仓库名和获取指定任务类型最近上传文件时间
+            GitService -->> Service: 返回最近上传文件时间
+            Service ->> Service: 在最近上传任务截至时间和最近上传文件时间取最小值，作为任务开始时间
+            Service ->> Database: 根据用户名，仓库名，任务类型，任务开始时间，任务结束时间（今天）保存任务记录
+          end
+        end
+      end
+      Service ->> Service: 获取私有数据下载任务类型
+      Service ->> Service: 将私有数据下载任务保存到下载列表
+    end
+  end
+  alt if 是否开启公开数据同步
+    Service ->> Database: 获取用户信息
+    Database -->> Service: 返回用户信息
+    Service ->> Service: 获取公开数据上传任务类型
+    opt if 有需要同步公开的数据
+      Service ->> Service: 获取公开数据仓库名
+      Service ->> GitHubApi: 尝试根据用户名和仓库名创建公开数据仓库
+      loop 公开数据上传任务类型
+        rect rgb(191, 223, 255)
+          Note right of Service: 计算并保存上传任务
+        end
+      end
+      Service ->> Service: 获取公开数据下载任务类型
+      Service ->> Service: 将公开数据下载任务保存到下载列表
+    end
+  end
+  Service ->> Database: 获取数据共享伙伴列表
+  Database -->> Service: 返回数据共享伙伴列表
+  Service ->> Service: 将数据共享伙伴数据的下载任务保存到下载列表
+  loop 下载列表
+    Service ->> Service: 根据下载列表获取伙伴信息
+    Service ->> Service: 根据下载列表获取下载任务类型
+    loop 下载任务类型
+      rect rgb(191, 255, 223)
+        Note right of Service: 计算并保存下载任务
+        Service ->> GitService: 根据任务类型或文件名查询日期目录列表
+        GitService -->> Service: 返回日期目录列表
+        Service ->> Service: 根据下载历史文件保留天数和当前日期过滤和升序日期列表，获得仓库文件日期列表
+        Service ->> Service: 根据仓库文件日期列表，获取开始时间(列表中最小时间)和结束时间(列表中最大时间)
+        Service ->> Database: 根据开始时间和结束时间查询指定类型的下载任务列表
+        Database -->> Service: 返回下载任务列表
+        Service ->> Service: 根据仓库文件日期列表和下载任务列表的日期计算得出本地缺失日期列表
+        Service ->> Database: 根据本地缺失日期列表，新增指定类型的下载任务
+      end
+    end
+  end
+  Service ->> Database: 获取数据源元数据自动更新列表
+  Database -->> Service: 返回数据源元数据自动更新列表
+  loop 数据源元数据自动更新列表
+      rect rgb(255, 223,191)
+        Note right of Service: 计算并保存元数据下载任务
+        Service ->> Database: 根据任务类型编号获取最近下载任务列表
+        Database -->> Service: 返回下载任务列表
+        opt if 任务列表中含有非今天未完成的任务
+          Service ->> Database: 将未完成的任务状态设置为取消
+        end
+        opt if 任务列表中没有今天未完成的任务
+          Service ->> Database: 新增数据源元数据下载任务
+        end
+      end
+  end
+  Note right of Service: 执行下载和上传任务
+  Service ->> Database: 查询需要执行的任务
+  Database -->> Service: 返回需要执行的任务
+  Service ->> Service: 执行查询到的需要执行的任务
+  Note right of Service: 执行定时任务
+  Service ->> Database: 查询已合并但未删除的文件
+  Database -->> Service: 返回已合并但未删除的文件
+  Service ->> Service: 根据历史文件保留数量和最大历史文件保留容量计算需要删除的文件列表
+  Service ->> Database: 根据需要删除的文件列表删除文件
+```
+
+1. 数据结构
+
+TODO
+
 ## 数据同步
 
 ## 数据导入与导出
