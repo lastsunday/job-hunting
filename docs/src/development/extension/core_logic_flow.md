@@ -677,9 +677,123 @@ sequenceDiagram
   Service ->> Database: 根据需要删除的文件列表删除文件
 ```
 
-1. 数据结构
+### 任务状态图
 
-TODO
+```mermaid
+---
+title: Task state
+---
+stateDiagram-v2
+    [*] --> READY
+    READY --> RUNNING
+    READY --> CANCEL
+    RUNNING --> FINISHED
+    RUNNING --> FINISHED_BUT_ERROR
+    RUNNING --> ERROR
+    RUNNING --> CANCEL
+    FINISHED --> [*]
+    FINISHED_BUT_ERROR --> [*]
+    ERROR --> [*]
+    CANCEL --> [*]
+```
+
+### 数据关系图
+
+```mermaid
+---
+title: Task ER
+---
+erDiagram
+    task ||--|| task_data_upload: owns
+    task {
+      string(255) id PK "编号"
+      string(255) type "任务类型"
+      string(255) data_id FK "任务详情编号"
+      string(255) status "任务状态"
+      string error_reason "错误原因"
+      int cost_time "耗时"
+      int retry_count "重试次数"
+      datetime create_datetime "创建时间"
+      datetime update_datetime "更新时间"
+    }
+    task_data_upload {
+      string(255) id PK "编号"
+      string(255) type "任务类型"
+      string(255) username "用户名"
+      string(255) reponame "仓库名"
+      datetime start_datetime "开始时间"
+      datetime end_datetime "结束时间"
+      int data_count "数据量"
+      datetime create_datetime "创建时间"
+      datetime update_datetime "更新时间"
+    }
+    task ||--|| task_data_download: owns
+    task_data_download {
+      string(255) id PK "编号"
+      string(255) type "任务类型"
+      string(255) username "用户名"
+      string(255) reponame "仓库名"
+      datetime datetime "日期"
+      datetime create_datetime "创建时间"
+      datetime update_datetime "更新时间"
+    }
+    task ||--|| task_data_merge: owns
+    task_data_merge {
+      string(255) id PK "编号"
+      string(255) type "任务类型"
+      string(255) username "用户名"
+      string(255) reponame "仓库名"
+      datetime datetime "日期"
+      string(255) data_id FK "文件编号"
+      int data_count "数据量"
+      datetime create_datetime "创建时间"
+      datetime update_datetime "更新时间"
+    }
+    task_data_merge |o--|| file: has
+    file {
+      string(255) id PK "编号"
+      string(255) name "文件名"
+      string(255) sha "散列值"
+      string(255) encoding "编码"
+      string content "文件内容"
+      int size "文件尺寸"
+      string type "文件类型"
+      datetime create_datetime "创建时间"
+      datetime update_datetime "更新时间"
+    }
+```
+
+### 任务类型
+
+```js
+export const TASK_TYPE_JOB_DATA_UPLOAD = 'JOB_DATA_UPLOAD';
+export const TASK_TYPE_JOB_DATA_DOWNLOAD = 'JOB_DATA_DOWNLOAD';
+export const TASK_TYPE_JOB_DATA_MERGE = 'JOB_DATA_MERGE';
+
+export const TASK_TYPE_COMPANY_DATA_UPLOAD = 'COMPANY_DATA_UPLOAD';
+export const TASK_TYPE_COMPANY_DATA_DOWNLOAD = 'COMPANY_DATA_DOWNLOAD';
+export const TASK_TYPE_COMPANY_DATA_MERGE = 'COMPANY_DATA_MERGE';
+
+export const TASK_TYPE_COMPANY_TAG_DATA_UPLOAD = 'COMPANY_TAG_DATA_UPLOAD';
+export const TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD = 'COMPANY_TAG_DATA_DOWNLOAD';
+export const TASK_TYPE_COMPANY_TAG_DATA_MERGE = 'COMPANY_TAG_DATA_MERGE';
+
+export const TASK_TYPE_JOB_TAG_DATA_UPLOAD = 'JOB_TAG_DATA_UPLOAD';
+export const TASK_TYPE_JOB_TAG_DATA_DOWNLOAD = 'JOB_TAG_DATA_DOWNLOAD';
+export const TASK_TYPE_JOB_TAG_DATA_MERGE = 'JOB_TAG_DATA_MERGE';
+
+export const TASK_TYPE_JOB_PUBLIC_DATA_UPLOAD = 'JOB_PUBLIC_DATA_UPLOAD';
+export const TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD = 'JOB_PUBLIC_DATA_DOWNLOAD';
+export const TASK_TYPE_JOB_PUBLIC_DATA_MERGE = 'JOB_PUBLIC_DATA_MERGE';
+
+export const TASK_TYPE_METADATA_DATA_DOWNLOAD = 'METADATA_DATA_DOWNLOAD';
+export const TASK_TYPE_METADATA_DATA_MERGE = 'METADATA_DATA_MERGE';
+
+export const TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD =
+  'COMPANY_COMMENT_DATA_DOWNLOAD';
+export const TASK_TYPE_COMPANY_COMMENT_DATA_MERGE =
+  'COMPANY_COMMENT_DATA_MERGE';
+```
 
 ## 数据同步
 
