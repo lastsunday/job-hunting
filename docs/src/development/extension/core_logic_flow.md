@@ -1018,6 +1018,7 @@ sequenceDiagram
   GithubWebsite ->> GithubWebsite: redirect to callback url
   Note over GithubWebsite: https://github.com/lastsunday/job-hunting-github-app/blob/main/INSTALL?code=
   GithubWebsite -->> Background: notify url with code
+  Background ->> Background: chrome.tabs.onUpdated
   Background ->> GithubServer: http request access_token
   Note over GithubWebsite: https://github.com/login/oauth/access_token?client_id=&client_secret=&code=
   GithubServer -->> Background: return oauth info
