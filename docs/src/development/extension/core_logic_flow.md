@@ -736,6 +736,8 @@ erDiagram
       datetime datetime "日期"
       datetime create_datetime "创建时间"
       datetime update_datetime "更新时间"
+      string(255) type_id "类型标识，用于识别特定文件"
+      json config "配置"
     }
     task ||--|| task_data_merge: owns
     task_data_merge {
@@ -748,6 +750,8 @@ erDiagram
       int data_count "数据量"
       datetime create_datetime "创建时间"
       datetime update_datetime "更新时间"
+      string(255) type_id "类型标识，用于识别特定文件"
+      json config "配置"
     }
     task_data_merge |o--|| file: has
     file {
@@ -797,13 +801,196 @@ export const TASK_TYPE_COMPANY_COMMENT_DATA_MERGE =
 
 ## 数据同步
 
-1. 数据仓库文件结构
-1. Git 读取数据仓库文件结构
-1. 数据合并文件
-   1. 版本格式
-   1. 版本识别规则
-1. 数据递增规则
-   1. 以记录更新时间为递增规则
+### 数据仓库文件结构
+
+```txt
+  ├── YYYY                              //年份，格式YYYY
+  │   └── MM-DD                         //月日，格式MM-DD
+  │       ├─── company.zip
+  │       ├─── job.zip
+  │       ├─── job_tag.zip
+  │       ├─── company_tag.zip
+```
+
+### Git 读取数据仓库文件结构
+
+> <https://git-scm.com/docs/gitprotocol-v2>
+
+```mermaid
+sequenceDiagram
+    participant GitService
+    participant GitServer
+
+    GitService ->> GitServer: 发送ls-refs请求
+    GitServer -->> GitService: 返回refs
+    GitService ->> GitService: 根据refs获取commitHash
+    GitService ->> GitServer: 根据commitHash获取treesIdx
+    GitServer -->> GitService: 返回treesIdx
+    GitService ->> GitServer: 根据treesIdx遍历仓库目录
+    GitServer -->> GitService: 返回仓库目录
+    GitService -->> GitService: 根据仓库目录过滤符合日期目录的指定文件的文件列表
+```
+
+### 数据合并文件
+
+1. 文件格式: excel
+1. 文件内容格式
+
+   | 字段名       | 字段类型 | 备注                                       |
+   | ------------ | -------- | ------------------------------------------ |
+   | 编号         | string   | 记录唯一标识                               |
+   | xxx          | xxx      |                                            |
+   | `__VERSION_` | int      | 版本号,如果该字段不存在，则会被认为第 0 版 |
+
+1. 版本识别规则
+   1. 通过版本号字段读取文件的文件字段列表
+   1. 根据文件字段列表识别文件是否合法
+
+### 数据递增规则
+
+1. 以记录创建时间为数据增量规则
+1. 各数据格式增量更新规则字段
+
+   1. 职位
+
+      1. `createDatetime`
+      1. `updateDatetime`
+      1. `isFullCompanyName`
+
+   1. 职位公开数据
+
+      1. `createDatetime`
+
+   1. 职位快照
+
+      1. `updateDatetime`
+
+   1. 职位标签
+
+      > 未正确实现覆盖更新
+
+      1. `updateDatetime`
+
+   1. 公司
+
+      1. `sourceRefreshDatetime`
+
+   1. 公司标签
+
+      > 未正确实现覆盖更新
+
+      1. `updateDatetime`
+
+   1. 公司评论
+
+      1. `createDatetime`
+
+### 各数据类型版本
+
+#### 职位
+
+| 字段           | 类型     | 生效版本 |
+| -------------- | -------- | -------- |
+| 职位自编号     | string   | 0        |
+| 发布平台       | string   | 0        |
+| 职位访问地址   | string   | 0        |
+| 职位           | string   | 0        |
+| 公司           | string   | 0        |
+| 公司是否为全称 | bool     | 0        |
+| 地区           | string   | 0        |
+| 地址           | string   | 0        |
+| 经度           | number   | 0        |
+| 纬度           | number   | 0        |
+| 职位描述       | string   | 0        |
+| 学历           | string   | 0        |
+| 所需经验       | string   | 0        |
+| 技能           | string   | 1        |
+| 福利           | string   | 1        |
+| 最低薪资       | number   | 0        |
+| 最高薪资       | number   | 0        |
+| 首次发布时间   | datetime | 0        |
+| 招聘人         | string   | 0        |
+| 招聘公司       | string   | 0        |
+| 招聘者职位     | string   | 0        |
+| 首次扫描日期   | datetime | 0        |
+| 记录更新日期   | datetime | 0        |
+
+#### 职位标签
+
+| 字段         | 类型     | 生效版本 |
+| ------------ | -------- | -------- |
+| 职位编号     | string   | 0        |
+| 标签         | string   | 0        |
+| 记录更新日期 | datetime | 1        |
+
+#### 职位公开数据
+
+| 字段         | 类型     | 生效版本 |
+| ------------ | -------- | -------- |
+| 职位自编号   | string   | 0        |
+| 首次扫描日期 | datetime | 0        |
+| 记录更新日期 | datetime | 0        |
+
+#### 职位快照
+
+| 字段     | 类型     | 生效版本 |
+| -------- | -------- | -------- |
+| 编号     | string   | 0        |
+| 职位编号 | string   | 0        |
+| 职位链接 | string   | 0        |
+| 内容     | string   | 0        |
+| 招聘平台 | string   | 0        |
+| 创建日期 | datetime | 0        |
+| 更新日期 | datetime | 0        |
+
+#### 公司
+
+| 字段             | 类型     | 生效版本 |
+| ---------------- | -------- | -------- |
+| 公司             | string   | 0        |
+| 公司描述         | string   | 0        |
+| 成立时间         | string   | 0        |
+| 经营状态         | string   | 0        |
+| 法人             | string   | 0        |
+| 统一社会信用代码 | string   | 0        |
+| 官网             | string   | 0        |
+| 社保人数         | number   | 0        |
+| 自身风险数       | number   | 0        |
+| 关联风险数       | number   | 0        |
+| 地址             | string   | 0        |
+| 经营范围         | string   | 0        |
+| 纳税人识别号     | string   | 0        |
+| 所属行业         | string   | 0        |
+| 工商注册号       | string   | 0        |
+| 经度             | number   | 0        |
+| 纬度             | number   | 0        |
+| 注册资本         | string   | 2        |
+| 注册资本货币     | string   | 2        |
+| 数据来源地址     | string   | 0        |
+| 数据来源平台     | string   | 0        |
+| 数据来源记录编号 | string   | 0        |
+| 数据来源更新时间 | datetime | 0        |
+| 记录创建日期     | datetime | 1        |
+| 记录更新日期     | datetime | 1        |
+
+#### 公司标签
+
+| 字段         | 类型     | 生效版本 |
+| ------------ | -------- | -------- |
+| 公司         | string   | 0        |
+| 标签         | string   | 0        |
+| 记录更新日期 | datetime | 1        |
+
+#### 公司评论
+
+| 字段     | 类型     | 生效版本 |
+| -------- | -------- | -------- |
+| 公司     | string   | 0        |
+| 评论     | string   | 0        |
+| 情感     | string   | 1        |
+| 数据集   | string   | 1        |
+| 创建日期 | datetime | 1        |
+| 更新日期 | datetime | 1        |
 
 ## 数据导入与导出
 
