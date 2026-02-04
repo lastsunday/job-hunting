@@ -1001,7 +1001,29 @@ sequenceDiagram
 
 ## Oauth
 
-1. 采用 Oauth2 流程
+### Github Oauth2 流程
+
+```mermaid
+sequenceDiagram
+  participant ContentScript
+  participant Background
+  participant GithubWebsite
+  participant GithubServer
+
+  ContentScript ->> Background: authOauth2Login
+  activate GithubWebsite
+  Background ->> GithubWebsite: chrome.tabs.create
+  Note over GithubWebsite: https://github.com/login/oauth/authorize?client_id=
+  GithubWebsite ->> GithubWebsite: github login
+  GithubWebsite ->> GithubWebsite: redirect to callback url
+  Note over GithubWebsite: https://github.com/lastsunday/job-hunting-github-app/blob/main/INSTALL?code=
+  GithubWebsite -->> Background: notify url with code
+  Background ->> GithubServer: http request access_token
+  Note over GithubWebsite: https://github.com/login/oauth/access_token?client_id=&client_secret=&code=
+  GithubServer -->> Background: return oauth info
+  Background ->> GithubWebsite: chrome.tabs.remove
+  deactivate GithubWebsite
+```
 
 ## BBS 系统
 
