@@ -1029,6 +1029,20 @@ sequenceDiagram
 ## BBS 系统
 
 1. 采用 Github Issues 作为服务端
+1. 地区选择实现原理
+
+   1. 利用标题作为搜索字段
+   1. targetId = sha256 地区名: sha256(省)-sha256(市)-sha256(区)
+
+      ```hql
+         search(query:"${targetId} in:title sort:created-desc is:issue is:open repo:${GITHUB_APP_REPO}", type: ISSUE, first: ${first ?? null}, after: ${after ? "\"" + after + "\"" : null},last:${last ?? null},before:${before ? "\"" + before + "\"" : null})
+      ```
+
+1. 使用的 Github API
+   1. HQL 查询(可查询 Issues): <https://api.github.com/graphql>
+   1. 新增 Issues: POST <https://api.github.com/repos/lastsunday/job-hunting-github-app/issues>
+   1. 查询 Issues Comment: GET <https://api.github.com/repos/lastsunday/job-hunting-github-app/issues/${issueNumber}/comments?per_page=${pageSize}&page=${pageNum}>
+   1. 新增 Issues Comment: POST <https://api.github.com/repos/lastsunday/job-hunting-github-app/issues/${issueNumber}/comments>
 
 ## 自动化
 
