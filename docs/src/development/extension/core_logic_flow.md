@@ -1052,4 +1052,21 @@ sequenceDiagram
 ## LLM
 
 1. 外部 LLM
+
+   1. ollama
+
+      <https://docs.ollama.com/api/introduction>
+
+   1. openai
+
+      <https://platform.openai.com/docs/api-reference/chat>
+
+   1. siliconflow
+
+      <https://docs.siliconflow.com/en/api-reference/chat-completions/chat-completions>
+
 1. 内嵌 LLM
+
+   1. web-llm
+
+      <https://github.com/mlc-ai/web-llm>
