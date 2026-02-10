@@ -1,31 +1,30 @@
 [package]
 name = "service"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+
 
 [dependencies]
-sea-orm = { version = "1.1.12", features = [
+sea-orm = { workspace = true, features = [
   "sqlx-postgres",
   "sqlx-sqlite",
   "runtime-tokio-rustls",
   "macros",
   "debug-print",
 ] }
-anyhow = { version = "1.0.98" }
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter"] }
-git2 = "0.20.2"
-ssh-key = { version = "0.6.7", features = ["getrandom", "ed25519"] }
-chrono = "0.4.41"
-testcontainers = "0.24.0"
-testcontainers-modules = { version = "0.12.1", features = [
-  "postgres",
-  "gitea",
-] }
-uuid = { version = "1.17.0", features = ["v4"] }
-tokio = { version = "1.45.1", features = ["full"] }
-num_cpus = { version = "1.17.0" }
-openssl = { version = "0.10.73", features = ["vendored"] }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+git2 = { workspace = true }
+ssh-key = { workspace = true, features = ["getrandom", "ed25519"] }
+chrono = { workspace = true }
+testcontainers = { workspace = true }
+testcontainers-modules = { workspace = true, features = ["postgres", "gitea"] }
+uuid = { workspace = true, features = ["v4"] }
+tokio = { workspace = true, features = ["full"] }
+num_cpus = { workspace = true }
+openssl = { workspace = true, features = ["vendored"] }
 migration = { path = "../migration" }
 entity = { path = "../entity" }
 framework = { path = "../framework" }
