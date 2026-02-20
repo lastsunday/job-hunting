@@ -83,7 +83,7 @@
     "semver": "^7.7.3",
     "sha.js": "^2.4.12",
     "single-file-core": "^1.5.81",
-    "swiper": "^11.2.10",
+    "swiper": "^12.1.2",
     "tsparticles": "^3.9.1",
     "uuid": "^11.1.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
