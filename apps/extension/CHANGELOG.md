@@ -1,3 +1,13 @@
+## 3.15.2 (2026-03-02)
+
+### 🩹 Fixes
+
+- 修复 BOSS 直聘页面 URL 分页参数的处理逻辑
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
 ## 3.15.1 (2025-11-19)
 
 ### 🩹 Fixes

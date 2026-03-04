@@ -92,14 +92,14 @@ jobs:
         if: ${{ !cancelled() }}
         continue-on-error: true
         with:
-          ref: gh-pages
-          path: gh-pages
+          ref: gh-test
+          path: gh-test
       - name: (allure-report)Build test report
         uses: simple-elf/allure-report-action@53ebb757a2097edc77c53ecef4d454fc2f2f774c
         if: ${{ !cancelled() }}
         with:
-          gh_pages: gh-pages
-          allure_history: gh-pages
+          gh_pages: gh-test
+          allure_history: gh-test
           allure_results: ${{ env.ROOT_DIR }}allure-results
       - name: (allure-report)Upload test report to action artifacts
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
@@ -108,13 +108,13 @@ jobs:
           name: extension-e2e-tests-allure-report
           path: allure-report/
           retention-days: 30
-      - name: (allure-report)Publish test report to gh-pages
+      - name: (allure-report)Publish test report to gh-test
         uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e
         if: ${{ (github.event_name != 'pull_request') && !cancelled()}}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: gh-pages
+          publish_branch: gh-test
+          publish_dir: gh-test
 
       - name: Rename dist files
         if: startsWith(github.ref, 'refs/tags/')

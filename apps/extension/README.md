@@ -17,9 +17,9 @@
     pnpm run build
 ```
 
-2. 打开 chrome，选择加载已解压的扩展程序，选择当前项目的 .output/chrome-mv3 目录
+1. 打开 chrome，选择加载已解压的扩展程序，选择当前项目的 .output/chrome-mv3 目录
 
-3. 打开页面
+2. 打开页面
    - boss 直聘： <https://www.zhipin.com/web/geek/jobs>
    - 51Job： <https://we.51job.com/pc/search>
    - 智联招聘： <https://sou.zhaopin.com/>
@@ -47,9 +47,7 @@
 
 ## 测试
 
-> https://vitalets.github.io/playwright-bdd/
-
-1. [在线测试报告-Allure Report](https://lastsunday.github.io/job-hunting/)
+> <https://vitalets.github.io/playwright-bdd/>
 
 ## Thanks
 

@@ -1,11 +1,12 @@
 [package]
 name = "web"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
 
 [dependencies]
-axum = { version = "0.8.4", features = ["macros"] }
-rust-embed = { version = "8.7.2", features = [
+axum = { workspace = true, features = ["macros"] }
+rust-embed = { workspace = true, features = [
   "axum",
   "axum-ex",
   "tokio",
