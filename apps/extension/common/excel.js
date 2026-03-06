@@ -1,15 +1,24 @@
-import { CompanyBO } from "./data/bo/companyBO";
-import { CompanyTagBO } from "./data/bo/companyTagBO";
-import { JobTagBO } from "./data/bo/jobTagBO";
-import { Job } from "./data/domain/job";
-import { JobSnapshot } from "./data/domain/jobSnapshot";
-import { JobPublic } from "./data/domain/jobPublic";
-import { convertDateStringToDateObject, dateToStr, genIdFromText, genSha256 } from "./utils";
-import { utils, writeXLSX } from "xlsx";
-import { CompanyComment, genId as companyCommentGenId, convertEmotionFromText } from "./data/domain/companyComment";
-import { genIdByCompanyName } from "./data/domain/company";
+import { CompanyBO } from './data/bo/companyBO';
+import { CompanyTagBO } from './data/bo/companyTagBO';
+import { JobTagBO } from './data/bo/jobTagBO';
+import { Job } from './data/domain/job';
+import { JobSnapshot } from './data/domain/jobSnapshot';
+import { JobPublic } from './data/domain/jobPublic';
+import {
+  convertDateStringToDateObject,
+  dateToStr,
+  genIdFromText,
+  genSha256,
+} from './utils';
+import { utils, writeXLSX } from 'xlsx';
+import {
+  CompanyComment,
+  genId as companyCommentGenId,
+  convertEmotionFromText,
+} from './data/domain/companyComment';
+import { genIdByCompanyName } from './data/domain/company';
 
-const HEADER_VERSION_PREFIX = "__VERSION_";
+const HEADER_VERSION_PREFIX = '__VERSION_';
 
 export const validImportData = (data, allVersionValidArray) => {
   let dataVersion = 0;
@@ -19,7 +28,7 @@ export const validImportData = (data, allVersionValidArray) => {
     for (let i = 0; i < headerRowArray.length; i++) {
       const header = headerRowArray[i];
       if (header.startsWith(HEADER_VERSION_PREFIX)) {
-        const numberString = header.replaceAll(HEADER_VERSION_PREFIX, "");
+        const numberString = header.replaceAll(HEADER_VERSION_PREFIX, '');
         const number = Number.parseInt(numberString);
         if (Number.isInteger(number)) {
           dataVersion = number;
@@ -48,62 +57,65 @@ export const validImportData = (data, allVersionValidArray) => {
       }
     }
   }
-  return { validResult: colCount == validArray.length, lackColumn: lackColumnMap.keys().toArray() };
-}
+  return {
+    validResult: colCount == validArray.length,
+    lackColumn: lackColumnMap.keys().toArray(),
+  };
+};
 
 const fillDataVersion = (obj, header) => {
   obj[`${HEADER_VERSION_PREFIX}${header.length - 1}`] = null;
-}
+};
 
 export const JOB_FILE_HEADER = [
   [
-    "职位自编号",
-    "发布平台",
-    "职位访问地址",
-    "职位",
-    "公司",
-    "公司是否为全称",
-    "地区",
-    "地址",
-    "经度",
-    "纬度",
-    "职位描述",
-    "学历",
-    "所需经验",
-    "最低薪资",
-    "最高薪资",
-    "首次发布时间",
-    "招聘人",
-    "招聘公司",
-    "招聘者职位",
-    "首次扫描日期",
-    "记录更新日期",
+    '职位自编号',
+    '发布平台',
+    '职位访问地址',
+    '职位',
+    '公司',
+    '公司是否为全称',
+    '地区',
+    '地址',
+    '经度',
+    '纬度',
+    '职位描述',
+    '学历',
+    '所需经验',
+    '最低薪资',
+    '最高薪资',
+    '首次发布时间',
+    '招聘人',
+    '招聘公司',
+    '招聘者职位',
+    '首次扫描日期',
+    '记录更新日期',
   ],
   [
-    "职位自编号",
-    "发布平台",
-    "职位访问地址",
-    "职位",
-    "公司",
-    "公司是否为全称",
-    "地区",
-    "地址",
-    "经度",
-    "纬度",
-    "职位描述",
-    "学历",
-    "所需经验",
-    "技能",
-    "福利",
-    "最低薪资",
-    "最高薪资",
-    "首次发布时间",
-    "招聘人",
-    "招聘公司",
-    "招聘者职位",
-    "首次扫描日期",
-    "记录更新日期",
-  ]
+    '职位自编号',
+    '发布平台',
+    '职位访问地址',
+    '职位',
+    '公司',
+    '公司是否为全称',
+    '地区',
+    '地址',
+    '经度',
+    '纬度',
+    '职位描述',
+    '学历',
+    '所需经验',
+    '技能',
+    '福利',
+    '最低薪资',
+    '最高薪资',
+    '首次发布时间',
+    '招聘人',
+    '招聘公司',
+    '招聘者职位',
+    '首次扫描日期',
+    '记录更新日期',
+  ],
 ];
 
 export const jobDataToExcelJSONArray = (list) => {
@@ -140,7 +152,7 @@ export const jobDataToExcelJSONArray = (list) => {
     result.push(obj);
   }
   return result;
-}
+};
 
 export const jobExcelDataToObjectArray = (data) => {
   const jobList = [];
@@ -165,23 +177,25 @@ export const jobExcelDataToObjectArray = (data) => {
     item.jobSalaryMin = dataItem['最低薪资'];
     item.jobSalaryMax = dataItem['最高薪资'];
     item.jobSalaryTotalMonth = dataItem['几薪'];
-    item.jobFirstPublishDatetime = convertDateStringToDateObject(dataItem['首次发布时间']);
+    item.jobFirstPublishDatetime = convertDateStringToDateObject(
+      dataItem['首次发布时间']
+    );
     item.bossName = dataItem['招聘人'];
     item.bossCompanyName = dataItem['招聘公司'];
     item.bossPosition = dataItem['招聘者职位'];
-    item.createDatetime = convertDateStringToDateObject(dataItem['首次扫描日期']);
-    item.updateDatetime = convertDateStringToDateObject(dataItem['记录更新日期']);
+    item.createDatetime = convertDateStringToDateObject(
+      dataItem['首次扫描日期']
+    );
+    item.updateDatetime = convertDateStringToDateObject(
+      dataItem['记录更新日期']
+    );
     jobList.push(item);
   }
   return jobList;
-}
+};
 
 export const JOB_PUBLIC_FILE_HEADER = [
-  [
-    "职位自编号",
-    "首次扫描日期",
-    "记录更新日期",
-  ]
+  ['职位自编号', '首次扫描日期', '记录更新日期'],
 ];
 
 export const jobPublicDataToExcelJSONArray = (list) => {
@@ -197,7 +211,7 @@ export const jobPublicDataToExcelJSONArray = (list) => {
     result.push(obj);
   }
   return result;
-}
+};
 
 export const jobPublicExcelDataToObjectArray = (data) => {
   const jobList = [];
@@ -205,87 +219,93 @@ export const jobPublicExcelDataToObjectArray = (data) => {
     const dataItem = data[i];
     const item = new JobPublic();
     item.jobId = dataItem['职位自编号'];
-    item.createDatetime = convertDateStringToDateObject(dataItem['首次扫描日期']);
-    item.updateDatetime = convertDateStringToDateObject(dataItem['记录更新日期']);
+    item.createDatetime = convertDateStringToDateObject(
+      dataItem['首次扫描日期']
+    );
+    item.updateDatetime = convertDateStringToDateObject(
+      dataItem['记录更新日期']
+    );
     jobList.push(item);
   }
   return jobList;
-}
+};
 
 export const COMPANY_FILE_HEADER = [
   [
-    "公司",
-    "公司描述",
-    "成立时间",
-    "经营状态",
-    "法人",
-    "统一社会信用代码",
-    "官网",
-    "社保人数",
-    "自身风险数",
-    "关联风险数",
-    "地址",
-    "经营范围",
-    "纳税人识别号",
-    "所属行业",
-    "工商注册号",
-    "经度",
-    "纬度",
-    "数据来源地址",
-    "数据来源平台",
-    "数据来源记录编号",
-    "数据来源更新时间",
-  ], [
-    "公司",
-    "公司描述",
-    "成立时间",
-    "经营状态",
-    "法人",
-    "统一社会信用代码",
-    "官网",
-    "社保人数",
-    "自身风险数",
-    "关联风险数",
-    "地址",
-    "经营范围",
-    "纳税人识别号",
-    "所属行业",
-    "工商注册号",
-    "经度",
-    "纬度",
-    "数据来源地址",
-    "数据来源平台",
-    "数据来源记录编号",
-    "数据来源更新时间",
-    "记录创建日期",
-    "记录更新日期",
-  ], [
-    "公司",
-    "公司描述",
-    "成立时间",
-    "经营状态",
-    "法人",
-    "统一社会信用代码",
-    "官网",
-    "社保人数",
-    "自身风险数",
-    "关联风险数",
-    "地址",
-    "经营范围",
-    "纳税人识别号",
-    "所属行业",
-    "工商注册号",
-    "经度",
-    "纬度",
-    "注册资本",
-    "注册资本货币",
-    "数据来源地址",
-    "数据来源平台",
-    "数据来源记录编号",
-    "数据来源更新时间",
-    "记录创建日期",
-    "记录更新日期",
-  ]
+    '公司',
+    '公司描述',
+    '成立时间',
+    '经营状态',
+    '法人',
+    '统一社会信用代码',
+    '官网',
+    '社保人数',
+    '自身风险数',
+    '关联风险数',
+    '地址',
+    '经营范围',
+    '纳税人识别号',
+    '所属行业',
+    '工商注册号',
+    '经度',
+    '纬度',
+    '数据来源地址',
+    '数据来源平台',
+    '数据来源记录编号',
+    '数据来源更新时间',
+  ],
+  [
+    '公司',
+    '公司描述',
+    '成立时间',
+    '经营状态',
+    '法人',
+    '统一社会信用代码',
+    '官网',
+    '社保人数',
+    '自身风险数',
+    '关联风险数',
+    '地址',
+    '经营范围',
+    '纳税人识别号',
+    '所属行业',
+    '工商注册号',
+    '经度',
+    '纬度',
+    '数据来源地址',
+    '数据来源平台',
+    '数据来源记录编号',
+    '数据来源更新时间',
+    '记录创建日期',
+    '记录更新日期',
+  ],
+  [
+    '公司',
+    '公司描述',
+    '成立时间',
+    '经营状态',
+    '法人',
+    '统一社会信用代码',
+    '官网',
+    '社保人数',
+    '自身风险数',
+    '关联风险数',
+    '地址',
+    '经营范围',
+    '纳税人识别号',
+    '所属行业',
+    '工商注册号',
+    '经度',
+    '纬度',
+    '注册资本',
+    '注册资本货币',
+    '数据来源地址',
+    '数据来源平台',
+    '数据来源记录编号',
+    '数据来源更新时间',
+    '记录创建日期',
+    '记录更新日期',
+  ],
 ];
 
 export const companyDataToExcelJSONArray = (list) => {
@@ -323,7 +343,7 @@ export const companyDataToExcelJSONArray = (list) => {
     result.push(obj);
   }
   return result;
-}
+};
 
 export const companyExcelDataToObjectArray = (data, datetime) => {
   const companyBOList = [];
@@ -353,27 +373,23 @@ export const companyExcelDataToObjectArray = (data, datetime) => {
     item.sourceUrl = dataItem['数据来源地址'];
     item.sourcePlatform = dataItem['数据来源平台'];
     item.sourceRecordId = dataItem['数据来源记录编号'];
-    item.sourceRefreshDatetime = convertDateStringToDateObject(dataItem['数据来源更新时间']);
-    item.createDatetime = convertDateStringToDateObject(dataItem['记录创建日期']) ?? convertDateStringToDateObject(datetime);
-    item.updateDatetime = convertDateStringToDateObject(dataItem['记录更新日期']) ?? convertDateStringToDateObject(datetime);
+    item.sourceRefreshDatetime = convertDateStringToDateObject(
+      dataItem['数据来源更新时间']
+    );
+    item.createDatetime =
+      convertDateStringToDateObject(dataItem['记录创建日期']) ??
+      convertDateStringToDateObject(datetime);
+    item.updateDatetime =
+      convertDateStringToDateObject(dataItem['记录更新日期']) ??
+      convertDateStringToDateObject(datetime);
     companyBOList.push(item);
   }
   return companyBOList;
-}
+};
 
 export const COMPANY_COMMENT_FILE_HEADER = [
-  [
-    "公司",
-    "评论",
-  ],
-  [
-    "公司",
-    "评论",
-    "情感",
-    "数据集",
-    "创建日期",
-    "更新日期",
-  ]
+  ['公司', '评论'],
+  ['公司', '评论', '情感', '数据集', '创建日期', '更新日期'],
 ];
 
 export const companyCommentDataToExcelJSONArray = (list) => {
@@ -392,9 +408,13 @@ export const companyCommentDataToExcelJSONArray = (list) => {
     result.push(obj);
   }
   return result;
-}
+};
 
-export const companyCommentExcelDataToObjectArray = (data, datetime, { config } = {}) => {
+export const companyCommentExcelDataToObjectArray = (
+  data,
+  datetime,
+  { config } = {}
+) => {
   const result = [];
   for (let i = 0; i < data.length; i++) {
     const dataItem = data[i];
@@ -403,38 +423,35 @@ export const companyCommentExcelDataToObjectArray = (data, datetime, { config } 
     const emotion = dataItem['情感'] ?? convertEmotionFromText(config?.emotion);
     const sourceDataName = dataItem['数据集'] ?? config?.name;
     if (companyNameString && comment) {
-      const splitCompanyArray = companyNameString.split("\n");
+      const splitCompanyArray = companyNameString.split('\n');
       for (let n = 0; n < splitCompanyArray.length; n++) {
         const companyName = splitCompanyArray[n];
         if (companyName) {
           const item = new CompanyComment();
           item.companyName = companyName.trim();
           item.companyId = genIdByCompanyName(companyName);
-          item.comment = (comment + "").trim();
+          item.comment = (comment + '').trim();
           item.id = companyCommentGenId(item);
           item.emotion = emotion;
           item.sourceType = 0;
           item.sourceDataName = sourceDataName;
-          item.createDatetime = convertDateStringToDateObject(dataItem['创建日期']) ?? convertDateStringToDateObject(datetime);
-          item.updateDatetime = convertDateStringToDateObject(dataItem['更新日期']) ?? convertDateStringToDateObject(datetime);
+          item.createDatetime =
+            convertDateStringToDateObject(dataItem['创建日期']) ??
+            convertDateStringToDateObject(datetime);
+          item.updateDatetime =
+            convertDateStringToDateObject(dataItem['更新日期']) ??
+            convertDateStringToDateObject(datetime);
           result.push(item);
         }
       }
     }
   }
   return result;
-}
+};
 
 export const COMPANY_TAG_FILE_HEADER = [
-  [
-    "公司",
-    "标签",
-  ],
-  [
-    "公司",
-    "标签",
-    "记录更新日期",
-  ]
+  ['公司', '标签'],
+  ['公司', '标签', '记录更新日期'],
 ];
 
 export const companyTagDataToExcelJSONArrayForView = (list) => {
@@ -443,14 +460,14 @@ export const companyTagDataToExcelJSONArrayForView = (list) => {
     const item = list[i];
     const obj = {
       公司: item.companyName,
-      标签: Array.from(new Set(item.tagNameArray)).join(","),
+      标签: Array.from(new Set(item.tagNameArray)).join(','),
       记录更新日期: dateToStr(item.updateDatetime),
-    }
+    };
     fillDataVersion(obj, JOB_TAG_FILE_HEADER);
     result.push(obj);
   }
   return result;
-}
+};
 
 export const companyTagDataToExcelJSONArray = (list) => {
   const result = [];
@@ -465,7 +482,7 @@ export const companyTagDataToExcelJSONArray = (list) => {
     result.push(obj);
   }
   return result;
-}
+};
 
 export const companyTagExcelDataToObjectArray = (data, datetime) => {
   const companyTagBOList = [];
@@ -473,23 +490,18 @@ export const companyTagExcelDataToObjectArray = (data, datetime) => {
     const dataItem = data[i];
     const item = new CompanyTagBO();
     item.companyName = dataItem['公司'];
-    item.tags = dataItem['标签'].split(",");
-    item.updateDatetime = convertDateStringToDateObject(dataItem['记录更新日期']) ?? convertDateStringToDateObject(datetime);
+    item.tags = dataItem['标签'].split(',');
+    item.updateDatetime =
+      convertDateStringToDateObject(dataItem['记录更新日期']) ??
+      convertDateStringToDateObject(datetime);
     companyTagBOList.push(item);
   }
   return companyTagBOList;
-}
+};
 
 export const JOB_TAG_FILE_HEADER = [
-  [
-    "职位编号",
-    "标签",
-  ],
-  [
-    "职位编号",
-    "标签",
-    "记录更新日期",
-  ],
+  ['职位编号', '标签'],
+  ['职位编号', '标签', '记录更新日期'],
 ];
 
 export const jobTagDataToExcelJSONArrayForView = (list) => {
@@ -498,14 +510,14 @@ export const jobTagDataToExcelJSONArrayForView = (list) => {
     const item = list[i];
     const obj = {
       职位编号: item.jobId,
-      标签: Array.from(new Set(item.tagNameArray)).join(","),
+      标签: Array.from(new Set(item.tagNameArray)).join(','),
       记录更新日期: dateToStr(item.updateDatetime),
-    }
+    };
     fillDataVersion(obj, JOB_TAG_FILE_HEADER);
     result.push(obj);
   }
   return result;
-}
+};
 
 export const jobTagDataToExcelJSONArray = (list) => {
   const result = [];
@@ -515,12 +527,12 @@ export const jobTagDataToExcelJSONArray = (list) => {
       职位编号: item.jobId,
       标签: item.tagNameArray,
       记录更新日期: dateToStr(item.updateDatetime),
-    }
+    };
     fillDataVersion(obj, JOB_TAG_FILE_HEADER);
     result.push(obj);
   }
   return result;
-}
+};
 
 export const jobTagExcelDataToObjectArray = (data, datetime) => {
   const result = [];
@@ -528,26 +540,18 @@ export const jobTagExcelDataToObjectArray = (data, datetime) => {
     const dataItem = data[i];
     const item = new JobTagBO();
     item.jobId = dataItem['职位编号'];
-    item.tags = dataItem['标签'].split(",");
-    item.updateDatetime = convertDateStringToDateObject(dataItem['记录更新日期']) ?? convertDateStringToDateObject(datetime);
+    item.tags = dataItem['标签'].split(',');
+    item.updateDatetime =
+      convertDateStringToDateObject(dataItem['记录更新日期']) ??
+      convertDateStringToDateObject(datetime);
     result.push(item);
   }
   return result;
-}
-
+};
 
 export const JOB_SNAPSHOT_FILE_HEADER = [
-  [
-    "编号",
-    "职位编号",
-    "职位链接",
-    "内容",
-    "招聘平台",
-    "创建日期",
-    "更新日期",
-  ]
+  ['编号', '职位编号', '职位链接', '内容', '招聘平台', '创建日期', '更新日期'],
 ];
-
 
 export const jobSnapshotDataToJSONArray = (list) => {
   const result = [];
@@ -561,12 +565,12 @@ export const jobSnapshotDataToJSONArray = (list) => {
       招聘平台: item.platform,
       创建日期: item.createDatetime,
       更新日期: item.updateDatetime,
-    }
+    };
     fillDataVersion(obj, JOB_SNAPSHOT_FILE_HEADER);
     result.push(obj);
   }
   return result;
-}
+};
 
 export const jobSnapshotDataToObjectArray = (data, datetime) => {
   const result = [];
@@ -583,11 +587,11 @@ export const jobSnapshotDataToObjectArray = (data, datetime) => {
     result.push(item);
   }
   return result;
-}
+};
 
 export async function convertJsonObjectToExcelData(result) {
   const ws = utils.json_to_sheet(result);
   const wb = utils.book_new();
-  utils.book_append_sheet(wb, ws, "Data");
-  return writeXLSX(wb, { type: "buffer" });
+  utils.book_append_sheet(wb, ws, 'Data');
+  return writeXLSX(wb, { type: 'buffer' });
 }

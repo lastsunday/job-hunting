@@ -1,15 +1,19 @@
-import { postErrorMessage, postSuccessMessage } from "@/common/extension/worker/util";
-import { debugLog, errorLog, infoLog, isDebug } from "@/common/log";
-import { convertEmptyStringToNull, toHump, toLine } from "@/common/utils";
-import dayjs from "dayjs";
-import { getChangeLogList, initChangeLog } from "./changeLog";
-import { ChangeLogV1 } from "./changeLog/changeLogV1";
+import {
+  postErrorMessage,
+  postSuccessMessage,
+} from '@/common/extension/worker/util';
+import { debugLog, errorLog, infoLog, isDebug } from '@/common/log';
+import { convertEmptyStringToNull, toHump, toLine } from '@/common/utils';
+import dayjs from 'dayjs';
+import { getChangeLogList, initChangeLog } from './changeLog';
+import { ChangeLogV1 } from './changeLog/changeLogV1';
 import { ChangeLogV10 } from './changeLog/changeLogV10';
 import { ChangeLogV11 } from './changeLog/changeLogV11';
 import { ChangeLogV12 } from './changeLog/changeLogV12';
 import { ChangeLogV13 } from './changeLog/changeLogV13';
 import { ChangeLogV14 } from './changeLog/changeLogV14';
-import { ChangeLogV2 } from "./changeLog/changeLogV2";
+import { ChangeLogV15 } from './changeLog/changeLogV15';
+import { ChangeLogV2 } from './changeLog/changeLogV2';
 import { ChangeLogV3 } from './changeLog/changeLogV3';
 import { ChangeLogV4 } from './changeLog/changeLogV4';
 import { ChangeLogV5 } from './changeLog/changeLogV5';
@@ -18,24 +22,24 @@ import { ChangeLogV7 } from './changeLog/changeLogV7';
 import { ChangeLogV8 } from './changeLog/changeLogV8';
 import { ChangeLogV9 } from './changeLog/changeLogV9';
 
-import { isDevEnv } from "@/common";
-import { ENABLE_SQL_AUTO_EXPLAIN } from "@/common/config";
+import { isDevEnv } from '@/common';
+import { ENABLE_SQL_AUTO_EXPLAIN } from '@/common/config';
 import { PGlite } from '@electric-sql/pglite';
 import { auto_explain } from '@electric-sql/pglite/contrib/auto_explain';
-import { pgDump } from '@electric-sql/pglite-tools/pg_dump'
-import { zipFileToBlob, unzipAdvanceFileToText } from "@/common/zip";
+import { pgDump } from '@electric-sql/pglite-tools/pg_dump';
+import { zipFileToBlob, unzipAdvanceFileToText } from '@/common/zip';
 
-const DATA_DIR = "data";
-const JOB_DIR = "job";
-const JOB_DB_PATH = "/" + DATA_DIR + "/" + JOB_DIR + "/";
-const DUMP_FILE_NAME = "db.sql";
+const DATA_DIR = 'data';
+const JOB_DIR = 'job';
+const JOB_DB_PATH = '/' + DATA_DIR + '/' + JOB_DIR + '/';
+const DUMP_FILE_NAME = 'db.sql';
 let db;
 let initializing = false;
 let recoveryMode = false;
 
 export async function getDb({ dataDir } = {}) {
   if (recoveryMode) {
-    throw "get database error while current database in recovery mode";
+    throw 'get database error while current database in recovery mode';
   }
   return await Database.innerInit({ dataDir });
 }
@@ -82,18 +86,43 @@ export function genFullSelectSQL(obj, tableName) {
     const key = keys[n];
     column.push(toLine(key));
   }
-  return `SELECT ${column.join(",")} FROM ${tableName}`;
+  return `SELECT ${column.join(',')} FROM ${tableName}`;
 }
 
 export function genFullSelectByIdSQL(obj, tableName, idColumnName, id) {
   return `${genFullSelectSQL(obj, tableName)} WHERE ${idColumnName} = '${id}'`;
 }
 
-export async function batchInsert(obj, tableName, params, { overrideCreateDatetime = false, overrideUpdateDatetime = false, connection = null } = {}) {
-  return batchInsertOrReplace(obj, tableName, null, params, { replace: false, overrideCreateDatetime, overrideUpdateDatetime, connection })
+export async function batchInsert(
+  obj,
+  tableName,
+  params,
+  {
+    overrideCreateDatetime = false,
+    overrideUpdateDatetime = false,
+    connection = null,
+  } = {}
+) {
+  return batchInsertOrReplace(obj, tableName, null, params, {
+    replace: false,
+    overrideCreateDatetime,
+    overrideUpdateDatetime,
+    connection,
+  });
 }
 
-export async function batchInsertOrReplace(obj, tableName, tableIdColumn, params, { replace = true, overrideCreateDatetime = false, overrideUpdateDatetime = false, connection = null } = {}) {
+export async function batchInsertOrReplace(
+  obj,
+  tableName,
+  tableIdColumn,
+  params,
+  {
+    replace = true,
+    overrideCreateDatetime = false,
+    overrideUpdateDatetime = false,
+    connection = null,
+  } = {}
+) {
   connection ??= await getDb();
   if (params && params.length > 0) {
     //https://www.sqlite.org/limits.html
@@ -102,7 +131,9 @@ export async function batchInsertOrReplace(obj, tableName, tableIdColumn, params
     //在PGlite里暂时先借用该规则，这数值不一定合理。
     const maxVarLength = 32766;
     const paramVarLength = Object.keys(obj).length;
-    const maxRecordCountForOneExec = Number.parseInt(maxVarLength / paramVarLength);
+    const maxRecordCountForOneExec = Number.parseInt(
+      maxVarLength / paramVarLength
+    );
     const recordTotal = params.length;
     let count = Number.parseInt(recordTotal / maxRecordCountForOneExec);
     const modCount = recordTotal % maxRecordCountForOneExec;
@@ -117,17 +148,34 @@ export async function batchInsertOrReplace(obj, tableName, tableIdColumn, params
         end = recordTotal;
       }
       const rangeParam = params.slice(start, end);
-      const batchInsertOrReplaceSQL = genRawBatchFullInsertOrReplaceSQL(obj, tableName, tableIdColumn, rangeParam, { replace, overrideCreateDatetime });
+      const batchInsertOrReplaceSQL = genRawBatchFullInsertOrReplaceSQL(
+        obj,
+        tableName,
+        tableIdColumn,
+        rangeParam,
+        { replace, overrideCreateDatetime }
+      );
       if (isDebug()) {
-        debugLog(`[database] [batchInsertOrReplace] batchInsertOrReplaceSQL = ${batchInsertOrReplaceSQL}`)
+        debugLog(
+          `[database] [batchInsertOrReplace] batchInsertOrReplaceSQL = ${batchInsertOrReplaceSQL}`
+        );
       }
-      const bindValue = genInsertValueBindValue(obj, rangeParam, { overrideCreateDatetime, overrideUpdateDatetime });
+      const bindValue = genInsertValueBindValue(obj, rangeParam, {
+        overrideCreateDatetime,
+        overrideUpdateDatetime,
+      });
       await connection.query(batchInsertOrReplaceSQL, bindValue);
     }
   }
 }
 
-export function genRawBatchFullInsertOrReplaceSQL(obj, tableName, tableIdColumn, params, { replace = true, overrideCreateDatetime = false } = {}) {
+export function genRawBatchFullInsertOrReplaceSQL(
+  obj,
+  tableName,
+  tableIdColumn,
+  params,
+  { replace = true, overrideCreateDatetime = false } = {}
+) {
   const column = [];
   const keys = Object.keys(obj);
   for (let n = 0; n < keys.length; n++) {
@@ -135,23 +183,37 @@ export function genRawBatchFullInsertOrReplaceSQL(obj, tableName, tableIdColumn,
     column.push(toLine(key));
   }
   const valuesSql = genInsertValueSQL(obj, params);
-  const updateSql = replace ? genUpdateValueSQL(obj, tableIdColumn, { overrideCreateDatetime }) : '';
-  return `INSERT INTO ${tableName} (${column.join(",")}) VALUES ${valuesSql} ${updateSql}`;
+  const updateSql = replace
+    ? genUpdateValueSQL(obj, tableIdColumn, { overrideCreateDatetime })
+    : '';
+  return `INSERT INTO ${tableName} (${column.join(
+    ','
+  )}) VALUES ${valuesSql} ${updateSql}`;
 }
 
-function genUpdateValueSQL(obj, tableIdColumn, { overrideCreateDatetime = false } = {}) {
+function genUpdateValueSQL(
+  obj,
+  tableIdColumn,
+  { overrideCreateDatetime = false } = {}
+) {
   const updateColumns = [];
   const keys = Object.keys(obj);
   for (let i = 0; i < keys.length; i++) {
     const key = toLine(keys[i]);
-    if (key != "create_datetime" || overrideCreateDatetime) {
+    if (key != 'create_datetime' || overrideCreateDatetime) {
       updateColumns.push(`${toLine(key)} = EXCLUDED.${key}`);
     }
   }
-  return `ON CONFLICT (${tableIdColumn}) DO UPDATE SET ${updateColumns.join(",")}`
+  return `ON CONFLICT (${tableIdColumn}) DO UPDATE SET ${updateColumns.join(
+    ','
+  )}`;
 }
 
-function genInsertValueBindValue(obj, params, { overrideCreateDatetime = false, overrideUpdateDatetime = false } = {}) {
+function genInsertValueBindValue(
+  obj,
+  params,
+  { overrideCreateDatetime = false, overrideUpdateDatetime = false } = {}
+) {
   const now = new Date();
   const values = [];
   const keys = Object.keys(obj);
@@ -159,13 +221,13 @@ function genInsertValueBindValue(obj, params, { overrideCreateDatetime = false, 
     const param = params[i];
     for (let n = 0; n < keys.length; n++) {
       const key = keys[n];
-      if (key == "createDatetime") {
+      if (key == 'createDatetime') {
         if (overrideCreateDatetime && param[`${key}`]) {
           values.push(`${dayjs(param[`${key}` ?? now]).format()}`);
         } else {
           values.push(`${dayjs(now).format()}`);
         }
-      } else if (key == "updateDatetime") {
+      } else if (key == 'updateDatetime') {
         if (overrideUpdateDatetime && param[`${key}`]) {
           values.push(`${dayjs(param[`${key}` ?? now]).format()}`);
         } else {
@@ -190,39 +252,55 @@ function genInsertValueSQL(obj, params) {
     for (let n = 0; n < keys.length; n++) {
       values.push(`$${i * keys.length + n + 1}`);
     }
-    insertValues.push(`(${values.join(",")})`);
+    insertValues.push(`(${values.join(',')})`);
   }
-  return insertValues.join(",");
+  return insertValues.join(',');
 }
 
-
-export async function one(entity, tableName, idColumn, id, { connection = null } = {}) {
+export async function one(
+  entity,
+  tableName,
+  idColumn,
+  id,
+  { connection = null } = {}
+) {
   const selectOneSql = genFullSelectByIdSQL(entity, tableName, idColumn, id);
   if (isDebug()) {
-    debugLog(`[database] [one] selectOneSql = ${selectOneSql}`)
+    debugLog(`[database] [one] selectOneSql = ${selectOneSql}`);
   }
   return await getOne(selectOneSql, [], entity, { connection });
 }
 
-export async function all(entity, tableName, orderBy, { connection = null } = {}) {
+export async function all(
+  entity,
+  tableName,
+  orderBy,
+  { connection = null } = {}
+) {
   let selectAllSql = genFullSelectSQL(entity, tableName);
   if (orderBy) {
-    selectAllSql += ` ORDER BY ${orderBy}`
+    selectAllSql += ` ORDER BY ${orderBy}`;
   }
   if (isDebug()) {
-    debugLog(`[database] [all] selectAllSql = ${selectAllSql}`)
+    debugLog(`[database] [all] selectAllSql = ${selectAllSql}`);
   }
-  return getAll(selectAllSql, [], entity, { connection })
+  return getAll(selectAllSql, [], entity, { connection });
 }
 
-export async function batchGet(obj, tableName, idColumnName, ids, { connection = null } = {}) {
+export async function batchGet(
+  obj,
+  tableName,
+  idColumnName,
+  ids,
+  { connection = null } = {}
+) {
   connection ??= await getDb();
   if (ids.length == 0) {
     return [];
   }
   const batchGetSql = genFullSelectByIdsSQL(obj, tableName, idColumnName, ids);
   if (isDebug()) {
-    debugLog(`[database] [batchGet] batchGetSql = ${batchGetSql}`)
+    debugLog(`[database] [batchGet] batchGetSql = ${batchGetSql}`);
   }
   const { rows } = await connection.query(batchGetSql);
   return convertRows(rows);
@@ -230,53 +308,76 @@ export async function batchGet(obj, tableName, idColumnName, ids, { connection =
 
 export function genFullSelectByIdsSQL(obj, tableName, idColumnName, ids) {
   const idsString = "'" + ids.join("','") + "'";
-  return `${genFullSelectSQL(obj, tableName)} WHERE ${idColumnName} in (${idsString})`;
+  return `${genFullSelectSQL(
+    obj,
+    tableName
+  )} WHERE ${idColumnName} in (${idsString})`;
 }
 
-export async function del(tableName, idColumn, id, { otherCondition = null, connection = null } = {}) {
+export async function del(
+  tableName,
+  idColumn,
+  id,
+  { otherCondition = null, connection = null } = {}
+) {
   connection ??= await getDb();
-  const deleteSql = `DELETE FROM ${tableName} WHERE ${idColumn} = '${id}' ${otherCondition ? "AND " + otherCondition : ""}`;
+  const deleteSql = `DELETE FROM ${tableName} WHERE ${idColumn} = '${id}' ${
+    otherCondition ? 'AND ' + otherCondition : ''
+  }`;
   if (isDebug()) {
-    debugLog(`[database] [del] deleteSql = ${deleteSql}`)
+    debugLog(`[database] [del] deleteSql = ${deleteSql}`);
   }
   return await connection.exec(deleteSql);
 }
 
-export async function batchDel(tableName, idColumn, ids, { otherCondition = null, connection = null } = {}) {
+export async function batchDel(
+  tableName,
+  idColumn,
+  ids,
+  { otherCondition = null, connection = null } = {}
+) {
   connection ??= await getDb();
   const idsString = "'" + ids.join("','") + "'";
-  const deleteSql = `DELETE FROM ${tableName} WHERE ${idColumn} in (${idsString}) ${otherCondition ? "AND " + otherCondition : ""}`;
+  const deleteSql = `DELETE FROM ${tableName} WHERE ${idColumn} in (${idsString}) ${
+    otherCondition ? 'AND ' + otherCondition : ''
+  }`;
   if (isDebug()) {
-    debugLog(`[database] [batchDel] deleteSql = ${deleteSql}`)
+    debugLog(`[database] [batchDel] deleteSql = ${deleteSql}`);
   }
   return await connection.exec(deleteSql);
 }
 
-export async function search(entity, tableName, param, whereConditionFunction, { connection = null } = {}) {
+export async function search(
+  entity,
+  tableName,
+  param,
+  whereConditionFunction,
+  { connection = null } = {}
+) {
   connection ??= await getDb();
-  let sqlQuery = "";
-  let whereCondition = "";
+  let sqlQuery = '';
+  let whereCondition = '';
   if (whereConditionFunction) {
     whereCondition += whereConditionFunction(param);
   }
-  if (whereCondition.startsWith(" AND")) {
-    whereCondition = whereCondition.replace("AND", "");
-    whereCondition = " WHERE " + whereCondition;
+  if (whereCondition.startsWith(' AND')) {
+    whereCondition = whereCondition.replace('AND', '');
+    whereCondition = ' WHERE ' + whereCondition;
   }
-  let orderBy = "";
+  let orderBy = '';
   if (param.orderByColumn != null && param.orderBy != null) {
     orderBy =
-      " ORDER BY " +
+      ' ORDER BY ' +
       toLine(param.orderByColumn) +
-      " " +
+      ' ' +
       param.orderBy +
-      " NULLS LAST";
+      ' NULLS LAST';
   }
   let limit = '';
   if (param.pageNum != null && param.pageSize != null) {
     const limitStart = (param.pageNum - 1) * param.pageSize;
     const limitEnd = param.pageSize;
-    limit = " limit " + limitEnd + " OFFSET " + limitStart;
+    limit = ' limit ' + limitEnd + ' OFFSET ' + limitStart;
   }
   const sqlSearchQuery = genFullSelectSQL(Object.assign({}, entity), tableName);
   sqlQuery += sqlSearchQuery;
@@ -298,17 +399,23 @@ export async function search(entity, tableName, param, whereConditionFunction, {
   return items;
 }
 
-export async function searchCount(entity, tableName, param, whereConditionFunction, { connection = null } = {}) {
+export async function searchCount(
+  entity,
+  tableName,
+  param,
+  whereConditionFunction,
+  { connection = null } = {}
+) {
   connection ??= await getDb();
-  let sqlCountSubTable = "";
+  let sqlCountSubTable = '';
   const sqlSearchQuery = genFullSelectSQL(Object.assign({}, entity), tableName);
-  let whereCondition = "";
+  let whereCondition = '';
   if (whereConditionFunction) {
     whereCondition += whereConditionFunction(param);
   }
-  if (whereCondition.startsWith(" AND")) {
-    whereCondition = whereCondition.replace("AND", "");
-    whereCondition = " WHERE " + whereCondition;
+  if (whereCondition.startsWith(' AND')) {
+    whereCondition = whereCondition.replace('AND', '');
+    whereCondition = ' WHERE ' + whereCondition;
   }
   sqlCountSubTable += sqlSearchQuery;
   sqlCountSubTable += whereCondition;
@@ -320,16 +427,24 @@ export async function searchCount(entity, tableName, param, whereConditionFuncti
 }
 
 /**
- * 
+ *
  * @param {string[]} param ids
  */
-export async function sort(tableName, idColumnName, param, { connection = null } = {}) {
+export async function sort(
+  tableName,
+  idColumnName,
+  param,
+  { connection = null } = {}
+) {
   const now = new Date();
   const nowDatetimeString = dayjs(now).format();
   connection ??= await getDb();
   if (param && param.length > 0) {
     param.forEach(async (id, index) => {
-      await connection.query(`UPDATE ${tableName} SET seq=$1,update_datetime=$2 WHERE ${idColumnName} = $3`, [index, nowDatetimeString, id]);
+      await connection.query(
+        `UPDATE ${tableName} SET seq=$1,update_datetime=$2 WHERE ${idColumnName} = $3`,
+        [index, nowDatetimeString, id]
+      );
     });
   }
 }
@@ -344,7 +459,7 @@ export const Database = {
     try {
       await Database.innerInit({ dataDir: param.dataDir });
     } catch (e) {
-      postErrorMessage(message, "init database error : " + e.message);
+      postErrorMessage(message, 'init database error : ' + e.message);
     }
     postSuccessMessage(message);
   },
@@ -357,7 +472,7 @@ export const Database = {
       if (!initializing) {
         try {
           initializing = true;
-          debugLog("Loading and initializing...");
+          debugLog('Loading and initializing...');
           const changelogList = [];
           changelogList.push(new ChangeLogV1());
           changelogList.push(new ChangeLogV2());
@@ -373,12 +488,13 @@ export const Database = {
           changelogList.push(new ChangeLogV12());
           changelogList.push(new ChangeLogV13());
           changelogList.push(new ChangeLogV14());
+          changelogList.push(new ChangeLogV15());
           initChangeLog(changelogList);
           await initDb({ dataDir });
-          debugLog("Done initializing. Running app...");
+          debugLog('Done initializing. Running app...');
           resolve(db);
         } catch (e) {
-          reject("init database error : " + e.message);
+          reject('init database error : ' + e.message);
         }
       } else {
         resolve(db);
@@ -392,10 +508,13 @@ export const Database = {
    */
   dbExport: async function (message, param) {
     try {
-      const file = await pgDump({ pg: await getDb() })
-      postSuccessMessage(message, URL.createObjectURL(await zipFileToBlob(DUMP_FILE_NAME, file)));
+      const file = await pgDump({ pg: await getDb() });
+      postSuccessMessage(
+        message,
+        URL.createObjectURL(await zipFileToBlob(DUMP_FILE_NAME, file))
+      );
     } catch (e) {
-      postErrorMessage(message, "[worker] dbExport error : " + e.message);
+      postErrorMessage(message, '[worker] dbExport error : ' + e.message);
     }
   },
 
@@ -406,14 +525,17 @@ export const Database = {
    */
   dbImport: async function (message, param) {
     try {
-      let blob = await fetch(param).then(r => r.blob());
-      let sqlText = await unzipAdvanceFileToText({ fileName: DUMP_FILE_NAME, file: blob });
+      let blob = await fetch(param).then((r) => r.blob());
+      let sqlText = await unzipAdvanceFileToText({
+        fileName: DUMP_FILE_NAME,
+        file: blob,
+      });
       await _dbDelete();
       let restoredPG = await PGlite.create(`opfs-ahp://${JOB_DB_PATH}`);
       await restoredPG.exec(sqlText);
       postSuccessMessage(message, {});
     } catch (e) {
-      postErrorMessage(message, "[worker] dbImport error : " + e.message);
+      postErrorMessage(message, '[worker] dbImport error : ' + e.message);
     }
   },
   dbClose: async function (message, param) {
@@ -421,10 +543,7 @@ export const Database = {
       await (await getDb()).close();
       postSuccessMessage(message, {});
     } catch (e) {
-      postErrorMessage(
-        message,
-        "[worker] dbClose error : " + e.message
-      );
+      postErrorMessage(message, '[worker] dbClose error : ' + e.message);
     }
   },
   dbDelete: async function (message, param) {
@@ -432,10 +551,7 @@ export const Database = {
       await _dbDelete();
       postSuccessMessage(message, {});
     } catch (e) {
-      postErrorMessage(
-        message,
-        "[worker] dbDelete error : " + e.message
-      );
+      postErrorMessage(message, '[worker] dbDelete error : ' + e.message);
     }
   },
   dbSize: async function (message, param) {
@@ -445,10 +561,7 @@ export const Database = {
       const total = rows[0].total;
       postSuccessMessage(message, { total });
     } catch (e) {
-      postErrorMessage(
-        message,
-        "[worker] dbSize error : " + e.message
-      );
+      postErrorMessage(message, '[worker] dbSize error : ' + e.message);
     }
   },
   dbSchemaVersion: async function (message, param) {
@@ -460,7 +573,7 @@ export const Database = {
     } catch (e) {
       postErrorMessage(
         message,
-        "[worker] dbSchemaVersion error : " + e.message
+        '[worker] dbSchemaVersion error : ' + e.message
       );
     }
   },
@@ -470,10 +583,7 @@ export const Database = {
       const { rows, fields, affectedRows } = await (await getDb()).query(sql);
       postSuccessMessage(message, { result: { rows, fields, affectedRows } });
     } catch (e) {
-      postErrorMessage(
-        message,
-        "[worker] dbExec error : " + e.message
-      );
+      postErrorMessage(message, '[worker] dbExec error : ' + e.message);
     }
   },
   dbGetAllTableName: async function (message, param) {
@@ -484,11 +594,10 @@ export const Database = {
     } catch (e) {
       postErrorMessage(
         message,
-        "[worker] dbGetAllTableName error : " + e.message
+        '[worker] dbGetAllTableName error : ' + e.message
       );
     }
-  }
-
+  },
 };
 
 const _dbDelete = async () => {
@@ -497,7 +606,7 @@ const _dbDelete = async () => {
   const root = await navigator.storage.getDirectory();
   const fileHandle = await root.getDirectoryHandle(DATA_DIR);
   await fileHandle.removeEntry(JOB_DIR, { recursive: true });
-}
+};
 
 /**
  *
@@ -517,7 +626,7 @@ const initDb = async function ({ dataDir = `opfs-ahp://${JOB_DB_PATH}` } = {}) {
   } else {
     db = new PGlite(dataDir);
   }
-  infoLog("[DB] schema checking...");
+  infoLog('[DB] schema checking...');
   const changelogList = getChangeLogList();
   let oldVersion = 0;
   const newVersion = changelogList.length;
@@ -529,7 +638,7 @@ const initDb = async function ({ dataDir = `opfs-ahp://${JOB_DB_PATH}` } = {}) {
         )
       `;
       await tx.exec(SQL_CREATE_TABLE_VERSION);
-      const SQL_QUERY_VERSION = "SELECT num FROM version";
+      const SQL_QUERY_VERSION = 'SELECT num FROM version';
       const result = await tx.query(SQL_QUERY_VERSION);
       const rows = result.rows;
       if (rows.length > 0) {
@@ -539,28 +648,31 @@ const initDb = async function ({ dataDir = `opfs-ahp://${JOB_DB_PATH}` } = {}) {
         await tx.query(SQL_INSERT_VERSION, [0]);
       }
       infoLog(
-        "[DB] schema oldVersion = " + oldVersion + ", newVersion = " + newVersion
+        '[DB] schema oldVersion = ' +
+          oldVersion +
+          ', newVersion = ' +
+          newVersion
       );
       if (newVersion > oldVersion) {
-        infoLog("[DB] schema upgrade start");
+        infoLog('[DB] schema upgrade start');
         for (let i = oldVersion; i < newVersion; i++) {
           const currentVersion = i + 1;
           const changelog = changelogList[i];
           const sqlList = changelog.getSqlList();
           infoLog(
-            "[DB] schema upgrade changelog version = " +
-            currentVersion +
-            ", sql total = " +
-            sqlList.length
+            '[DB] schema upgrade changelog version = ' +
+              currentVersion +
+              ', sql total = ' +
+              sqlList.length
           );
           for (let seq = 0; seq < sqlList.length; seq++) {
             infoLog(
-              "[DB] schema upgrade changelog version = " +
-              currentVersion +
-              ", execute sql = " +
-              (seq + 1) +
-              "/" +
-              sqlList.length
+              '[DB] schema upgrade changelog version = ' +
+                currentVersion +
+                ', execute sql = ' +
+                (seq + 1) +
+                '/' +
+                sqlList.length
             );
             const sql = sqlList[seq];
             await tx.exec(sql);
@@ -568,15 +680,15 @@ const initDb = async function ({ dataDir = `opfs-ahp://${JOB_DB_PATH}` } = {}) {
         }
         const SQL_UPDATE_VERSION = `UPDATE version SET num = $1`;
         await tx.query(SQL_UPDATE_VERSION, [newVersion]);
-        infoLog("[DB] schema upgrade finish to version = " + newVersion);
-        infoLog("[DB] current schema version = " + newVersion);
+        infoLog('[DB] schema upgrade finish to version = ' + newVersion);
+        infoLog('[DB] current schema version = ' + newVersion);
       } else {
-        infoLog("[DB] skip schema upgrade");
-        infoLog("[DB] current schema version = " + oldVersion);
+        infoLog('[DB] skip schema upgrade');
+        infoLog('[DB] current schema version = ' + oldVersion);
       }
     });
   } catch (e) {
-    errorLog("[DB] schema upgrade fail," + e.message);
+    errorLog('[DB] schema upgrade fail,' + e.message);
   }
 };
 
@@ -584,10 +696,10 @@ export function convertRows(rows) {
   const result = [];
   if (rows.length > 0) {
     const keys = Object.keys(rows[0]);
-    rows.forEach(item => {
+    rows.forEach((item) => {
       const obj = {};
-      keys.forEach(key => {
-        obj[toHump(key)] = item[key]
+      keys.forEach((key) => {
+        obj[toHump(key)] = item[key];
       });
       result.push(obj);
     });
