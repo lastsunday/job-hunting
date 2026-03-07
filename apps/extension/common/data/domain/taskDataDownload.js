@@ -5,6 +5,7 @@ export class TaskDataDownload {
   reponame;
   datetime;
   seq;
+  dataId;
   typeId;
   config;
   createDatetime;

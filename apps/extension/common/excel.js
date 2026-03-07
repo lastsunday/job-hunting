@@ -8,7 +8,6 @@ import {
   convertDateStringToDateObject,
   dateToStr,
   genIdFromText,
-  genSha256,
 } from './utils';
 import { utils, writeXLSX } from 'xlsx';
 import {
@@ -17,6 +16,20 @@ import {
   convertEmotionFromText,
 } from './data/domain/companyComment';
 import { genIdByCompanyName } from './data/domain/company';
+import {
+  TASK_TYPE_COMPANY_DATA_DOWNLOAD,
+  TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD,
+  TASK_TYPE_JOB_DATA_DOWNLOAD,
+  TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD,
+  TASK_TYPE_JOB_TAG_DATA_DOWNLOAD,
+  TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
+  TASK_TYPE_COMPANY_DATA_MERGE,
+  TASK_TYPE_COMPANY_TAG_DATA_MERGE,
+  TASK_TYPE_JOB_DATA_MERGE,
+  TASK_TYPE_JOB_PUBLIC_DATA_MERGE,
+  TASK_TYPE_JOB_TAG_DATA_MERGE,
+  TASK_TYPE_COMPANY_COMMENT_DATA_MERGE,
+} from '.';
 
 const HEADER_VERSION_PREFIX = '__VERSION_';
 
@@ -594,4 +607,40 @@ export async function convertJsonObjectToExcelData(result) {
   const wb = utils.book_new();
   utils.book_append_sheet(wb, ws, 'Data');
   return writeXLSX(wb, { type: 'buffer' });
+}
+
+export function getFileHeaderByTaskType(value) {
+  if (
+    value == TASK_TYPE_JOB_DATA_MERGE ||
+    value == TASK_TYPE_JOB_DATA_DOWNLOAD
+  ) {
+    return JOB_FILE_HEADER;
+  } else if (
+    value == TASK_TYPE_COMPANY_DATA_MERGE ||
+    value == TASK_TYPE_COMPANY_DATA_DOWNLOAD
+  ) {
+    return COMPANY_FILE_HEADER;
+  } else if (
+    value == TASK_TYPE_COMPANY_TAG_DATA_MERGE ||
+    value == TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD
+  ) {
+    return COMPANY_TAG_FILE_HEADER;
+  } else if (
+    value == TASK_TYPE_JOB_TAG_DATA_MERGE ||
+    value == TASK_TYPE_JOB_TAG_DATA_DOWNLOAD
+  ) {
+    return JOB_TAG_FILE_HEADER;
+  } else if (
+    value == TASK_TYPE_JOB_PUBLIC_DATA_MERGE ||
+    value == TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD
+  ) {
+    return JOB_PUBLIC_FILE_HEADER;
+  } else if (
+    value == TASK_TYPE_COMPANY_COMMENT_DATA_MERGE ||
+    value == TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD
+  ) {
+    return COMPANY_COMMENT_FILE_HEADER;
+  } else {
+    throw `unkonw file header for ${value}`;
+  }
 }

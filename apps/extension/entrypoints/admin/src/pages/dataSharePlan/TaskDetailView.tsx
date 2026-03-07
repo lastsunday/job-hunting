@@ -151,6 +151,10 @@ const TaskDetailView: React.FC = () => {
                   <div className="i-fluent-mdl2:date-time inline-flex" />
                   日期：{dateToStr(value.datetime, 'YYYY-MM-DD') ?? `N/A`}
                 </div>
+                <div>
+                  <div className="i-mdi:file inline-flex" />
+                  文件编号：<Text copyable>{value.dataId}</Text>
+                </div>
               </Col>
             ) : (
               <Col>
@@ -161,6 +165,14 @@ const TaskDetailView: React.FC = () => {
                 <div>
                   <div className="i-fluent-mdl2:date-time inline-flex" />
                   日期：{dateToStr(value.datetime, 'YYYY-MM-DD') ?? `N/A`}
+                </div>
+                <div>
+                  <div className="i-mdi:view-sequential inline-flex" />
+                  序号：{value.seq}
+                </div>
+                <div>
+                  <div className="i-mdi:file inline-flex" />
+                  文件编号：<Text copyable>{value.dataId}</Text>
                 </div>
               </Col>
             )
@@ -234,12 +246,27 @@ const TaskDetailView: React.FC = () => {
                   日期：{dateToStr(value.datetime, 'YYYY-MM-DD') ?? `N/A`}
                 </div>
                 <div>
-                  <div className="i-mdi:database-plus inline-flex" />
-                  数据量：{value.dataCount ?? 0}
-                </div>
-                <div>
                   <div className="i-mdi:file inline-flex" />
                   文件编号：<Text copyable>{value.dataId}</Text>
+                </div>
+                <div>
+                  {value.dataCount > 0 ? (
+                    <div>
+                      <div>
+                        <div className="i-mdi:database-arrow-up inline-flex" />
+                        数据页数：{value.dataPageNum}/
+                        {Math.ceil(value.dataCount / value.dataPageSize)}
+                      </div>
+                      <div>
+                        <div className="i-mdi:database-arrow-up inline-flex" />
+                        每页记录数：{value.dataPageSize}
+                      </div>
+                    </div>
+                  ) : null}
+                  <div>
+                    <div className="i-mdi:database-arrow-up inline-flex" />
+                    总数据量：{value.dataCount ?? 0}
+                  </div>
                 </div>
               </Col>
             )

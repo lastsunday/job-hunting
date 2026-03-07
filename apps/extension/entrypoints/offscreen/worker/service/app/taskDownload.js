@@ -22,61 +22,120 @@ import {
   TASK_TYPE_JOB_TAG_DATA_DOWNLOAD,
   TASK_TYPE_JOB_TAG_DATA_MERGE,
   TASK_TYPE_METADATA_DATA_DOWNLOAD,
-  TASK_TYPE_METADATA_DATA_MERGE
-} from "@/common";
-import { EXCEPTION } from "@/common/api/github";
-import { TASK_DATA_DOWNLOAD_MAX_DAY } from "@/common/config";
-import { SearchTaskDataDownloadBO } from "@/common/data/bo/searchTaskDataDownloadBO";
-import { File } from "@/common/data/domain/file";
-import { debugLog, errorLog, infoLog } from "@/common/log";
-import { dateToStr } from "@/common/utils";
-import { bytesToBase64 } from "@/common/utils/base64";
-import { parse } from "@/common/utils/date";
-import { shasum } from "@/common/utils/shasum";
-import dayjs from "dayjs";
-import { _queryLatestTaskDataDownload, _searchTaskDataDownload, _taskDataDownloadGetById } from "../taskDataDownloadService";
-import { _updateTaskStatus } from "../taskService";
-import { getPathByDatetime } from "./index";
-import { saveFileAndCalculateDataMergeTask, saveTask } from "./taskDownloadLogic";
-import { filterAndSortAscDateList, getFileData, getFileDataByUrl, queryRepoFileDateList } from "./taskLogic";
+  TASK_TYPE_METADATA_DATA_MERGE,
+  getFileMaxRecordCountByTaskType,
+} from '@/common';
+import { EXCEPTION } from '@/common/api/github';
+import { TASK_DATA_DOWNLOAD_MAX_DAY } from '@/common/config';
+import { SearchTaskDataDownloadBO } from '@/common/data/bo/searchTaskDataDownloadBO';
+import { File } from '@/common/data/domain/file';
+import { debugLog, errorLog, infoLog } from '@/common/log';
+import { dateToStr } from '@/common/utils';
+import { bytesToBase64 } from '@/common/utils/base64';
+import { parse } from '@/common/utils/date';
+import { shasum } from '@/common/utils/shasum';
+import dayjs from 'dayjs';
+import {
+  _queryLatestTaskDataDownload,
+  _searchTaskDataDownload,
+  _taskDataDownloadGetById,
+} from '../taskDataDownloadService';
+import { _updateTaskStatus } from '../taskService';
+import { getPathByDatetime } from './index';
+import {
+  saveFileAndCalculateDataMergeTask,
+  saveTask,
+} from './taskDownloadLogic';
+import {
+  filterAndSortAscDateList,
+  getFileData,
+  getFileDataByUrl,
+  queryRepoFileDateAndMaxSeqMap,
+} from './taskLogic';
+import { getBinaryExcelDataFromZipFile } from '@/common/zip';
+import { getFileHeaderByTaskType, validImportData } from '@/common/excel';
+import { read, utils } from 'xlsx';
+
 // Calculate
-export async function calculateDownloadTask({ userName, repoName, taskType, typeId, config, getTargetDay = async () => {
-  return dayjs();
-} }) {
+export async function calculateDownloadTask({
+  userName,
+  repoName,
+  taskType,
+  typeId,
+  config,
+  getTargetDay = async () => {
+    return dayjs();
+  },
+}) {
   const targetDay = await getTargetDay();
   if (isStandardDataDownloadType(taskType)) {
-    return await handleStandardDataCalcalate({ userName, repoName, taskType, targetDay });
+    return await handleStandardDataCalcalate({
+      userName,
+      repoName,
+      taskType,
+      targetDay,
+    });
   } else if (isDataSourceDataDownloadType(taskType)) {
-    return await handleStandardDataCalcalate({ userName, repoName, taskType, targetDay, config });
+    return await handleStandardDataCalcalate({
+      userName,
+      repoName,
+      taskType,
+      targetDay,
+      config,
+    });
   } else if (taskType == TASK_TYPE_METADATA_DATA_DOWNLOAD) {
     return await handleDataCalcalate({ taskType, targetDay, typeId, config });
   } else {
-    throw `unsupport download task taskType = ${taskType}`
+    throw `unsupport download task taskType = ${taskType}`;
   }
 }
 
-export async function handleStandardDataCalcalate({ userName, repoName, taskType, targetDay, config } = {}) {
+export async function handleStandardDataCalcalate({
+  userName,
+  repoName,
+  taskType,
+  targetDay,
+  config,
+} = {}) {
   const typeId = config?.name;
   const fileName = config?.fileName;
   const retentionDay = config?.retentionDay;
-  let repoAllFileDateList = [];
+  let repoAllFileDateStrAndMaxSeqMap = new Map();
   try {
-    repoAllFileDateList = await queryRepoFileDateList({ userName, repoName, taskType, fileName });
+    repoAllFileDateStrAndMaxSeqMap = await queryRepoFileDateAndMaxSeqMap({
+      userName,
+      repoName,
+      taskType,
+      fileName,
+    });
   } catch (e) {
     if (e == EXCEPTION.UNAUTHORIZED) {
-      infoLog(`[TASK DATA DOWNLOAD CALCULATE] repo(${userName}/${repoName}) taskType = ${taskType},${fileName ? `fileName = ${fileName}` : ""} not found or unauthorized `);
+      infoLog(
+        `[TASK DATA DOWNLOAD CALCULATE] repo(${userName}/${repoName}) taskType = ${taskType},${
+          fileName ? `fileName = ${fileName}` : ''
+        } not found or unauthorized `
+      );
     } else {
       throw e;
     }
     return false;
   }
-  const repoFilterAndSortAscDateList = filterAndSortAscDateList({ dateList: repoAllFileDateList, targetDay, retentionDay: retentionDay ?? TASK_DATA_DOWNLOAD_MAX_DAY });
+  const repoFilterAndSortAscDateList = filterAndSortAscDateList({
+    dateList: Array.from(repoAllFileDateStrAndMaxSeqMap.keys()).map(
+      (dateStr) => {
+        return parse(dateStr);
+      }
+    ),
+    targetDay,
+    retentionDay: retentionDay ?? TASK_DATA_DOWNLOAD_MAX_DAY,
+  });
   //查找缺失的日期
   //获得数据库区间时间范围的记录
   let endDatetimeForSearchTaskDownload = null;
   let startDatetimeForSearchTaskDownload = null;
   if (repoFilterAndSortAscDateList.length > 0) {
-    endDatetimeForSearchTaskDownload = repoFilterAndSortAscDateList[repoFilterAndSortAscDateList.length - 1];
+    endDatetimeForSearchTaskDownload =
+      repoFilterAndSortAscDateList[repoFilterAndSortAscDateList.length - 1];
     startDatetimeForSearchTaskDownload = repoFilterAndSortAscDateList[0];
     let searchParam = new SearchTaskDataDownloadBO();
     searchParam.userName = userName;
@@ -84,10 +143,12 @@ export async function handleStandardDataCalcalate({ userName, repoName, taskType
     searchParam.type = taskType;
     searchParam.typeId = typeId;
     searchParam.startDatetime = startDatetimeForSearchTaskDownload;
-    searchParam.endDatetime = endDatetimeForSearchTaskDownload.add(1, "day");
-    searchParam.orderByColumn = "createDatetime";
-    searchParam.orderBy = "ASC";
-    let taskDataDownloadResult = await _searchTaskDataDownload({ param: searchParam });
+    searchParam.endDatetime = endDatetimeForSearchTaskDownload.add(1, 'day');
+    searchParam.orderByColumn = 'createDatetime';
+    searchParam.orderBy = 'ASC';
+    let taskDataDownloadResult = await _searchTaskDataDownload({
+      param: searchParam,
+    });
     let taskDataDownloadMap = new Map();
     let taskDataDownloadResultItems = taskDataDownloadResult.items;
     if (taskDataDownloadResultItems.length > 0) {
@@ -98,32 +159,61 @@ export async function handleStandardDataCalcalate({ userName, repoName, taskType
     } else {
       //skip
     }
-    let filterDay = repoFilterAndSortAscDateList.filter(item => { return !taskDataDownloadMap.has(dateToStr(item)) });
-    infoLog(`[TASK DATA DOWNLOAD CALCULATE] filterDay length = ${filterDay.length} to add record`)
+    let filterDay = repoFilterAndSortAscDateList.filter((item) => {
+      return !taskDataDownloadMap.has(dateToStr(item));
+    });
+    infoLog(
+      `[TASK DATA DOWNLOAD CALCULATE] filterDay length = ${filterDay.length} to add record`
+    );
+
+    let datetimeAndSeqList = [];
+    for (let i = 0; i < filterDay.length; i++) {
+      let day = filterDay[i];
+      let maxSeq = repoAllFileDateStrAndMaxSeqMap.get(day.format('YYYY-MM-DD'));
+      datetimeAndSeqList.push({ day, maxSeq });
+    }
     //将缺失的日期任务添加到数据
     if (filterDay.length > 0) {
       try {
-        await saveTask({ type: taskType, datetimeList: filterDay, userName, repoName, typeId, config })
-        infoLog(`[TASK DATA DOWNLOAD CALCULATE] save task ${userName}/${repoName},${taskType},length = ${filterDay.length}`);
+        await saveTask({
+          type: taskType,
+          datetimeAndSeqList,
+          userName,
+          repoName,
+          typeId,
+          config,
+        });
+        infoLog(
+          `[TASK DATA DOWNLOAD CALCULATE] save task ${userName}/${repoName},${taskType},length = ${filterDay.length}`
+        );
         return true;
       } catch (e) {
         errorLog(e);
       }
     } else {
-      infoLog(`[TASK DATA DOWNLOAD CALCULATE] no newer record repo(${userName}/${repoName}) taskType = ${taskType}`);
+      infoLog(
+        `[TASK DATA DOWNLOAD CALCULATE] no newer record repo(${userName}/${repoName}) taskType = ${taskType}`
+      );
     }
   } else {
-    infoLog(`[TASK DATA DOWNLOAD CALCULATE] has't match record repo(${userName}/${repoName}) taskType = ${taskType}`);
+    infoLog(
+      `[TASK DATA DOWNLOAD CALCULATE] has't match record repo(${userName}/${repoName}) taskType = ${taskType}`
+    );
   }
   return false;
 }
-export async function handleDataCalcalate({ taskType, targetDay, typeId, config } = {}) {
-  const today = targetDay.startOf("day");
+export async function handleDataCalcalate({
+  taskType,
+  targetDay,
+  typeId,
+  config,
+} = {}) {
+  const today = targetDay.startOf('day');
   const latestTaskDataDownload = await _queryLatestTaskDataDownload({
     param: {
       typeId,
       datetime: today,
-    }
+    },
   });
   let needAdd = false;
   let needUpdateCancelStatusTaskId = [];
@@ -135,24 +225,45 @@ export async function handleDataCalcalate({ taskType, targetDay, typeId, config 
       if (latestTaskDataDownload.length == 1) {
         //skip,the only item is today
       } else {
-        needUpdateCancelStatusTaskId.push(...latestTaskDataDownload.slice(1, latestTaskDataDownload.length).map(item => item.id));
+        needUpdateCancelStatusTaskId.push(
+          ...latestTaskDataDownload
+            .slice(1, latestTaskDataDownload.length)
+            .map((item) => item.id)
+        );
       }
     } else {
       needAdd = true;
-      needUpdateCancelStatusTaskId.push(...latestTaskDataDownload.slice(0, latestTaskDataDownload.length).map(item => item.id));
+      needUpdateCancelStatusTaskId.push(
+        ...latestTaskDataDownload
+          .slice(0, latestTaskDataDownload.length)
+          .map((item) => item.id)
+      );
     }
   }
   if (needUpdateCancelStatusTaskId.length > 0) {
-    await _updateTaskStatus({ param: { id: needUpdateCancelStatusTaskId, status: TASK_STATUS_CANCEL } })
-    infoLog(`[TASK DATA DOWNLOAD CALCULATE] update task status for cancel taskType = ${taskType},typeId = ${typeId},task ids = ${needUpdateCancelStatusTaskId}`);
+    await _updateTaskStatus({
+      param: { id: needUpdateCancelStatusTaskId, status: TASK_STATUS_CANCEL },
+    });
+    infoLog(
+      `[TASK DATA DOWNLOAD CALCULATE] update task status for cancel taskType = ${taskType},typeId = ${typeId},task ids = ${needUpdateCancelStatusTaskId}`
+    );
   }
   if (needAdd) {
-    await saveTask({ type: taskType, datetimeList: [today], typeId, config });
-    infoLog(`[TASK DATA DOWNLOAD CALCULATE] save task taskType = ${taskType},typeId = ${typeId}, datetime = ${today}`);
+    await saveTask({
+      type: taskType,
+      datetimeAndSeqList: [{ day: today, maxSeq: 1 }],
+      typeId,
+      config,
+    });
+    infoLog(
+      `[TASK DATA DOWNLOAD CALCULATE] save task taskType = ${taskType},typeId = ${typeId}, datetime = ${today}`
+    );
   }
   const result = needUpdateCancelStatusTaskId.length > 0 || needAdd;
   if (!result) {
-    infoLog(`[TASK DATA DOWNLOAD CALCULATE] sikp task taskType = ${taskType},typeId = ${typeId}, datetime = ${today}`);
+    infoLog(
+      `[TASK DATA DOWNLOAD CALCULATE] sikp task taskType = ${taskType},typeId = ${typeId}, datetime = ${today}`
+    );
   }
   return result;
 }
@@ -160,36 +271,74 @@ export async function handleDataCalcalate({ taskType, targetDay, typeId, config 
 // Handle
 export function setup(handleMap) {
   handleMap.set(TASK_TYPE_JOB_DATA_DOWNLOAD, async (dataId) => {
-    return downloadDataByDataId(dataId, DATA_TYPE_NAME_JOB, TASK_TYPE_JOB_DATA_MERGE);
-  })
+    return downloadDataByDataId(
+      dataId,
+      DATA_TYPE_NAME_JOB,
+      TASK_TYPE_JOB_DATA_MERGE
+    );
+  });
   handleMap.set(TASK_TYPE_COMPANY_DATA_DOWNLOAD, async (dataId) => {
-    return downloadDataByDataId(dataId, DATA_TYPE_NAME_COMPANY, TASK_TYPE_COMPANY_DATA_MERGE);
-  })
+    return downloadDataByDataId(
+      dataId,
+      DATA_TYPE_NAME_COMPANY,
+      TASK_TYPE_COMPANY_DATA_MERGE
+    );
+  });
   handleMap.set(TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD, async (dataId) => {
-    return downloadDataByDataId(dataId, DATA_TYPE_NAME_COMPANY_TAG, TASK_TYPE_COMPANY_TAG_DATA_MERGE);
-  })
+    return downloadDataByDataId(
+      dataId,
+      DATA_TYPE_NAME_COMPANY_TAG,
+      TASK_TYPE_COMPANY_TAG_DATA_MERGE
+    );
+  });
   handleMap.set(TASK_TYPE_JOB_TAG_DATA_DOWNLOAD, async (dataId) => {
-    return downloadDataByDataId(dataId, DATA_TYPE_NAME_JOB_TAG, TASK_TYPE_JOB_TAG_DATA_MERGE);
-  })
+    return downloadDataByDataId(
+      dataId,
+      DATA_TYPE_NAME_JOB_TAG,
+      TASK_TYPE_JOB_TAG_DATA_MERGE
+    );
+  });
   handleMap.set(TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD, async (dataId) => {
-    return downloadDataByDataId(dataId, DATA_TYPE_NAME_JOB_PUBLIC, TASK_TYPE_JOB_PUBLIC_DATA_MERGE);
-  })
+    return downloadDataByDataId(
+      dataId,
+      DATA_TYPE_NAME_JOB_PUBLIC,
+      TASK_TYPE_JOB_PUBLIC_DATA_MERGE
+    );
+  });
   handleMap.set(TASK_TYPE_METADATA_DATA_DOWNLOAD, async (dataId) => {
     return downloadDataByDataId(dataId, null, TASK_TYPE_METADATA_DATA_MERGE);
-  })
+  });
   handleMap.set(TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD, async (dataId) => {
-    return downloadDataByDataId(dataId, null, TASK_TYPE_COMPANY_COMMENT_DATA_MERGE);
-  })
+    return downloadDataByDataId(
+      dataId,
+      null,
+      TASK_TYPE_COMPANY_COMMENT_DATA_MERGE
+    );
+  });
 }
 
-export async function downloadDataByDataId(dataId, dataTypeName, taskType, { getTargetDay = async () => {
-  return dayjs();
-} } = {}) {
+export async function downloadDataByDataId(
+  dataId,
+  dataTypeName,
+  taskType,
+  {
+    getTargetDay = async () => {
+      return dayjs();
+    },
+  } = {}
+) {
   const targetDay = await getTargetDay();
   if (isStandardDataMergeType(taskType)) {
-    return await handleDownloadStandardDataByDataId(dataId, dataTypeName, taskType, { targetDay });
+    return await handleDownloadStandardDataByDataId(
+      dataId,
+      dataTypeName,
+      taskType,
+      { targetDay }
+    );
   } else if (isDataSourceDataMergeType(taskType)) {
-    return await handleDownloadStandardDataByDataId(dataId, null, taskType, { targetDay });
+    return await handleDownloadStandardDataByDataId(dataId, null, taskType, {
+      targetDay,
+    });
   } else {
     return await handleDownloadDataByDataId(dataId, taskType);
   }
@@ -209,71 +358,139 @@ export async function handleDownloadDataByDataId(dataId, taskType) {
       const file = new File();
       file.name = filePath;
       file.sha = await shasum(fileData);
-      file.encoding = "base64"
+      file.encoding = 'base64';
       file.content = bytesToBase64(fileData);
       file.size = fileData.byteLength;
-      file.type = "file";
-      await saveFileAndCalculateDataMergeTask({ taskType, file, datetime, typeId });
+      file.type = 'file';
+      await saveFileAndCalculateDataMergeTask({
+        downloadTaskId: taskData.id,
+        taskType,
+        file,
+        datetime,
+        typeId,
+      });
       return null;
     } catch (e) {
       if (e == EXCEPTION.NOT_FOUND) {
-        debugLog(`[TASK DOWNLOAD DATA] file not exists ${url}/${filePath}`)
+        debugLog(`[TASK DOWNLOAD DATA] file not exists ${url}/${filePath}`);
         return `file not exists ${url}/${filePath}`;
       } else {
         throw e;
       }
     }
   } else {
-    throw "config url or path not exists";
+    throw 'config url or path not exists';
   }
 }
 
-export async function handleDownloadStandardDataByDataId(dataId, dataTypeName, taskType, { targetDay } = {}) {
+export async function handleDownloadStandardDataByDataId(
+  dataId,
+  dataTypeName,
+  taskType,
+  { targetDay } = {}
+) {
   let taskData = await _taskDataDownloadGetById({ param: dataId });
   let userName = taskData.username;
   let repoName = taskData.reponame;
   let datetime = taskData.datetime;
+  let seq = taskData.seq;
   const config = taskData.config;
-  const actualFileName = dataTypeName ?? config?.fileName;
-  infoLog(`[TASK DOWNLOAD DATA] file name = ${actualFileName}`);
-  if (!actualFileName) {
+  const fileSeqStr = seq > 0 ? `_${seq}` : ``;
+  const sourceFileName = dataTypeName ?? config?.fileName;
+  const fileName = sourceFileName + fileSeqStr;
+  infoLog(`[TASK DOWNLOAD DATA] file name = ${fileName}`);
+  if (!fileName) {
     throw `can't find fileName,dataId = ${dataId}, taskType = ${taskType}`;
   }
-  const path = getPathByDatetime({ datetime }) + `/${actualFileName}.zip`;
+  const path = getPathByDatetime({ datetime }) + `/${fileName}.zip`;
   try {
     try {
-      infoLog(`[TASK DOWNLOAD DATA] get file from ${userName}.${repoName}.${path}`);
-      const fileData = await getFileData({ userName, repoName, filePath: path });
+      infoLog(
+        `[TASK DOWNLOAD DATA] get file from ${userName}.${repoName}.${path}`
+      );
+      const fileData = await getFileData({
+        userName,
+        repoName,
+        filePath: path,
+      });
+      const fileHeader = getFileHeaderByTaskType(taskType);
+      let excelFileBufferData = await getBinaryExcelDataFromZipFile(
+        fileData,
+        sourceFileName
+      );
+      let wb = read(excelFileBufferData, { type: 'buffer', cellDates: true });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      let data = utils.sheet_to_json(sheet, {
+        header: 1,
+        UTC: true,
+      });
+      // -1 remove header row
+      let total = data.length - 1;
+      let validResultObject = validImportData(data, fileHeader);
+      if (!validResultObject.validResult) {
+        infoLog(
+          `[TASK DOWNLOAD DATA] valid file name = ${file.name}, id = ${file.id} failure`
+        );
+        return `文件校验失败，缺少数据列(${
+          validResultObject.lackColumn.length
+        }):${validResultObject.lackColumn.join(',')}`;
+      }
       const file = new File();
-      file.name = `${actualFileName}.zip`;
+      file.name = `${fileName}.zip`;
       file.sha = await shasum(fileData);
-      file.encoding = "base64"
+      file.encoding = 'base64';
       file.content = bytesToBase64(fileData);
       file.size = fileData.byteLength;
-      file.type = "file";
-      await saveFileAndCalculateDataMergeTask({ userName, repoName, taskType, file, datetime, config });
+      file.type = 'file';
+      let pageSize = getFileMaxRecordCountByTaskType(taskType);
+      let totalPage = Math.ceil(total / pageSize);
+      totalPage = totalPage <= 1 ? 1 : totalPage;
+      for (let pageNum = 1; pageNum <= totalPage; pageNum++) {
+        await saveFileAndCalculateDataMergeTask({
+          downloadTaskId: taskData.id,
+          userName,
+          repoName,
+          taskType,
+          file,
+          datetime,
+          config,
+          pageNum,
+          pageSize,
+          total,
+        });
+      }
       return null;
     } catch (e) {
       throw e;
     }
   } catch (e) {
     if (e == EXCEPTION.NOT_FOUND) {
-      debugLog(`[TASK DOWNLOAD DATA]file not exists ${userName}.${repoName}.${path}`)
+      debugLog(
+        `[TASK DOWNLOAD DATA]file not exists ${userName}.${repoName}.${path}`
+      );
       //文件不存在
       //判断文件日期距离今日零点是否已超过一天
       //如果超过，则将通过任务
       //如果未超过则报错，使得其可以继续查询
       const ONE_DAY_OFFSET = 86400000;
       let now = targetDay;
-      const fileDatetime = parse(datetime)
+      const fileDatetime = parse(datetime);
       const offset = now.valueOf() - fileDatetime.valueOf();
       if (offset >= ONE_DAY_OFFSET) {
         //skip
-        debugLog(`[TASK DOWNLOAD DATA] file ${userName}.${repoName}.${path} datetime = ${datetime} before now = ${dateToStr(now)} more than 1 day`)
-        debugLog(`[TASK DOWNLOAD DATA] file ${userName}.${repoName}.${path} never upload`)
+        debugLog(
+          `[TASK DOWNLOAD DATA] file ${userName}.${repoName}.${path} datetime = ${datetime} before now = ${dateToStr(
+            now
+          )} more than 1 day`
+        );
+        debugLog(
+          `[TASK DOWNLOAD DATA] file ${userName}.${repoName}.${path} never upload`
+        );
         return `file ${userName}.${repoName}.${path} never upload`;
       } else {
-        debugLog(`[TASK DOWNLOAD DATA] file ${userName}.${repoName}.${path} continue download in next time`)
+        debugLog(
+          `[TASK DOWNLOAD DATA] file ${userName}.${repoName}.${path} continue download in next time`
+        );
         throw `File not found,file ${userName}.${repoName}.${path} continue download in next time`;
       }
     } else {
