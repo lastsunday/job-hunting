@@ -1,9 +1,14 @@
-import { FileApi } from "@/common/api";
-import { downloadBlob, exportExcelFromBase64ZipFile, getFileName, getFileExtension } from "@/common/file";
-import { errorLog } from "@/common/log";
-import { convertToAbbreviation, dateToStr } from "@/common/utils";
-import { base64ToBlob, base64decode } from "@/common/utils/base64";
-import { getExcelDataFromZipFile } from "@/common/zip";
+import { FileApi } from '@/common/api';
+import {
+  downloadBlob,
+  exportExcelFromBase64ZipFile,
+  getFileName,
+  getFileExtension,
+} from '@/common/file';
+import { errorLog } from '@/common/log';
+import { convertToAbbreviation, dateToStr } from '@/common/utils';
+import { base64ToBlob, base64decode } from '@/common/utils/base64';
+import { getExcelDataFromZipFile } from '@/common/zip';
 import {
   Button,
   Col,
@@ -15,24 +20,26 @@ import {
   Select,
   Space,
   TableColumnsType,
-  Typography, message
-} from "antd";
-import dayjs from "dayjs";
-import duration from "dayjs/plugin/duration";
-import BasicTable from "../components/BasicTable";
-import ExcelPreview from "../components/ExcelPreview";
-import { FileData } from "../data/FileData";
-import { useFile } from "../hooks/file";
+  Typography,
+  message,
+} from 'antd';
+import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
+import BasicTable from '../components/BasicTable';
+import ExcelPreview from '../components/ExcelPreview';
+import { FileData } from '../data/FileData';
+import { useFile } from '../hooks/file';
 import CodeMirror from '@uiw/react-codemirror';
 import { langs } from '@uiw/codemirror-extensions-langs';
 const { convertSortField } = useFile();
 const { Text } = Typography;
 const { RangePicker } = DatePicker;
 
-dayjs.extend(duration)
+dayjs.extend(duration);
 
 const fillSearchParam = (searchParam, values) => {
-  const { createDatetimeRange, updateDatetimeRange, name, id, isDelete } = values;
+  const { createDatetimeRange, updateDatetimeRange, name, id, isDelete } =
+    values;
   searchParam.id = id;
   searchParam.name = name;
   searchParam.isDelete = isDelete;
@@ -50,46 +57,39 @@ const fillSearchParam = (searchParam, values) => {
     searchParam.startDatetimeForUpdate = null;
     searchParam.endDatetimeForUpdate = null;
   }
-}
+};
 
 const FileView: React.FC = () => {
-
   const [messageApi, contextHolder] = message.useMessage();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editData, setEditData] = useState();
-  const [previewFileName, setPreviewFileName] = useState("");
-  const [previewFileExtension, setPreviewFileExtension] = useState("json");
+  const [previewFileName, setPreviewFileName] = useState('');
+  const [previewFileExtension, setPreviewFileExtension] = useState('json');
   const tableRef = useRef(null);
 
   const columns: TableColumnsType<FileData> = [
     {
       title: '编号',
       dataIndex: 'id',
-      render: (value: string) =>
-        <Popover
-          content={<Text copyable>{value}</Text>}
-          trigger="click"
-        >
-          <Text
-            title={`${value}`}
-            ellipsis
-          >{`${value?.length > 8 ? value.substring(0, 8) : value}`}</Text>
-        </Popover>,
+      render: (value: string) => (
+        <Popover content={<Text copyable>{value}</Text>} trigger="click">
+          <Text title={`${value}`} ellipsis>{`${
+            value?.length > 8 ? value.substring(0, 8) : value
+          }`}</Text>
+        </Popover>
+      ),
       width: 100,
     },
     {
       title: '名称',
       dataIndex: 'name',
-      render: (value: string) =>
-        <Popover
-          content={<Text copyable>{value}</Text>}
-          trigger="click"
-        >
-          <Text
-            title={`${value}`}
-            ellipsis
-          >{`${value?.length > 20 ? `${value.substring(0, 20)}...` : value}`}</Text>
-        </Popover>,
+      render: (value: string) => (
+        <Popover content={<Text copyable>{value}</Text>} trigger="click">
+          <Text title={`${value}`} ellipsis>{`${
+            value?.length > 20 ? `${value.substring(0, 20)}...` : value
+          }`}</Text>
+        </Popover>
+      ),
       minWidth: 200,
     },
 
@@ -102,7 +102,9 @@ const FileView: React.FC = () => {
     {
       title: '大小',
       dataIndex: 'size',
-      render: (value: string) => <Text title={`${value} bytes`}>{convertToAbbreviation(value)}</Text>,
+      render: (value: string) => (
+        <Text title={`${value} bytes`}>{convertToAbbreviation(value)}</Text>
+      ),
       minWidth: 100,
     },
     {
@@ -114,29 +116,30 @@ const FileView: React.FC = () => {
     {
       title: 'SHA',
       dataIndex: 'sha',
-      render: (value: string) =>
-        <Popover
-          content={<Text copyable>{value}</Text>}
-          trigger="click"
-        >
-          <Text
-            title={`${value}`}
-            ellipsis
-          >{`${value?.length > 8 ? value.substring(0, 8) : value}`}</Text>
-        </Popover>,
+      render: (value: string) => (
+        <Popover content={<Text copyable>{value}</Text>} trigger="click">
+          <Text title={`${value}`} ellipsis>{`${
+            value?.length > 8 ? value.substring(0, 8) : value
+          }`}</Text>
+        </Popover>
+      ),
       width: 100,
     },
     {
       title: '创建时间',
       dataIndex: 'createDatetime',
-      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value, "YYYY-MM-DD")}</Text>,
+      render: (value: Date) => (
+        <Text title={dateToStr(value)}>{dateToStr(value, 'YYYY-MM-DD')}</Text>
+      ),
       minWidth: 100,
       sorter: true,
     },
     {
       title: '更新时间',
       dataIndex: 'updateDatetime',
-      render: (value: Date) => <Text title={dateToStr(value)}>{dateToStr(value, "YYYY-MM-DD")}</Text>,
+      render: (value: Date) => (
+        <Text title={dateToStr(value)}>{dateToStr(value, 'YYYY-MM-DD')}</Text>
+      ),
       minWidth: 100,
       sorter: true,
     },
@@ -150,103 +153,119 @@ const FileView: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      fixed: "right",
-      render: (_, record) => (
-        !record.isDelete ? <Space size="middle">
-          <Button type="link" onClick={async () => {
-            const fileName = getFileName(record.name);
-            const extension = getFileExtension(record.name);
-            setPreviewFileExtension(extension);
-            if (extension == "json") {
-              setPreviewFileName(`(${fileName}.${extension}[${record.id}])`);
-              const text = base64decode(record.content);
-              setEditData(text);
-              setIsEditModalOpen(true);
-            } else {
-              try {
-                setPreviewFileName(`(${fileName}.xlsx[${record.id}])`);
-                setEditData(await getExcelDataFromZipFile(record.content, fileName));
-                setIsEditModalOpen(true);
-              } catch (e) {
-                errorLog(e);
-                messageApi.error(e.message);
-              }
-            }
-          }}>预览</Button>
-          {getFileExtension(record.name) == "json" ? null : <Button type="link" onClick={() => {
-            const zipFileName = record.name;
-            const fileName = getFileName(zipFileName);
-            try {
-              exportExcelFromBase64ZipFile(record.content, fileName + ".xlsx");
-            } catch (e) {
-              errorLog(e);
-              messageApi.error(e.message);
-            }
-          }}>下载</Button>}
-          <Button type="link" onClick={async () => {
-            const zipFileName = record.name;
-            try {
-              downloadBlob(
-                base64ToBlob(record.content),
-                zipFileName,
-                "application/octet-stream"
-              );
-            } catch (e) {
-              errorLog(e);
-              messageApi.error(e.message);
-            }
-          }}>下载源文件</Button>
-        </Space> : null
-      ),
+      fixed: 'right',
+      render: (_, record) =>
+        !record.isDelete ? (
+          <Space size="middle">
+            <Button
+              type="link"
+              onClick={async () => {
+                const fileName = getFileName(record.name);
+                const extension = getFileExtension(record.name);
+                setPreviewFileExtension(extension);
+                if (extension == 'json') {
+                  setPreviewFileName(
+                    `(${fileName}.${extension}[${record.id}])`
+                  );
+                  const text = base64decode(record.content);
+                  setEditData(text);
+                  setIsEditModalOpen(true);
+                } else {
+                  try {
+                    setPreviewFileName(`(${fileName}.xlsx[${record.id}])`);
+                    setEditData(
+                      await getExcelDataFromZipFile(record.content, fileName)
+                    );
+                    setIsEditModalOpen(true);
+                  } catch (e) {
+                    errorLog(e);
+                    messageApi.error(e.message);
+                  }
+                }
+              }}
+            >
+              预览
+            </Button>
+            {getFileExtension(record.name) == 'json' ? null : (
+              <Button
+                type="link"
+                onClick={() => {
+                  const zipFileName = record.name;
+                  const fileName = getFileName(zipFileName);
+                  try {
+                    exportExcelFromBase64ZipFile(
+                      record.content,
+                      fileName + '.xlsx'
+                    );
+                  } catch (e) {
+                    errorLog(e);
+                    messageApi.error(e.message);
+                  }
+                }}
+              >
+                下载
+              </Button>
+            )}
+            <Button
+              type="link"
+              onClick={async () => {
+                const zipFileName = record.name;
+                try {
+                  downloadBlob(
+                    base64ToBlob(record.content),
+                    zipFileName,
+                    'application/octet-stream'
+                  );
+                } catch (e) {
+                  errorLog(e);
+                  messageApi.error(e.message);
+                }
+              }}
+            >
+              下载源文件
+            </Button>
+          </Space>
+        ) : null,
     },
   ];
 
   const searchFields = {
     common: [
       <Col span={8} key="id">
-        <Form.Item
-          name={`id`}
-          label={`编号`}
-        >
+        <Form.Item name={`id`} label={`编号`}>
           <Input allowClear placeholder="请输入编号"></Input>
         </Form.Item>
       </Col>,
       <Col span={8} key="name">
-        <Form.Item
-          name={`name`}
-          label={`名称`}
-        >
+        <Form.Item name={`name`} label={`名称`}>
           <Input allowClear placeholder="请输入名称" />
         </Form.Item>
       </Col>,
       <Col span={8} key="isDelete">
-        <Form.Item
-          name={`isDelete`}
-          label={`文件状态`}
-        >
-          <Select allowClear options={[{ value: 0, label: <span>正常</span> }, { value: 1, label: <span>已删除</span> }]} />
+        <Form.Item name={`isDelete`} label={`文件状态`}>
+          <Select
+            allowClear
+            options={[
+              { value: false, label: <span>正常</span> },
+              { value: true, label: <span>已删除</span> },
+            ]}
+          />
         </Form.Item>
       </Col>,
     ],
     expand: [
       <Col span={8} key="createDatetimeRange">
-        <Form.Item
-          name={`createDatetimeRange`}
-          label={`创建时间`}
-        >
+        <Form.Item name={`createDatetimeRange`} label={`创建时间`}>
           <RangePicker />
         </Form.Item>
       </Col>,
       <Col span={8} key="updateDatetimeRange">
-        <Form.Item
-          name={`updateDatetimeRange`}
-          label={`更新时间`}
-        >
+        <Form.Item name={`updateDatetimeRange`} label={`更新时间`}>
           <RangePicker />
         </Form.Item>
-      </Col>
-    ]
-  }
+      </Col>,
+    ],
+  };
 
   const onDelete = async (keys: React.Key[]) => {
     try {
@@ -255,55 +274,59 @@ const FileView: React.FC = () => {
       messageApi.error(e.message);
     }
     tableRef?.current.refresh();
-  }
+  };
 
-  return <>
-    {contextHolder}
-    <BasicTable
-      ref={tableRef}
-      mode={["r", "d"]}
-      onDelete={onDelete}
-      searchProps={{
-        columns,
-        searchFields,
-        fillSearchParam,
-        convertSortField,
-        search: async (searchParam) => {
-          return await FileApi.searchFile(searchParam);
-        },
-        orderByColumn: "createDatetime",
-        searchParam: {
-          isDelete: false,
-        }
-      }}
-      rowKeyFunction={(record) => { return record.id }}
-    ></BasicTable>
-    <Modal
-      title={`预览${previewFileName}`}
-      open={isEditModalOpen}
-      onCancel={() => {
-        setIsEditModalOpen(false);
-      }}
-      maskClosable={false}
-      footer={null}
-      width="90%"
-      destroyOnClose
-    >
-      {previewFileExtension == "json" ?
-        <CodeMirror
-          key="preiview"
-          basicSetup={{ autocompletion: true }}
-          extensions={[langs.json()]}
-          style={{ width: '100%' }}
-          minHeight="200px"
-          value={editData}
-          editable={false}
-        />
-        :
-        <ExcelPreview source={editData}></ExcelPreview>
-      }
-    </Modal>
-  </>
-}
+  return (
+    <>
+      {contextHolder}
+      <BasicTable
+        ref={tableRef}
+        mode={['r', 'd']}
+        onDelete={onDelete}
+        searchProps={{
+          columns,
+          searchFields,
+          fillSearchParam,
+          convertSortField,
+          search: async (searchParam) => {
+            return await FileApi.searchFile(searchParam);
+          },
+          orderByColumn: 'createDatetime',
+          searchParam: {
+            isDelete: false,
+          },
+        }}
+        rowKeyFunction={(record) => {
+          return record.id;
+        }}
+      ></BasicTable>
+      <Modal
+        title={`预览${previewFileName}`}
+        open={isEditModalOpen}
+        onCancel={() => {
+          setIsEditModalOpen(false);
+        }}
+        maskClosable={false}
+        footer={null}
+        width="90%"
+        destroyOnClose
+      >
+        {previewFileExtension == 'json' ? (
+          <CodeMirror
+            key="preiview"
+            basicSetup={{ autocompletion: true }}
+            extensions={[langs.json()]}
+            style={{ width: '100%' }}
+            minHeight="200px"
+            value={editData}
+            editable={false}
+          />
+        ) : (
+          <ExcelPreview source={editData}></ExcelPreview>
+        )}
+      </Modal>
+    </>
+  );
+};
 
 export default FileView;

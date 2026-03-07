@@ -63,8 +63,9 @@ export default defineConfig({
       copyFileSync(resolve(srcDir, packageName), resolve(outDir, packageName));
       copyFileSync(resolve(srcDir, licenseName), resolve(outDir, licenseName));
       if (wxt.config.mode == 'production') {
-        copyFileSync(resolve(srcDir, "node_modules", "@electric-sql", "pglite", "dist", "postgres.wasm"), resolve(outDir, "assets", "postgres.wasm"));
-        copyFileSync(resolve(srcDir, "node_modules", "@electric-sql", "pglite", "dist", "postgres.data"), resolve(outDir, "assets", "postgres.data"))
+        copyFileSync(resolve(srcDir, "node_modules", "@electric-sql", "pglite", "dist", "pglite.wasm"), resolve(outDir, "assets", "pglite.wasm"));
+        copyFileSync(resolve(srcDir, "node_modules", "@electric-sql", "pglite", "dist", "pglite.data"), resolve(outDir, "assets", "pglite.data"));
+        copyFileSync(resolve(srcDir, "node_modules", "@electric-sql", "pglite-tools", "dist", "pg_dump.wasm"), resolve(outDir, "assets", "pg_dump.wasm"));
         copyFileSync(resolve(srcDir, "node_modules", "libarchive.js", "dist", "worker-bundle.js"), resolve(outDir, "worker-bundle.js"));
         copyFileSync(resolve(srcDir, "node_modules", "libarchive.js", "dist", "libarchive.wasm"), resolve(outDir, "libarchive.wasm"));
       }
@@ -90,7 +91,7 @@ export default defineConfig({
         format: 'es',
       },
       optimizeDeps: {
-        exclude: ['@electric-sql/pglite', 'libarchive.js']
+        exclude: ['@electric-sql/pglite', '@electric-sql/pglite-tools', 'libarchive.js']
       }
     }
   }

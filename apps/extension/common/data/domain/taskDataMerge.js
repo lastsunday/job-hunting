@@ -8,6 +8,8 @@ export class TaskDataMerge {
   dataId;
   config;
   dataCount;
+  dataPageNum;
+  dataPageSize;
   createDatetime;
   updateDatetime;
 }

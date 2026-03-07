@@ -724,6 +724,8 @@ erDiagram
       datetime start_datetime "开始时间"
       datetime end_datetime "结束时间"
       int data_count "数据量"
+      int data_page_num "页数"
+      int data_page_size "页大小"
       datetime create_datetime "创建时间"
       datetime update_datetime "更新时间"
     }
@@ -734,10 +736,12 @@ erDiagram
       string(255) username "用户名"
       string(255) reponame "仓库名"
       datetime datetime "日期"
+      int seq "序号"
       datetime create_datetime "创建时间"
       datetime update_datetime "更新时间"
       string(255) type_id "类型标识，用于识别特定文件"
       json config "配置"
+      string(255) data_id FK "文件编号"
     }
     task ||--|| task_data_merge: owns
     task_data_merge {
@@ -748,6 +752,8 @@ erDiagram
       datetime datetime "日期"
       string(255) data_id FK "文件编号"
       int data_count "数据量"
+      int data_page_num "页数"
+      int data_page_size "页大小"
       datetime create_datetime "创建时间"
       datetime update_datetime "更新时间"
       string(255) type_id "类型标识，用于识别特定文件"
@@ -762,6 +768,7 @@ erDiagram
       string content "文件内容"
       int size "文件尺寸"
       string type "文件类型"
+      is_delete boolean "是否刪除"
       datetime create_datetime "创建时间"
       datetime update_datetime "更新时间"
     }

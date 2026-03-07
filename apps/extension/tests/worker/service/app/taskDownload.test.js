@@ -1,276 +1,486 @@
-import { expect, test } from "vitest";
-import { calculateDownloadTask, downloadDataByDataId } from "@/entrypoints/offscreen/worker/service/app/taskDownload";
-import { DATA_TYPE_NAME_JOB, TASK_STATUS_CANCEL, TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD, TASK_TYPE_JOB_DATA_DOWNLOAD, TASK_TYPE_JOB_DATA_MERGE, TASK_TYPE_METADATA_DATA_DOWNLOAD, TASK_TYPE_METADATA_DATA_MERGE } from "@/common";
-import * as modApp from "@/entrypoints/offscreen/worker/service/app";
-import * as modTaskLogic from "@/entrypoints/offscreen/worker/service/app/taskLogic";
-import * as modTaskDownloadLogic from "@/entrypoints/offscreen/worker/service/app/taskDownloadLogic";
-import * as modTaskDataDownloadService from "@/entrypoints/offscreen/worker/service/taskDataDownloadService";
-import * as modTaskService from "@/entrypoints/offscreen/worker/service/taskService";
-import { vi } from "vitest";
-import { parse, dateToStr } from "@/common/utils/date";
-import { EXCEPTION } from "@/common/api/github";
-const USER_NAME = "lastsunday";
-const REPO_NAME = "job-hunting-data";
+import { expect, test } from 'vitest';
+import {
+  calculateDownloadTask,
+  downloadDataByDataId,
+} from '@/entrypoints/offscreen/worker/service/app/taskDownload';
+import {
+  DATA_TYPE_NAME_JOB,
+  TASK_STATUS_CANCEL,
+  TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
+  TASK_TYPE_JOB_DATA_DOWNLOAD,
+  TASK_TYPE_JOB_DATA_MERGE,
+  TASK_TYPE_METADATA_DATA_DOWNLOAD,
+  TASK_TYPE_METADATA_DATA_MERGE,
+} from '@/common';
+import * as modApp from '@/entrypoints/offscreen/worker/service/app';
+import * as modTaskLogic from '@/entrypoints/offscreen/worker/service/app/taskLogic';
+import * as modTaskDownloadLogic from '@/entrypoints/offscreen/worker/service/app/taskDownloadLogic';
+import * as modTaskDataDownloadService from '@/entrypoints/offscreen/worker/service/taskDataDownloadService';
+import * as modTaskService from '@/entrypoints/offscreen/worker/service/taskService';
+import { vi } from 'vitest';
+import { parse, dateToStr } from '@/common/utils/date';
+import { EXCEPTION } from '@/common/api/github';
+import { base64ToBytes } from '@/common/utils/base64';
+const USER_NAME = 'lastsunday';
+const REPO_NAME = 'job-hunting-data';
 const TASK_TYPE = TASK_TYPE_JOB_DATA_DOWNLOAD;
 test('calculate standard data download task in correct logic', async () => {
-  vi.spyOn(modTaskLogic, 'queryRepoFileDateList').mockImplementation(async ({ userName, repoName, taskType }) => {
-    expect(userName).toBe(USER_NAME);
-    expect(repoName).toBe(REPO_NAME);
-    expect(taskType).toBe(TASK_TYPE);
-    return [
-      parse("2025-01-03"),
-      parse("2024-12-30"),
-      parse("2025-01-01"),
-      parse("2024-12-31"),
-    ]
-  });
-  vi.spyOn(modTaskDataDownloadService, "_searchTaskDataDownload").mockImplementation(async ({ param }) => {
-    expect(param).toMatchObject(
-      {
-        pageNum: undefined,
-        pageSize: undefined,
-        userName: USER_NAME,
-        repoName: REPO_NAME,
-        type: TASK_TYPE,
-        startDatetime: parse("2024-12-30"),
-        endDatetime: parse("2025-01-04"),
-        orderByColumn: 'createDatetime',
-        orderBy: 'ASC'
-      }
-    );
+  vi.spyOn(modTaskLogic, 'queryRepoFileDateAndMaxSeqMap').mockImplementation(
+    async ({ userName, repoName, taskType }) => {
+      expect(userName).toBe(USER_NAME);
+      expect(repoName).toBe(REPO_NAME);
+      expect(taskType).toBe(TASK_TYPE);
+      return new Map([
+        ['2025-01-03', 4],
+        ['2024-12-30', 1],
+        ['2025-01-01', 1],
+        ['2024-12-31', 1],
+      ]);
+    }
+  );
+  vi.spyOn(
+    modTaskDataDownloadService,
+    '_searchTaskDataDownload'
+  ).mockImplementation(async ({ param }) => {
+    expect(param).toMatchObject({
+      pageNum: undefined,
+      pageSize: undefined,
+      userName: USER_NAME,
+      repoName: REPO_NAME,
+      type: TASK_TYPE,
+      startDatetime: parse('2024-12-30'),
+      endDatetime: parse('2025-01-04'),
+      orderByColumn: 'createDatetime',
+      orderBy: 'ASC',
+    });
     return {
-      items: [{
-        id: "testid",
-        type: TASK_TYPE,
-        username: USER_NAME,
-        reponame: REPO_NAME,
-        datetime: parse("2024-12-30"),
-        createDatetime: parse("2024-12-30"),
-        updateDatetime: parse("2024-12-30"),
-      }],
-      total: 1
+      items: [
+        {
+          id: 'testid',
+          type: TASK_TYPE,
+          username: USER_NAME,
+          reponame: REPO_NAME,
+          datetime: parse('2024-12-30'),
+          createDatetime: parse('2024-12-30'),
+          updateDatetime: parse('2024-12-30'),
+        },
+      ],
+      total: 1,
     };
   });
-  vi.spyOn(modTaskDownloadLogic, 'saveTask').mockImplementation(async ({ type, datetimeList, userName, repoName }) => {
-    expect(type).toBe(TASK_TYPE);
-    expect(datetimeList).toMatchObject([parse("2024-12-31"), parse(("2025-01-01")), parse("2025-01-03")]);
-    expect(userName).toBe(USER_NAME);
-    expect(repoName).toBe(REPO_NAME);
-  });
-  const result = await calculateDownloadTask({
-    userName: USER_NAME, repoName: REPO_NAME, taskType: TASK_TYPE, getTargetDay: async () => {
-      return parse("2025-01-15");
+  vi.spyOn(modTaskDownloadLogic, 'saveTask').mockImplementation(
+    async ({ type, datetimeAndSeqList, userName, repoName }) => {
+      expect(type).toBe(TASK_TYPE);
+      expect(userName).toBe(USER_NAME);
+      expect(repoName).toBe(REPO_NAME);
+      expect(datetimeAndSeqList).toMatchObject([
+        { day: parse('2024-12-31'), maxSeq: 1 },
+        { day: parse('2025-01-01'), maxSeq: 1 },
+        { day: parse('2025-01-03'), maxSeq: 4 },
+      ]);
     }
+  );
+  const result = await calculateDownloadTask({
+    userName: USER_NAME,
+    repoName: REPO_NAME,
+    taskType: TASK_TYPE,
+    getTargetDay: async () => {
+      return parse('2025-01-15');
+    },
   });
   expect(result).toBeTruthy();
-})
+});
 
 test('calculate data source download task in correct logic', async () => {
   const CONFIG = {
-    "name": "深圳避雷公司名单",
-    "type": TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
-    "emotion": "NEGATIVE",
-    "fileName": "mine_field_shenzhen",
-    "description": "来自网络收集",
-    "retentionDay": 3650,
+    name: '深圳避雷公司名单',
+    type: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
+    emotion: 'NEGATIVE',
+    fileName: 'mine_field_shenzhen',
+    description: '来自网络收集',
+    retentionDay: 3650,
   };
-  vi.spyOn(modTaskLogic, 'queryRepoFileDateList').mockImplementation(async ({ userName, repoName, taskType, fileName }) => {
-    expect(userName).toBe(USER_NAME);
-    expect(repoName).toBe(REPO_NAME);
-    expect(taskType).toBe(TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD);
-    expect(fileName).toBe("mine_field_shenzhen");
-    return [
-      parse("2025-01-03"),
-      parse("2024-12-30"),
-      parse("2025-01-01"),
-      parse("2024-12-31"),
-    ]
-  });
-  vi.spyOn(modTaskDataDownloadService, "_searchTaskDataDownload").mockImplementation(async ({ param }) => {
-    expect(param).toMatchObject(
-      {
-        pageNum: undefined,
-        pageSize: undefined,
-        userName: USER_NAME,
-        repoName: REPO_NAME,
-        type: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
-        typeId: "深圳避雷公司名单",
-        startDatetime: parse("2024-12-30"),
-        endDatetime: parse("2025-01-04"),
-        orderByColumn: 'createDatetime',
-        orderBy: 'ASC'
-      }
-    );
+  vi.spyOn(modTaskLogic, 'queryRepoFileDateAndMaxSeqMap').mockImplementation(
+    async ({ userName, repoName, taskType, fileName }) => {
+      expect(userName).toBe(USER_NAME);
+      expect(repoName).toBe(REPO_NAME);
+      expect(taskType).toBe(TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD);
+      expect(fileName).toBe('mine_field_shenzhen');
+      return new Map([
+        ['2025-01-03', 1],
+        ['2024-12-30', 1],
+        ['2025-01-01', 1],
+        ['2024-12-31', 1],
+      ]);
+    }
+  );
+  vi.spyOn(
+    modTaskDataDownloadService,
+    '_searchTaskDataDownload'
+  ).mockImplementation(async ({ param }) => {
+    expect(param).toMatchObject({
+      pageNum: undefined,
+      pageSize: undefined,
+      userName: USER_NAME,
+      repoName: REPO_NAME,
+      type: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
+      typeId: '深圳避雷公司名单',
+      startDatetime: parse('2024-12-30'),
+      endDatetime: parse('2025-01-04'),
+      orderByColumn: 'createDatetime',
+      orderBy: 'ASC',
+    });
     return {
-      items: [{
-        id: "testid",
-        type: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
-        username: USER_NAME,
-        reponame: REPO_NAME,
-        datetime: parse("2024-12-30"),
-        createDatetime: parse("2024-12-30"),
-        updateDatetime: parse("2024-12-30"),
-      }],
-      total: 1
+      items: [
+        {
+          id: 'testid',
+          type: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
+          username: USER_NAME,
+          reponame: REPO_NAME,
+          datetime: parse('2024-12-30'),
+          createDatetime: parse('2024-12-30'),
+          updateDatetime: parse('2024-12-30'),
+        },
+      ],
+      total: 1,
     };
   });
-  vi.spyOn(modTaskDownloadLogic, 'saveTask').mockImplementation(async ({ type, datetimeList, userName, repoName, typeId, config }) => {
-    expect(type).toBe(TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD);
-    expect(datetimeList).toMatchObject([parse("2024-12-31"), parse(("2025-01-01")), parse("2025-01-03")]);
-    expect(userName).toBe(USER_NAME);
-    expect(repoName).toBe(REPO_NAME);
-    expect(typeId).toBe("深圳避雷公司名单");
-    expect(config).toMatchObject(CONFIG);
-  });
+  vi.spyOn(modTaskDownloadLogic, 'saveTask').mockImplementation(
+    async ({
+      type,
+      datetimeAndSeqList,
+      userName,
+      repoName,
+      typeId,
+      config,
+    }) => {
+      expect(type).toBe(TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD);
+      expect(userName).toBe(USER_NAME);
+      expect(repoName).toBe(REPO_NAME);
+      expect(typeId).toBe('深圳避雷公司名单');
+      expect(config).toMatchObject(CONFIG);
+      expect(datetimeAndSeqList).toMatchObject([
+        { day: parse('2024-12-31'), maxSeq: 1 },
+        { day: parse('2025-01-01'), maxSeq: 1 },
+        { day: parse('2025-01-03'), maxSeq: 1 },
+      ]);
+    }
+  );
   const result = await calculateDownloadTask({
-    userName: USER_NAME, repoName: REPO_NAME, taskType: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD, getTargetDay: async () => {
-      return parse("2025-01-15");
-    }, config: CONFIG
+    userName: USER_NAME,
+    repoName: REPO_NAME,
+    taskType: TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD,
+    getTargetDay: async () => {
+      return parse('2025-01-15');
+    },
+    config: CONFIG,
   });
   expect(result).toBeTruthy();
-})
-
-test('downloadDataByDataId in correct logic', async () => {
-  const dataId = "";
-  const dataTypeName = DATA_TYPE_NAME_JOB;
-  const taskType = TASK_TYPE_JOB_DATA_MERGE;
-  const fileData = new Uint8Array();
-  vi.spyOn(modApp, "isLogin").mockImplementation(async () => {
-    return true;
-  });
-  vi.spyOn(modTaskDataDownloadService, '_taskDataDownloadGetById').mockImplementation(async () => {
-    return {
-      type: TASK_TYPE,
-      username: USER_NAME,
-      reponame: REPO_NAME,
-      datetime: parse("2025-01-01")
-    };
-  });
-  vi.spyOn(modTaskLogic, "getFileData").mockImplementation(async ({ userName, repoName, filePath }) => {
-    expect(userName).toBe(USER_NAME);
-    expect(repoName).toBe(REPO_NAME);
-    expect(filePath).toBe("/2025/01-01/job.zip");
-    return fileData;
-  })
-  vi.spyOn(modTaskDownloadLogic, "saveFileAndCalculateDataMergeTask").mockImplementation(async ({ userName, repoName, taskType, file, datetime }) => {
-    expect(userName).toBe(USER_NAME);
-    expect(repoName).toBe(REPO_NAME);
-    expect(taskType).toBe(TASK_TYPE_JOB_DATA_MERGE);
-    expect(datetime).toMatchObject(parse("2025-01-01"));
-    expect(file.name).toBe("job.zip");
-    expect(file.size).toBe(fileData.byteLength);
-  });
-  const result = await downloadDataByDataId(dataId, dataTypeName, taskType);
-  expect(result).toBeNull();
 });
 
 test('downloadDataByDataId file not found and never upload', async () => {
-  const dataId = "";
+  const dataId = '';
   const dataTypeName = DATA_TYPE_NAME_JOB;
   const taskType = TASK_TYPE_JOB_DATA_MERGE;
-  vi.spyOn(modApp, "isLogin").mockImplementation(async () => {
+  vi.spyOn(modApp, 'isLogin').mockImplementation(async () => {
     return true;
   });
-  vi.spyOn(modTaskDataDownloadService, '_taskDataDownloadGetById').mockImplementation(async () => {
+  vi.spyOn(
+    modTaskDataDownloadService,
+    '_taskDataDownloadGetById'
+  ).mockImplementation(async () => {
     return {
       type: TASK_TYPE,
       username: USER_NAME,
       reponame: REPO_NAME,
-      datetime: parse("2025-01-01")
+      datetime: parse('2025-01-01'),
     };
   });
-  vi.spyOn(modTaskLogic, "getFileData").mockImplementation(async ({ userName, repoName, filePath }) => {
-    throw EXCEPTION.NOT_FOUND;
-  })
+  vi.spyOn(modTaskLogic, 'getFileData').mockImplementation(
+    async ({ userName, repoName, filePath }) => {
+      throw EXCEPTION.NOT_FOUND;
+    }
+  );
   const result = await downloadDataByDataId(dataId, dataTypeName, taskType, {
     getTargetDay: async () => {
-      return parse("2025-01-02");
-    }
+      return parse('2025-01-02');
+    },
   });
-  expect(result).contains("never upload");
+  expect(result).contains('never upload');
 });
 
 test('downloadDataByDataId file not found', async () => {
-  const dataId = "";
+  const dataId = '';
   const dataTypeName = DATA_TYPE_NAME_JOB;
   const taskType = TASK_TYPE_JOB_DATA_MERGE;
-  vi.spyOn(modApp, "isLogin").mockImplementation(async () => {
+  vi.spyOn(modApp, 'isLogin').mockImplementation(async () => {
     return true;
   });
-  vi.spyOn(modTaskDataDownloadService, '_taskDataDownloadGetById').mockImplementation(async () => {
+  vi.spyOn(
+    modTaskDataDownloadService,
+    '_taskDataDownloadGetById'
+  ).mockImplementation(async () => {
     return {
       type: TASK_TYPE,
       username: USER_NAME,
       reponame: REPO_NAME,
-      datetime: parse("2025-01-01")
+      datetime: parse('2025-01-01'),
     };
   });
-  vi.spyOn(modTaskLogic, "getFileData").mockImplementation(async ({ userName, repoName, filePath }) => {
-    throw EXCEPTION.NOT_FOUND;
-  })
+  vi.spyOn(modTaskLogic, 'getFileData').mockImplementation(
+    async ({ userName, repoName, filePath }) => {
+      throw EXCEPTION.NOT_FOUND;
+    }
+  );
   try {
     const result = await downloadDataByDataId(dataId, dataTypeName, taskType, {
       getTargetDay: async () => {
-        return parse("2025-01-01T23:59:59");
-      }
+        return parse('2025-01-01T23:59:59');
+      },
     });
   } catch (e) {
-    expect(e).contains("not found");
+    expect(e).contains('not found');
   }
 });
 
 test('calculateDownloadTask for metadata', async () => {
-  vi.spyOn(modTaskDataDownloadService, '_queryLatestTaskDataDownload').mockImplementation(async ({ param }) => {
-    return [
-      { id: "1", datetime: parse('2025-01-14') }
-    ];
+  vi.spyOn(
+    modTaskDataDownloadService,
+    '_queryLatestTaskDataDownload'
+  ).mockImplementation(async ({ param }) => {
+    return [{ id: '1', datetime: parse('2025-01-14') }];
   });
-  vi.spyOn(modTaskService, '_updateTaskStatus').mockImplementation(async ({ param, connection }) => {
-    expect(param.id.length).toBe(1);
-    expect(param.id[0]).toBe('1');
-    expect(param.status).toBe(TASK_STATUS_CANCEL);
-  });
-  vi.spyOn(modTaskDownloadLogic, 'saveTask').mockImplementation(async ({ type, datetimeList, userName, repoName, typeId, config }) => {
-    expect(type).toBe(TASK_TYPE_METADATA_DATA_DOWNLOAD);
-    expect(datetimeList).toMatchObject([parse('2025-01-15')]);
-    expect(typeId).toBe('typeId1');
-    expect(config).toMatchObject({});
-  });
+  vi.spyOn(modTaskService, '_updateTaskStatus').mockImplementation(
+    async ({ param, connection }) => {
+      expect(param.id.length).toBe(1);
+      expect(param.id[0]).toBe('1');
+      expect(param.status).toBe(TASK_STATUS_CANCEL);
+    }
+  );
+  vi.spyOn(modTaskDownloadLogic, 'saveTask').mockImplementation(
+    async ({
+      type,
+      datetimeAndSeqList,
+      userName,
+      repoName,
+      typeId,
+      config,
+    }) => {
+      expect(type).toBe(TASK_TYPE_METADATA_DATA_DOWNLOAD);
+      expect(datetimeAndSeqList).toMatchObject([
+        { day: parse('2025-01-15'), maxSeq: 1 },
+      ]);
+      expect(typeId).toBe('typeId1');
+      expect(config).toMatchObject({});
+    }
+  );
   const result = await calculateDownloadTask({
     taskType: TASK_TYPE_METADATA_DATA_DOWNLOAD,
-    typeId: "typeId1",
+    typeId: 'typeId1',
     config: {},
     getTargetDay: async () => {
-      return parse("2025-01-15");
-    }
+      return parse('2025-01-15');
+    },
   });
   expect(result).toBeTruthy();
 });
 
-test('downloadDataByDataId for metadata merge', async () => {
-  const URL = "https://github.com/lastsunday/job-hunting-data-source";
-  const FILE_PATH = "metadata.json";
-  vi.spyOn(modTaskDataDownloadService, '_taskDataDownloadGetById').mockImplementation(async ({ param }) => {
+test('downloadDataByDataId in correct logic', async () => {
+  const dataId = '';
+  const dataTypeName = DATA_TYPE_NAME_JOB;
+  const taskType = TASK_TYPE_JOB_DATA_MERGE;
+  const fileData = base64ToBytes(
+    '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'
+  );
+  vi.spyOn(modApp, 'isLogin').mockImplementation(async () => {
+    return true;
+  });
+  vi.spyOn(
+    modTaskDataDownloadService,
+    '_taskDataDownloadGetById'
+  ).mockImplementation(async () => {
     return {
-      typeId: "typeId1",
-      datetime: parse("2025-01-01"),
+      type: TASK_TYPE,
+      username: USER_NAME,
+      reponame: REPO_NAME,
+      seq: 0,
+      datetime: parse('2025-01-01'),
+    };
+  });
+  vi.spyOn(modTaskLogic, 'getFileData').mockImplementation(
+    async ({ userName, repoName, filePath }) => {
+      expect(userName).toBe(USER_NAME);
+      expect(repoName).toBe(REPO_NAME);
+      expect(filePath).toBe('/2025/01-01/job.zip');
+      return fileData;
+    }
+  );
+  vi.spyOn(
+    modTaskDownloadLogic,
+    'saveFileAndCalculateDataMergeTask'
+  ).mockImplementation(
+    async ({ userName, repoName, taskType, file, datetime }) => {
+      expect(userName).toBe(USER_NAME);
+      expect(repoName).toBe(REPO_NAME);
+      expect(taskType).toBe(TASK_TYPE_JOB_DATA_MERGE);
+      expect(datetime).toMatchObject(parse('2025-01-01'));
+      expect(file.name).toBe('job.zip');
+      expect(file.size).toBe(fileData.byteLength);
+    }
+  );
+  let result = await downloadDataByDataId(dataId, dataTypeName, taskType);
+  expect(result).toBeNull();
+
+  vi.spyOn(
+    modTaskDataDownloadService,
+    '_taskDataDownloadGetById'
+  ).mockImplementation(async () => {
+    return {
+      type: TASK_TYPE,
+      username: USER_NAME,
+      reponame: REPO_NAME,
+      seq: 1,
+      datetime: parse('2025-01-01'),
+    };
+  });
+  vi.spyOn(modTaskLogic, 'getFileData').mockImplementation(
+    async ({ userName, repoName, filePath }) => {
+      expect(userName).toBe(USER_NAME);
+      expect(repoName).toBe(REPO_NAME);
+      expect(filePath).toBe('/2025/01-01/job_1.zip');
+      return fileData;
+    }
+  );
+  vi.spyOn(
+    modTaskDownloadLogic,
+    'saveFileAndCalculateDataMergeTask'
+  ).mockImplementation(
+    async ({
+      userName,
+      repoName,
+      taskType,
+      file,
+      datetime,
+      pageNum,
+      pageSize,
+      total,
+    }) => {
+      expect(userName).toBe(USER_NAME);
+      expect(repoName).toBe(REPO_NAME);
+      expect(taskType).toBe(TASK_TYPE_JOB_DATA_MERGE);
+      expect(datetime).toMatchObject(parse('2025-01-01'));
+      expect(file.name).toBe('job_1.zip');
+      expect(file.size).toBe(fileData.byteLength);
+      expect(pageNum).toBe(1);
+      expect(pageSize).toBe(6000);
+      expect(total).toBe(31);
+    }
+  );
+  result = await downloadDataByDataId(dataId, dataTypeName, taskType);
+  expect(result).toBeNull();
+
+  vi.spyOn(
+    modTaskDataDownloadService,
+    '_taskDataDownloadGetById'
+  ).mockImplementation(async () => {
+    return {
+      type: TASK_TYPE,
+      username: USER_NAME,
+      reponame: REPO_NAME,
+      seq: 99,
+      datetime: parse('2025-01-01'),
+    };
+  });
+  vi.spyOn(modTaskLogic, 'getFileData').mockImplementation(
+    async ({ userName, repoName, filePath }) => {
+      expect(userName).toBe(USER_NAME);
+      expect(repoName).toBe(REPO_NAME);
+      expect(filePath).toBe('/2025/01-01/job_99.zip');
+      return fileData;
+    }
+  );
+  vi.spyOn(
+    modTaskDownloadLogic,
+    'saveFileAndCalculateDataMergeTask'
+  ).mockImplementation(
+    async ({
+      userName,
+      repoName,
+      taskType,
+      file,
+      datetime,
+      pageNum,
+      pageSize,
+      total,
+    }) => {
+      expect(userName).toBe(USER_NAME);
+      expect(repoName).toBe(REPO_NAME);
+      expect(taskType).toBe(TASK_TYPE_JOB_DATA_MERGE);
+      expect(datetime).toMatchObject(parse('2025-01-01'));
+      expect(file.name).toBe('job_99.zip');
+      expect(file.size).toBe(fileData.byteLength);
+      expect(pageNum).toBe(1);
+      expect(pageSize).toBe(6000);
+      expect(total).toBe(31);
+    }
+  );
+  result = await downloadDataByDataId(dataId, dataTypeName, taskType);
+  expect(result).toBeNull();
+});
+
+test('downloadDataByDataId for metadata merge', async () => {
+  const URL = 'https://github.com/lastsunday/job-hunting-data-source';
+  const FILE_PATH = 'metadata.json';
+  vi.spyOn(
+    modTaskDataDownloadService,
+    '_taskDataDownloadGetById'
+  ).mockImplementation(async ({ param }) => {
+    return {
+      typeId: 'typeId1',
+      datetime: parse('2025-01-01'),
       config: {
         config: {
           url: URL,
-          filePath: FILE_PATH
-        }
-      }
+          filePath: FILE_PATH,
+        },
+      },
     };
   });
-  vi.spyOn(modTaskLogic, 'getFileDataByUrl').mockImplementation(async ({ url, filePath }) => {
-    expect(url).toBe(URL);
-    expect(filePath).toBe(FILE_PATH);
-    return new TextEncoder().encode("Test Data");
-  });
-  vi.spyOn(modTaskDownloadLogic, 'saveFileAndCalculateDataMergeTask').mockImplementation(async ({ userName, repoName, taskType, file, datetime, typeId }) => {
-    expect(typeId).toBe("typeId1");
-    expect(dateToStr(parse(datetime))).toBe(dateToStr(parse('2025-01-01')));
-  });
-  const result = await downloadDataByDataId('1', null, TASK_TYPE_METADATA_DATA_MERGE, { getTargetDay: async () => { return parse('2025-01-15') } });
+  vi.spyOn(modTaskLogic, 'getFileDataByUrl').mockImplementation(
+    async ({ url, filePath }) => {
+      expect(url).toBe(URL);
+      expect(filePath).toBe(FILE_PATH);
+      return new TextEncoder().encode('Test Data');
+    }
+  );
+  vi.spyOn(
+    modTaskDownloadLogic,
+    'saveFileAndCalculateDataMergeTask'
+  ).mockImplementation(
+    async ({
+      userName,
+      repoName,
+      taskType,
+      file,
+      datetime,
+      pageNum,
+      pageSize,
+      total,
+      typeId,
+    }) => {
+      expect(typeId).toBe('typeId1');
+      expect(dateToStr(parse(datetime))).toBe(dateToStr(parse('2025-01-01')));
+    }
+  );
+  const result = await downloadDataByDataId(
+    '1',
+    null,
+    TASK_TYPE_METADATA_DATA_MERGE,
+    {
+      getTargetDay: async () => {
+        return parse('2025-01-15');
+      },
+    }
+  );
   expect(result).toBeNull();
 });

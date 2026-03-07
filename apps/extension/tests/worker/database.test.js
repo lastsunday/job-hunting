@@ -1,11 +1,13 @@
-import { expect, test } from "vitest";
-import { getDb } from "@/entrypoints/offscreen/worker/database";
-import { PGlite } from "@electric-sql/pglite";
+import { expect, test } from 'vitest';
+import { getDb } from '@/entrypoints/offscreen/worker/database';
+import { PGlite } from '@electric-sql/pglite';
 
 test('database init correct', async () => {
   const expectTable = {
     version: { columns: ['num'] },
-    job_browse_history: { columns: ['job_visit_datetime', 'job_id', 'job_visit_type'] },
+    job_browse_history: {
+      columns: ['job_visit_datetime', 'job_id', 'job_visit_type'],
+    },
     config: { columns: ['create_datetime', 'update_datetime', 'key', 'value'] },
     mission: {
       columns: [
@@ -16,8 +18,8 @@ test('database init correct', async () => {
         'mission_name',
         'mission_type',
         'mission_platform',
-        'mission_config'
-      ]
+        'mission_config',
+      ],
     },
     mission_log: {
       columns: [
@@ -27,8 +29,8 @@ test('database init correct', async () => {
         'mission_id',
         'mission_status',
         'mission_status_reason',
-        'mission_log_detail'
-      ]
+        'mission_log_detail',
+      ],
     },
     task: {
       columns: [
@@ -40,25 +42,28 @@ test('database init correct', async () => {
         'type',
         'data_id',
         'status',
-        'error_reason'
-      ]
+        'error_reason',
+      ],
     },
     task_data_upload: {
       columns: [
         'start_datetime',
         'end_datetime',
         'data_count',
+        'data_page_num',
+        'data_page_size',
         'create_datetime',
         'update_datetime',
         'id',
         'type',
         'username',
-        'reponame'
-      ]
+        'reponame',
+      ],
     },
     task_data_download: {
       columns: [
         'datetime',
+        'seq',
         'create_datetime',
         'update_datetime',
         'id',
@@ -66,13 +71,15 @@ test('database init correct', async () => {
         'username',
         'reponame',
         'type_id',
-        'config'
-      ]
+        'config',
+      ],
     },
     task_data_merge: {
       columns: [
         'datetime',
         'data_count',
+        'data_page_num',
+        'data_page_size',
         'create_datetime',
         'update_datetime',
         'id',
@@ -81,8 +88,8 @@ test('database init correct', async () => {
         'reponame',
         'data_id',
         'type_id',
-        'config'
-      ]
+        'config',
+      ],
     },
     job: {
       columns: [
@@ -109,8 +116,8 @@ test('database init correct', async () => {
         'job_company_name',
         'job_location_name',
         'job_address',
-        'job_description'
-      ]
+        'job_description',
+      ],
     },
     job_tag: {
       columns: [
@@ -121,8 +128,8 @@ test('database init correct', async () => {
         'id',
         'job_id',
         'tag_id',
-        'source'
-      ]
+        'source',
+      ],
     },
     tag: {
       columns: [
@@ -130,8 +137,8 @@ test('database init correct', async () => {
         'update_datetime',
         'is_public',
         'tag_id',
-        'tag_name'
-      ]
+        'tag_name',
+      ],
     },
     company_tag: {
       columns: [
@@ -143,8 +150,8 @@ test('database init correct', async () => {
         'company_id',
         'company_name',
         'tag_id',
-        'source'
-      ]
+        'source',
+      ],
     },
     file: {
       columns: [
@@ -157,8 +164,8 @@ test('database init correct', async () => {
         'sha',
         'encoding',
         'content',
-        'type'
-      ]
+        'type',
+      ],
     },
     job_snapshot: {
       columns: [
@@ -168,8 +175,8 @@ test('database init correct', async () => {
         'platform',
         'id',
         'job_id',
-        'url'
-      ]
+        'url',
+      ],
     },
     company: {
       columns: [
@@ -200,8 +207,8 @@ test('database init correct', async () => {
         'company_industry',
         'company_license_number',
         'reg_capital_currency',
-        'source_url'
-      ]
+        'source_url',
+      ],
     },
     data_share_partner: {
       columns: [
@@ -212,8 +219,8 @@ test('database init correct', async () => {
         'id',
         'username',
         'reponame',
-        'repo_type'
-      ]
+        'repo_type',
+      ],
     },
     job_public: {
       columns: [
@@ -222,8 +229,8 @@ test('database init correct', async () => {
         'source_type',
         'source',
         'create_datetime',
-        'update_datetime'
-      ]
+        'update_datetime',
+      ],
     },
     company_comment: {
       columns: [
@@ -236,8 +243,8 @@ test('database init correct', async () => {
         'source',
         'source_data_name',
         'create_datetime',
-        'update_datetime'
-      ]
+        'update_datetime',
+      ],
     },
     data_source_metadata: {
       columns: [
@@ -252,38 +259,44 @@ test('database init correct', async () => {
         'seq',
         'auto_update_enable',
         'create_datetime',
-        'update_datetime'
-      ]
-    }
-  }
+        'update_datetime',
+      ],
+    },
+  };
   const db = await getDb({ dataDir: 'memory://' });
   expect(db).toBeInstanceOf(PGlite);
   const sql = `select tablename as name from pg_tables where schemaname = 'public'`;
   const { rows } = await db.query(sql);
   expect(rows).toHaveLength(Object.keys(expectTable).length);
-  const tableNameArray = rows.map(item => item.name);
+  const tableNameArray = rows.map((item) => item.name);
   const tableNameMap = new Map();
-  tableNameArray.forEach(item => {
-    tableNameMap.set(item, "");
+  tableNameArray.forEach((item) => {
+    tableNameMap.set(item, '');
   });
-  Object.keys(expectTable).forEach(tableName => {
+  Object.keys(expectTable).forEach((tableName) => {
     expect(tableNameMap.has(tableName)).toBeTruthy();
-  })
-  const expectTableNameParam = Object.keys(expectTable).map(tableName => `'${tableName}'`).join(',');
+  });
+  const expectTableNameParam = Object.keys(expectTable)
+    .map((tableName) => `'${tableName}'`)
+    .join(',');
   const sqlQueryTableAndColumn = `select table_name,column_name from information_schema.columns where table_name in (${expectTableNameParam})`;
   const { rows: tableAndNameRows } = await db.query(sqlQueryTableAndColumn);
   const convertdTableAndColumn = tableAndNameRows.reduce(
     (result, currentValue) => {
-      (result[currentValue['table_name']] = result[currentValue['table_name']] || { columns: new Map() }).columns.set(currentValue['column_name'], "");
+      (result[currentValue['table_name']] = result[
+        currentValue['table_name']
+      ] || { columns: new Map() }).columns.set(currentValue['column_name'], '');
       return result;
-    }, {});
+    },
+    {}
+  );
   const expectTableKeys = Object.keys(expectTable);
-  expectTableKeys.forEach(tableName => {
+  expectTableKeys.forEach((tableName) => {
     const table = expectTable[tableName];
-    const queryTable = convertdTableAndColumn[tableName]
+    const queryTable = convertdTableAndColumn[tableName];
     expect(queryTable).toBeTruthy();
-    table.columns.forEach(columnName => {
+    table.columns.forEach((columnName) => {
       expect(queryTable.columns.has(columnName)).toBeTruthy();
-    })
-  })
-})
+    });
+  });
+});
