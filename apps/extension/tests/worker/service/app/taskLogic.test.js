@@ -22,5 +22,4 @@ test('queryRepoFileDateAndMaxSeqMap in correct logic', async () => {
       ]);
     },
   });
-  console.log(result);
 });

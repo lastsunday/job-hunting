@@ -210,7 +210,7 @@ export async function uploadDataByDataId(
   const endDatetime = taskDataUpload.endDatetime;
   const pageNum = taskDataUpload.dataPageNum;
   const pageSize = taskDataUpload.dataPageSize;
-  const dirPath = getPathByDatetime({ endDatetime });
+  const dirPath = getPathByDatetime({ datetime: endDatetime });
   return await uploadData({
     userName,
     repoName,
