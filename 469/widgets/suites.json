@@ -1,0 +1,1 @@
+{"total":2,"items":[{"uid":"6df4b1ac6ca45eb30887c96953ce8d73","name":"Microsoft Edge","statistic":{"failed":0,"broken":0,"skipped":0,"passed":1,"unknown":0,"total":1}},{"uid":"36c900977e1d8b81a2c6893cc82bfc01","name":"chromium","statistic":{"failed":0,"broken":0,"skipped":0,"passed":1,"unknown":0,"total":1}}]}
