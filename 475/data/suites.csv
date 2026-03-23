@@ -1,0 +1,3 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"","5390","打开后台页面","chromium","Mon Mar 23 14:11:45 UTC 2026","passed","Mon Mar 23 14:11:51 UTC 2026","后台管理","features/admin.feature.spec.js","",""
+"","42921","打开后台页面","Microsoft Edge","Mon Mar 23 14:11:45 UTC 2026","passed","Mon Mar 23 14:12:28 UTC 2026","后台管理","features/admin.feature.spec.js","",""
