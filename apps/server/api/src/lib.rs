@@ -3,6 +3,7 @@ pub mod company;
 pub mod config;
 pub mod index;
 pub mod job;
+pub mod statistics;
 pub mod sync;
 
 use std::net::SocketAddr;
@@ -82,6 +83,7 @@ pub fn create_router(state: AppState) -> Router {
     api_router = setup_company(api_router, state.clone());
     api_router = setup_auth(api_router, state.clone());
     api_router = setup_sync(api_router, state.clone());
+    api_router = setup_statistics(api_router, state.clone());
     let (mut app, api) = api_router.split_for_parts();
     app = setup_web(app);
     app = setup_api_fallback(app);
@@ -141,6 +143,10 @@ pub fn setup_auth(router: OpenApiRouter, state: AppState) -> OpenApiRouter {
 
 pub fn setup_sync(router: OpenApiRouter, state: AppState) -> OpenApiRouter {
     api_setup(router, sync::create_routes(state))
+}
+
+pub fn setup_statistics(router: OpenApiRouter, state: AppState) -> OpenApiRouter {
+    api_setup(router, statistics::create_routes(state))
 }
 
 fn api_setup(router: OpenApiRouter, api_router: OpenApiRouter) -> OpenApiRouter {
