@@ -288,6 +288,7 @@ function RouteComponent() {
                 <Table.Th>地点</Table.Th>
                 <Table.Th>薪资</Table.Th>
                 <Table.Th>发布时间</Table.Th>
+                <Table.Th>首次扫描日期</Table.Th>
                 <Table.Th>操作</Table.Th>
               </Table.Tr>
             </Table.Thead>
@@ -304,6 +305,9 @@ function RouteComponent() {
                   </Table.Td>
                   <Table.Td>
                     {job.first_publish_datetime?.slice(0, 10) || '-'}
+                  </Table.Td>
+                  <Table.Td>
+                    {job.create_datetime?.slice(0, 10) || '-'}
                   </Table.Td>
                   <Table.Td>
                     <Group gap="xs">

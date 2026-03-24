@@ -97,8 +97,8 @@ pub fn setup_default(router: Router) -> Router {
             tracing::warn!("Method not allowed");
             Err(ApiError::MethodNotAllowed)
         });
-    let timeout = TimeoutLayer::new(Duration::from_secs(120));
-    let body_limit = DefaultBodyLimit::max(ByteSize::mib(10).as_u64() as usize);
+    let timeout = TimeoutLayer::new(Duration::from_secs(300));
+    let body_limit = DefaultBodyLimit::max(ByteSize::mib(100).as_u64() as usize);
     let cors = CorsLayer::new()
         .allow_origin(cors::Any)
         .allow_methods(cors::Any)

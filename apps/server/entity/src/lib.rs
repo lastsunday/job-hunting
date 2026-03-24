@@ -2,6 +2,8 @@
 
 pub mod prelude;
 
+pub mod company;
+pub mod company_tag;
 pub mod config;
 pub mod job;
 pub mod job_tag;

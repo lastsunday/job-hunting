@@ -48,6 +48,7 @@ mime = { workspace = true }
 chrono = { workspace = true }
 testcontainers = { workspace = true }
 testcontainers-modules = { workspace = true, features = ["postgres", "gitea"] }
+base64 = "0.22"
 entity = { path = "../entity" }
 migration = { path = "../migration" }
 service = { path = "../service" }
