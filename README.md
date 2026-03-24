@@ -134,6 +134,16 @@
 
 如果在 Linux 下，请使用命令 _ulimit -n_ 检查 soft file descriptor 的值，一般默认为 1024 或 2048,请设定一个较高的值如 9001
 
+# AI 辅助开发声明
+
+部分代码或文档使用了 AI 工具（如 OpenCode(big-pickle), GitHub Copilot）生成。
+项目维护者对生成内容进行了审核和修改。
+
+## 当前涉及的模块
+
+1. apps/server
+1. apps/server-ui
+
 # 免责声明
 
 <div id="disclaimer">
