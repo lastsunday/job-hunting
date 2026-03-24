@@ -15,7 +15,6 @@ import {
   Skeleton,
   Drawer,
   Divider,
-  Badge,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { showNotification } from '@mantine/notifications';
@@ -35,7 +34,6 @@ export const Route = createFileRoute('/_pathlessLayout/admin/companies')({
 interface SearchParam {
   page: { num: number; size: number };
   name?: string;
-  platform?: string;
   industry?: string;
 }
 
@@ -53,7 +51,6 @@ function RouteComponent() {
   const [pageSize] = useState(20);
   const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState('');
-  const [searchPlatform, setSearchPlatform] = useState('');
   const [searchIndustry, setSearchIndustry] = useState('');
   const [openedModal, { open: openModal, close: closeModal }] =
     useDisclosure(false);
@@ -93,7 +90,6 @@ function RouteComponent() {
       const param: SearchParam = {
         page: { num: page, size: pageSize },
         name: searchName || undefined,
-        platform: searchPlatform || undefined,
         industry: searchIndustry || undefined,
       };
       const result = await postJson<ApiPageResult<Company>>(
@@ -271,12 +267,6 @@ function RouteComponent() {
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
           <TextInput
-            placeholder="平台"
-            value={searchPlatform}
-            onChange={(e) => setSearchPlatform(e.currentTarget.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          />
-          <TextInput
             placeholder="行业"
             value={searchIndustry}
             onChange={(e) => setSearchIndustry(e.currentTarget.value)}
@@ -301,10 +291,12 @@ function RouteComponent() {
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>公司名称</Table.Th>
-                <Table.Th>平台</Table.Th>
+                <Table.Th>公司状态</Table.Th>
                 <Table.Th>行业</Table.Th>
-                <Table.Th>地址</Table.Th>
-                <Table.Th>创建时间</Table.Th>
+                <Table.Th>社保人数</Table.Th>
+                <Table.Th>自身风险</Table.Th>
+                <Table.Th>关联风险</Table.Th>
+                <Table.Th>数据来源更新时间</Table.Th>
                 <Table.Th>操作</Table.Th>
               </Table.Tr>
             </Table.Thead>
@@ -312,11 +304,15 @@ function RouteComponent() {
               {companies.map((company) => (
                 <Table.Tr key={company.id}>
                   <Table.Td>{company.name}</Table.Td>
-                  <Table.Td>{company.platform || '-'}</Table.Td>
+                  <Table.Td>{company.status || '-'}</Table.Td>
                   <Table.Td>{company.industry || '-'}</Table.Td>
-                  <Table.Td>{company.address || '-'}</Table.Td>
+                  <Table.Td>{company.insurance_num ?? '-'}</Table.Td>
+                  <Table.Td>{company.self_risk ?? '-'}</Table.Td>
+                  <Table.Td>{company.union_risk ?? '-'}</Table.Td>
                   <Table.Td>
-                    {company.create_datetime?.slice(0, 10) || '-'}
+                    {company.source_refresh_datetime
+                      ? company.source_refresh_datetime.slice(0, 10)
+                      : '-'}
                   </Table.Td>
                   <Table.Td>
                     <Group gap="xs">
