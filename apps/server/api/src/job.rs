@@ -5,7 +5,7 @@ use framework::{
     data::{ApiPageResult, ApiResponse, PageParam, valid::ValidJson},
     error::ApiResult,
 };
-use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait, ActiveValue::Set};
+use sea_orm::{ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait, ActiveValue::Set};
 use utoipa::ToSchema;
 use utoipa_axum::{
     router::{OpenApiRouter, UtoipaMethodRouterExt},
@@ -19,7 +19,8 @@ pub fn create_routes(state: AppState) -> OpenApiRouter {
         .routes(routes!(search).with_state(state.clone()))
         .routes(routes!(get_by_id).with_state(state.clone()))
         .routes(routes!(create).with_state(state.clone()))
-        .routes(routes!(update).with_state(state))
+        .routes(routes!(update).with_state(state.clone()))
+        .route("/job/{id}", axum::routing::delete(delete_job).with_state(state))
 }
 
 #[debug_handler]
@@ -171,6 +172,22 @@ pub async fn update(
         .await?
         .ok_or_else(|| framework::error::ApiError::NotFound)?;
     Ok(ApiResponse::success(Some(job)))
+}
+
+#[debug_handler]
+#[utoipa::path(delete, path = "/job/{id}",tag=TAG,security(()),responses(
+    (status=OK,body=ApiResponse<String>)
+))]
+pub async fn delete_job(
+    State(AppState { conn }): State<AppState>,
+    Path(id): Path<String>,
+) -> ApiResult<ApiResponse<String>> {
+    let job = Job::find_by_id(&id)
+        .one(&conn)
+        .await?
+        .ok_or_else(|| framework::error::ApiError::NotFound)?;
+    Job::delete(job.into_active_model()).exec(&conn).await?;
+    Ok(ApiResponse::success(Some("Deleted".to_string())))
 }
 
 use chrono::{DateTime, FixedOffset};
