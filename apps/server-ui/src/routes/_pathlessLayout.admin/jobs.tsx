@@ -28,6 +28,7 @@ import { useEffect, useState } from 'react';
 import { jobApi, Job, CreateJobRequest, UpdateJobRequest } from '@/api/job';
 import { postJson } from '@/api/http';
 import { LocationMap } from '@/components/map/LocationMap';
+import { useTranslation } from '../../i18n';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/jobs')({
   component: RouteComponent,
@@ -48,6 +49,7 @@ interface ApiPageResult<T> {
 }
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -272,33 +274,33 @@ function RouteComponent() {
 
   return (
     <Stack gap="md">
-      <Title order={2}>职位数据</Title>
+      <Title order={2}>{t('job.title')}</Title>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Group>
           <TextInput
-            placeholder="职位名称"
+            placeholder={t('job.pleaseEnterJobName')}
             value={searchName}
             onChange={(e) => setSearchName(e.currentTarget.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
           <TextInput
-            placeholder="工作地点"
+            placeholder={t('job.pleaseEnterLocation')}
             value={searchAddress}
             onChange={(e) => setSearchAddress(e.currentTarget.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
-          <Button onClick={handleSearch}>搜索</Button>
+          <Button onClick={handleSearch}>{t('common.search')}</Button>
           <SegmentedControl
             value={viewMode}
             onChange={(v) => setViewMode(v as 'table' | 'map')}
             data={[
-              { label: '表格视图', value: 'table' },
-              { label: '地图视图', value: 'map' },
+              { label: t('job.tableView'), value: 'table' },
+              { label: t('job.mapView'), value: 'map' },
             ]}
           />
           <Button ml="auto" onClick={handleCreate}>
-            新增职位
+            {t('job.addJob')}
           </Button>
         </Group>
       </Card>
@@ -316,15 +318,15 @@ function RouteComponent() {
               <Table>
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th>职位名称</Table.Th>
-                    <Table.Th>公司</Table.Th>
-                    <Table.Th>地点</Table.Th>
-                    <Table.Th>学历要求</Table.Th>
-                    <Table.Th>工作年限</Table.Th>
-                    <Table.Th>薪资</Table.Th>
-                    <Table.Th>发布时间</Table.Th>
-                    <Table.Th>首次扫描日期</Table.Th>
-                    <Table.Th>操作</Table.Th>
+                    <Table.Th>{t('job.name')}</Table.Th>
+                    <Table.Th>{t('job.company')}</Table.Th>
+                    <Table.Th>{t('job.location')}</Table.Th>
+                    <Table.Th>{t('job.degree')}</Table.Th>
+                    <Table.Th>{t('job.year')}</Table.Th>
+                    <Table.Th>{t('job.salary')}</Table.Th>
+                    <Table.Th>{t('job.publishTime')}</Table.Th>
+                    <Table.Th>{t('job.firstScanTime')}</Table.Th>
+                    <Table.Th>{t('job.actions')}</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -335,7 +337,9 @@ function RouteComponent() {
                       <Table.Td>{job.address || job.location_name}</Table.Td>
                       <Table.Td>{job.degree_name || '-'}</Table.Td>
                       <Table.Td>
-                        {job.year != null ? `${job.year}年` : '-'}
+                        {job.year != null
+                          ? t('job.yearValue', { year: job.year })
+                          : '-'}
                       </Table.Td>
                       <Table.Td>
                         {job.salary_min && job.salary_max
@@ -357,14 +361,14 @@ function RouteComponent() {
                             variant="light"
                             onClick={() => handleView(job)}
                           >
-                            查看
+                            {t('common.view')}
                           </Button>
                           <Button
                             size="xs"
                             variant="light"
                             onClick={() => handleEdit(job)}
                           >
-                            编辑
+                            {t('common.edit')}
                           </Button>
                           <Button
                             size="xs"
@@ -372,7 +376,7 @@ function RouteComponent() {
                             color="red"
                             onClick={() => handleDelete(job)}
                           >
-                            删除
+                            {t('common.delete')}
                           </Button>
                         </Group>
                       </Table.Td>
@@ -393,7 +397,7 @@ function RouteComponent() {
             >
               <div className={classes.sidebarHeader}>
                 <Text size="sm" fw={500}>
-                  职位列表 ({total})
+                  {t('job.jobList')} ({total})
                 </Text>
               </div>
               <ScrollArea className={classes.sidebarContent}>
@@ -404,7 +408,7 @@ function RouteComponent() {
                     <Skeleton height={50} radius="md" />
                   </Stack>
                 ) : jobs.length === 0 ? (
-                  <div className={classes.noCoords}>暂无数据</div>
+                  <div className={classes.noCoords}>{t('common.noData')}</div>
                 ) : (
                   jobs.map((job) => (
                     <div
@@ -530,12 +534,12 @@ function RouteComponent() {
       <Modal
         opened={openedModal}
         onClose={closeModal}
-        title={editingJob ? '编辑职位' : '新增职位'}
+        title={editingJob ? t('job.editJob') : t('job.addJob')}
         size="lg"
       >
         <Stack>
           <TextInput
-            label="职位名称"
+            label={t('job.name')}
             value={formData.name}
             onChange={(e) =>
               setFormData({ ...formData, name: e.currentTarget.value })
@@ -543,14 +547,14 @@ function RouteComponent() {
             required
           />
           <TextInput
-            label="公司名称"
+            label={t('job.companyName')}
             value={formData.company_name}
             onChange={(e) =>
               setFormData({ ...formData, company_name: e.currentTarget.value })
             }
           />
           <TextInput
-            label="工作地点"
+            label={t('job.location')}
             value={formData.address}
             onChange={(e) =>
               setFormData({ ...formData, address: e.currentTarget.value })
@@ -558,7 +562,7 @@ function RouteComponent() {
           />
           <Group grow>
             <NumberInput
-              label="经度"
+              label={t('job.longitude')}
               value={formData.longitude ?? ''}
               onChange={(val) =>
                 setFormData({
@@ -569,7 +573,7 @@ function RouteComponent() {
               decimalScale={6}
             />
             <NumberInput
-              label="纬度"
+              label={t('job.latitude')}
               value={formData.latitude ?? ''}
               onChange={(val) =>
                 setFormData({
@@ -581,60 +585,66 @@ function RouteComponent() {
             />
           </Group>
           <TextInput
-            label="职位描述"
+            label={t('job.jobDescription')}
             value={formData.description}
             onChange={(e) =>
               setFormData({ ...formData, description: e.currentTarget.value })
             }
           />
           <TextInput
-            label="职位URL"
+            label={t('job.jobUrl')}
             value={formData.url}
             onChange={(e) =>
               setFormData({ ...formData, url: e.currentTarget.value })
             }
           />
           <TextInput
-            label="平台"
+            label={t('job.platform')}
             value={formData.platform}
             onChange={(e) =>
               setFormData({ ...formData, platform: e.currentTarget.value })
             }
           />
           <Textarea
-            label="技能标签"
+            label={t('job.skillTag')}
             value={formData.skill_tag}
             onChange={(e) =>
               setFormData({ ...formData, skill_tag: e.currentTarget.value })
             }
-            placeholder="用逗号分隔多个标签"
+            placeholder={t('job.skillTagPlaceholder')}
           />
           <Textarea
-            label="福利标签"
+            label={t('job.welfareTag')}
             value={formData.welfare_tag}
             onChange={(e) =>
               setFormData({ ...formData, welfare_tag: e.currentTarget.value })
             }
-            placeholder="用逗号分隔多个标签"
+            placeholder={t('job.welfareTagPlaceholder')}
           />
           <Button onClick={handleSubmit} loading={submitting}>
-            {editingJob ? '更新' : '创建'}
+            {editingJob ? t('common.update') : t('common.create')}
           </Button>
         </Stack>
       </Modal>
 
-      <Modal opened={openedDelete} onClose={closeDelete} title="确认删除">
-        <Text>确定要删除职位 "{deletingJob?.name}" 吗？此操作不可恢复。</Text>
+      <Modal
+        opened={openedDelete}
+        onClose={closeDelete}
+        title={t('job.confirmDelete')}
+      >
+        <Text>
+          {t('job.confirmDeleteMessage', { name: deletingJob?.name || '' })}
+        </Text>
         <Group justify="flex-end" mt="md">
           <Button variant="default" onClick={closeDelete}>
-            取消
+            {t('common.cancel')}
           </Button>
           <Button
             color="red"
             onClick={handleConfirmDelete}
             loading={submitting}
           >
-            删除
+            {t('common.delete')}
           </Button>
         </Group>
       </Modal>
@@ -642,7 +652,7 @@ function RouteComponent() {
       <Drawer
         opened={openedView}
         onClose={closeView}
-        title="职位详情"
+        title={t('job.jobDetails')}
         size="md"
         position="right"
       >

@@ -13,19 +13,24 @@ import {
 import { useEffect, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { jobStatsApi, companyStatsApi, StatItem } from '@/api/statistics';
+import { useTranslation } from '../../i18n';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const { t } = useTranslation();
+
   return (
     <Stack gap="md">
-      <Title order={2}>数据统计</Title>
+      <Title order={2}>{t('statistics.dataStatistics')}</Title>
       <Tabs defaultValue="job">
         <Tabs.List>
-          <Tabs.Tab value="job">职位统计</Tabs.Tab>
-          <Tabs.Tab value="company">公司统计</Tabs.Tab>
+          <Tabs.Tab value="job">{t('statistics.jobStatistics')}</Tabs.Tab>
+          <Tabs.Tab value="company">
+            {t('statistics.companyStatistics')}
+          </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="job" pt="md">
@@ -41,6 +46,7 @@ function RouteComponent() {
 }
 
 function JobStats() {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
   const [loading, setLoading] = useState(true);
   const [scanTimeYear, setScanTimeYear] = useState<string | null>(
@@ -91,7 +97,7 @@ function JobStats() {
   }, [scanTimeYear]);
 
   const yearOptions = [
-    { value: '', label: '全部' },
+    { value: '', label: t('common.all') },
     ...Array.from({ length: 5 }, (_, i) => ({
       value: (currentYear - i).toString(),
       label: (currentYear - i).toString(),
@@ -114,7 +120,7 @@ function JobStats() {
     <Grid>
       <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
         <StatCard
-          title="扫描时间分布"
+          title={t('statistics.scanTimeDistribution')}
           extra={
             <Select
               size="xs"
@@ -127,29 +133,32 @@ function JobStats() {
           }
         >
           <ReactECharts
-            option={getLineChartOption(scanTimeData, '扫描数量')}
+            option={getLineChartOption(scanTimeData, t('statistics.scanCount'))}
             style={{ height: 280 }}
           />
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
-        <StatCard title="薪资分布">
+        <StatCard title={t('statistics.salaryDistribution')}>
           <ReactECharts
-            option={getBarChartOption(salaryData, '职位数量')}
+            option={getBarChartOption(salaryData, t('statistics.jobCount'))}
             style={{ height: 280 }}
           />
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
-        <StatCard title="地区分布 (Top 10)">
+        <StatCard title={t('statistics.locationDistribution')}>
           <ReactECharts
-            option={getBarChartOption(locationData.slice(0, 10), '职位数量')}
+            option={getBarChartOption(
+              locationData.slice(0, 10),
+              t('statistics.jobCount')
+            )}
             style={{ height: 280 }}
           />
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
-        <StatCard title="平台分布">
+        <StatCard title={t('statistics.platformDistribution')}>
           <ReactECharts
             option={getPieChartOption(platformData)}
             style={{ height: 280 }}
@@ -157,17 +166,17 @@ function JobStats() {
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
-        <StatCard title="学历分布">
+        <StatCard title={t('statistics.degreeDistribution')}>
           <ReactECharts
-            option={getBarChartOption(degreeData, '职位数量')}
+            option={getBarChartOption(degreeData, t('statistics.jobCount'))}
             style={{ height: 280 }}
           />
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
-        <StatCard title="工作年限分布">
+        <StatCard title={t('statistics.yearDistribution')}>
           <ReactECharts
-            option={getBarChartOption(yearData, '职位数量')}
+            option={getBarChartOption(yearData, t('statistics.jobCount'))}
             style={{ height: 280 }}
           />
         </StatCard>
@@ -177,6 +186,7 @@ function JobStats() {
 }
 
 function CompanyStats() {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
   const [loading, setLoading] = useState(true);
   const [sourceUpdateYear, setSourceUpdateYear] = useState<string | null>(
@@ -225,7 +235,7 @@ function CompanyStats() {
   }, [sourceUpdateYear]);
 
   const yearOptions = [
-    { value: '', label: '全部' },
+    { value: '', label: t('common.all') },
     ...Array.from({ length: 5 }, (_, i) => ({
       value: (currentYear - i).toString(),
       label: (currentYear - i).toString(),
@@ -247,23 +257,29 @@ function CompanyStats() {
   return (
     <Grid>
       <Grid.Col span={{ base: 12, md: 6 }}>
-        <StatCard title="社保人数分布">
+        <StatCard title={t('statistics.insuranceDistribution')}>
           <ReactECharts
-            option={getBarChartOption(insuranceData, '公司数量')}
+            option={getBarChartOption(
+              insuranceData,
+              t('statistics.companyCount')
+            )}
             style={{ height: 280 }}
           />
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6 }}>
-        <StatCard title="行业分布 (Top 10)">
+        <StatCard title={t('statistics.industryDistribution')}>
           <ReactECharts
-            option={getBarChartOption(industryData.slice(0, 10), '公司数量')}
+            option={getBarChartOption(
+              industryData.slice(0, 10),
+              t('statistics.companyCount')
+            )}
             style={{ height: 280 }}
           />
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6 }}>
-        <StatCard title="公司状态分布">
+        <StatCard title={t('statistics.companyStatusDistribution')}>
           <ReactECharts
             option={getPieChartOption(statusData)}
             style={{ height: 280 }}
@@ -272,7 +288,7 @@ function CompanyStats() {
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6 }}>
         <StatCard
-          title="数据来源更新时间分布"
+          title={t('statistics.sourceUpdateDistribution')}
           extra={
             <Select
               size="xs"
@@ -285,7 +301,10 @@ function CompanyStats() {
           }
         >
           <ReactECharts
-            option={getLineChartOption(sourceUpdateData, '更新数量')}
+            option={getLineChartOption(
+              sourceUpdateData,
+              t('statistics.scanCount')
+            )}
             style={{ height: 280 }}
           />
         </StatCard>

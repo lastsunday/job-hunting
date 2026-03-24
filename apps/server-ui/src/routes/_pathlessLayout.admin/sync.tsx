@@ -18,12 +18,14 @@ import {
 import { showNotification } from '@mantine/notifications';
 import { useEffect, useState } from 'react';
 import { syncApi, SyncStatus, SyncConfig, SyncGitParam } from '@/api/sync';
+import { useTranslation } from '../../i18n';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/sync')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [config, setConfig] = useState<SyncConfig | null>(null);
   const [loading, setLoading] = useState(true);
@@ -179,11 +181,11 @@ function RouteComponent() {
 
   return (
     <Stack gap="md">
-      <Title order={2}>数据同步</Title>
+      <Title order={2}>{t('sync.title')}</Title>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Title order={4} mb="md">
-          同步状态
+          {t('sync.syncStatus')}
         </Title>
         <Group>
           <RingProgress
@@ -236,19 +238,23 @@ function RouteComponent() {
           />
           <Stack gap="xs">
             <Text size="sm">
-              最后同步职位:{' '}
-              <Badge color="blue">{status?.last_sync_job || '从未同步'}</Badge>
-            </Text>
-            <Text size="sm">
-              最后同步公司:{' '}
-              <Badge color="green">
-                {status?.last_sync_company || '从未同步'}
+              {t('sync.lastSyncJob')}:{' '}
+              <Badge color="blue">
+                {status?.last_sync_job || t('sync.neverSynced')}
               </Badge>
             </Text>
             <Text size="sm">
-              定时任务:{' '}
+              {t('sync.lastSyncCompany')}:{' '}
+              <Badge color="green">
+                {status?.last_sync_company || t('sync.neverSynced')}
+              </Badge>
+            </Text>
+            <Text size="sm">
+              {t('sync.scheduledTask')}:{' '}
               <Badge color={status?.scheduler_running ? 'green' : 'gray'}>
-                {status?.scheduler_running ? '运行中' : '已停止'}
+                {status?.scheduler_running
+                  ? t('sync.running')
+                  : t('sync.stopped')}
               </Badge>
             </Text>
           </Stack>
@@ -257,31 +263,31 @@ function RouteComponent() {
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Title order={4} mb="md">
-          Git 同步
+          {t('sync.gitSync')}
         </Title>
         <Stack>
           <TextInput
-            label="Git API URL"
+            label={t('sync.gitApiUrl')}
             placeholder="https://api.github.com"
             value={baseUrl}
             onChange={(e) => setBaseUrl(e.currentTarget.value)}
           />
           <Group grow>
             <TextInput
-              label="仓库所有者 (Owner)"
+              label={t('sync.repoOwner')}
               placeholder="Enter owner"
               value={owner}
               onChange={(e) => setOwner(e.currentTarget.value)}
             />
             <TextInput
-              label="仓库名称"
+              label={t('sync.repoName')}
               placeholder="Enter repo name"
               value={repo}
               onChange={(e) => setRepo(e.currentTarget.value)}
             />
           </Group>
           <PasswordInput
-            label="Token (可选)"
+            label={t('sync.tokenOptional')}
             placeholder="Enter token if needed"
             value={token}
             onChange={(e) => setToken(e.currentTarget.value)}
@@ -292,7 +298,7 @@ function RouteComponent() {
               onClick={handleSyncJobs}
               leftSection={<div className="i-mdi:github" />}
             >
-              同步职位数据
+              {t('sync.syncJobData')}
             </Button>
             <Button
               loading={syncing}
@@ -300,7 +306,7 @@ function RouteComponent() {
               variant="outline"
               leftSection={<div className="i-mdi:github" />}
             >
-              同步公司数据
+              {t('sync.syncCompanyData')}
             </Button>
           </Group>
         </Stack>
@@ -308,55 +314,55 @@ function RouteComponent() {
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Title order={4} mb="md">
-          文件导入
+          {t('sync.fileImport')}
         </Title>
         <Stack>
           <Select
-            label="数据类型"
+            label={t('sync.dataType')}
             data={[
-              { value: 'job', label: '职位' },
-              { value: 'company', label: '公司' },
+              { value: 'job', label: t('sync.jobType') },
+              { value: 'company', label: t('sync.companyType') },
             ]}
             value={dataType}
             onChange={(value) => setDataType(value || 'job')}
           />
           <FileInput
-            label="选择 Excel 文件"
-            placeholder="点击选择文件"
+            label={t('sync.selectExcelFile')}
+            placeholder={t('sync.clickToSelectFile')}
             accept=".xlsx,.xls"
             value={file}
             onChange={setFile}
           />
           <Button loading={syncing} onClick={handleFileImport} disabled={!file}>
-            导入数据
+            {t('sync.importData')}
           </Button>
         </Stack>
       </Card>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Title order={4} mb="md">
-          定时任务配置
+          {t('sync.scheduledTaskConfig')}
         </Title>
         <Stack>
           <Alert
             color={config?.schedule_enabled ? 'green' : 'gray'}
-            title="定时同步状态"
+            title={t('sync.scheduledSyncStatus')}
           >
-            {config?.schedule_enabled ? '已启用' : '已禁用'}
+            {config?.schedule_enabled ? t('sync.enabled') : t('sync.disabled')}
           </Alert>
           <Text size="sm">
-            Cron 表达式: <code>{config?.schedule_cron}</code>
+            {t('sync.cronExpression')}: <code>{config?.schedule_cron}</code>
           </Text>
           <Text size="sm">
-            同步职位:{' '}
+            {t('sync.syncJob')}:{' '}
             <Badge color={config?.sync_jobs ? 'green' : 'red'}>
-              {config?.sync_jobs ? '是' : '否'}
+              {config?.sync_jobs ? t('sync.yes') : t('sync.no')}
             </Badge>
           </Text>
           <Text size="sm">
-            同步公司:{' '}
+            {t('sync.syncCompany')}:{' '}
             <Badge color={config?.sync_companies ? 'green' : 'red'}>
-              {config?.sync_companies ? '是' : '否'}
+              {config?.sync_companies ? t('sync.yes') : t('sync.no')}
             </Badge>
           </Text>
         </Stack>

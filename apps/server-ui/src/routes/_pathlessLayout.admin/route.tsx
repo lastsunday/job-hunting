@@ -10,6 +10,7 @@ import {
   Modal,
   PasswordInput,
   Text,
+  Select,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { showNotification } from '@mantine/notifications';
@@ -23,6 +24,7 @@ import {
 import { useEffect, useState } from 'react';
 import logo from '../../assets/logo.svg';
 import { useAuth } from '../../hooks/auth';
+import { useTranslation } from '../../i18n';
 import { UserButton } from '../../widget/UserButton/UserButton';
 import classes from './route.module.css';
 
@@ -41,27 +43,36 @@ export const Route = createFileRoute('/_pathlessLayout/admin')({
 });
 
 const data = [
-  { link: '/admin', label: '仪表板', icon: 'i-mdi:monitor-dashboard' },
-  { link: '/admin/jobs', label: '职位数据', icon: 'i-hugeicons:job-search' },
-  { link: '/admin/companies', label: '公司数据', icon: 'i-mdi:company' },
-  { link: '/admin/sync', label: '数据同步', icon: 'i-mdi:sync' },
-  { link: '', label: '公司评论', icon: 'i-mingcute:comment-line' },
+  { link: '/admin', label: 'admin.dashboard', icon: 'i-mdi:monitor-dashboard' },
+  {
+    link: '/admin/jobs',
+    label: 'admin.jobData',
+    icon: 'i-hugeicons:job-search',
+  },
+  {
+    link: '/admin/companies',
+    label: 'admin.companyData',
+    icon: 'i-mdi:company',
+  },
+  { link: '/admin/sync', label: 'admin.dataSync', icon: 'i-mdi:sync' },
+  { link: '', label: 'admin.companyComment', icon: 'i-mingcute:comment-line' },
   {
     link: '',
-    label: '任务',
+    label: 'admin.task',
     icon: 'i-material-symbols:other-admission-outline',
   },
-  { link: '', label: '数据源', icon: 'i-material-symbols:dataset' },
-  { link: '', label: '设置', icon: 'i-mdi:settings' },
+  { link: '', label: 'admin.dataSource', icon: 'i-material-symbols:dataset' },
+  { link: '', label: 'admin.settings', icon: 'i-mdi:settings' },
 ];
 
 function RouteComponent() {
   const router = useRouter();
   const navigate = Route.useNavigate();
   const auth = useAuth();
+  const { t, locale, setLocale } = useTranslation();
   const [opened, { toggle }] = useDisclosure();
 
-  const [active, setActive] = useState('仪表板');
+  const [active, setActive] = useState('admin.dashboard');
 
   const [openedPassword, { open: openPassword, close: closePassword }] =
     useDisclosure(false);
@@ -79,7 +90,7 @@ function RouteComponent() {
   }, []);
 
   const handleLogout = () => {
-    if (window.confirm('确认登出？')) {
+    if (window.confirm(t('admin.confirmLogout'))) {
       auth.logout().then(() => {
         router.invalidate().finally(() => {
           navigate({ to: '/login' });
@@ -103,7 +114,7 @@ function RouteComponent() {
       }}
     >
       <div className={`${item.icon} ${classes.linkIcon}`} />
-      <span>{item.label}</span>
+      <span>{t(item.label as any)}</span>
     </a>
   ));
 
@@ -120,8 +131,8 @@ function RouteComponent() {
       if (passwordValue !== confirmPasswordValue) {
         showNotification({
           color: 'red',
-          title: '错误',
-          message: '密码不一致',
+          title: t('common.error'),
+          message: t('password.passwordMismatch'),
         });
       } else {
         const oldPassword = oldPasswordValue.toString();
@@ -129,8 +140,8 @@ function RouteComponent() {
         await resetPassword({ password, old_password: oldPassword });
         showNotification({
           color: 'green',
-          title: '密码修改成功',
-          message: `请重新登录`,
+          title: t('password.passwordChangeSuccess'),
+          message: t('password.pleaseReLogin'),
         });
         await router.invalidate();
         auth.logout().then(() => {
@@ -143,7 +154,7 @@ function RouteComponent() {
       console.error('Error logging in: ', error);
       showNotification({
         color: 'red',
-        title: 'Error',
+        title: t('common.error'),
         message: `${error}`,
       });
     } finally {
@@ -160,10 +171,27 @@ function RouteComponent() {
       padding="md"
     >
       <AppShell.Header>
-        <Group h="100%" px="md">
-          <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
-          <img className={classes.logo} src={logo}></img>
-          <Text>职位猎人(后台)</Text>
+        <Group h="100%" px="md" justify="space-between">
+          <Group>
+            <Burger
+              opened={opened}
+              onClick={toggle}
+              hiddenFrom="sm"
+              size="sm"
+            />
+            <img className={classes.logo} src={logo}></img>
+            <Text>{t('admin.jobHunter')}</Text>
+          </Group>
+          <Select
+            value={locale}
+            onChange={(value) => value && setLocale(value as 'zh' | 'en')}
+            data={[
+              { value: 'zh', label: '🇨🇳 中文' },
+              { value: 'en', label: '🇺🇸 EN' },
+            ]}
+            size="xs"
+            styles={{ input: { minWidth: 90 } }}
+          />
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="md">
@@ -186,7 +214,7 @@ function RouteComponent() {
           <div className={classes.footer}>
             <a className={classes.link} onClick={openPassword}>
               <div className="i-mdi:password size-5 mr-2"></div>
-              <span>修改密码</span>
+              <span>{t('admin.changePassword')}</span>
             </a>
             <a
               href="#"
@@ -197,7 +225,7 @@ function RouteComponent() {
               }}
             >
               <div className="i-material-symbols:logout size-5 mr-2"></div>
-              <span>登出</span>
+              <span>{t('admin.logout')}</span>
             </a>
           </div>
         </nav>
@@ -205,12 +233,16 @@ function RouteComponent() {
       <AppShell.Main>
         <Outlet />
       </AppShell.Main>
-      <Modal opened={openedPassword} onClose={closePassword} title="修改密码">
+      <Modal
+        opened={openedPassword}
+        onClose={closePassword}
+        title={t('password.changePassword')}
+      >
         <form className="mt-4 max-w-lg" onSubmit={onFormSubmit}>
           <PasswordInput
             name="oldPassword"
-            label="原密码"
-            placeholder="请输入原密码"
+            label={t('password.oldPassword')}
+            placeholder={t('password.pleaseEnterOldPassword')}
             required
             mt="md"
             radius="md"
@@ -219,8 +251,8 @@ function RouteComponent() {
           />
           <PasswordInput
             name="password"
-            label="密码"
-            placeholder="请输入密码"
+            label={t('password.newPassword')}
+            placeholder={t('password.pleaseEnterPassword')}
             required
             mt="md"
             radius="md"
@@ -229,8 +261,8 @@ function RouteComponent() {
           />
           <PasswordInput
             name="confirmPassword"
-            label="确认密码"
-            placeholder="请输入确认密码"
+            label={t('password.confirmPassword')}
+            placeholder={t('password.pleaseEnterConfirmPassword')}
             required
             mt="md"
             radius="md"
@@ -244,7 +276,9 @@ function RouteComponent() {
             radius="md"
             disabled={isSubmitting}
           >
-            {isPasswordUpdating ? '修改中...' : '修改密码'}
+            {isPasswordUpdating
+              ? t('password.changing')
+              : t('password.changePassword')}
           </Button>
         </form>
       </Modal>

@@ -32,6 +32,7 @@ import {
 } from '@/api/company';
 import { postJson } from '@/api/http';
 import { LocationMap } from '@/components/map/LocationMap';
+import { useTranslation } from '../../i18n';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/companies')({
   component: RouteComponent,
@@ -51,6 +52,7 @@ interface ApiPageResult<T> {
 }
 
 function RouteComponent() {
+  const { t } = useTranslation();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -279,33 +281,33 @@ function RouteComponent() {
 
   return (
     <Stack gap="md">
-      <Title order={2}>公司数据</Title>
+      <Title order={2}>{t('company.title')}</Title>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Group>
           <TextInput
-            placeholder="公司名称"
+            placeholder={t('company.pleaseEnterCompanyName')}
             value={searchName}
             onChange={(e) => setSearchName(e.currentTarget.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
           <TextInput
-            placeholder="行业"
+            placeholder={t('company.pleaseEnterIndustry')}
             value={searchIndustry}
             onChange={(e) => setSearchIndustry(e.currentTarget.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
-          <Button onClick={handleSearch}>搜索</Button>
+          <Button onClick={handleSearch}>{t('common.search')}</Button>
           <SegmentedControl
             value={viewMode}
             onChange={(v) => setViewMode(v as 'table' | 'map')}
             data={[
-              { label: '表格视图', value: 'table' },
-              { label: '地图视图', value: 'map' },
+              { label: t('company.tableView'), value: 'table' },
+              { label: t('company.mapView'), value: 'map' },
             ]}
           />
           <Button ml="auto" onClick={handleCreate}>
-            新增公司
+            {t('company.addCompany')}
           </Button>
         </Group>
       </Card>
@@ -323,14 +325,14 @@ function RouteComponent() {
               <Table>
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th>公司名称</Table.Th>
-                    <Table.Th>公司状态</Table.Th>
-                    <Table.Th>行业</Table.Th>
-                    <Table.Th>社保人数</Table.Th>
-                    <Table.Th>自身风险</Table.Th>
-                    <Table.Th>关联风险</Table.Th>
-                    <Table.Th>数据来源更新时间</Table.Th>
-                    <Table.Th>操作</Table.Th>
+                    <Table.Th>{t('company.name')}</Table.Th>
+                    <Table.Th>{t('company.status')}</Table.Th>
+                    <Table.Th>{t('company.industry')}</Table.Th>
+                    <Table.Th>{t('company.insuranceNum')}</Table.Th>
+                    <Table.Th>{t('company.selfRisk')}</Table.Th>
+                    <Table.Th>{t('company.unionRisk')}</Table.Th>
+                    <Table.Th>{t('company.sourceUpdateTime')}</Table.Th>
+                    <Table.Th>{t('company.actions')}</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -354,14 +356,14 @@ function RouteComponent() {
                             variant="light"
                             onClick={() => handleView(company)}
                           >
-                            查看
+                            {t('common.view')}
                           </Button>
                           <Button
                             size="xs"
                             variant="light"
                             onClick={() => handleEdit(company)}
                           >
-                            编辑
+                            {t('common.edit')}
                           </Button>
                           <Button
                             size="xs"
@@ -369,7 +371,7 @@ function RouteComponent() {
                             color="red"
                             onClick={() => handleDelete(company)}
                           >
-                            删除
+                            {t('common.delete')}
                           </Button>
                         </Group>
                       </Table.Td>
