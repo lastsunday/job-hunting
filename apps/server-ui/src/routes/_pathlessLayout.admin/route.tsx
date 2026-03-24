@@ -41,7 +41,7 @@ export const Route = createFileRoute('/_pathlessLayout/admin')({
 });
 
 const data = [
-  { link: '/', label: '仪表板', icon: 'i-mdi:monitor-dashboard' },
+  { link: '/admin', label: '仪表板', icon: 'i-mdi:monitor-dashboard' },
   { link: '/admin/jobs', label: '职位数据', icon: 'i-hugeicons:job-search' },
   { link: '/admin/companies', label: '公司数据', icon: 'i-mdi:company' },
   { link: '/admin/sync', label: '数据同步', icon: 'i-mdi:sync' },
