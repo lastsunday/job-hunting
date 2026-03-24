@@ -11,9 +11,11 @@
     "@tanstack/react-query-devtools": "^5.91.3",
     "@tanstack/react-router": "^1.166.2",
     "@tanstack/react-router-devtools": "^1.166.2",
+    "@vis.gl/react-maplibre": "^8.1.0",
     "axios": "^1.13.6",
     "echarts": "^5.6.0",
     "echarts-for-react": "^3.0.6",
+    "maplibre-gl": "^5.19.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {

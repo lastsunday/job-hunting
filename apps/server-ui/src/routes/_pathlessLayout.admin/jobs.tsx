@@ -16,12 +16,18 @@ import {
   Drawer,
   Divider,
   Badge,
+  SegmentedControl,
+  ScrollArea,
+  Badge as MapBadge,
+  Select,
 } from '@mantine/core';
+import classes from './jobs.module.css';
 import { useDisclosure } from '@mantine/hooks';
 import { showNotification } from '@mantine/notifications';
 import { useEffect, useState } from 'react';
 import { jobApi, Job, CreateJobRequest, UpdateJobRequest } from '@/api/job';
 import { postJson } from '@/api/http';
+import { LocationMap } from '@/components/map/LocationMap';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/jobs')({
   component: RouteComponent,
@@ -45,7 +51,7 @@ function RouteComponent() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState('');
   const [searchAddress, setSearchAddress] = useState('');
@@ -59,6 +65,8 @@ function RouteComponent() {
   const [viewingJob, setViewingJob] = useState<Job | null>(null);
   const [deletingJob, setDeletingJob] = useState<Job | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'map'>('table');
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<CreateJobRequest>({
     name: '',
@@ -78,6 +86,8 @@ function RouteComponent() {
     boss_position: '',
     skill_tag: '',
     welfare_tag: '',
+    longitude: undefined,
+    latitude: undefined,
   });
 
   const loadJobs = async () => {
@@ -114,6 +124,13 @@ function RouteComponent() {
     loadJobs();
   };
 
+  const handlePageSizeChange = (value: string | null) => {
+    if (value) {
+      setPageSize(Number(value));
+      setPage(1);
+    }
+  };
+
   const handleCreate = () => {
     setEditingJob(null);
     setFormData({
@@ -134,6 +151,8 @@ function RouteComponent() {
       boss_position: '',
       skill_tag: '',
       welfare_tag: '',
+      longitude: undefined,
+      latitude: undefined,
     });
     openModal();
   };
@@ -158,6 +177,8 @@ function RouteComponent() {
       boss_position: job.boss_position || '',
       skill_tag: job.skill_tag || '',
       welfare_tag: job.welfare_tag || '',
+      longitude: job.longitude,
+      latitude: job.latitude,
     });
     openModal();
   };
@@ -194,6 +215,8 @@ function RouteComponent() {
           boss_position: formData.boss_position || undefined,
           skill_tag: formData.skill_tag || undefined,
           welfare_tag: formData.welfare_tag || undefined,
+          longitude: formData.longitude,
+          latitude: formData.latitude,
         };
         await jobApi.update(editingJob.id, data);
         showNotification({
@@ -266,6 +289,14 @@ function RouteComponent() {
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
           <Button onClick={handleSearch}>搜索</Button>
+          <SegmentedControl
+            value={viewMode}
+            onChange={(v) => setViewMode(v as 'table' | 'map')}
+            data={[
+              { label: '表格视图', value: 'table' },
+              { label: '地图视图', value: 'map' },
+            ]}
+          />
           <Button ml="auto" onClick={handleCreate}>
             新增职位
           </Button>
@@ -273,76 +304,205 @@ function RouteComponent() {
       </Card>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
-        {loading ? (
-          <Stack>
-            <Skeleton height={50} radius="md" />
-            <Skeleton height={50} radius="md" />
-            <Skeleton height={50} radius="md" />
-          </Stack>
-        ) : (
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>职位名称</Table.Th>
-                <Table.Th>公司</Table.Th>
-                <Table.Th>地点</Table.Th>
-                <Table.Th>薪资</Table.Th>
-                <Table.Th>发布时间</Table.Th>
-                <Table.Th>首次扫描日期</Table.Th>
-                <Table.Th>操作</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {jobs.map((job) => (
-                <Table.Tr key={job.id}>
-                  <Table.Td>{job.name}</Table.Td>
-                  <Table.Td>{job.company_name}</Table.Td>
-                  <Table.Td>{job.address || job.location_name}</Table.Td>
-                  <Table.Td>
-                    {job.salary_min && job.salary_max
-                      ? `${job.salary_min / 1000}k-${job.salary_max / 1000}k`
-                      : '-'}
-                  </Table.Td>
-                  <Table.Td>
-                    {job.first_publish_datetime?.slice(0, 10) || '-'}
-                  </Table.Td>
-                  <Table.Td>
-                    {job.create_datetime?.slice(0, 10) || '-'}
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <Button
-                        size="xs"
-                        variant="light"
-                        onClick={() => handleView(job)}
-                      >
-                        查看
-                      </Button>
-                      <Button
-                        size="xs"
-                        variant="light"
-                        onClick={() => handleEdit(job)}
-                      >
-                        编辑
-                      </Button>
-                      <Button
-                        size="xs"
-                        variant="light"
-                        color="red"
-                        onClick={() => handleDelete(job)}
-                      >
-                        删除
-                      </Button>
-                    </Group>
-                  </Table.Td>
+        {viewMode === 'table' ? (
+          loading ? (
+            <Stack>
+              <Skeleton height={50} radius="md" />
+              <Skeleton height={50} radius="md" />
+              <Skeleton height={50} radius="md" />
+            </Stack>
+          ) : (
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>职位名称</Table.Th>
+                  <Table.Th>公司</Table.Th>
+                  <Table.Th>地点</Table.Th>
+                  <Table.Th>学历要求</Table.Th>
+                  <Table.Th>工作年限</Table.Th>
+                  <Table.Th>薪资</Table.Th>
+                  <Table.Th>发布时间</Table.Th>
+                  <Table.Th>首次扫描日期</Table.Th>
+                  <Table.Th>操作</Table.Th>
                 </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+              </Table.Thead>
+              <Table.Tbody>
+                {jobs.map((job) => (
+                  <Table.Tr key={job.id}>
+                    <Table.Td>{job.name}</Table.Td>
+                    <Table.Td>{job.company_name}</Table.Td>
+                    <Table.Td>{job.address || job.location_name}</Table.Td>
+                    <Table.Td>{job.degree_name || '-'}</Table.Td>
+                    <Table.Td>
+                      {job.year != null ? `${job.year}年` : '-'}
+                    </Table.Td>
+                    <Table.Td>
+                      {job.salary_min && job.salary_max
+                        ? `${job.salary_min / 1000}k-${job.salary_max / 1000}k`
+                        : '-'}
+                    </Table.Td>
+                    <Table.Td>
+                      {job.first_publish_datetime?.slice(0, 10) || '-'}
+                    </Table.Td>
+                    <Table.Td>
+                      {job.create_datetime?.slice(0, 10) || '-'}
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <Button
+                          size="xs"
+                          variant="light"
+                          onClick={() => handleView(job)}
+                        >
+                          查看
+                        </Button>
+                        <Button
+                          size="xs"
+                          variant="light"
+                          onClick={() => handleEdit(job)}
+                        >
+                          编辑
+                        </Button>
+                        <Button
+                          size="xs"
+                          variant="light"
+                          color="red"
+                          onClick={() => handleDelete(job)}
+                        >
+                          删除
+                        </Button>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          )
+        ) : (
+          <div className={classes.mapViewContainer}>
+            <Card
+              className={classes.sidebar}
+              shadow="sm"
+              padding={0}
+              radius="md"
+              withBorder
+            >
+              <div className={classes.sidebarHeader}>
+                <Text size="sm" fw={500}>
+                  职位列表 ({total})
+                </Text>
+              </div>
+              <ScrollArea className={classes.sidebarContent}>
+                {loading ? (
+                  <Stack gap="xs" p="sm">
+                    <Skeleton height={50} radius="md" />
+                    <Skeleton height={50} radius="md" />
+                    <Skeleton height={50} radius="md" />
+                  </Stack>
+                ) : jobs.length === 0 ? (
+                  <div className={classes.noCoords}>暂无数据</div>
+                ) : (
+                  jobs.map((job) => (
+                    <div
+                      key={job.id}
+                      className={`${classes.listItem} ${
+                        selectedItemId === job.id ? classes.selected : ''
+                      }`}
+                      onClick={() => setSelectedItemId(job.id)}
+                      onDoubleClick={() => handleView(job)}
+                    >
+                      <div className={classes.listItemTitle}>
+                        {job.name || '-'}
+                      </div>
+                      <div className={classes.listItemSubtitle}>
+                        {job.company_name || '-'}
+                        {job.salary_min && job.salary_max && (
+                          <MapBadge
+                            size="xs"
+                            variant="light"
+                            color="green"
+                            ml="xs"
+                          >
+                            {job.salary_min / 1000}k-{job.salary_max / 1000}k
+                          </MapBadge>
+                        )}
+                      </div>
+                      <div className={classes.listItemSubtitle}>
+                        {job.address || job.location_name || '-'}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </ScrollArea>
+              {totalPages > 1 && (
+                <div className={classes.sidebarFooter}>
+                  <Pagination
+                    value={page}
+                    onChange={(p) => {
+                      setPage(p);
+                      setSelectedItemId(null);
+                    }}
+                    total={totalPages}
+                    size="sm"
+                  />
+                </div>
+              )}
+            </Card>
+            <Card
+              className={classes.mapContainer}
+              shadow="sm"
+              padding={0}
+              radius="md"
+              withBorder
+            >
+              <LocationMap
+                mode="multi"
+                items={jobs
+                  .filter(
+                    (job) => job.longitude != null && job.latitude != null
+                  )
+                  .map((job) => ({
+                    id: job.id,
+                    name: job.name || '',
+                    address: job.address || job.location_name,
+                    longitude: job.longitude,
+                    latitude: job.latitude,
+                    company: job.company_name,
+                    salary: {
+                      min: job.salary_min,
+                      max: job.salary_max,
+                    },
+                  }))}
+                selectedId={selectedItemId}
+                onItemClick={(id) => {
+                  setSelectedItemId(id);
+                  const job = jobs.find((j) => j.id === id);
+                  if (job) handleView(job);
+                }}
+              />
+            </Card>
+          </div>
         )}
-        {totalPages > 1 && (
+        {viewMode === 'table' && (
           <Group justify="center" mt="md">
-            <Pagination value={page} onChange={setPage} total={totalPages} />
+            <Pagination
+              value={Math.min(page, Math.max(1, totalPages))}
+              onChange={setPage}
+              total={Math.max(1, totalPages)}
+            />
+            <Select
+              value={String(pageSize)}
+              onChange={handlePageSizeChange}
+              data={[
+                { value: '20', label: '20/页' },
+                { value: '50', label: '50/页' },
+                { value: '100', label: '100/页' },
+                { value: '200', label: '200/页' },
+                { value: '500', label: '500/页' },
+              ]}
+              style={{ width: 100 }}
+              size="sm"
+            />
           </Group>
         )}
       </Card>
@@ -378,20 +538,26 @@ function RouteComponent() {
           />
           <Group grow>
             <NumberInput
-              label="最低薪资"
-              value={formData.salary_min}
+              label="经度"
+              value={formData.longitude ?? ''}
               onChange={(val) =>
-                setFormData({ ...formData, salary_min: Number(val) })
+                setFormData({
+                  ...formData,
+                  longitude: val !== '' ? Number(val) : undefined,
+                })
               }
-              min={0}
+              decimalScale={6}
             />
             <NumberInput
-              label="最高薪资"
-              value={formData.salary_max}
+              label="纬度"
+              value={formData.latitude ?? ''}
               onChange={(val) =>
-                setFormData({ ...formData, salary_max: Number(val) })
+                setFormData({
+                  ...formData,
+                  latitude: val !== '' ? Number(val) : undefined,
+                })
               }
-              min={0}
+              decimalScale={6}
             />
           </Group>
           <TextInput
@@ -493,6 +659,36 @@ function RouteComponent() {
                 <Text size="md">{viewingJob.platform || '-'}</Text>
               </div>
             </Group>
+            {viewingJob.longitude && viewingJob.latitude ? (
+              <>
+                <Group grow>
+                  <div>
+                    <Text size="sm" c="dimmed">
+                      经度
+                    </Text>
+                    <Text size="md">{viewingJob.longitude}</Text>
+                  </div>
+                  <div>
+                    <Text size="sm" c="dimmed">
+                      纬度
+                    </Text>
+                    <Text size="md">{viewingJob.latitude}</Text>
+                  </div>
+                </Group>
+                <LocationMap
+                  mode="single"
+                  longitude={viewingJob.longitude}
+                  latitude={viewingJob.latitude}
+                  name={viewingJob.name}
+                  address={viewingJob.address || viewingJob.location_name}
+                  height={250}
+                />
+              </>
+            ) : (
+              <Text size="sm" c="dimmed">
+                暂无坐标信息
+              </Text>
+            )}
             <Divider label="薪资信息" labelPosition="left" />
             <Group grow>
               <div>

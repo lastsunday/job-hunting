@@ -15,7 +15,12 @@ import {
   Skeleton,
   Drawer,
   Divider,
+  SegmentedControl,
+  ScrollArea,
+  Badge,
+  Select,
 } from '@mantine/core';
+import classes from './companies.module.css';
 import { useDisclosure } from '@mantine/hooks';
 import { showNotification } from '@mantine/notifications';
 import { useEffect, useState } from 'react';
@@ -26,6 +31,7 @@ import {
   UpdateCompanyRequest,
 } from '@/api/company';
 import { postJson } from '@/api/http';
+import { LocationMap } from '@/components/map/LocationMap';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/companies')({
   component: RouteComponent,
@@ -48,7 +54,7 @@ function RouteComponent() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(20);
   const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState('');
   const [searchIndustry, setSearchIndustry] = useState('');
@@ -62,6 +68,8 @@ function RouteComponent() {
   const [viewingCompany, setViewingCompany] = useState<Company | null>(null);
   const [deletingCompany, setDeletingCompany] = useState<Company | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'map'>('table');
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
   const [formData, setFormData] = useState<CreateCompanyRequest>({
     name: '',
@@ -82,6 +90,8 @@ function RouteComponent() {
     reg_capital_value: 0,
     reg_capital_currency: '',
     source_url: '',
+    longitude: undefined,
+    latitude: undefined,
   });
 
   const loadCompanies = async () => {
@@ -118,6 +128,13 @@ function RouteComponent() {
     loadCompanies();
   };
 
+  const handlePageSizeChange = (value: string | null) => {
+    if (value) {
+      setPageSize(Number(value));
+      setPage(1);
+    }
+  };
+
   const handleCreate = () => {
     setEditingCompany(null);
     setFormData({
@@ -139,6 +156,8 @@ function RouteComponent() {
       reg_capital_value: 0,
       reg_capital_currency: '',
       source_url: '',
+      longitude: undefined,
+      latitude: undefined,
     });
     openModal();
   };
@@ -164,6 +183,8 @@ function RouteComponent() {
       reg_capital_value: company.reg_capital_value || 0,
       reg_capital_currency: company.reg_capital_currency || '',
       source_url: company.source_url || '',
+      longitude: company.longitude,
+      latitude: company.latitude,
     });
     openModal();
   };
@@ -201,6 +222,8 @@ function RouteComponent() {
           reg_capital_value: formData.reg_capital_value || undefined,
           reg_capital_currency: formData.reg_capital_currency || undefined,
           source_url: formData.source_url || undefined,
+          longitude: formData.longitude,
+          latitude: formData.latitude,
         };
         await companyApi.update(editingCompany.id, data);
         showNotification({
@@ -273,6 +296,14 @@ function RouteComponent() {
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
           <Button onClick={handleSearch}>搜索</Button>
+          <SegmentedControl
+            value={viewMode}
+            onChange={(v) => setViewMode(v as 'table' | 'map')}
+            data={[
+              { label: '表格视图', value: 'table' },
+              { label: '地图视图', value: 'map' },
+            ]}
+          />
           <Button ml="auto" onClick={handleCreate}>
             新增公司
           </Button>
@@ -280,74 +311,189 @@ function RouteComponent() {
       </Card>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
-        {loading ? (
-          <Stack>
-            <Skeleton height={50} radius="md" />
-            <Skeleton height={50} radius="md" />
-            <Skeleton height={50} radius="md" />
-          </Stack>
-        ) : (
-          <Table>
-            <Table.Thead>
-              <Table.Tr>
-                <Table.Th>公司名称</Table.Th>
-                <Table.Th>公司状态</Table.Th>
-                <Table.Th>行业</Table.Th>
-                <Table.Th>社保人数</Table.Th>
-                <Table.Th>自身风险</Table.Th>
-                <Table.Th>关联风险</Table.Th>
-                <Table.Th>数据来源更新时间</Table.Th>
-                <Table.Th>操作</Table.Th>
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {companies.map((company) => (
-                <Table.Tr key={company.id}>
-                  <Table.Td>{company.name}</Table.Td>
-                  <Table.Td>{company.status || '-'}</Table.Td>
-                  <Table.Td>{company.industry || '-'}</Table.Td>
-                  <Table.Td>{company.insurance_num ?? '-'}</Table.Td>
-                  <Table.Td>{company.self_risk ?? '-'}</Table.Td>
-                  <Table.Td>{company.union_risk ?? '-'}</Table.Td>
-                  <Table.Td>
-                    {company.source_refresh_datetime
-                      ? company.source_refresh_datetime.slice(0, 10)
-                      : '-'}
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <Button
-                        size="xs"
-                        variant="light"
-                        onClick={() => handleView(company)}
-                      >
-                        查看
-                      </Button>
-                      <Button
-                        size="xs"
-                        variant="light"
-                        onClick={() => handleEdit(company)}
-                      >
-                        编辑
-                      </Button>
-                      <Button
-                        size="xs"
-                        variant="light"
-                        color="red"
-                        onClick={() => handleDelete(company)}
-                      >
-                        删除
-                      </Button>
-                    </Group>
-                  </Table.Td>
+        {viewMode === 'table' ? (
+          loading ? (
+            <Stack>
+              <Skeleton height={50} radius="md" />
+              <Skeleton height={50} radius="md" />
+              <Skeleton height={50} radius="md" />
+            </Stack>
+          ) : (
+            <Table>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>公司名称</Table.Th>
+                  <Table.Th>公司状态</Table.Th>
+                  <Table.Th>行业</Table.Th>
+                  <Table.Th>社保人数</Table.Th>
+                  <Table.Th>自身风险</Table.Th>
+                  <Table.Th>关联风险</Table.Th>
+                  <Table.Th>数据来源更新时间</Table.Th>
+                  <Table.Th>操作</Table.Th>
                 </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
+              </Table.Thead>
+              <Table.Tbody>
+                {companies.map((company) => (
+                  <Table.Tr key={company.id}>
+                    <Table.Td>{company.name}</Table.Td>
+                    <Table.Td>{company.status || '-'}</Table.Td>
+                    <Table.Td>{company.industry || '-'}</Table.Td>
+                    <Table.Td>{company.insurance_num ?? '-'}</Table.Td>
+                    <Table.Td>{company.self_risk ?? '-'}</Table.Td>
+                    <Table.Td>{company.union_risk ?? '-'}</Table.Td>
+                    <Table.Td>
+                      {company.source_refresh_datetime
+                        ? company.source_refresh_datetime.slice(0, 10)
+                        : '-'}
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <Button
+                          size="xs"
+                          variant="light"
+                          onClick={() => handleView(company)}
+                        >
+                          查看
+                        </Button>
+                        <Button
+                          size="xs"
+                          variant="light"
+                          onClick={() => handleEdit(company)}
+                        >
+                          编辑
+                        </Button>
+                        <Button
+                          size="xs"
+                          variant="light"
+                          color="red"
+                          onClick={() => handleDelete(company)}
+                        >
+                          删除
+                        </Button>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          )
+        ) : (
+          <div className={classes.mapViewContainer}>
+            <Card
+              className={classes.sidebar}
+              shadow="sm"
+              padding={0}
+              radius="md"
+              withBorder
+            >
+              <div className={classes.sidebarHeader}>
+                <Text size="sm" fw={500}>
+                  公司列表 ({total})
+                </Text>
+              </div>
+              <ScrollArea className={classes.sidebarContent}>
+                {loading ? (
+                  <Stack gap="xs" p="sm">
+                    <Skeleton height={50} radius="md" />
+                    <Skeleton height={50} radius="md" />
+                    <Skeleton height={50} radius="md" />
+                  </Stack>
+                ) : companies.length === 0 ? (
+                  <div className={classes.noCoords}>暂无数据</div>
+                ) : (
+                  companies.map((company) => (
+                    <div
+                      key={company.id}
+                      className={`${classes.listItem} ${
+                        selectedItemId === company.id ? classes.selected : ''
+                      }`}
+                      onClick={() => setSelectedItemId(company.id)}
+                      onDoubleClick={() => handleView(company)}
+                    >
+                      <div className={classes.listItemTitle}>
+                        {company.name || '-'}
+                      </div>
+                      <div className={classes.listItemSubtitle}>
+                        {company.industry || '-'}
+                        {company.insurance_num != null && (
+                          <Badge size="xs" variant="light" color="blue" ml="xs">
+                            社保{company.insurance_num}人
+                          </Badge>
+                        )}
+                      </div>
+                      <div className={classes.listItemSubtitle}>
+                        {company.address || '-'}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </ScrollArea>
+              {totalPages > 1 && (
+                <div className={classes.sidebarFooter}>
+                  <Pagination
+                    value={page}
+                    onChange={(p) => {
+                      setPage(p);
+                      setSelectedItemId(null);
+                    }}
+                    total={totalPages}
+                    size="sm"
+                  />
+                </div>
+              )}
+            </Card>
+            <Card
+              className={classes.mapContainer}
+              shadow="sm"
+              padding={0}
+              radius="md"
+              withBorder
+            >
+              <LocationMap
+                mode="multi"
+                items={companies
+                  .filter(
+                    (company) =>
+                      company.longitude != null && company.latitude != null
+                  )
+                  .map((company) => ({
+                    id: company.id,
+                    name: company.name || '',
+                    address: company.address,
+                    longitude: company.longitude,
+                    latitude: company.latitude,
+                    company: company.industry,
+                  }))}
+                selectedId={selectedItemId}
+                onItemClick={(id) => {
+                  setSelectedItemId(id);
+                  const company = companies.find((c) => c.id === id);
+                  if (company) handleView(company);
+                }}
+              />
+            </Card>
+          </div>
         )}
-        {totalPages > 1 && (
+        {viewMode === 'table' && (
           <Group justify="center" mt="md">
-            <Pagination value={page} onChange={setPage} total={totalPages} />
+            <Pagination
+              value={Math.min(page, Math.max(1, totalPages))}
+              onChange={setPage}
+              total={Math.max(1, totalPages)}
+            />
+            <Select
+              value={String(pageSize)}
+              onChange={handlePageSizeChange}
+              data={[
+                { value: '20', label: '20/页' },
+                { value: '50', label: '50/页' },
+                { value: '100', label: '100/页' },
+                { value: '200', label: '200/页' },
+                { value: '500', label: '500/页' },
+              ]}
+              style={{ width: 100 }}
+              size="sm"
+            />
           </Group>
         )}
       </Card>
@@ -388,6 +534,30 @@ function RouteComponent() {
               setFormData({ ...formData, address: e.currentTarget.value })
             }
           />
+          <Group grow>
+            <NumberInput
+              label="经度"
+              value={formData.longitude ?? ''}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  longitude: val !== '' ? Number(val) : undefined,
+                })
+              }
+              decimalScale={6}
+            />
+            <NumberInput
+              label="纬度"
+              value={formData.latitude ?? ''}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  latitude: val !== '' ? Number(val) : undefined,
+                })
+              }
+              decimalScale={6}
+            />
+          </Group>
           <Textarea
             label="公司简介"
             value={formData.description}
@@ -619,6 +789,16 @@ function RouteComponent() {
                 <Text size="md">{viewingCompany.latitude || '-'}</Text>
               </div>
             </Group>
+            {viewingCompany.longitude && viewingCompany.latitude && (
+              <LocationMap
+                mode="single"
+                longitude={viewingCompany.longitude}
+                latitude={viewingCompany.latitude}
+                name={viewingCompany.name}
+                address={viewingCompany.address}
+                height={250}
+              />
+            )}
             <Divider label="风险信息" labelPosition="left" />
             <Group grow>
               <div>
