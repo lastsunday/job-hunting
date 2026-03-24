@@ -51,7 +51,7 @@ function RouteComponent() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState('');
   const [searchAddress, setSearchAddress] = useState('');
@@ -312,71 +312,75 @@ function RouteComponent() {
               <Skeleton height={50} radius="md" />
             </Stack>
           ) : (
-            <Table>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>职位名称</Table.Th>
-                  <Table.Th>公司</Table.Th>
-                  <Table.Th>地点</Table.Th>
-                  <Table.Th>学历要求</Table.Th>
-                  <Table.Th>工作年限</Table.Th>
-                  <Table.Th>薪资</Table.Th>
-                  <Table.Th>发布时间</Table.Th>
-                  <Table.Th>首次扫描日期</Table.Th>
-                  <Table.Th>操作</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {jobs.map((job) => (
-                  <Table.Tr key={job.id}>
-                    <Table.Td>{job.name}</Table.Td>
-                    <Table.Td>{job.company_name}</Table.Td>
-                    <Table.Td>{job.address || job.location_name}</Table.Td>
-                    <Table.Td>{job.degree_name || '-'}</Table.Td>
-                    <Table.Td>
-                      {job.year != null ? `${job.year}年` : '-'}
-                    </Table.Td>
-                    <Table.Td>
-                      {job.salary_min && job.salary_max
-                        ? `${job.salary_min / 1000}k-${job.salary_max / 1000}k`
-                        : '-'}
-                    </Table.Td>
-                    <Table.Td>
-                      {job.first_publish_datetime?.slice(0, 10) || '-'}
-                    </Table.Td>
-                    <Table.Td>
-                      {job.create_datetime?.slice(0, 10) || '-'}
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <Button
-                          size="xs"
-                          variant="light"
-                          onClick={() => handleView(job)}
-                        >
-                          查看
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="light"
-                          onClick={() => handleEdit(job)}
-                        >
-                          编辑
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="light"
-                          color="red"
-                          onClick={() => handleDelete(job)}
-                        >
-                          删除
-                        </Button>
-                      </Group>
-                    </Table.Td>
+            <div className={classes.tableViewContainer}>
+              <Table>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>职位名称</Table.Th>
+                    <Table.Th>公司</Table.Th>
+                    <Table.Th>地点</Table.Th>
+                    <Table.Th>学历要求</Table.Th>
+                    <Table.Th>工作年限</Table.Th>
+                    <Table.Th>薪资</Table.Th>
+                    <Table.Th>发布时间</Table.Th>
+                    <Table.Th>首次扫描日期</Table.Th>
+                    <Table.Th>操作</Table.Th>
                   </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
+                </Table.Thead>
+                <Table.Tbody>
+                  {jobs.map((job) => (
+                    <Table.Tr key={job.id}>
+                      <Table.Td>{job.name}</Table.Td>
+                      <Table.Td>{job.company_name}</Table.Td>
+                      <Table.Td>{job.address || job.location_name}</Table.Td>
+                      <Table.Td>{job.degree_name || '-'}</Table.Td>
+                      <Table.Td>
+                        {job.year != null ? `${job.year}年` : '-'}
+                      </Table.Td>
+                      <Table.Td>
+                        {job.salary_min && job.salary_max
+                          ? `${job.salary_min / 1000}k-${
+                              job.salary_max / 1000
+                            }k`
+                          : '-'}
+                      </Table.Td>
+                      <Table.Td>
+                        {job.first_publish_datetime?.slice(0, 10) || '-'}
+                      </Table.Td>
+                      <Table.Td>
+                        {job.create_datetime?.slice(0, 10) || '-'}
+                      </Table.Td>
+                      <Table.Td>
+                        <Group gap="xs">
+                          <Button
+                            size="xs"
+                            variant="light"
+                            onClick={() => handleView(job)}
+                          >
+                            查看
+                          </Button>
+                          <Button
+                            size="xs"
+                            variant="light"
+                            onClick={() => handleEdit(job)}
+                          >
+                            编辑
+                          </Button>
+                          <Button
+                            size="xs"
+                            variant="light"
+                            color="red"
+                            onClick={() => handleDelete(job)}
+                          >
+                            删除
+                          </Button>
+                        </Group>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </div>
           )
         ) : (
           <div className={classes.mapViewContainer}>
@@ -434,8 +438,8 @@ function RouteComponent() {
                   ))
                 )}
               </ScrollArea>
-              {totalPages > 1 && (
-                <div className={classes.sidebarFooter}>
+              <div className={classes.sidebarFooter}>
+                <Group justify="center" gap="sm" wrap="nowrap">
                   <Pagination
                     value={page}
                     onChange={(p) => {
@@ -445,8 +449,21 @@ function RouteComponent() {
                     total={totalPages}
                     size="sm"
                   />
-                </div>
-              )}
+                  <Select
+                    value={String(pageSize)}
+                    onChange={handlePageSizeChange}
+                    data={[
+                      { value: '50', label: '50/页' },
+                      { value: '100', label: '100/页' },
+                      { value: '200', label: '200/页' },
+                      { value: '500', label: '500/页' },
+                      { value: '1000', label: '1000/页' },
+                    ]}
+                    style={{ width: 100 }}
+                    size="sm"
+                  />
+                </Group>
+              </div>
             </Card>
             <Card
               className={classes.mapContainer}
@@ -497,11 +514,11 @@ function RouteComponent() {
               value={String(pageSize)}
               onChange={handlePageSizeChange}
               data={[
-                { value: '20', label: '20/页' },
                 { value: '50', label: '50/页' },
                 { value: '100', label: '100/页' },
                 { value: '200', label: '200/页' },
                 { value: '500', label: '500/页' },
+                { value: '1000', label: '1000/页' },
               ]}
               style={{ width: 100 }}
               size="sm"

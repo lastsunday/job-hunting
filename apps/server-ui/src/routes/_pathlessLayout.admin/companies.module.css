@@ -1,12 +1,17 @@
 .mapViewContainer {
   display: flex;
-  height: calc(100vh - 200px);
+  height: calc(100vh - 280px);
   min-height: 400px;
   gap: var(--mantine-spacing-md);
 }
 
+.tableViewContainer {
+  max-height: calc(100vh - 335px);
+  overflow-y: auto;
+}
+
 .sidebar {
-  width: 350px;
+  width: 450px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;

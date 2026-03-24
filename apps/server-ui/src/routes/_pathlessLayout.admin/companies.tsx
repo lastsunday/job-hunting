@@ -54,7 +54,7 @@ function RouteComponent() {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState('');
   const [searchIndustry, setSearchIndustry] = useState('');
@@ -319,63 +319,65 @@ function RouteComponent() {
               <Skeleton height={50} radius="md" />
             </Stack>
           ) : (
-            <Table>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>公司名称</Table.Th>
-                  <Table.Th>公司状态</Table.Th>
-                  <Table.Th>行业</Table.Th>
-                  <Table.Th>社保人数</Table.Th>
-                  <Table.Th>自身风险</Table.Th>
-                  <Table.Th>关联风险</Table.Th>
-                  <Table.Th>数据来源更新时间</Table.Th>
-                  <Table.Th>操作</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {companies.map((company) => (
-                  <Table.Tr key={company.id}>
-                    <Table.Td>{company.name}</Table.Td>
-                    <Table.Td>{company.status || '-'}</Table.Td>
-                    <Table.Td>{company.industry || '-'}</Table.Td>
-                    <Table.Td>{company.insurance_num ?? '-'}</Table.Td>
-                    <Table.Td>{company.self_risk ?? '-'}</Table.Td>
-                    <Table.Td>{company.union_risk ?? '-'}</Table.Td>
-                    <Table.Td>
-                      {company.source_refresh_datetime
-                        ? company.source_refresh_datetime.slice(0, 10)
-                        : '-'}
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <Button
-                          size="xs"
-                          variant="light"
-                          onClick={() => handleView(company)}
-                        >
-                          查看
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="light"
-                          onClick={() => handleEdit(company)}
-                        >
-                          编辑
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="light"
-                          color="red"
-                          onClick={() => handleDelete(company)}
-                        >
-                          删除
-                        </Button>
-                      </Group>
-                    </Table.Td>
+            <div className={classes.tableViewContainer}>
+              <Table>
+                <Table.Thead>
+                  <Table.Tr>
+                    <Table.Th>公司名称</Table.Th>
+                    <Table.Th>公司状态</Table.Th>
+                    <Table.Th>行业</Table.Th>
+                    <Table.Th>社保人数</Table.Th>
+                    <Table.Th>自身风险</Table.Th>
+                    <Table.Th>关联风险</Table.Th>
+                    <Table.Th>数据来源更新时间</Table.Th>
+                    <Table.Th>操作</Table.Th>
                   </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
+                </Table.Thead>
+                <Table.Tbody>
+                  {companies.map((company) => (
+                    <Table.Tr key={company.id}>
+                      <Table.Td>{company.name}</Table.Td>
+                      <Table.Td>{company.status || '-'}</Table.Td>
+                      <Table.Td>{company.industry || '-'}</Table.Td>
+                      <Table.Td>{company.insurance_num ?? '-'}</Table.Td>
+                      <Table.Td>{company.self_risk ?? '-'}</Table.Td>
+                      <Table.Td>{company.union_risk ?? '-'}</Table.Td>
+                      <Table.Td>
+                        {company.source_refresh_datetime
+                          ? company.source_refresh_datetime.slice(0, 10)
+                          : '-'}
+                      </Table.Td>
+                      <Table.Td>
+                        <Group gap="xs">
+                          <Button
+                            size="xs"
+                            variant="light"
+                            onClick={() => handleView(company)}
+                          >
+                            查看
+                          </Button>
+                          <Button
+                            size="xs"
+                            variant="light"
+                            onClick={() => handleEdit(company)}
+                          >
+                            编辑
+                          </Button>
+                          <Button
+                            size="xs"
+                            variant="light"
+                            color="red"
+                            onClick={() => handleDelete(company)}
+                          >
+                            删除
+                          </Button>
+                        </Group>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </div>
           )
         ) : (
           <div className={classes.mapViewContainer}>
@@ -428,8 +430,8 @@ function RouteComponent() {
                   ))
                 )}
               </ScrollArea>
-              {totalPages > 1 && (
-                <div className={classes.sidebarFooter}>
+              <div className={classes.sidebarFooter}>
+                <Group justify="center" gap="sm" wrap="nowrap">
                   <Pagination
                     value={page}
                     onChange={(p) => {
@@ -439,8 +441,21 @@ function RouteComponent() {
                     total={totalPages}
                     size="sm"
                   />
-                </div>
-              )}
+                  <Select
+                    value={String(pageSize)}
+                    onChange={handlePageSizeChange}
+                    data={[
+                      { value: '50', label: '50/页' },
+                      { value: '100', label: '100/页' },
+                      { value: '200', label: '200/页' },
+                      { value: '500', label: '500/页' },
+                      { value: '1000', label: '1000/页' },
+                    ]}
+                    style={{ width: 100 }}
+                    size="sm"
+                  />
+                </Group>
+              </div>
             </Card>
             <Card
               className={classes.mapContainer}
@@ -486,11 +501,11 @@ function RouteComponent() {
               value={String(pageSize)}
               onChange={handlePageSizeChange}
               data={[
-                { value: '20', label: '20/页' },
                 { value: '50', label: '50/页' },
                 { value: '100', label: '100/页' },
                 { value: '200', label: '200/页' },
                 { value: '500', label: '500/页' },
+                { value: '1000', label: '1000/页' },
               ]}
               style={{ width: 100 }}
               size="sm"
