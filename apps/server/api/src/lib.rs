@@ -1,7 +1,9 @@
 pub mod auth;
+pub mod company;
 pub mod config;
 pub mod index;
 pub mod job;
+pub mod sync;
 
 use std::net::SocketAddr;
 use std::time::Duration;
@@ -77,7 +79,9 @@ pub fn create_router(state: AppState) -> Router {
     let mut api_router = OpenApiRouter::with_openapi(api);
     api_router = setup_index(api_router);
     api_router = setup_job(api_router, state.clone());
+    api_router = setup_company(api_router, state.clone());
     api_router = setup_auth(api_router, state.clone());
+    api_router = setup_sync(api_router, state.clone());
     let (mut app, api) = api_router.split_for_parts();
     app = setup_web(app);
     app = setup_api_fallback(app);
@@ -127,8 +131,16 @@ pub fn setup_job(router: OpenApiRouter, state: AppState) -> OpenApiRouter {
     api_setup(router, job::create_routes(state))
 }
 
+pub fn setup_company(router: OpenApiRouter, state: AppState) -> OpenApiRouter {
+    api_setup(router, company::create_routes(state))
+}
+
 pub fn setup_auth(router: OpenApiRouter, state: AppState) -> OpenApiRouter {
     api_setup(router, auth::create_routes(state))
+}
+
+pub fn setup_sync(router: OpenApiRouter, state: AppState) -> OpenApiRouter {
+    api_setup(router, sync::create_routes(state))
 }
 
 fn api_setup(router: OpenApiRouter, api_router: OpenApiRouter) -> OpenApiRouter {
