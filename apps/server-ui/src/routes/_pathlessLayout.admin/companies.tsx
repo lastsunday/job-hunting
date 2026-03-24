@@ -451,6 +451,7 @@ function RouteComponent() {
             >
               <LocationMap
                 mode="multi"
+                type="company"
                 items={companies
                   .filter(
                     (company) =>

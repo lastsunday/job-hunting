@@ -457,6 +457,7 @@ function RouteComponent() {
             >
               <LocationMap
                 mode="multi"
+                type="job"
                 items={jobs
                   .filter(
                     (job) => job.longitude != null && job.latitude != null
@@ -472,6 +473,8 @@ function RouteComponent() {
                       min: job.salary_min,
                       max: job.salary_max,
                     },
+                    degree: job.degree_name,
+                    year: job.year,
                   }))}
                 selectedId={selectedItemId}
                 onItemClick={(id) => {
