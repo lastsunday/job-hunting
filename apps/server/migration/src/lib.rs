@@ -3,7 +3,6 @@ pub use sea_orm_migration::prelude::*;
 
 mod m20241230_000001_init;
 mod m20241231_000001_add_company;
-mod m20260324_000001_add_first_scan_datetime;
 
 pub struct Migrator;
 
@@ -13,7 +12,6 @@ impl MigratorTrait for Migrator {
         vec![
             Box::new(m20241230_000001_init::Migration),
             Box::new(m20241231_000001_add_company::Migration),
-            Box::new(m20260324_000001_add_first_scan_datetime::Migration),
         ]
     }
 }
