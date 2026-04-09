@@ -2,7 +2,10 @@
   "defaultBase": "dev",
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "sharedGlobals"],
+    "default": [
+      "{projectRoot}/**/*",
+      "sharedGlobals"
+    ],
     "production": [
       "default",
       "!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)",
@@ -16,7 +19,9 @@
       "!{projectRoot}/jest.config.[jt]s",
       "!{projectRoot}/test-setup.[jt]s"
     ],
-    "sharedGlobals": ["{workspaceRoot}/.github/workflows/ci.yml"]
+    "sharedGlobals": [
+      "{workspaceRoot}/.github/workflows/ci.yml"
+    ]
   },
   "nxCloudId": "",
   "neverConnectToCloud": true,
@@ -59,15 +64,6 @@
       }
     },
     {
-      "plugin": "@nx/next/plugin",
-      "options": {
-        "startTargetName": "start",
-        "buildTargetName": "build",
-        "devTargetName": "dev",
-        "serveStaticTargetName": "serve-static"
-      }
-    },
-    {
       "plugin": "@nx/playwright/plugin",
       "options": {
         "targetName": "e2e"
@@ -98,7 +94,9 @@
     }
   ],
   "release": {
-    "projects": ["apps/extension"],
+    "projects": [
+      "apps/extension"
+    ],
     "projectsRelationship": "independent",
     "changelog": {
       "projectChangelogs": {
@@ -124,34 +122,48 @@
   },
   "targetDefaults": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
     },
     "zip": {
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "production",
+        "^production"
+      ]
     },
     "dev": {
-      "dependsOn": ["^build"],
-      "inputs": ["default"]
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "default"
+      ]
     },
     "e2e-ci--**/*": {
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ]
     },
     "test": {
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ]
     },
     "e2e-ci--**/**": {
-      "dependsOn": ["^build"]
+      "dependsOn": [
+        "^build"
+      ]
     }
   },
   "generators": {
-    "@nx/next": {
-      "application": {
-        "style": "tailwind",
-        "linter": "eslint"
-      }
-    },
     "@nx/react": {
       "application": {
         "babel": true,
