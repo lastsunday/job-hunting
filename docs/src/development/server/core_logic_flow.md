@@ -155,7 +155,7 @@ erDiagram
 Example
 
 ```txt
- data:://[username[@]][host]/[path]
+ data://[username[@]][host]/[path]
 ```
 
 - data://lastsunday@github.com/lastsunday/job-hunting-data/blob/main/2026/03-03/job.zip
@@ -229,7 +229,7 @@ erDiagram
 Example
 
 ```txt
- data:://[username[@]][host]/[path]
+ data://[username[@]][host]/[path]
 ```
 
 - data://lastsunday@github.com/lastsunday/job-hunting-data/blob/main/2024/12-26/company_tag.zip
