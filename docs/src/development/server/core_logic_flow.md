@@ -6,16 +6,14 @@
 
 数据同步流程以任务形式执行
 
-流程：计算数据下载任务 -> 数据下载 -> 数据贮藏 -> 数据合并
+流程：计算数据下载任务 -> 数据下载 -> 数据贮藏与合并
 
 - 计算数据下载任务
-  - ? <-> task,task_data_download
+  - (task_data_plan,task_data_source_plan)task_plan <-> task,task_data_download
 - 数据下载
-  - task,task_data_download <-> file
-- 数据贮藏
-  - task,task_data_storage <-> job_storage,company_storage,job_tag_storage,company_tag_storage
-- 数据合并
-  - task,task_data_merge <-> job,company,job_tag,company_tag
+  - task,task_data_download <-> file,task,task_data_merge
+- 数据贮藏与合并
+  - task,task_data_merge <-> task,task_data_merge,job_storage,company_storage,job_tag_storage,company_tag_storage,job,company,job_tag,company_tag
 
 ### 核心数据关系图
 
@@ -87,6 +85,7 @@ erDiagram
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
+    job ||--o{ job_storage: has
     job {
       id varchar(255) PK "职位编号"
       platform varchar(255) "发布平台"
@@ -115,6 +114,7 @@ erDiagram
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
+    company ||--o{ company_storage: has
     company{
       id varchar(255) PK "公司编号"
       name varchar(255) UK "名称"
@@ -176,6 +176,7 @@ erDiagram
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
+    tag ||--o{ job_tag_storage: has
     job_tag_storage{
       id varchar(255) PK "编号"
       job_id varchar(255) "职位编号"
@@ -186,6 +187,7 @@ erDiagram
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
+    tag ||--o{ company_tag_storage: has
     company_tag_storage{
       id varchar(255) PK "编号"
       company_id varchar(255) "公司编号"
@@ -197,6 +199,8 @@ erDiagram
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
+    tag ||--o{ job_tag: has
+    job_tag ||--o{ job_tag_storage: has
     job_tag{
       id varchar(255) PK "编号"
       job_id varchar(255) "职位编号"
@@ -206,6 +210,8 @@ erDiagram
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
+    tag ||--o{ company_tag: has
+    company_tag ||--o{ company_tag_storage: has
     company_tag{
       id varchar(255) PK "编号"
       company_id varchar(255) "公司编号"
@@ -238,15 +244,129 @@ title: Task ER
 ---
 erDiagram
     task_plan{
+      id varchar(255) PK "编号"
+      type int4 "任务计划类型: 0: DATA_DOWNLOAD,1: METADATA_DOWNLOAD"
+      enable bool "开关"
+      config jsonb "配置"
+      cron varchar(255) "cron定时任务表达式"
+      create_datetime timestamptz "创建时间"
+      update_datetime timestamptz "更新时间"
     }
+    task_plan ||--o{ task : has
     task{
+      id varchar(255) PK "编号"
+      task_plan_id varchar(255) "任务计划编号"
+      type varchar(255) "任务类型"
+      data_id varchar(255) "任务编号"
+      status varchar(255) "状态"
+      error_reason text "错误原因"
+      cost_time int4 "耗时"
+      retry_count int4 "重试次数"
+      create_datetime timestamptz "创建时间"
+      update_datetime timestamptz "更新时间"
     }
+    task_data_plan ||--|| task_plan: owns
+    task_data_plan{
+      id varchar(255) PK "编号"
+      task_plan_id varchar(255) "任务计划编号"
+      username varchar(255) "用户名"
+      repo_name varchar(255) "仓库名"
+      repo_type varchar(255) "仓库类型"
+      create_datetime timestamptz "创建时间"
+      update_datetime timestamptz "更新时间"
+    }
+    task_data_source_plan ||--|| task_plan: owns
+    task_data_source_plan{
+      id varchar(255) PK "编号"
+      task_plan_id varchar(255) "任务计划编号"
+      username varchar(255) "用户名"
+      repo_name varchar(255) "仓库名"
+      repo_type varchar(255) "仓库类型"
+      create_datetime timestamptz "创建时间"
+      update_datetime timestamptz "更新时间"
+    }
+    task ||--|| task_data_download: owns
     task_data_download{
+      id varchar(255) PK "编号"
+      type varchar(255) "下载数据任务类型"
+      username varchar(255) "用户名"
+      repo_name varchar(255) "仓库名"
+      datetime timestamptz "时间"
+      config jsonb "配置"
+      data_id varchar(255) "文件编号"
+      seq int4 "序号"
+      create_datetime timestamptz "创建时间"
+      update_datetime timestamptz "更新时间"
     }
-    task_data_storage{
-    }
+    task ||--|| task_data_merge: owns
     task_data_merge{
+      id varchar(255) PK "编号"
+      type varchar(255) "合并数据任务类型"
+      username varchar(255) "用户名"
+      repo_name varchar(255) "仓库名"
+      datetime timestamptz "时间"
+      data_id varchar(255) "文件编号"
+      data_count int4 "数据总数"
+      config jsonb "配置"
+      data_page_num int4 "页码"
+      data_page_size int4 "页尺寸"
+      create_datetime timestamptz "创建时间"
+      update_datetime timestamptz "更新时间"
     }
+    task_data_download||--|{ file: has
+    task_data_merge ||--|{ file: has
     file{
+      id varchar(255) PK "编号"
+      name varchar(255) "名称"
+      sha varchar(255) "sha"
+      content BLOB "内容"
+      size int8 "尺寸"
+      is_delete bool "是否删除"
+      create_datetime timestamptz "创建时间"
+      update_datetime timestamptz "更新时间"
     }
+```
+
+#### task type
+
+- JOB_DATA_DOWNLOAD
+- JOB_DATA_MERGE
+- COMPANY_DATA_DOWNLOAD
+- COMPANY_DATA_MERGE
+- COMPANY_TAG_DATA_DOWNLOAD
+- COMPANY_TAG_DATA_MERGE
+- JOB_TAG_DATA_DOWNLOAD
+- JOB_TAG_DATA_MERGE
+- JOB_PUBLIC_DATA_DOWNLOAD
+- JOB_PUBLIC_DATA_MERGE
+- METADATA_DATA_DOWNLOAD
+- METADATA_DATA_MERGE
+- COMPANY_COMMENT_DATA_DOWNLOAD
+- COMPANY_COMMENT_DATA_MERGE
+
+#### task status
+
+- READY
+- RUNNING
+- CANCEL
+- FINISHED
+- FINISHED_BUT_ERROR
+- ERROR
+
+```mermaid
+---
+title: Task state
+---
+stateDiagram-v2
+    [*] --> READY
+    READY --> RUNNING
+    READY --> CANCEL
+    RUNNING --> FINISHED
+    RUNNING --> FINISHED_BUT_ERROR
+    RUNNING --> ERROR
+    RUNNING --> CANCEL
+    FINISHED --> [*]
+    FINISHED_BUT_ERROR --> [*]
+    ERROR --> [*]
+    CANCEL --> [*]
 ```
