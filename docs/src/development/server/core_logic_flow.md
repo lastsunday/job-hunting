@@ -13,7 +13,7 @@
 - 数据下载
   - task,task_data_download <-> file,task,task_data_merge
 - 数据贮藏与合并
-  - task,task_data_merge <-> task,task_data_merge,job_storage,company_storage,job_tag_storage,company_tag_storage,job,company,job_tag,company_tag
+  - task,task_data_merge <-> task,task_data_merge,job_source,company_source,job_tag_source,company_tag_source,job,company,job_tag,company_tag
 
 ### 核心数据关系图
 
@@ -22,7 +22,7 @@
 title: Core Data ER
 ---
 erDiagram
-    job_storage{
+    job_source{
       id varchar(255) PK "编号"
       job_id varchar(255) "职位编号"
       platform varchar(255) "发布平台"
@@ -52,7 +52,7 @@ erDiagram
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
-    company_storage{
+    company_source{
       id varchar(255) PK "编号"
       company_id varchar(255) "公司编号"
       name varchar(255) "名称"
@@ -85,7 +85,7 @@ erDiagram
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
-    job ||--o{ job_storage: has
+    job ||--o{ job_source: has
     job {
       id varchar(255) PK "职位编号"
       platform varchar(255) "发布平台"
@@ -114,7 +114,7 @@ erDiagram
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
-    company ||--o{ company_storage: has
+    company ||--o{ company_source: has
     company{
       id varchar(255) PK "公司编号"
       name varchar(255) UK "名称"
@@ -176,8 +176,8 @@ erDiagram
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
-    tag ||--o{ job_tag_storage: has
-    job_tag_storage{
+    tag ||--o{ job_tag_source: has
+    job_tag_source{
       id varchar(255) PK "编号"
       job_id varchar(255) "职位编号"
       tag_id varchar(255) "标签编号"
@@ -187,8 +187,8 @@ erDiagram
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
-    tag ||--o{ company_tag_storage: has
-    company_tag_storage{
+    tag ||--o{ company_tag_source: has
+    company_tag_source{
       id varchar(255) PK "编号"
       company_id varchar(255) "公司编号"
       company_name varchar(255) "公司名称"
@@ -200,7 +200,7 @@ erDiagram
       update_datetime timestamptz "更新时间"
     }
     tag ||--o{ job_tag: has
-    job_tag ||--o{ job_tag_storage: has
+    job_tag ||--o{ job_tag_source: has
     job_tag{
       id varchar(255) PK "编号"
       job_id varchar(255) "职位编号"
@@ -211,7 +211,7 @@ erDiagram
       update_datetime timestamptz "更新时间"
     }
     tag ||--o{ company_tag: has
-    company_tag ||--o{ company_tag_storage: has
+    company_tag ||--o{ company_tag_source: has
     company_tag{
       id varchar(255) PK "编号"
       company_id varchar(255) "公司编号"
@@ -370,3 +370,69 @@ stateDiagram-v2
     ERROR --> [*]
     CANCEL --> [*]
 ```
+
+### 索引设计
+
+#### job
+
+> [!WIP]
+
+#### company
+
+> [!WIP]
+
+#### job_source
+
+> [!WIP]
+
+#### company_source
+
+> [!WIP]
+
+#### tag
+
+> [!WIP]
+
+#### job_tag
+
+> [!WIP]
+
+#### job_tag_source
+
+> [!WIP]
+
+#### company_tag
+
+> [!WIP]
+
+#### company_tag_source
+
+> [!WIP]
+
+#### task_plan
+
+> [!WIP]
+
+#### task
+
+> [!WIP]
+
+#### task_data_plan
+
+> [!WIP]
+
+#### task_data_source_plan
+
+> [!WIP]
+
+#### task_data_download
+
+> [!WIP]
+
+#### task_data_merge
+
+> [!WIP]
+
+#### file
+
+> [!WIP]
