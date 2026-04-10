@@ -1,8 +1,8 @@
-# 核心逻辑
+# 核心逻辑与数据结构设计
+
+## 数据同步流程
 
 > [!WIP]
-
-## 数据结构与同步逻辑
 
 数据同步流程以任务形式执行
 
@@ -15,11 +15,37 @@
 - 数据贮藏与合并
   - task,task_data_merge <-> task,task_data_merge,job_source,company_source,job_tag_source,company_tag_source,job,company,job_tag,company_tag
 
-### 核心数据关系图
+## 核心数据模型
+
+#### URI 规范
+
+> 参考：[RFC 3986](https://www.rfc-editor.org/rfc/rfc3986.html)
+
+格式：`data://[username[@]]host/path`
+
+字段说明：
+
+- `username`：数据贡献者/上传者标识
+
+示例：
+
+```txt
+data://lastsunday@github.com/lastsunday/job-hunting-data/blob/main/2026/03-03/job.zip
+data://lastsunday@github.com/lastsunday/job-hunting-data/blob/main/2024/12-20/company.zip
+data://lastsunday@aiqicha.baidu.com/company_detail_19146183042612
+data://admin@system
+```
+
+### 职位相关表
+
+> 设计说明：
+>
+> - `job_source`：多渠道原始数据来源表，存储来自不同用户/渠道的原始数据
+> - `job`：标准化表，去重后的一手数据
 
 ```mermaid
 ---
-title: Core Data ER
+title: Job ER
 ---
 erDiagram
     job_source{
@@ -47,11 +73,54 @@ erDiagram
       skill_tag text "技能标签: 逗号作为分隔符"
       welfare_tag text "福利标签: 逗号作为分隔符"
       first_scan_datetime timestamptz "首次扫描时间"
-      uri varchar(255) "来源,格式: data://hier-part"
+      uri varchar(255) "来源"
       publish_datetime timestamptz "数据发布时间"
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
+    job_source }|..|| job : "源自(最新)"
+    job {
+      id varchar(255) PK "职位编号"
+      platform varchar(255) "发布平台"
+      url varchar(255) "链接"
+      name varchar(255) "名称"
+      company_name varchar(255) "公司名"
+      location_name varchar(255) "地区"
+      address varchar(255) "地址"
+      longitude numeric(16_13) "经度"
+      latitude numeric(16_13) "纬度"
+      description text "描述"
+      degree_name varchar(255) "学历"
+      year int2 "所需经验"
+      salary_min numeric(12_2) "最低薪资"
+      salary_max numeric(12_2) "最高薪资"
+      salary_total_month int2 "几薪"
+      first_publish_datetime timestamptz "首次发布时间"
+      boss_name varchar(255) "招聘人名称"
+      boss_company_name varchar(255) "招聘公司"
+      boss_position varchar(255) "招聘者职位"
+      is_full_company_name bool "公司名是否为全称"
+      skill_tag text "技能标签: 逗号作为分隔符"
+      welfare_tag text "福利标签: 逗号作为分隔符"
+      first_scan_datetime timestamptz "首次扫描时间"
+      uri varchar(255) "来源"
+      create_datetime timestamptz "创建时间"
+      update_datetime timestamptz "更新时间"
+    }
+```
+
+### 公司相关表
+
+> 设计说明：
+>
+> - `company_source`：多渠道原始数据来源表，存储来自不同用户/渠道的原始数据
+> - `company`：标准化表，去重后的一手数据
+
+```mermaid
+---
+title: Company ER
+---
+erDiagram
     company_source{
       id varchar(255) PK "编号"
       company_id varchar(255) "公司编号"
@@ -80,41 +149,12 @@ erDiagram
       reg_capital_currency varchar(255) "注册资本货币"
       paidin_capital_value numeric(17_2) "实缴资本数值"
       paidin_capital_currency varchar(255) "实缴资本货币"
-      uri varchar(255) "来源,格式: data://hier-part"
+      uri varchar(255) "来源"
       publish_datetime timestamptz "数据发布时间"
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
-    job ||--o{ job_source: has
-    job {
-      id varchar(255) PK "职位编号"
-      platform varchar(255) "发布平台"
-      url varchar(255) "链接"
-      name varchar(255) "名称"
-      company_name varchar(255) "公司名"
-      location_name varchar(255) "地区"
-      address varchar(255) "地址"
-      longitude numeric(16_13) "经度"
-      latitude numeric(16_13) "纬度"
-      description text "描述"
-      degree_name varchar(255) "学历"
-      year int2 "所需经验"
-      salary_min numeric(12_2) "最低薪资"
-      salary_max numeric(12_2) "最高薪资"
-      salary_total_month int2 "几薪"
-      first_publish_datetime timestamptz "首次发布时间"
-      boss_name varchar(255) "招聘人名称"
-      boss_company_name varchar(255) "招聘公司"
-      boss_position varchar(255) "招聘者职位"
-      is_full_company_name bool "公司名是否为全称"
-      skill_tag text "技能标签: 逗号作为分隔符"
-      welfare_tag text "福利标签: 逗号作为分隔符"
-      first_scan_datetime timestamptz "首次扫描时间"
-      uri varchar(255) "来源,格式: data://hier-part"
-      create_datetime timestamptz "创建时间"
-      update_datetime timestamptz "更新时间"
-    }
-    company ||--o{ company_source: has
+    company_source }|..|| company : "源自(最新)"
     company{
       id varchar(255) PK "公司编号"
       name varchar(255) UK "名称"
@@ -142,32 +182,17 @@ erDiagram
       reg_capital_currency varchar(255) "注册资本货币"
       paidin_capital_value numeric(17_2) "实缴资本数值"
       paidin_capital_currency varchar(255) "实缴资本货币"
-      uri varchar(255) "来源,格式: data://hier-part"
+      uri varchar(255) "来源"
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
 ```
 
-#### URI
-
-> <https://www.rfc-editor.org/rfc/rfc3986.html>
-
-Example
-
-```txt
- data://[username[@]][host]/[path]
-```
-
-- data://lastsunday@github.com/lastsunday/job-hunting-data/blob/main/2026/03-03/job.zip
-- data://lastsunday@github.com/lastsunday/job-hunting-data/blob/main/2024/12-20/company.zip
-- data://lastsunday@aiqicha.baidu.com/company_detail_19146183042612
-- data://admin@system
-
-### 核心额外数据关系图
+## 标签数据模型
 
 ```mermaid
 ---
-title: Core Data ER
+title: Tag ER
 ---
 erDiagram
     tag{
@@ -176,67 +201,63 @@ erDiagram
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
-    tag ||--o{ job_tag_source: has
+    tag ||--o{ job_tag_source: "关联"
     job_tag_source{
       id varchar(255) PK "编号"
       job_id varchar(255) "职位编号"
       tag_id varchar(255) "标签编号"
       seq int4 "序号"
-      uri varchar(255) "来源,格式: data://hier-part"
+      uri varchar(255) "来源"
       publish_datetime timestamptz "数据发布时间"
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
-    tag ||--o{ company_tag_source: has
+    tag ||--o{ company_tag_source: "关联"
     company_tag_source{
       id varchar(255) PK "编号"
       company_id varchar(255) "公司编号"
       company_name varchar(255) "公司名称"
       tag_id varchar(255) "标签编号"
       seq int4 "序号"
-      uri varchar(255) "来源,格式: data://hier-part"
+      uri varchar(255) "来源"
       publish_datetime timestamptz "数据发布时间"
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
-    tag ||--o{ job_tag: has
-    job_tag ||--o{ job_tag_source: has
+    tag ||--o{ job_tag: "关联"
+    job ||--o{ job_tag: "关联"
+    job_tag_source }|..|| job_tag : "源自(最新)"
     job_tag{
       id varchar(255) PK "编号"
       job_id varchar(255) "职位编号"
       tag_id varchar(255) "标签编号"
       seq int4 "序号"
-      uri varchar(255) "来源,格式: data://hier-part"
+      uri varchar(255) "来源"
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
-    tag ||--o{ company_tag: has
-    company_tag ||--o{ company_tag_source: has
+    tag ||--o{ company_tag: "关联"
+    company ||--o{ company_tag: "关联"
+    company_tag_source }|..|| company_tag : "源自(最新)"
     company_tag{
       id varchar(255) PK "编号"
       company_id varchar(255) "公司编号"
       company_name varchar(255) "公司名称"
       tag_id varchar(255) "标签编号"
       seq int4 "序号"
-      uri varchar(255) "来源,格式: data://hier-part"
+      uri varchar(255) "来源"
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
 ```
 
-#### URI
-
-Example
-
-```txt
- data://[username[@]][host]/[path]
-```
-
-- data://lastsunday@github.com/lastsunday/job-hunting-data/blob/main/2024/12-26/company_tag.zip
-- data://lastsunday@github.com/lastsunday/job-hunting-data/blob/main/2026/03-03/job.zip
-- data://system
+## 任务系统设计
 
 ### 任务关系图
+
+> 设计说明：
+>
+> - `task_data_plan` / `task_data_source_plan`：用于生成 `task_plan` 的配置表，便于从界面上描述任务计划，实际参与任务生成的是 `task_plan`
 
 ```mermaid
 ---
@@ -252,7 +273,7 @@ erDiagram
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
-    task_plan ||--o{ task : has
+    task_plan ||..o| task : "触发"
     task{
       id varchar(255) PK "编号"
       task_plan_id varchar(255) "任务计划编号"
@@ -306,15 +327,15 @@ erDiagram
       repo_name varchar(255) "仓库名"
       datetime timestamptz "时间"
       data_id varchar(255) "文件编号"
-      data_count int4 "数据总数"
+      data_count int4 "合并后的数据总数"
       config jsonb "配置"
-      data_page_num int4 "页码"
-      data_page_size int4 "页尺寸"
+      data_page_num int4 "分页页码，控制批量合并的页索引"
+      data_page_size int4 "分页大小，控制每批合并的数据量"
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }
-    task_data_download||--|{ file: has
-    task_data_merge ||--|{ file: has
+    task_data_download ||..|| file : "生成"
+    task_data_merge ||..|| file : "读取"
     file{
       id varchar(255) PK "编号"
       name varchar(255) "名称"
@@ -327,31 +348,27 @@ erDiagram
     }
 ```
 
-#### task type
+### 任务类型
 
 - JOB_DATA_DOWNLOAD
-- JOB_DATA_MERGE
+- JOB_DATA_STORAGE_AND_MERGE
 - COMPANY_DATA_DOWNLOAD
-- COMPANY_DATA_MERGE
+- COMPANY_DATA_STORAGE_AND_MERGE
 - COMPANY_TAG_DATA_DOWNLOAD
-- COMPANY_TAG_DATA_MERGE
+- COMPANY_TAG_DATA_STORAGE_AND_MERGE
 - JOB_TAG_DATA_DOWNLOAD
-- JOB_TAG_DATA_MERGE
-- JOB_PUBLIC_DATA_DOWNLOAD
-- JOB_PUBLIC_DATA_MERGE
-- METADATA_DATA_DOWNLOAD
-- METADATA_DATA_MERGE
-- COMPANY_COMMENT_DATA_DOWNLOAD
-- COMPANY_COMMENT_DATA_MERGE
+- JOB_TAG_DATA_STORAGE_AND_MERGE
 
-#### task status
+### 任务状态
 
-- READY
-- RUNNING
-- CANCEL
-- FINISHED
-- FINISHED_BUT_ERROR
-- ERROR
+状态值：
+
+- READY：等待执行
+- RUNNING：执行中
+- CANCEL：已取消
+- FINISHED：执行成功
+- FINISHED_BUT_ERROR：执行完成但有错误
+- ERROR：执行失败
 
 ```mermaid
 ---
@@ -367,11 +384,52 @@ stateDiagram-v2
     RUNNING --> CANCEL
     FINISHED --> [*]
     FINISHED_BUT_ERROR --> [*]
-    ERROR --> [*]
+    ERROR --> RUNNING
     CANCEL --> [*]
 ```
 
-### 索引设计
+状态转换说明：
+
+- READY → RUNNING：任务被调度器领取
+- READY → CANCEL：任务被取消
+- RUNNING → FINISHED：任务执行成功
+- RUNNING → FINISHED_BUT_ERROR：任务执行完成但有错误（如部分数据处理失败、超出重试次数）
+- RUNNING → ERROR：任务执行失败（如网络异常、数据解析错误）
+- RUNNING → CANCEL：任务执行中被取消
+- ERROR → RUNNING：任务重试执行
+
+### 任务编排
+
+#### 流程串联
+
+**流程一：计算数据下载任务**
+
+- 由 `task_data_plan` / `task_data_source_plan` 生成 `task_plan`
+- `task_plan` 触发创建 `task` 和 `task_data_download`
+
+**流程二：数据下载**
+
+- `task` + `task_data_download` 执行下载
+- 下载完成后生成 `file` 文件
+- 下载任务完成后，根据预设的最大数据量生成多个合并任务，避免一次超大合并带来的性能问题
+
+**流程三：数据贮藏与合并**
+
+- `task` + `task_data_merge` 执行合并
+- 根据 `data_page_num` 和 `data_page_size` 读取对应批次数据
+- 合并流程：
+  1. 写入 source 表（job_source, company_source, job_tag_source, company_tag_source），遇到重复数据则忽略
+  2. 将最新数据写入标准化表（job, company, job_tag, company_tag）
+- `data_count` 记录合并后的数据总数
+
+#### 失败重试策略
+
+- `ERROR` 状态可触发重试，回到 `RUNNING`
+- `retry_count` 字段记录当前重试次数
+- 最大重试次数由**系统配置**设定
+- 超出最大重试次数后状态置为 `FINISHED_BUT_ERROR`
+
+## 数据索引设计
 
 #### job
 
