@@ -13,6 +13,7 @@ use axum::Router;
 use axum::extract::DefaultBodyLimit;
 use axum::extract::Request;
 use axum::routing::get;
+use axum::http::StatusCode;
 use bytesize::ByteSize;
 use migration::MigratorTrait;
 use service::AppState;
@@ -99,7 +100,7 @@ pub fn setup_default(router: Router) -> Router {
             tracing::warn!("Method not allowed");
             Err(ApiError::MethodNotAllowed)
         });
-    let timeout = TimeoutLayer::new(Duration::from_secs(300));
+    let timeout = TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, Duration::from_secs(300));
     let body_limit = DefaultBodyLimit::max(ByteSize::mib(100).as_u64() as usize);
     let cors = CorsLayer::new()
         .allow_origin(cors::Any)

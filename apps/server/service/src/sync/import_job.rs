@@ -207,12 +207,12 @@ impl JobImporter {
                     }
                     chrono::NaiveDate::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S")
                         .ok()
-                        .map(|d| d.and_hms_opt(0, 0, 0).unwrap_or_else(|| d.and_hms(0, 0, 0)))
+                        .map(|d| d.and_hms_opt(0, 0, 0).unwrap())
                         .and_then(|nd| FixedOffset::west_opt(0).unwrap().from_local_datetime(&nd).single())
                         .or_else(|| {
                             chrono::NaiveDate::parse_from_str(trimmed, "%Y-%m-%d")
                                 .ok()
-                                .and_then(|d| Some(d.and_hms_opt(0, 0, 0).unwrap_or_else(|| d.and_hms(0, 0, 0))))
+                                .and_then(|d| Some(d.and_hms_opt(0, 0, 0).unwrap()))
                                 .and_then(|nd| FixedOffset::west_opt(0).unwrap().from_local_datetime(&nd).single())
                         })
                 })

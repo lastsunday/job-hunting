@@ -1,3 +1,4 @@
+use base64::Engine;
 use crate::AppState;
 use axum::{debug_handler, extract::State};
 use entity::{company::Entity as Company, job::Entity as Job};
@@ -51,11 +52,11 @@ pub struct ImportFileRequest {
 #[utoipa::path(post, path = "/sync/file/import", tag = TAG, security(()), request_body = ImportFileRequest, responses(
     (status = OK, body = ApiResponse<ImportResult>)
 ))]
-pub async fn import_file(
+pub(crate) async fn import_file(
     State(state): State<SyncState>,
     ValidJson(param): ValidJson<ImportFileRequest>,
 ) -> ApiResult<ApiResponse<ImportResult>> {
-    let data = base64::decode(&param.file)
+    let data = base64::engine::general_purpose::STANDARD.decode(&param.file)
         .map_err(|e| framework::error::ApiError::Validation(format!("Invalid file data: {}", e)))?;
 
     let result = match param.data_type.as_str() {
@@ -84,7 +85,7 @@ pub async fn import_file(
 #[utoipa::path(get, path = "/sync/status", tag = TAG, security(()), responses(
     (status = OK, body = ApiResponse<SyncStatus>)
 ))]
-pub async fn get_sync_status(State(state): State<SyncState>) -> ApiResult<ApiResponse<SyncStatus>> {
+pub(crate) async fn get_sync_status(State(state): State<SyncState>) -> ApiResult<ApiResponse<SyncStatus>> {
     let conn = conn(&state);
 
     let last_job = Job::find()
