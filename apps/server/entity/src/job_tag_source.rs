@@ -6,15 +6,16 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, ToSchema)]
-#[sea_orm(table_name = "company_tag")]
+#[sea_orm(table_name = "job_tag_source")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    pub company_id: String,
-    pub company_name: Option<String>,
-    pub tag_id: String,
+    pub job_id: Option<String>,
+    pub tag_id: Option<String>,
     pub seq: Option<i32>,
     pub uri: Option<String>,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
+    pub publish_datetime: Option<DateTimeWithTimeZone>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub create_datetime: Option<DateTimeWithTimeZone>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]

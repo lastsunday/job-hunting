@@ -5,16 +5,16 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, ToSchema)]
-#[sea_orm(table_name = "company_tag")]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize, ToSchema)]
+#[sea_orm(table_name = "task_plan")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    pub company_id: String,
-    pub company_name: Option<String>,
-    pub tag_id: String,
-    pub seq: Option<i32>,
-    pub uri: Option<String>,
+    pub r#type: Option<i32>,
+    pub enable: Option<bool>,
+    #[sea_orm(column_type = "Json", nullable)]
+    pub config: Option<String>,
+    pub cron: Option<String>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub create_datetime: Option<DateTimeWithTimeZone>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]

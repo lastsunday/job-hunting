@@ -33,7 +33,7 @@ impl CompanyImporter {
 
         let rows = &data[1..];
         let mut imported = 0;
-        let mut updated = 0;
+        let updated = 0;
         let mut errors = Vec::new();
         let total = rows.len();
 
@@ -100,10 +100,10 @@ impl CompanyImporter {
         model.name = ActiveValue::Set(Some(name));
         
         if let Some(v) = get_string(mapping.platform.clone()) {
-            model.platform = ActiveValue::Set(Some(v));
+            model.source_platform = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.description.clone()) {
-            model.description = ActiveValue::Set(Some(v));
+            model.desc = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.start_date.clone()) {
             if let Ok(date) = NaiveDate::parse_from_str(&v, "%Y-%m-%d") {
@@ -120,7 +120,7 @@ impl CompanyImporter {
             model.unified_code = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.website.clone()) {
-            model.website = ActiveValue::Set(Some(v));
+            model.web_site = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_i32(mapping.insurance_num.clone()) {
             model.insurance_num = ActiveValue::Set(Some(v));

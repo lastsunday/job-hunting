@@ -5,16 +5,22 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, ToSchema)]
-#[sea_orm(table_name = "company_tag")]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize, ToSchema)]
+#[sea_orm(table_name = "task_data_merge")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    pub company_id: String,
-    pub company_name: Option<String>,
-    pub tag_id: String,
-    pub seq: Option<i32>,
-    pub uri: Option<String>,
+    pub r#type: Option<String>,
+    pub username: Option<String>,
+    pub repo_name: Option<String>,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
+    pub datetime: Option<DateTimeWithTimeZone>,
+    pub data_id: Option<String>,
+    pub data_count: Option<i32>,
+    #[sea_orm(column_type = "Json", nullable)]
+    pub config: Option<String>,
+    pub data_page_num: Option<i32>,
+    pub data_page_size: Option<i32>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub create_datetime: Option<DateTimeWithTimeZone>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]

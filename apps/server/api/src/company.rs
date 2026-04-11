@@ -39,7 +39,7 @@ pub async fn search(
                 query.filter(company::Column::Name.like(format!("%{}%", v)))
             })
             .apply_if(v.platform, |query, v| {
-                query.filter(company::Column::Platform.like(format!("%{}%", v)))
+                query.filter(company::Column::SourcePlatform.like(format!("%{}%", v)))
             })
             .apply_if(v.industry, |query, v| {
                 query.filter(company::Column::Industry.like(format!("%{}%", v)))
@@ -81,14 +81,14 @@ pub async fn create(
     let now: chrono::DateTime<chrono::Utc> = chrono::Utc::now();
     let active_model = company::ActiveModel {
         id: Set(param.id.unwrap_or_else(|| xid::new().to_string())),
-        platform: Set(param.platform),
         name: Set(param.name),
-        description: Set(param.description),
+        desc: Set(param.desc),
         start_date: Set(param.start_date),
         status: Set(param.status),
         legal_person: Set(param.legal_person),
         unified_code: Set(param.unified_code),
-        website: Set(param.website),
+        web_site: Set(param.web_site),
+        source_platform: Set(param.source_platform),
         insurance_num: Set(param.insurance_num),
         self_risk: Set(param.self_risk),
         union_risk: Set(param.union_risk),
@@ -104,6 +104,9 @@ pub async fn create(
         source_url: Set(param.source_url),
         source_record_id: Set(param.source_record_id),
         source_refresh_datetime: Set(param.source_refresh_datetime),
+        paidin_capital_value: Set(param.paidin_capital_value),
+        paidin_capital_currency: Set(param.paidin_capital_currency),
+        uri: Set(param.uri),
         create_datetime: Set(Some(now.into())),
         update_datetime: Set(Some(now.into())),
     };
@@ -131,14 +134,14 @@ pub async fn update(
     
     let active_model = company::ActiveModel {
         id: Set(id.clone()),
-        platform: Set(param.platform.or(existing.platform)),
         name: Set(param.name.or(existing.name)),
-        description: Set(param.description.or(existing.description)),
+        desc: Set(param.desc.or(existing.desc)),
         start_date: Set(param.start_date.or(existing.start_date)),
         status: Set(param.status.or(existing.status)),
         legal_person: Set(param.legal_person.or(existing.legal_person)),
         unified_code: Set(param.unified_code.or(existing.unified_code)),
-        website: Set(param.website.or(existing.website)),
+        web_site: Set(param.web_site.or(existing.web_site)),
+        source_platform: Set(param.source_platform.or(existing.source_platform)),
         insurance_num: Set(param.insurance_num.or(existing.insurance_num)),
         self_risk: Set(param.self_risk.or(existing.self_risk)),
         union_risk: Set(param.union_risk.or(existing.union_risk)),
@@ -199,12 +202,13 @@ pub struct CreateCompanyRequest {
     pub id: Option<String>,
     pub platform: Option<String>,
     pub name: Option<String>,
-    pub description: Option<String>,
+    pub desc: Option<String>,
     pub start_date: Option<NaiveDate>,
     pub status: Option<String>,
     pub legal_person: Option<String>,
     pub unified_code: Option<String>,
-    pub website: Option<String>,
+    pub web_site: Option<String>,
+    pub source_platform: Option<String>,
     pub insurance_num: Option<i32>,
     pub self_risk: Option<i32>,
     pub union_risk: Option<i32>,
@@ -220,18 +224,22 @@ pub struct CreateCompanyRequest {
     pub source_url: Option<String>,
     pub source_record_id: Option<String>,
     pub source_refresh_datetime: Option<DateTime<FixedOffset>>,
+    pub paidin_capital_value: Option<f64>,
+    pub paidin_capital_currency: Option<String>,
+    pub uri: Option<String>,
 }
 
 #[derive(Default, Deserialize, Serialize, Debug, Clone, Validate, ToSchema)]
 pub struct UpdateCompanyRequest {
     pub platform: Option<String>,
     pub name: Option<String>,
-    pub description: Option<String>,
+    pub desc: Option<String>,
     pub start_date: Option<NaiveDate>,
     pub status: Option<String>,
     pub legal_person: Option<String>,
     pub unified_code: Option<String>,
-    pub website: Option<String>,
+    pub web_site: Option<String>,
+    pub source_platform: Option<String>,
     pub insurance_num: Option<i32>,
     pub self_risk: Option<i32>,
     pub union_risk: Option<i32>,
@@ -247,4 +255,7 @@ pub struct UpdateCompanyRequest {
     pub source_url: Option<String>,
     pub source_record_id: Option<String>,
     pub source_refresh_datetime: Option<DateTime<FixedOffset>>,
+    pub paidin_capital_value: Option<f64>,
+    pub paidin_capital_currency: Option<String>,
+    pub uri: Option<String>,
 }

@@ -276,7 +276,7 @@ erDiagram
     task_plan ||..o| task : "触发"
     task{
       id varchar(255) PK "编号"
-      task_plan_id varchar(255) "任务计划编号"
+      plan_id varchar(255) "任务计划编号"
       type varchar(255) "任务类型"
       data_id varchar(255) "任务编号"
       status varchar(255) "状态"
@@ -289,7 +289,7 @@ erDiagram
     task_data_plan ||--|| task_plan: owns
     task_data_plan{
       id varchar(255) PK "编号"
-      task_plan_id varchar(255) "任务计划编号"
+      plan_id varchar(255) "任务计划编号"
       username varchar(255) "用户名"
       repo_name varchar(255) "仓库名"
       repo_type varchar(255) "仓库类型"
@@ -299,7 +299,7 @@ erDiagram
     task_data_source_plan ||--|| task_plan: owns
     task_data_source_plan{
       id varchar(255) PK "编号"
-      task_plan_id varchar(255) "任务计划编号"
+      plan_id varchar(255) "任务计划编号"
       username varchar(255) "用户名"
       repo_name varchar(255) "仓库名"
       repo_type varchar(255) "仓库类型"

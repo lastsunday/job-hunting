@@ -10,14 +10,13 @@ use utoipa::ToSchema;
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    pub platform: Option<String>,
     pub name: Option<String>,
-    pub description: Option<String>,
+    pub desc: Option<String>,
     pub start_date: Option<chrono::NaiveDate>,
     pub status: Option<String>,
     pub legal_person: Option<String>,
     pub unified_code: Option<String>,
-    pub website: Option<String>,
+    pub web_site: Option<String>,
     pub insurance_num: Option<i32>,
     pub self_risk: Option<i32>,
     pub union_risk: Option<i32>,
@@ -30,13 +29,18 @@ pub struct Model {
     pub longitude: Option<f64>,
     #[sea_orm(column_type = "Double", nullable)]
     pub latitude: Option<f64>,
-    #[sea_orm(column_type = "Float", nullable)]
-    pub reg_capital_value: Option<f64>,
-    pub reg_capital_currency: Option<String>,
     pub source_url: Option<String>,
+    pub source_platform: Option<String>,
     pub source_record_id: Option<String>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub source_refresh_datetime: Option<DateTimeWithTimeZone>,
+    #[sea_orm(column_type = "Float", nullable)]
+    pub reg_capital_value: Option<f64>,
+    pub reg_capital_currency: Option<String>,
+    #[sea_orm(column_type = "Float", nullable)]
+    pub paidin_capital_value: Option<f64>,
+    pub paidin_capital_currency: Option<String>,
+    pub uri: Option<String>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub create_datetime: Option<DateTimeWithTimeZone>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]

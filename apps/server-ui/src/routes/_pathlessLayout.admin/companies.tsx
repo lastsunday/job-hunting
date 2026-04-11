@@ -76,11 +76,11 @@ function RouteComponent() {
   const [formData, setFormData] = useState<CreateCompanyRequest>({
     name: '',
     platform: '',
-    description: '',
+    desc: '',
     status: '',
     legal_person: '',
     unified_code: '',
-    website: '',
+    web_site: '',
     insurance_num: 0,
     self_risk: 0,
     union_risk: 0,
@@ -142,11 +142,11 @@ function RouteComponent() {
     setFormData({
       name: '',
       platform: '',
-      description: '',
+      desc: '',
       status: '',
       legal_person: '',
       unified_code: '',
-      website: '',
+      web_site: '',
       insurance_num: 0,
       self_risk: 0,
       union_risk: 0,
@@ -169,11 +169,12 @@ function RouteComponent() {
     setFormData({
       name: company.name || '',
       platform: company.platform || '',
-      description: company.description || '',
+      desc: company.desc || '',
       status: company.status || '',
       legal_person: company.legal_person || '',
       unified_code: company.unified_code || '',
-      website: company.website || '',
+      web_site: company.web_site || '',
+      source_platform: company.source_platform || '',
       insurance_num: company.insurance_num || 0,
       self_risk: company.self_risk || 0,
       union_risk: company.union_risk || 0,
@@ -208,11 +209,11 @@ function RouteComponent() {
         const data: UpdateCompanyRequest = {
           name: formData.name || undefined,
           platform: formData.platform || undefined,
-          description: formData.description || undefined,
+          desc: formData.desc || undefined,
           status: formData.status || undefined,
           legal_person: formData.legal_person || undefined,
           unified_code: formData.unified_code || undefined,
-          website: formData.website || undefined,
+          web_site: formData.web_site || undefined,
           insurance_num: formData.insurance_num || undefined,
           self_risk: formData.self_risk || undefined,
           union_risk: formData.union_risk || undefined,
@@ -578,16 +579,16 @@ function RouteComponent() {
           </Group>
           <Textarea
             label="公司简介"
-            value={formData.description}
+            value={formData.desc}
             onChange={(e) =>
-              setFormData({ ...formData, description: e.currentTarget.value })
+              setFormData({ ...formData, desc: e.currentTarget.value })
             }
           />
           <TextInput
             label="公司官网"
-            value={formData.website}
+            value={formData.web_site}
             onChange={(e) =>
-              setFormData({ ...formData, website: e.currentTarget.value })
+              setFormData({ ...formData, web_site: e.currentTarget.value })
             }
           />
           <Group grow>
@@ -724,7 +725,7 @@ function RouteComponent() {
                 公司简介
               </Text>
               <Text size="md" style={{ whiteSpace: 'pre-wrap' }}>
-                {viewingCompany.description || '-'}
+                {viewingCompany.desc || '-'}
               </Text>
             </div>
             <Divider label="工商信息" labelPosition="left" />
@@ -843,14 +844,14 @@ function RouteComponent() {
               <Text size="sm" c="dimmed">
                 官网
               </Text>
-              {viewingCompany.website ? (
+              {viewingCompany.web_site ? (
                 <Text size="md" c="blue">
                   <a
-                    href={viewingCompany.website}
+                    href={viewingCompany.web_site}
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    {viewingCompany.website}
+                    {viewingCompany.web_site}
                   </a>
                 </Text>
               ) : (

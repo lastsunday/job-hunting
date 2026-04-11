@@ -1,14 +1,12 @@
 pub mod auth;
 pub mod database;
 pub mod server;
-pub mod sync;
 use std::sync::LazyLock;
 
 use anyhow::Context;
 use config::{Config, FileFormat};
 use serde::Deserialize;
 pub use server::ServerConfig;
-pub use sync::{GitSyncConfig, ScheduleConfig, SyncConfig};
 
 use crate::config::{auth::AuthConfig, database::DatabaseConfig};
 
@@ -20,8 +18,6 @@ pub struct AppConfig {
     server: ServerConfig,
     database: DatabaseConfig,
     auth: AuthConfig,
-    #[serde(default)]
-    sync: sync::SyncConfig,
 }
 
 impl AppConfig {
@@ -64,7 +60,6 @@ impl AppConfig {
             server: ServerConfig::new(),
             database: DatabaseConfig::new(),
             auth: AuthConfig::new(),
-            sync: sync::SyncConfig::new(),
         }
     }
 
@@ -78,10 +73,6 @@ impl AppConfig {
 
     pub fn auth(&self) -> &AuthConfig {
         &self.auth
-    }
-
-    pub fn sync(&self) -> &sync::SyncConfig {
-        &self.sync
     }
 }
 

@@ -1,0 +1,800 @@
+use entity::*;
+use sea_orm::entity::*;
+use sea_orm::Set;
+use sea_orm_migration::{async_trait::async_trait, prelude::*, schema::*};
+
+#[derive(DeriveMigrationName)]
+pub struct Migration;
+
+#[async_trait]
+impl MigrationTrait for Migration {
+    async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        let db = manager.get_connection();
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Config::Table)
+                    .if_not_exists()
+                    .col(string_uniq(Config::Id))
+                    .col(string_uniq(Config::Key))
+                    .col(json_binary_null(Config::Value))
+                    .col(timestamp_with_time_zone_null(Config::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(Config::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-config-id").col(Config::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(User::Table)
+                    .if_not_exists()
+                    .col(string_uniq(User::Id))
+                    .col(string_uniq(User::Account))
+                    .col(string(User::Password))
+                    .col(string_null(User::Email))
+                    .col(boolean(User::Enable))
+                    .col(timestamp_with_time_zone_null(User::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(User::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-user-id").col(User::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        let root_user = user::ActiveModel {
+            account: Set("root".to_string()),
+            password: Set(
+                "$2b$12$n7NaDXwHdpCQI5LlsM1viuDJWZWofuhz/HnGAi8X.BmPRIuHvaXUy".to_string(),
+            ),
+            enable: Set(true),
+            ..Default::default()
+        };
+        root_user.insert(db).await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Job::Table)
+                    .if_not_exists()
+                    .col(string(Job::Id))
+                    .col(string_null(Job::Platform))
+                    .col(string_null(Job::Url))
+                    .col(string_null(Job::Name))
+                    .col(string_null(Job::CompanyName))
+                    .col(string_null(Job::LocationName))
+                    .col(string_null(Job::Address))
+                    .col(double_null(Job::Longitude))
+                    .col(double_null(Job::Latitude))
+                    .col(string_null(Job::Description))
+                    .col(string_null(Job::DegreeName))
+                    .col(integer_null(Job::Year))
+                    .col(float_null(Job::SalaryMin))
+                    .col(float_null(Job::SalaryMax))
+                    .col(integer_null(Job::SalaryTotalMonth))
+                    .col(timestamp_with_time_zone_null(Job::FirstPublishDatetime))
+                    .col(string_null(Job::BossName))
+                    .col(string_null(Job::BossCompanyName))
+                    .col(string_null(Job::BossPosition))
+                    .col(timestamp_with_time_zone_null(Job::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(Job::UpdateDatetime))
+                    .col(boolean_null(Job::IsFullCompanyName))
+                    .col(string_null(Job::SkillTag))
+                    .col(string_null(Job::WelfareTag))
+                    .col(timestamp_with_time_zone_null(Job::FirstScanDatetime))
+                    .col(string_null(Job::Uri))
+                    .primary_key(Index::create().name("pk-job-id").col(Job::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Tag::Table)
+                    .if_not_exists()
+                    .col(string(Tag::Id))
+                    .col(text_null(Tag::Name))
+                    .col(timestamp_with_time_zone_null(Tag::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(Tag::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-tag-id").col(Tag::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(JobTag::Table)
+                    .if_not_exists()
+                    .col(string(JobTag::Id))
+                    .col(string(JobTag::JobId))
+                    .col(string(JobTag::TagId))
+                    .col(integer_null(JobTag::Seq))
+                    .col(string_null(JobTag::Uri))
+                    .col(timestamp_with_time_zone_null(JobTag::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(JobTag::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-job-tag-id").col(JobTag::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Company::Table)
+                    .if_not_exists()
+                    .col(string(Company::Id))
+                    .col(string_uniq(Company::Name))
+                    .col(text_null(Company::Desc))
+                    .col(date_null(Company::StartDate))
+                    .col(string_null(Company::Status))
+                    .col(string_null(Company::LegalPerson))
+                    .col(string_null(Company::UnifiedCode))
+                    .col(string_null(Company::WebSite))
+                    .col(integer_null(Company::InsuranceNum))
+                    .col(integer_null(Company::SelfRisk))
+                    .col(integer_null(Company::UnionRisk))
+                    .col(text_null(Company::Address))
+                    .col(text_null(Company::Scope))
+                    .col(string_null(Company::TaxNo))
+                    .col(string_null(Company::Industry))
+                    .col(string_null(Company::LicenseNumber))
+                    .col(double_null(Company::Longitude))
+                    .col(double_null(Company::Latitude))
+                    .col(double_null(Company::RegCapitalValue))
+                    .col(string_null(Company::RegCapitalCurrency))
+                    .col(float_null(Company::PaidinCapitalValue))
+                    .col(string_null(Company::PaidinCapitalCurrency))
+                    .col(string_null(Company::SourcePlatform))
+                    .col(string_null(Company::SourceUrl))
+                    .col(string_null(Company::SourceRecordId))
+                    .col(timestamp_with_time_zone_null(Company::SourceRefreshDatetime))
+                    .col(string_null(Company::Uri))
+                    .col(timestamp_with_time_zone_null(Company::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(Company::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-company-id").col(Company::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(CompanyTag::Table)
+                    .if_not_exists()
+                    .col(string(CompanyTag::Id))
+                    .col(string(CompanyTag::CompanyId))
+                    .col(string_null(CompanyTag::CompanyName))
+                    .col(string(CompanyTag::TagId))
+                    .col(integer_null(CompanyTag::Seq))
+                    .col(string_null(CompanyTag::Uri))
+                    .col(timestamp_with_time_zone_null(CompanyTag::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(CompanyTag::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-company-tag-id").col(CompanyTag::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(File::Table)
+                    .if_not_exists()
+                    .col(string_uniq(File::Id))
+                    .col(string_null(File::Name))
+                    .col(string_null(File::Sha))
+                    .col(blob_null(File::Content))
+                    .col(big_integer_null(File::Size))
+                    .col(boolean(File::IsDelete))
+                    .col(timestamp_with_time_zone_null(File::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(File::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-file-id").col(File::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(TaskPlan::Table)
+                    .if_not_exists()
+                    .col(string_uniq(TaskPlan::Id))
+                    .col(integer_null(TaskPlan::Type))
+                    .col(boolean(TaskPlan::Enable))
+                    .col(json_binary_null(TaskPlan::Config))
+                    .col(string_null(TaskPlan::Cron))
+                    .col(timestamp_with_time_zone_null(TaskPlan::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(TaskPlan::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-task-plan-id").col(TaskPlan::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Task::Table)
+                    .if_not_exists()
+                    .col(string_uniq(Task::Id))
+                    .col(string_null(Task::PlanId))
+                    .col(string_null(Task::Type))
+                    .col(string_null(Task::DataId))
+                    .col(string_null(Task::Status))
+                    .col(text_null(Task::ErrorReason))
+                    .col(integer_null(Task::CostTime))
+                    .col(integer_null(Task::RetryCount))
+                    .col(timestamp_with_time_zone_null(Task::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(Task::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-task-id").col(Task::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(TaskDataPlan::Table)
+                    .if_not_exists()
+                    .col(string_uniq(TaskDataPlan::Id))
+                    .col(string_null(TaskDataPlan::PlanId))
+                    .col(string_null(TaskDataPlan::Username))
+                    .col(string_null(TaskDataPlan::RepoName))
+                    .col(string_null(TaskDataPlan::RepoType))
+                    .col(timestamp_with_time_zone_null(TaskDataPlan::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(TaskDataPlan::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-task-data-plan-id").col(TaskDataPlan::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(TaskDataSourcePlan::Table)
+                    .if_not_exists()
+                    .col(string_uniq(TaskDataSourcePlan::Id))
+                    .col(string_null(TaskDataSourcePlan::PlanId))
+                    .col(string_null(TaskDataSourcePlan::Username))
+                    .col(string_null(TaskDataSourcePlan::RepoName))
+                    .col(string_null(TaskDataSourcePlan::RepoType))
+                    .col(timestamp_with_time_zone_null(TaskDataSourcePlan::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(TaskDataSourcePlan::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-task-data-source-plan-id").col(TaskDataSourcePlan::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(TaskDataDownload::Table)
+                    .if_not_exists()
+                    .col(string_uniq(TaskDataDownload::Id))
+                    .col(string_null(TaskDataDownload::Type))
+                    .col(string_null(TaskDataDownload::Username))
+                    .col(string_null(TaskDataDownload::RepoName))
+                    .col(timestamp_with_time_zone_null(TaskDataDownload::Datetime))
+                    .col(json_binary_null(TaskDataDownload::Config))
+                    .col(string_null(TaskDataDownload::DataId))
+                    .col(integer_null(TaskDataDownload::Seq))
+                    .col(timestamp_with_time_zone_null(TaskDataDownload::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(TaskDataDownload::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-task-data-download-id").col(TaskDataDownload::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(TaskDataMerge::Table)
+                    .if_not_exists()
+                    .col(string_uniq(TaskDataMerge::Id))
+                    .col(string_null(TaskDataMerge::Type))
+                    .col(string_null(TaskDataMerge::Username))
+                    .col(string_null(TaskDataMerge::RepoName))
+                    .col(timestamp_with_time_zone_null(TaskDataMerge::Datetime))
+                    .col(string_null(TaskDataMerge::DataId))
+                    .col(integer_null(TaskDataMerge::DataCount))
+                    .col(json_binary_null(TaskDataMerge::Config))
+                    .col(integer_null(TaskDataMerge::DataPageNum))
+                    .col(integer_null(TaskDataMerge::DataPageSize))
+                    .col(timestamp_with_time_zone_null(TaskDataMerge::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(TaskDataMerge::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-task-data-merge-id").col(TaskDataMerge::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(JobSource::Table)
+                    .if_not_exists()
+                    .col(string_uniq(JobSource::Id))
+                    .col(string_null(JobSource::JobId))
+                    .col(string_null(JobSource::Platform))
+                    .col(string_null(JobSource::Url))
+                    .col(string_null(JobSource::Name))
+                    .col(string_null(JobSource::CompanyName))
+                    .col(string_null(JobSource::LocationName))
+                    .col(string_null(JobSource::Address))
+                    .col(double_null(JobSource::Longitude))
+                    .col(double_null(JobSource::Latitude))
+                    .col(text_null(JobSource::Description))
+                    .col(string_null(JobSource::DegreeName))
+                    .col(integer_null(JobSource::Year))
+                    .col(float_null(JobSource::SalaryMin))
+                    .col(float_null(JobSource::SalaryMax))
+                    .col(integer_null(JobSource::SalaryTotalMonth))
+                    .col(timestamp_with_time_zone_null(JobSource::FirstPublishDatetime))
+                    .col(string_null(JobSource::BossName))
+                    .col(string_null(JobSource::BossCompanyName))
+                    .col(string_null(JobSource::BossPosition))
+                    .col(boolean_null(JobSource::IsFullCompanyName))
+                    .col(text_null(JobSource::SkillTag))
+                    .col(text_null(JobSource::WelfareTag))
+                    .col(timestamp_with_time_zone_null(JobSource::FirstScanDatetime))
+                    .col(string_null(JobSource::Uri))
+                    .col(timestamp_with_time_zone_null(JobSource::PublishDatetime))
+                    .col(timestamp_with_time_zone_null(JobSource::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(JobSource::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-job-source-id").col(JobSource::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(CompanySource::Table)
+                    .if_not_exists()
+                    .col(string_uniq(CompanySource::Id))
+                    .col(string_null(CompanySource::CompanyId))
+                    .col(string_null(CompanySource::Name))
+                    .col(text_null(CompanySource::Desc))
+                    .col(date_null(CompanySource::StartDate))
+                    .col(string_null(CompanySource::Status))
+                    .col(string_null(CompanySource::LegalPerson))
+                    .col(string_null(CompanySource::UnifiedCode))
+                    .col(text_null(CompanySource::WebSite))
+                    .col(integer_null(CompanySource::InsuranceNum))
+                    .col(integer_null(CompanySource::SelfRisk))
+                    .col(integer_null(CompanySource::UnionRisk))
+                    .col(text_null(CompanySource::Address))
+                    .col(text_null(CompanySource::Scope))
+                    .col(string_null(CompanySource::TaxNo))
+                    .col(string_null(CompanySource::Industry))
+                    .col(string_null(CompanySource::LicenseNumber))
+                    .col(double_null(CompanySource::Longitude))
+                    .col(double_null(CompanySource::Latitude))
+                    .col(text_null(CompanySource::SourceUrl))
+                    .col(string_null(CompanySource::SourcePlatform))
+                    .col(string_null(CompanySource::SourceRecordId))
+                    .col(timestamp_with_time_zone_null(CompanySource::SourceRefreshDatetime))
+                    .col(float_null(CompanySource::RegCapitalValue))
+                    .col(string_null(CompanySource::RegCapitalCurrency))
+                    .col(float_null(CompanySource::PaidinCapitalValue))
+                    .col(string_null(CompanySource::PaidinCapitalCurrency))
+                    .col(string_null(CompanySource::Uri))
+                    .col(timestamp_with_time_zone_null(CompanySource::PublishDatetime))
+                    .col(timestamp_with_time_zone_null(CompanySource::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(CompanySource::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-company-source-id").col(CompanySource::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(JobTagSource::Table)
+                    .if_not_exists()
+                    .col(string_uniq(JobTagSource::Id))
+                    .col(string_null(JobTagSource::JobId))
+                    .col(string_null(JobTagSource::TagId))
+                    .col(integer_null(JobTagSource::Seq))
+                    .col(string_null(JobTagSource::Uri))
+                    .col(timestamp_with_time_zone_null(JobTagSource::PublishDatetime))
+                    .col(timestamp_with_time_zone_null(JobTagSource::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(JobTagSource::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-job-tag-source-id").col(JobTagSource::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(CompanyTagSource::Table)
+                    .if_not_exists()
+                    .col(string_uniq(CompanyTagSource::Id))
+                    .col(string_null(CompanyTagSource::CompanyId))
+                    .col(string_null(CompanyTagSource::CompanyName))
+                    .col(string_null(CompanyTagSource::TagId))
+                    .col(integer_null(CompanyTagSource::Seq))
+                    .col(string_null(CompanyTagSource::Uri))
+                    .col(timestamp_with_time_zone_null(CompanyTagSource::PublishDatetime))
+                    .col(timestamp_with_time_zone_null(CompanyTagSource::CreateDatetime))
+                    .col(timestamp_with_time_zone_null(CompanyTagSource::UpdateDatetime))
+                    .primary_key(Index::create().name("pk-company-tag-source-id").col(CompanyTagSource::Id))
+                    .to_owned(),
+            )
+            .await?;
+
+        Ok(())
+    }
+
+    async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        manager
+            .drop_table(Table::drop().table(Config::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(User::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(Job::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(Tag::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(JobTag::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(Company::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(CompanyTag::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(File::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(TaskPlan::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(Task::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(TaskDataPlan::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(TaskDataSourcePlan::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(TaskDataDownload::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(TaskDataMerge::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(JobSource::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(CompanySource::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(JobTagSource::Table).to_owned())
+            .await?;
+        manager
+            .drop_table(Table::drop().table(CompanyTagSource::Table).to_owned())
+            .await?;
+        Ok(())
+    }
+}
+
+#[derive(DeriveIden)]
+enum Config {
+    Table,
+    Id,
+    Key,
+    Value,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum User {
+    Table,
+    Id,
+    Account,
+    Password,
+    Email,
+    Enable,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum Job {
+    Table,
+    Id,
+    Platform,
+    Url,
+    Name,
+    CompanyName,
+    LocationName,
+    Address,
+    Longitude,
+    Latitude,
+    Description,
+    DegreeName,
+    Year,
+    SalaryMin,
+    SalaryMax,
+    SalaryTotalMonth,
+    FirstPublishDatetime,
+    BossName,
+    BossCompanyName,
+    BossPosition,
+    CreateDatetime,
+    UpdateDatetime,
+    IsFullCompanyName,
+    SkillTag,
+    WelfareTag,
+    FirstScanDatetime,
+    Uri,
+}
+
+#[derive(DeriveIden)]
+enum Tag {
+    Table,
+    Id,
+    Name,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum JobTag {
+    Table,
+    Id,
+    JobId,
+    TagId,
+    Seq,
+    Uri,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum Company {
+    Table,
+    Id,
+    Name,
+    Desc,
+    StartDate,
+    Status,
+    LegalPerson,
+    UnifiedCode,
+    WebSite,
+    InsuranceNum,
+    SelfRisk,
+    UnionRisk,
+    Address,
+    Scope,
+    TaxNo,
+    Industry,
+    LicenseNumber,
+    Longitude,
+    Latitude,
+    RegCapitalValue,
+    RegCapitalCurrency,
+    SourcePlatform,
+    SourceUrl,
+    SourceRecordId,
+    SourceRefreshDatetime,
+    PaidinCapitalValue,
+    PaidinCapitalCurrency,
+    Uri,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum CompanyTag {
+    Table,
+    Id,
+    CompanyId,
+    CompanyName,
+    TagId,
+    Seq,
+    Uri,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum File {
+    Table,
+    Id,
+    Name,
+    Sha,
+    Content,
+    Size,
+    IsDelete,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum TaskPlan {
+    Table,
+    Id,
+    Type,
+    Enable,
+    Config,
+    Cron,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum Task {
+    Table,
+    Id,
+    PlanId,
+    Type,
+    DataId,
+    Status,
+    ErrorReason,
+    CostTime,
+    RetryCount,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum TaskDataPlan {
+    Table,
+    Id,
+    PlanId,
+    Username,
+    RepoName,
+    RepoType,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum TaskDataSourcePlan {
+    Table,
+    Id,
+    PlanId,
+    Username,
+    RepoName,
+    RepoType,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum TaskDataDownload {
+    Table,
+    Id,
+    Type,
+    Username,
+    RepoName,
+    Datetime,
+    Config,
+    DataId,
+    Seq,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum TaskDataMerge {
+    Table,
+    Id,
+    Type,
+    Username,
+    RepoName,
+    Datetime,
+    DataId,
+    DataCount,
+    Config,
+    DataPageNum,
+    DataPageSize,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum JobSource {
+    Table,
+    Id,
+    JobId,
+    Platform,
+    Url,
+    Name,
+    CompanyName,
+    LocationName,
+    Address,
+    Longitude,
+    Latitude,
+    Description,
+    DegreeName,
+    Year,
+    SalaryMin,
+    SalaryMax,
+    SalaryTotalMonth,
+    FirstPublishDatetime,
+    BossName,
+    BossCompanyName,
+    BossPosition,
+    IsFullCompanyName,
+    SkillTag,
+    WelfareTag,
+    FirstScanDatetime,
+    Uri,
+    PublishDatetime,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum CompanySource {
+    Table,
+    Id,
+    CompanyId,
+    Name,
+    Desc,
+    StartDate,
+    Status,
+    LegalPerson,
+    UnifiedCode,
+    WebSite,
+    InsuranceNum,
+    SelfRisk,
+    UnionRisk,
+    Address,
+    Scope,
+    TaxNo,
+    Industry,
+    LicenseNumber,
+    Longitude,
+    Latitude,
+    SourceUrl,
+    SourcePlatform,
+    SourceRecordId,
+    SourceRefreshDatetime,
+    RegCapitalValue,
+    RegCapitalCurrency,
+    PaidinCapitalValue,
+    PaidinCapitalCurrency,
+    Uri,
+    PublishDatetime,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum JobTagSource {
+    Table,
+    Id,
+    JobId,
+    TagId,
+    Seq,
+    Uri,
+    PublishDatetime,
+    CreateDatetime,
+    UpdateDatetime,
+}
+
+#[derive(DeriveIden)]
+enum CompanyTagSource {
+    Table,
+    Id,
+    CompanyId,
+    CompanyName,
+    TagId,
+    Seq,
+    Uri,
+    PublishDatetime,
+    CreateDatetime,
+    UpdateDatetime,
+}

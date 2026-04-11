@@ -6,10 +6,11 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize, ToSchema)]
-#[sea_orm(table_name = "job")]
+#[sea_orm(table_name = "job_source")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
+    pub job_id: Option<String>,
     pub platform: Option<String>,
     pub url: Option<String>,
     pub name: Option<String>,
@@ -33,16 +34,18 @@ pub struct Model {
     pub boss_name: Option<String>,
     pub boss_company_name: Option<String>,
     pub boss_position: Option<String>,
-    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
-    pub create_datetime: Option<DateTimeWithTimeZone>,
-    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
-    pub update_datetime: Option<DateTimeWithTimeZone>,
     pub is_full_company_name: Option<bool>,
     pub skill_tag: Option<String>,
     pub welfare_tag: Option<String>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub first_scan_datetime: Option<DateTimeWithTimeZone>,
     pub uri: Option<String>,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
+    pub publish_datetime: Option<DateTimeWithTimeZone>,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
+    pub create_datetime: Option<DateTimeWithTimeZone>,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
+    pub update_datetime: Option<DateTimeWithTimeZone>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -1,8 +1,7 @@
-use calamine::{open_workbook, Data, Reader, Xlsx};
+use calamine::{open_workbook, Reader, Xlsx};
 use std::fs::File;
-use std::io::{BufReader, Cursor};
+use std::io::BufReader;
 
-use crate::sync::types::ImportResult;
 
 pub struct FileParser;
 

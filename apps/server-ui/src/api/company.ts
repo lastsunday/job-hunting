@@ -4,12 +4,13 @@ export interface Company {
   id: string;
   platform?: string;
   name?: string;
-  description?: string;
+  desc?: string;
   start_date?: string;
   status?: string;
   legal_person?: string;
   unified_code?: string;
-  website?: string;
+  web_site?: string;
+  source_platform?: string;
   insurance_num?: number;
   self_risk?: number;
   union_risk?: number;
@@ -33,12 +34,13 @@ export interface CreateCompanyRequest {
   id?: string;
   platform?: string;
   name?: string;
-  description?: string;
+  desc?: string;
   start_date?: string;
   status?: string;
   legal_person?: string;
   unified_code?: string;
-  website?: string;
+  web_site?: string;
+  source_platform?: string;
   insurance_num?: number;
   self_risk?: number;
   union_risk?: number;
@@ -59,12 +61,13 @@ export interface CreateCompanyRequest {
 export interface UpdateCompanyRequest {
   platform?: string;
   name?: string;
-  description?: string;
+  desc?: string;
   start_date?: string;
   status?: string;
   legal_person?: string;
   unified_code?: string;
-  website?: string;
+  web_site?: string;
+  source_platform?: string;
   insurance_num?: number;
   self_risk?: number;
   union_risk?: number;

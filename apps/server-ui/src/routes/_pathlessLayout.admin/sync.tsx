@@ -17,7 +17,7 @@ import {
 } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
 import { useEffect, useState } from 'react';
-import { syncApi, SyncStatus, SyncConfig, SyncGitParam } from '@/api/sync';
+import { syncApi, SyncStatus, SyncGitParam } from '@/api/sync';
 import { useTranslation } from '../../i18n';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/sync')({
@@ -27,26 +27,17 @@ export const Route = createFileRoute('/_pathlessLayout/admin/sync')({
 function RouteComponent() {
   const { t } = useTranslation();
   const [status, setStatus] = useState<SyncStatus | null>(null);
-  const [config, setConfig] = useState<SyncConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [dataType, setDataType] = useState<string>('job');
-  const [baseUrl, setBaseUrl] = useState('https://api.github.com');
-  const [owner, setOwner] = useState('');
-  const [repo, setRepo] = useState('');
-  const [token, setToken] = useState('');
 
   const loadData = async () => {
     try {
-      const [statusData, configData] = await Promise.all([
+      const [statusData] = await Promise.all([
         syncApi.getStatus(),
-        syncApi.getConfig(),
       ]);
       setStatus(statusData);
-      setConfig(configData);
-      setBaseUrl(configData.git_base_url || 'https://api.github.com');
-      setRepo(configData.default_repo || '');
     } catch (error) {
       showNotification({
         color: 'red',
@@ -61,76 +52,6 @@ function RouteComponent() {
   useEffect(() => {
     loadData();
   }, []);
-
-  const handleSyncJobs = async () => {
-    if (!owner || !repo) {
-      showNotification({
-        color: 'red',
-        title: 'Error',
-        message: 'Please enter owner and repo name',
-      });
-      return;
-    }
-    setSyncing(true);
-    try {
-      const param: SyncGitParam = {
-        base_url: baseUrl || undefined,
-        owner,
-        repo_name: repo,
-        token: token || undefined,
-      };
-      const result = await syncApi.syncGitJobs(param);
-      showNotification({
-        color: result.success ? 'green' : 'red',
-        title: result.success ? 'Success' : 'Error',
-        message: `Imported ${result.imported} jobs from ${result.total_files} files`,
-      });
-      loadData();
-    } catch (error) {
-      showNotification({
-        color: 'red',
-        title: 'Error',
-        message: `Sync failed: ${error}`,
-      });
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  const handleSyncCompanies = async () => {
-    if (!owner || !repo) {
-      showNotification({
-        color: 'red',
-        title: 'Error',
-        message: 'Please enter owner and repo name',
-      });
-      return;
-    }
-    setSyncing(true);
-    try {
-      const param: SyncGitParam = {
-        base_url: baseUrl || undefined,
-        owner,
-        repo_name: repo,
-        token: token || undefined,
-      };
-      const result = await syncApi.syncGitCompanies(param);
-      showNotification({
-        color: result.success ? 'green' : 'red',
-        title: result.success ? 'Success' : 'Error',
-        message: `Imported ${result.imported} companies from ${result.total_files} files`,
-      });
-      loadData();
-    } catch (error) {
-      showNotification({
-        color: 'red',
-        title: 'Error',
-        message: `Sync failed: ${error}`,
-      });
-    } finally {
-      setSyncing(false);
-    }
-  };
 
   const handleFileImport = async () => {
     if (!file) {
@@ -196,8 +117,8 @@ function RouteComponent() {
               {
                 value: status
                   ? (status.total_jobs /
-                      (status.total_jobs + status.total_companies || 1)) *
-                    100
+                    (status.total_jobs + status.total_companies || 1)) *
+                  100
                   : 0,
                 color: 'blue',
               },
@@ -220,8 +141,8 @@ function RouteComponent() {
               {
                 value: status
                   ? (status.total_companies /
-                      (status.total_jobs + status.total_companies || 1)) *
-                    100
+                    (status.total_jobs + status.total_companies || 1)) *
+                  100
                   : 0,
                 color: 'green',
               },
@@ -249,67 +170,8 @@ function RouteComponent() {
                 {status?.last_sync_company || t('sync.neverSynced')}
               </Badge>
             </Text>
-            <Text size="sm">
-              {t('sync.scheduledTask')}:{' '}
-              <Badge color={status?.scheduler_running ? 'green' : 'gray'}>
-                {status?.scheduler_running
-                  ? t('sync.running')
-                  : t('sync.stopped')}
-              </Badge>
-            </Text>
           </Stack>
         </Group>
-      </Card>
-
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <Title order={4} mb="md">
-          {t('sync.gitSync')}
-        </Title>
-        <Stack>
-          <TextInput
-            label={t('sync.gitApiUrl')}
-            placeholder="https://api.github.com"
-            value={baseUrl}
-            onChange={(e) => setBaseUrl(e.currentTarget.value)}
-          />
-          <Group grow>
-            <TextInput
-              label={t('sync.repoOwner')}
-              placeholder="Enter owner"
-              value={owner}
-              onChange={(e) => setOwner(e.currentTarget.value)}
-            />
-            <TextInput
-              label={t('sync.repoName')}
-              placeholder="Enter repo name"
-              value={repo}
-              onChange={(e) => setRepo(e.currentTarget.value)}
-            />
-          </Group>
-          <PasswordInput
-            label={t('sync.tokenOptional')}
-            placeholder="Enter token if needed"
-            value={token}
-            onChange={(e) => setToken(e.currentTarget.value)}
-          />
-          <Group>
-            <Button
-              loading={syncing}
-              onClick={handleSyncJobs}
-              leftSection={<div className="i-mdi:github" />}
-            >
-              {t('sync.syncJobData')}
-            </Button>
-            <Button
-              loading={syncing}
-              onClick={handleSyncCompanies}
-              variant="outline"
-              leftSection={<div className="i-mdi:github" />}
-            >
-              {t('sync.syncCompanyData')}
-            </Button>
-          </Group>
-        </Stack>
       </Card>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
@@ -339,34 +201,6 @@ function RouteComponent() {
         </Stack>
       </Card>
 
-      <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <Title order={4} mb="md">
-          {t('sync.scheduledTaskConfig')}
-        </Title>
-        <Stack>
-          <Alert
-            color={config?.schedule_enabled ? 'green' : 'gray'}
-            title={t('sync.scheduledSyncStatus')}
-          >
-            {config?.schedule_enabled ? t('sync.enabled') : t('sync.disabled')}
-          </Alert>
-          <Text size="sm">
-            {t('sync.cronExpression')}: <code>{config?.schedule_cron}</code>
-          </Text>
-          <Text size="sm">
-            {t('sync.syncJob')}:{' '}
-            <Badge color={config?.sync_jobs ? 'green' : 'red'}>
-              {config?.sync_jobs ? t('sync.yes') : t('sync.no')}
-            </Badge>
-          </Text>
-          <Text size="sm">
-            {t('sync.syncCompany')}:{' '}
-            <Badge color={config?.sync_companies ? 'green' : 'red'}>
-              {config?.sync_companies ? t('sync.yes') : t('sync.no')}
-            </Badge>
-          </Text>
-        </Stack>
-      </Card>
     </Stack>
   );
 }
