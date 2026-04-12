@@ -20,16 +20,6 @@ i18n
     lng: getInitialLanguage(),
     fallbackLng: 'zh',
     defaultNS: 'common',
-    ns: [
-      'common',
-      'login',
-      'admin',
-      'statistics',
-      'job',
-      'company',
-      'sync',
-      'password',
-    ],
     backend: {
       loadPath: '/locales/{{lng}}/{{ns}}.json',
     },
