@@ -28,7 +28,7 @@ import { useEffect, useState } from 'react';
 import { jobApi, Job, CreateJobRequest, UpdateJobRequest } from '@/api/job';
 import { postJson } from '@/api/http';
 import { LocationMap } from '@/components/map/LocationMap';
-import { useTranslation } from '../../i18n';
+import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/jobs')({
   component: RouteComponent,
@@ -49,7 +49,7 @@ interface ApiPageResult<T> {
 }
 
 function RouteComponent() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['job', 'common']);
   const [jobs, setJobs] = useState<Job[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -274,33 +274,33 @@ function RouteComponent() {
 
   return (
     <Stack gap="md">
-      <Title order={2}>{t('job.title')}</Title>
+      <Title order={2}>{t('job:title')}</Title>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Group>
           <TextInput
-            placeholder={t('job.pleaseEnterJobName')}
+            placeholder={t('job:pleaseEnterJobName')}
             value={searchName}
             onChange={(e) => setSearchName(e.currentTarget.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
           <TextInput
-            placeholder={t('job.pleaseEnterLocation')}
+            placeholder={t('job:pleaseEnterLocation')}
             value={searchAddress}
             onChange={(e) => setSearchAddress(e.currentTarget.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
-          <Button onClick={handleSearch}>{t('common.search')}</Button>
+          <Button onClick={handleSearch}>{t('common:search')}</Button>
           <SegmentedControl
             value={viewMode}
             onChange={(v) => setViewMode(v as 'table' | 'map')}
             data={[
-              { label: t('job.tableView'), value: 'table' },
-              { label: t('job.mapView'), value: 'map' },
+              { label: t('job:tableView'), value: 'table' },
+              { label: t('job:mapView'), value: 'map' },
             ]}
           />
           <Button ml="auto" onClick={handleCreate}>
-            {t('job.addJob')}
+            {t('job:addJob')}
           </Button>
         </Group>
       </Card>
@@ -318,15 +318,15 @@ function RouteComponent() {
               <Table>
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th>{t('job.name')}</Table.Th>
-                    <Table.Th>{t('job.company')}</Table.Th>
-                    <Table.Th>{t('job.location')}</Table.Th>
-                    <Table.Th>{t('job.degree')}</Table.Th>
-                    <Table.Th>{t('job.year')}</Table.Th>
-                    <Table.Th>{t('job.salary')}</Table.Th>
-                    <Table.Th>{t('job.publishTime')}</Table.Th>
-                    <Table.Th>{t('job.firstScanTime')}</Table.Th>
-                    <Table.Th>{t('job.actions')}</Table.Th>
+                    <Table.Th>{t('job:name')}</Table.Th>
+                    <Table.Th>{t('job:company')}</Table.Th>
+                    <Table.Th>{t('job:location')}</Table.Th>
+                    <Table.Th>{t('job:degree')}</Table.Th>
+                    <Table.Th>{t('job:year')}</Table.Th>
+                    <Table.Th>{t('job:salary')}</Table.Th>
+                    <Table.Th>{t('job:publishTime')}</Table.Th>
+                    <Table.Th>{t('job:firstScanTime')}</Table.Th>
+                    <Table.Th>{t('job:actions')}</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -338,7 +338,7 @@ function RouteComponent() {
                       <Table.Td>{job.degree_name || '-'}</Table.Td>
                       <Table.Td>
                         {job.year != null
-                          ? t('job.yearValue', { year: job.year })
+                          ? t('job:yearValue', { year: job.year })
                           : '-'}
                       </Table.Td>
                       <Table.Td>
@@ -361,14 +361,14 @@ function RouteComponent() {
                             variant="light"
                             onClick={() => handleView(job)}
                           >
-                            {t('common.view')}
+                            {t('common:view')}
                           </Button>
                           <Button
                             size="xs"
                             variant="light"
                             onClick={() => handleEdit(job)}
                           >
-                            {t('common.edit')}
+                            {t('common:edit')}
                           </Button>
                           <Button
                             size="xs"
@@ -376,7 +376,7 @@ function RouteComponent() {
                             color="red"
                             onClick={() => handleDelete(job)}
                           >
-                            {t('common.delete')}
+                            {t('common:delete')}
                           </Button>
                         </Group>
                       </Table.Td>
@@ -397,7 +397,7 @@ function RouteComponent() {
             >
               <div className={classes.sidebarHeader}>
                 <Text size="sm" fw={500}>
-                  {t('job.jobList')} ({total})
+                  {t('job:jobList')} ({total})
                 </Text>
               </div>
               <ScrollArea className={classes.sidebarContent}>
@@ -408,7 +408,7 @@ function RouteComponent() {
                     <Skeleton height={50} radius="md" />
                   </Stack>
                 ) : jobs.length === 0 ? (
-                  <div className={classes.noCoords}>{t('common.noData')}</div>
+                  <div className={classes.noCoords}>{t('common:noData')}</div>
                 ) : (
                   jobs.map((job) => (
                     <div
@@ -534,12 +534,12 @@ function RouteComponent() {
       <Modal
         opened={openedModal}
         onClose={closeModal}
-        title={editingJob ? t('job.editJob') : t('job.addJob')}
+        title={editingJob ? t('job:editJob') : t('job:addJob')}
         size="lg"
       >
         <Stack>
           <TextInput
-            label={t('job.name')}
+            label={t('job:name')}
             value={formData.name}
             onChange={(e) =>
               setFormData({ ...formData, name: e.currentTarget.value })
@@ -547,14 +547,14 @@ function RouteComponent() {
             required
           />
           <TextInput
-            label={t('job.companyName')}
+            label={t('job:companyName')}
             value={formData.company_name}
             onChange={(e) =>
               setFormData({ ...formData, company_name: e.currentTarget.value })
             }
           />
           <TextInput
-            label={t('job.location')}
+            label={t('job:location')}
             value={formData.address}
             onChange={(e) =>
               setFormData({ ...formData, address: e.currentTarget.value })
@@ -562,7 +562,7 @@ function RouteComponent() {
           />
           <Group grow>
             <NumberInput
-              label={t('job.longitude')}
+              label={t('job:longitude')}
               value={formData.longitude ?? ''}
               onChange={(val) =>
                 setFormData({
@@ -573,7 +573,7 @@ function RouteComponent() {
               decimalScale={6}
             />
             <NumberInput
-              label={t('job.latitude')}
+              label={t('job:latitude')}
               value={formData.latitude ?? ''}
               onChange={(val) =>
                 setFormData({
@@ -585,44 +585,44 @@ function RouteComponent() {
             />
           </Group>
           <TextInput
-            label={t('job.jobDescription')}
+            label={t('job:jobDescription')}
             value={formData.description}
             onChange={(e) =>
               setFormData({ ...formData, description: e.currentTarget.value })
             }
           />
           <TextInput
-            label={t('job.jobUrl')}
+            label={t('job:jobUrl')}
             value={formData.url}
             onChange={(e) =>
               setFormData({ ...formData, url: e.currentTarget.value })
             }
           />
           <TextInput
-            label={t('job.platform')}
+            label={t('job:platform')}
             value={formData.platform}
             onChange={(e) =>
               setFormData({ ...formData, platform: e.currentTarget.value })
             }
           />
           <Textarea
-            label={t('job.skillTag')}
+            label={t('job:skillTag')}
             value={formData.skill_tag}
             onChange={(e) =>
               setFormData({ ...formData, skill_tag: e.currentTarget.value })
             }
-            placeholder={t('job.skillTagPlaceholder')}
+            placeholder={t('job:skillTagPlaceholder')}
           />
           <Textarea
-            label={t('job.welfareTag')}
+            label={t('job:welfareTag')}
             value={formData.welfare_tag}
             onChange={(e) =>
               setFormData({ ...formData, welfare_tag: e.currentTarget.value })
             }
-            placeholder={t('job.welfareTagPlaceholder')}
+            placeholder={t('job:welfareTagPlaceholder')}
           />
           <Button onClick={handleSubmit} loading={submitting}>
-            {editingJob ? t('common.update') : t('common.create')}
+            {editingJob ? t('common:update') : t('common:create')}
           </Button>
         </Stack>
       </Modal>
@@ -630,21 +630,21 @@ function RouteComponent() {
       <Modal
         opened={openedDelete}
         onClose={closeDelete}
-        title={t('job.confirmDelete')}
+        title={t('job:confirmDelete')}
       >
         <Text>
-          {t('job.confirmDeleteMessage', { name: deletingJob?.name || '' })}
+          {t('job:confirmDeleteMessage', { name: deletingJob?.name || '' })}
         </Text>
         <Group justify="flex-end" mt="md">
           <Button variant="default" onClick={closeDelete}>
-            {t('common.cancel')}
+            {t('common:cancel')}
           </Button>
           <Button
             color="red"
             onClick={handleConfirmDelete}
             loading={submitting}
           >
-            {t('common.delete')}
+            {t('common:delete')}
           </Button>
         </Group>
       </Modal>
@@ -652,7 +652,7 @@ function RouteComponent() {
       <Drawer
         opened={openedView}
         onClose={closeView}
-        title={t('job.jobDetails')}
+        title={t('job:jobDetails')}
         size="md"
         position="right"
       >

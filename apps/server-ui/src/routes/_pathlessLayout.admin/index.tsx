@@ -13,23 +13,23 @@ import {
 import { useEffect, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { jobStatsApi, companyStatsApi, StatItem } from '@/api/statistics';
-import { useTranslation } from '../../i18n';
+import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['statistics', 'common']);
 
   return (
     <Stack gap="md">
-      <Title order={2}>{t('statistics.dataStatistics')}</Title>
+      <Title order={2}>{t('statistics:dataStatistics')}</Title>
       <Tabs defaultValue="job">
         <Tabs.List>
-          <Tabs.Tab value="job">{t('statistics.jobStatistics')}</Tabs.Tab>
+          <Tabs.Tab value="job">{t('statistics:jobStatistics')}</Tabs.Tab>
           <Tabs.Tab value="company">
-            {t('statistics.companyStatistics')}
+            {t('statistics:companyStatistics')}
           </Tabs.Tab>
         </Tabs.List>
 
@@ -46,7 +46,7 @@ function RouteComponent() {
 }
 
 function JobStats() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['statistics', 'common']);
   const currentYear = new Date().getFullYear();
   const [loading, setLoading] = useState(true);
   const [scanTimeYear, setScanTimeYear] = useState<string | null>(
@@ -97,7 +97,7 @@ function JobStats() {
   }, [scanTimeYear]);
 
   const yearOptions = [
-    { value: '', label: t('common.all') },
+    { value: '', label: t('common:all') },
     ...Array.from({ length: 5 }, (_, i) => ({
       value: (currentYear - i).toString(),
       label: (currentYear - i).toString(),
@@ -120,7 +120,7 @@ function JobStats() {
     <Grid>
       <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
         <StatCard
-          title={t('statistics.scanTimeDistribution')}
+          title={t('statistics:scanTimeDistribution')}
           extra={
             <Select
               size="xs"
@@ -133,32 +133,32 @@ function JobStats() {
           }
         >
           <ReactECharts
-            option={getLineChartOption(scanTimeData, t('statistics.scanCount'))}
+            option={getLineChartOption(scanTimeData, t('statistics:scanCount'))}
             style={{ height: 280 }}
           />
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
-        <StatCard title={t('statistics.salaryDistribution')}>
+        <StatCard title={t('statistics:salaryDistribution')}>
           <ReactECharts
-            option={getBarChartOption(salaryData, t('statistics.jobCount'))}
+            option={getBarChartOption(salaryData, t('statistics:jobCount'))}
             style={{ height: 280 }}
           />
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
-        <StatCard title={t('statistics.locationDistribution')}>
+        <StatCard title={t('statistics:locationDistribution')}>
           <ReactECharts
             option={getBarChartOption(
               locationData.slice(0, 10),
-              t('statistics.jobCount')
+              t('statistics:jobCount')
             )}
             style={{ height: 280 }}
           />
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
-        <StatCard title={t('statistics.platformDistribution')}>
+        <StatCard title={t('statistics:platformDistribution')}>
           <ReactECharts
             option={getPieChartOption(platformData)}
             style={{ height: 280 }}
@@ -166,17 +166,17 @@ function JobStats() {
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
-        <StatCard title={t('statistics.degreeDistribution')}>
+        <StatCard title={t('statistics:degreeDistribution')}>
           <ReactECharts
-            option={getBarChartOption(degreeData, t('statistics.jobCount'))}
+            option={getBarChartOption(degreeData, t('statistics:jobCount'))}
             style={{ height: 280 }}
           />
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6, lg: 4 }}>
-        <StatCard title={t('statistics.yearDistribution')}>
+        <StatCard title={t('statistics:yearDistribution')}>
           <ReactECharts
-            option={getBarChartOption(yearData, t('statistics.jobCount'))}
+            option={getBarChartOption(yearData, t('statistics:jobCount'))}
             style={{ height: 280 }}
           />
         </StatCard>
@@ -186,7 +186,7 @@ function JobStats() {
 }
 
 function CompanyStats() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['statistics', 'common']);
   const currentYear = new Date().getFullYear();
   const [loading, setLoading] = useState(true);
   const [sourceUpdateYear, setSourceUpdateYear] = useState<string | null>(
@@ -235,7 +235,7 @@ function CompanyStats() {
   }, [sourceUpdateYear]);
 
   const yearOptions = [
-    { value: '', label: t('common.all') },
+    { value: '', label: t('common:all') },
     ...Array.from({ length: 5 }, (_, i) => ({
       value: (currentYear - i).toString(),
       label: (currentYear - i).toString(),
@@ -257,29 +257,29 @@ function CompanyStats() {
   return (
     <Grid>
       <Grid.Col span={{ base: 12, md: 6 }}>
-        <StatCard title={t('statistics.insuranceDistribution')}>
+        <StatCard title={t('statistics:insuranceDistribution')}>
           <ReactECharts
             option={getBarChartOption(
               insuranceData,
-              t('statistics.companyCount')
+              t('statistics:companyCount')
             )}
             style={{ height: 280 }}
           />
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6 }}>
-        <StatCard title={t('statistics.industryDistribution')}>
+        <StatCard title={t('statistics:industryDistribution')}>
           <ReactECharts
             option={getBarChartOption(
               industryData.slice(0, 10),
-              t('statistics.companyCount')
+              t('statistics:companyCount')
             )}
             style={{ height: 280 }}
           />
         </StatCard>
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6 }}>
-        <StatCard title={t('statistics.companyStatusDistribution')}>
+        <StatCard title={t('statistics:companyStatusDistribution')}>
           <ReactECharts
             option={getPieChartOption(statusData)}
             style={{ height: 280 }}
@@ -288,7 +288,7 @@ function CompanyStats() {
       </Grid.Col>
       <Grid.Col span={{ base: 12, md: 6 }}>
         <StatCard
-          title={t('statistics.sourceUpdateDistribution')}
+          title={t('statistics:sourceUpdateDistribution')}
           extra={
             <Select
               size="xs"
@@ -303,7 +303,7 @@ function CompanyStats() {
           <ReactECharts
             option={getLineChartOption(
               sourceUpdateData,
-              t('statistics.scanCount')
+              t('statistics:scanCount')
             )}
             style={{ height: 280 }}
           />

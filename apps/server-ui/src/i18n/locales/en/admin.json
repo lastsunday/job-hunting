@@ -1,0 +1,14 @@
+{
+  "dashboard": "Dashboard",
+  "jobData": "Job Data",
+  "companyData": "Company Data",
+  "dataSync": "Data Sync",
+  "companyComment": "Company Comments",
+  "task": "Tasks",
+  "dataSource": "Data Sources",
+  "settings": "Settings",
+  "logout": "Logout",
+  "changePassword": "Change Password",
+  "confirmLogout": "Confirm logout?",
+  "jobHunter": "Job Hunter (Admin)"
+}

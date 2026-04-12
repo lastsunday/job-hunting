@@ -17,14 +17,14 @@ import {
 } from '@mantine/core';
 import { useEffect, useState } from 'react';
 import { syncApi, SyncStatus, ImportResult } from '@/api/sync';
-import { useTranslation } from '../../i18n';
+import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/sync')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { t } = useTranslation();
+  const { t } = useTranslation('sync');
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -113,17 +113,17 @@ function RouteComponent() {
         onClose={() => setResultModalOpen(false)}
         title={
           <Title order={4}>
-            {isSuccess ? t('sync.importSuccess') : t('sync.importFailed2')}
+            {isSuccess ? t('importSuccess') : t('importFailed2')}
           </Title>
         }
         size="md"
       >
         <Stack gap="md">
           <Group>
-            <Text fw={500}>{t('sync.fileVersion')}:</Text>
+            <Text fw={500}>{t('fileVersion')}:</Text>
             <Text>{importResult.data_version}</Text>
             <Text c="dimmed">
-              ({t('sync.validationVersion')}: v{importResult.actual_version})
+              ({'validationVersion'}: v{importResult.actual_version})
             </Text>
           </Group>
 
@@ -169,7 +169,7 @@ function RouteComponent() {
                       {importResult.imported + importResult.updated}
                       <Text span size="xs" fw={400}>
                         {' '}
-                        {t('sync.success')}
+                        {t('success')}
                       </Text>
                     </Text>
                   }
@@ -184,7 +184,7 @@ function RouteComponent() {
                       style={{ padding: 0 }}
                     />
                     <Text>
-                      {t('sync.success')}:{' '}
+                      {t('success')}:{' '}
                       {importResult.imported + importResult.updated}
                     </Text>
                   </Group>
@@ -197,15 +197,15 @@ function RouteComponent() {
                       style={{ padding: 0 }}
                     />
                     <Text>
-                      {t('sync.duplicate')}:{' '}
+                      {t('duplicate')}:{' '}
                       {importResult.total - importResult.imported}
                     </Text>
                   </Group>
                   <Text size="sm" c="dimmed">
-                    {t('sync.total')}: {importResult.total}
+                    {t('total')}: {importResult.total}
                   </Text>
                   <Text size="sm" c="dimmed">
-                    {t('sync.duration')}:{' '}
+                    {t('duration')}:{' '}
                     {formatDuration(importResult.cost_time)}
                   </Text>
                 </Stack>
@@ -216,7 +216,7 @@ function RouteComponent() {
               <Divider />
               <Stack gap="xs">
                 <Text fw={500} c="red">
-                  {t('sync.failureReason')}:
+                  {t('failureReason')}:
                 </Text>
                 {importResult.errors.map((error, index) => (
                   <Text key={index} c="red" size="sm">
@@ -226,8 +226,8 @@ function RouteComponent() {
                 {importResult.valid_columns.length > 0 && (
                   <>
                     <Text fw={500} mt="sm">
-                      {t('sync.fieldList')} (
-                      {t('sync.fieldCount', {
+                      {t('fieldList')} (
+                      {t('fieldCount', {
                         count: importResult.valid_columns.length,
                       })}
                       )
@@ -268,11 +268,11 @@ function RouteComponent() {
 
   return (
     <Stack gap="md">
-      <Title order={2}>{t('sync.title')}</Title>
+      <Title order={2}>{t('title')}</Title>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Title order={4} mb="md">
-          {t('sync.syncStatus')}
+          {t('syncStatus')}
         </Title>
         <Group>
           <RingProgress
@@ -294,7 +294,7 @@ function RouteComponent() {
                 {status?.total_jobs || 0}
                 <Text span size="xs" fw={400}>
                   {' '}
-                  {t('sync.jobs')}
+                  {t('jobs')}
                 </Text>
               </Text>
             }
@@ -318,22 +318,22 @@ function RouteComponent() {
                 {status?.total_companies || 0}
                 <Text span size="xs" fw={400}>
                   {' '}
-                  {t('sync.companies')}
+                  {t('companies')}
                 </Text>
               </Text>
             }
           />
           <Stack gap="xs">
             <Text size="sm">
-              {t('sync.lastSyncJob')}:{' '}
+              {t('lastSyncJob')}:{' '}
               <Badge color="blue">
-                {status?.last_sync_job || t('sync.neverSynced')}
+                {status?.last_sync_job || t('neverSynced')}
               </Badge>
             </Text>
             <Text size="sm">
-              {t('sync.lastSyncCompany')}:{' '}
+              {t('lastSyncCompany')}:{' '}
               <Badge color="green">
-                {status?.last_sync_company || t('sync.neverSynced')}
+                {status?.last_sync_company || t('neverSynced')}
               </Badge>
             </Text>
           </Stack>
@@ -342,27 +342,27 @@ function RouteComponent() {
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Title order={4} mb="md">
-          {t('sync.fileImport')}
+          {t('fileImport')}
         </Title>
         <Stack>
           <Select
-            label={t('sync.dataType')}
+            label={t('dataType')}
             data={[
-              { value: 'job', label: t('sync.jobType') },
-              { value: 'company', label: t('sync.companyType') },
+              { value: 'job', label: t('jobType') },
+              { value: 'company', label: t('companyType') },
             ]}
             value={dataType}
             onChange={(value) => setDataType(value || 'job')}
           />
           <FileInput
-            label={t('sync.selectExcelFile')}
-            placeholder={t('sync.clickToSelectFile')}
+            label={t('selectExcelFile')}
+            placeholder={t('clickToSelectFile')}
             accept=".xlsx,.xls"
             value={file}
             onChange={setFile}
           />
           <Button loading={syncing} onClick={handleFileImport} disabled={!file}>
-            {t('sync.importData')}
+            {t('importData')}
           </Button>
         </Stack>
       </Card>

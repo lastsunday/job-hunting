@@ -1,0 +1,18 @@
+{
+  "dataStatistics": "数据统计",
+  "jobStatistics": "职位统计",
+  "companyStatistics": "公司统计",
+  "scanTimeDistribution": "扫描时间分布",
+  "salaryDistribution": "薪资分布",
+  "locationDistribution": "地区分布 (Top 10)",
+  "platformDistribution": "平台分布",
+  "degreeDistribution": "学历分布",
+  "yearDistribution": "工作年限分布",
+  "insuranceDistribution": "社保人数分布",
+  "industryDistribution": "行业分布 (Top 10)",
+  "companyStatusDistribution": "公司状态分布",
+  "sourceUpdateDistribution": "数据来源更新时间分布",
+  "scanCount": "扫描数量",
+  "jobCount": "职位数量",
+  "companyCount": "公司数量"
+}

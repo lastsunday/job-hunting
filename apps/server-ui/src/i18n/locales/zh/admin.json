@@ -1,0 +1,14 @@
+{
+  "dashboard": "仪表板",
+  "jobData": "职位数据",
+  "companyData": "公司数据",
+  "dataSync": "数据同步",
+  "companyComment": "公司评论",
+  "task": "任务",
+  "dataSource": "数据源",
+  "settings": "设置",
+  "logout": "登出",
+  "changePassword": "修改密码",
+  "confirmLogout": "确认登出？",
+  "jobHunter": "职位猎人(后台)"
+}

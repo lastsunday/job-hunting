@@ -1,0 +1,18 @@
+{
+  "loading": "加载中...",
+  "error": "错误",
+  "success": "成功",
+  "confirm": "确认",
+  "cancel": "取消",
+  "delete": "删除",
+  "edit": "编辑",
+  "view": "查看",
+  "create": "创建",
+  "update": "更新",
+  "search": "搜索",
+  "submit": "提交",
+  "all": "全部",
+  "noData": "暂无数据",
+  "version": "Version",
+  "na": "N/A"
+}

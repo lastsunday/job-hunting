@@ -24,7 +24,7 @@ import {
 import { useEffect, useState } from 'react';
 import logo from '../../assets/logo.svg';
 import { useAuth } from '../../hooks/auth';
-import { useTranslation } from '../../i18n';
+import { useTranslation } from 'react-i18next';
 import { UserButton } from '../../widget/UserButton/UserButton';
 import classes from './route.module.css';
 
@@ -43,33 +43,33 @@ export const Route = createFileRoute('/_pathlessLayout/admin')({
 });
 
 const data = [
-  { link: '/admin', label: 'admin.dashboard', icon: 'i-mdi:monitor-dashboard' },
+  { link: '/admin', label: 'admin:dashboard', icon: 'i-mdi:monitor-dashboard' },
   {
     link: '/admin/jobs',
-    label: 'admin.jobData',
+    label: 'admin:jobData',
     icon: 'i-hugeicons:job-search',
   },
   {
     link: '/admin/companies',
-    label: 'admin.companyData',
+    label: 'admin:companyData',
     icon: 'i-mdi:company',
   },
-  { link: '/admin/sync', label: 'admin.dataSync', icon: 'i-mdi:sync' },
-  { link: '', label: 'admin.companyComment', icon: 'i-mingcute:comment-line' },
+  { link: '/admin/sync', label: 'admin:dataSync', icon: 'i-mdi:sync' },
+  { link: '', label: 'admin:companyComment', icon: 'i-mingcute:comment-line' },
   {
     link: '',
-    label: 'admin.task',
+    label: 'admin:task',
     icon: 'i-material-symbols:other-admission-outline',
   },
-  { link: '', label: 'admin.dataSource', icon: 'i-material-symbols:dataset' },
-  { link: '', label: 'admin.settings', icon: 'i-mdi:settings' },
+  { link: '', label: 'admin:dataSource', icon: 'i-material-symbols:dataset' },
+  { link: '', label: 'admin:settings', icon: 'i-mdi:settings' },
 ];
 
 function RouteComponent() {
   const router = useRouter();
   const navigate = Route.useNavigate();
   const auth = useAuth();
-  const { t, locale, setLocale } = useTranslation();
+  const { t, i18n } = useTranslation(['admin', 'common', 'password']);
   const [opened, { toggle }] = useDisclosure();
 
   const [active, setActive] = useState('admin.dashboard');
@@ -90,7 +90,7 @@ function RouteComponent() {
   }, []);
 
   const handleLogout = () => {
-    if (window.confirm(t('admin.confirmLogout'))) {
+    if (window.confirm(t('admin:confirmLogout'))) {
       auth.logout().then(() => {
         router.invalidate().finally(() => {
           navigate({ to: '/login' });
@@ -131,8 +131,8 @@ function RouteComponent() {
       if (passwordValue !== confirmPasswordValue) {
         showNotification({
           color: 'red',
-          title: t('common.error'),
-          message: t('password.passwordMismatch'),
+          title: t('common:error'),
+          message: t('password:passwordMismatch'),
         });
       } else {
         const oldPassword = oldPasswordValue.toString();
@@ -140,8 +140,8 @@ function RouteComponent() {
         await resetPassword({ password, old_password: oldPassword });
         showNotification({
           color: 'green',
-          title: t('password.passwordChangeSuccess'),
-          message: t('password.pleaseReLogin'),
+          title: t('password:passwordChangeSuccess'),
+          message: t('password:pleaseReLogin'),
         });
         await router.invalidate();
         auth.logout().then(() => {
@@ -154,7 +154,7 @@ function RouteComponent() {
       console.error('Error logging in: ', error);
       showNotification({
         color: 'red',
-        title: t('common.error'),
+        title: t('common:error'),
         message: `${error}`,
       });
     } finally {
@@ -180,11 +180,13 @@ function RouteComponent() {
               size="sm"
             />
             <img className={classes.logo} src={logo}></img>
-            <Text>{t('admin.jobHunter')}</Text>
+            <Text>{t('admin:jobHunter')}</Text>
           </Group>
           <Select
-            value={locale}
-            onChange={(value) => value && setLocale(value as 'zh' | 'en')}
+            value={i18n.language}
+            onChange={(value) =>
+              value && i18n.changeLanguage(value as 'zh' | 'en')
+            }
             data={[
               { value: 'zh', label: '🇨🇳 中文' },
               { value: 'en', label: '🇺🇸 EN' },
@@ -214,7 +216,7 @@ function RouteComponent() {
           <div className={classes.footer}>
             <a className={classes.link} onClick={openPassword}>
               <div className="i-mdi:password size-5 mr-2"></div>
-              <span>{t('admin.changePassword')}</span>
+              <span>{t('admin:changePassword')}</span>
             </a>
             <a
               href="#"
@@ -225,7 +227,7 @@ function RouteComponent() {
               }}
             >
               <div className="i-material-symbols:logout size-5 mr-2"></div>
-              <span>{t('admin.logout')}</span>
+              <span>{t('admin:logout')}</span>
             </a>
           </div>
         </nav>
@@ -236,13 +238,13 @@ function RouteComponent() {
       <Modal
         opened={openedPassword}
         onClose={closePassword}
-        title={t('password.changePassword')}
+        title={t('password:changePassword')}
       >
         <form className="mt-4 max-w-lg" onSubmit={onFormSubmit}>
           <PasswordInput
             name="oldPassword"
-            label={t('password.oldPassword')}
-            placeholder={t('password.pleaseEnterOldPassword')}
+            label={t('password:oldPassword')}
+            placeholder={t('password:pleaseEnterOldPassword')}
             required
             mt="md"
             radius="md"
@@ -251,8 +253,8 @@ function RouteComponent() {
           />
           <PasswordInput
             name="password"
-            label={t('password.newPassword')}
-            placeholder={t('password.pleaseEnterPassword')}
+            label={t('password:newPassword')}
+            placeholder={t('password:pleaseEnterPassword')}
             required
             mt="md"
             radius="md"
@@ -261,8 +263,8 @@ function RouteComponent() {
           />
           <PasswordInput
             name="confirmPassword"
-            label={t('password.confirmPassword')}
-            placeholder={t('password.pleaseEnterConfirmPassword')}
+            label={t('password:confirmPassword')}
+            placeholder={t('password:pleaseEnterConfirmPassword')}
             required
             mt="md"
             radius="md"
@@ -277,8 +279,8 @@ function RouteComponent() {
             disabled={isSubmitting}
           >
             {isPasswordUpdating
-              ? t('password.changing')
-              : t('password.changePassword')}
+              ? t('password:changing')
+              : t('password:changePassword')}
           </Button>
         </form>
       </Modal>

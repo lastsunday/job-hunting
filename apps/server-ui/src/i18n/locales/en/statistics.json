@@ -1,0 +1,18 @@
+{
+  "dataStatistics": "Data Statistics",
+  "jobStatistics": "Job Statistics",
+  "companyStatistics": "Company Statistics",
+  "scanTimeDistribution": "Scan Time Distribution",
+  "salaryDistribution": "Salary Distribution",
+  "locationDistribution": "Location Distribution (Top 10)",
+  "platformDistribution": "Platform Distribution",
+  "degreeDistribution": "Degree Distribution",
+  "yearDistribution": "Work Year Distribution",
+  "insuranceDistribution": "Insurance Distribution",
+  "industryDistribution": "Industry Distribution (Top 10)",
+  "companyStatusDistribution": "Company Status Distribution",
+  "sourceUpdateDistribution": "Source Update Distribution",
+  "scanCount": "Scan Count",
+  "jobCount": "Job Count",
+  "companyCount": "Company Count"
+}

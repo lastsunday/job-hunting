@@ -32,7 +32,7 @@ import {
 } from '@/api/company';
 import { postJson } from '@/api/http';
 import { LocationMap } from '@/components/map/LocationMap';
-import { useTranslation } from '../../i18n';
+import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/companies')({
   component: RouteComponent,
@@ -52,7 +52,7 @@ interface ApiPageResult<T> {
 }
 
 function RouteComponent() {
-  const { t } = useTranslation();
+  const { t } = useTranslation(['company', 'common']);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -282,33 +282,33 @@ function RouteComponent() {
 
   return (
     <Stack gap="md">
-      <Title order={2}>{t('company.title')}</Title>
+      <Title order={2}>{t('company:title')}</Title>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Group>
           <TextInput
-            placeholder={t('company.pleaseEnterCompanyName')}
+            placeholder={t('company:pleaseEnterCompanyName')}
             value={searchName}
             onChange={(e) => setSearchName(e.currentTarget.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
           <TextInput
-            placeholder={t('company.pleaseEnterIndustry')}
+            placeholder={t('company:pleaseEnterIndustry')}
             value={searchIndustry}
             onChange={(e) => setSearchIndustry(e.currentTarget.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
-          <Button onClick={handleSearch}>{t('common.search')}</Button>
+          <Button onClick={handleSearch}>{t('common:search')}</Button>
           <SegmentedControl
             value={viewMode}
             onChange={(v) => setViewMode(v as 'table' | 'map')}
             data={[
-              { label: t('company.tableView'), value: 'table' },
-              { label: t('company.mapView'), value: 'map' },
+              { label: t('company:tableView'), value: 'table' },
+              { label: t('company:mapView'), value: 'map' },
             ]}
           />
           <Button ml="auto" onClick={handleCreate}>
-            {t('company.addCompany')}
+            {t('company:addCompany')}
           </Button>
         </Group>
       </Card>
@@ -326,14 +326,14 @@ function RouteComponent() {
               <Table>
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th>{t('company.name')}</Table.Th>
-                    <Table.Th>{t('company.status')}</Table.Th>
-                    <Table.Th>{t('company.industry')}</Table.Th>
-                    <Table.Th>{t('company.insuranceNum')}</Table.Th>
-                    <Table.Th>{t('company.selfRisk')}</Table.Th>
-                    <Table.Th>{t('company.unionRisk')}</Table.Th>
-                    <Table.Th>{t('company.sourceUpdateTime')}</Table.Th>
-                    <Table.Th>{t('company.actions')}</Table.Th>
+                    <Table.Th>{t('company:name')}</Table.Th>
+                    <Table.Th>{t('company:status')}</Table.Th>
+                    <Table.Th>{t('company:industry')}</Table.Th>
+                    <Table.Th>{t('company:insuranceNum')}</Table.Th>
+                    <Table.Th>{t('company:selfRisk')}</Table.Th>
+                    <Table.Th>{t('company:unionRisk')}</Table.Th>
+                    <Table.Th>{t('company:sourceUpdateTime')}</Table.Th>
+                    <Table.Th>{t('company:actions')}</Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -357,14 +357,14 @@ function RouteComponent() {
                             variant="light"
                             onClick={() => handleView(company)}
                           >
-                            {t('common.view')}
+                            {t('common:view')}
                           </Button>
                           <Button
                             size="xs"
                             variant="light"
                             onClick={() => handleEdit(company)}
                           >
-                            {t('common.edit')}
+                            {t('common:edit')}
                           </Button>
                           <Button
                             size="xs"
@@ -372,7 +372,7 @@ function RouteComponent() {
                             color="red"
                             onClick={() => handleDelete(company)}
                           >
-                            {t('common.delete')}
+                            {t('common:delete')}
                           </Button>
                         </Group>
                       </Table.Td>

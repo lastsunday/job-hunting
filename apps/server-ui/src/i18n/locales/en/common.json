@@ -1,0 +1,18 @@
+{
+  "loading": "Loading...",
+  "error": "Error",
+  "success": "Success",
+  "confirm": "Confirm",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "view": "View",
+  "create": "Create",
+  "update": "Update",
+  "search": "Search",
+  "submit": "Submit",
+  "all": "All",
+  "noData": "No Data",
+  "version": "Version",
+  "na": "N/A"
+}

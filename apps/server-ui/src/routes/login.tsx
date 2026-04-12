@@ -21,7 +21,7 @@ import {
 import React, { useState } from 'react';
 import { z } from 'zod';
 import { useAuth } from '../hooks/auth';
-import { useTranslation } from '../i18n';
+import { useTranslation } from 'react-i18next';
 import classes from './login.module.css';
 
 const fallback = '/admin' as const;
@@ -45,7 +45,7 @@ function RouteComponent() {
   const navigate = Route.useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const search = Route.useSearch();
-  const { t, locale, setLocale } = useTranslation();
+  const { t, i18n } = useTranslation(['login', 'common']);
 
   const {
     data: version,
@@ -76,7 +76,7 @@ function RouteComponent() {
       console.error('Error logging in: ', error);
       showNotification({
         color: 'red',
-        title: t('common.error'),
+        title: t('common:error'),
         message: `${error}`,
       });
     } finally {
@@ -90,8 +90,10 @@ function RouteComponent() {
     <Container size={420} my={40}>
       <Group justify="flex-end" mb="sm">
         <Select
-          value={locale}
-          onChange={(value) => value && setLocale(value as 'zh' | 'en')}
+          value={i18n.language}
+          onChange={(value) =>
+            value && i18n.changeLanguage(value as 'zh' | 'en')
+          }
           data={[
             { value: 'zh', label: '🇨🇳 中文' },
             { value: 'en', label: '🇺🇸 EN' },
@@ -101,14 +103,14 @@ function RouteComponent() {
         />
       </Group>
       <Title ta="center" className={classes.title}>
-        {t('login.welcomeBack')}
+        {t('login:welcomeBack')}
         <Text size="xs">
-          {t('common.version')}:{' '}
+          {t('common:version')}:{' '}
           {isVersionLoading
             ? '...'
             : isVersionSuccess
             ? version
-            : t('common.na')}
+            : t('common:na')}
         </Text>
       </Title>
 
@@ -116,8 +118,8 @@ function RouteComponent() {
         <form className="mt-4 max-w-lg" onSubmit={onFormSubmit}>
           <TextInput
             name="account"
-            label={t('login.account')}
-            placeholder={t('login.pleaseEnterAccount')}
+            label={t('login:account')}
+            placeholder={t('login:pleaseEnterAccount')}
             required
             radius="md"
             minLength={4}
@@ -125,8 +127,8 @@ function RouteComponent() {
           />
           <PasswordInput
             name="password"
-            label={t('login.password')}
-            placeholder={t('login.pleaseEnterPassword')}
+            label={t('login:password')}
+            placeholder={t('login:pleaseEnterPassword')}
             required
             mt="md"
             radius="md"
@@ -140,7 +142,7 @@ function RouteComponent() {
             radius="md"
             disabled={isSubmitting}
           >
-            {isLoggingIn ? t('common.loading') : t('login.login')}
+            {isLoggingIn ? t('common:loading') : t('login:login')}
           </Button>
         </form>
       </Paper>
