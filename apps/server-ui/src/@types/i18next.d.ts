@@ -1,12 +1,12 @@
 import 'i18next';
-import common_en from '../i18n/locales/en/common.json';
-import login_en from '../i18n/locales/en/login.json';
-import admin_en from '../i18n/locales/en/admin.json';
-import statistics_en from '../i18n/locales/en/statistics.json';
-import job_en from '../i18n/locales/en/job.json';
-import company_en from '../i18n/locales/en/company.json';
-import sync_en from '../i18n/locales/en/sync.json';
-import password_en from '../i18n/locales/en/password.json';
+import common_en from '../../public/locales/en/common.json';
+import login_en from '../../public/locales/en/login.json';
+import admin_en from '../../public/locales/en/admin.json';
+import statistics_en from '../../public/locales/en/statistics.json';
+import job_en from '../../public/locales/en/job.json';
+import company_en from '../../public/locales/en/company.json';
+import sync_en from '../../public/locales/en/sync.json';
+import password_en from '../../public/locales/en/password.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
