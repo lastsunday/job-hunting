@@ -45,7 +45,7 @@
   "duration": "耗时",
   "failureReason": "导入失败原因",
   "fieldList": "字段列表",
-  "fieldCount": "{count} 个字段",
+  "fieldCount": "{{count, number}} 个字段",
   "pleaseEnterOwnerAndRepo": "Please enter owner and repo name",
   "pleaseSelectFile": "Please select a file",
   "importedRecords": "Imported {count} records",

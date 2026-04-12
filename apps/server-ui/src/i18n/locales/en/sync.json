@@ -45,7 +45,7 @@
   "duration": "Duration",
   "failureReason": "Failure Reason",
   "fieldList": "Field List",
-  "fieldCount": "{count} fields",
+  "fieldCount": "{{count, number}} fields",
   "pleaseEnterOwnerAndRepo": "Please enter owner and repo name",
   "pleaseSelectFile": "Please select a file",
   "importedRecords": "Imported {count} records",
