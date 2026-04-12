@@ -1,9 +1,17 @@
-use sea_orm::{DatabaseConnection, EntityTrait, ActiveValue, ActiveModelBehavior};
+use std::collections::HashSet;
+
+use sea_orm::{
+    DatabaseConnection, EntityTrait, ActiveValue, ActiveModelBehavior,
+    QueryFilter, ColumnTrait,
+};
 use chrono::{DateTime, FixedOffset, Utc, TimeZone};
-use entity::job::{Entity as Job, Model, ActiveModel};
+use entity::job::{Entity as Job, Model as JobModel, ActiveModel as JobActiveModel};
+use entity::job_source::Entity as JobSource;
+use entity::job_source::Column as JobSourceColumn;
 
 use crate::sync::file_parser::{FileParser, JobHeaderMapping};
 use crate::sync::types::ImportResult;
+use framework::id::gen_id;
 
 const BATCH_SIZE: usize = 1000;
 
@@ -13,6 +21,7 @@ impl JobImporter {
     pub async fn import(
         conn: &DatabaseConnection,
         data: Vec<Vec<String>>,
+        username: &str,
     ) -> Result<ImportResult, String> {
         if data.is_empty() {
             return Ok(ImportResult {
@@ -36,22 +45,70 @@ impl JobImporter {
         let mut updated = 0;
         let mut errors = Vec::new();
         let total = rows.len();
+        let now = Utc::now().with_timezone(&FixedOffset::west_opt(0).unwrap());
 
         for chunk in rows.chunks(BATCH_SIZE) {
-            let mut models = Vec::new();
+            let mut source_models = Vec::new();
+            let mut job_models = Vec::new();
             
             for row in chunk {
-                match Self::parse_row(&mapping, row) {
-                    Ok(active_model) => models.push(active_model),
+                match Self::parse_row(&mapping, row, username) {
+                    Ok((source_model, job_model)) => {
+                        source_models.push(source_model);
+                        job_models.push(job_model);
+                    }
                     Err(e) => errors.push(e),
                 }
             }
 
-            if !models.is_empty() {
+            if !source_models.is_empty() {
+                let job_ids: Vec<String> = source_models.iter()
+                    .filter_map(|m| m.job_id.clone().take().flatten())
+                    .collect();
+                let uris: Vec<String> = source_models.iter()
+                    .filter_map(|m| m.uri.clone().take().flatten())
+                    .collect();
+                
+                let existing: Vec<entity::job_source::Model> = if !job_ids.is_empty() && !uris.is_empty() {
+                    JobSource::find()
+                        .filter(JobSourceColumn::JobId.is_in(job_ids.clone()))
+                        .filter(JobSourceColumn::Uri.is_in(uris.clone()))
+                        .all(conn)
+                        .await
+                        .map_err(|e| e.to_string())?
+                } else {
+                    vec![]
+                };
+                
+                let existing_keys: HashSet<(String, String)> = existing.iter()
+                    .filter_map(|r| {
+                        Some((r.job_id.clone()?, r.uri.clone()?))
+                    })
+                    .collect();
+                
+                let to_insert: Vec<entity::job_source::ActiveModel> = source_models.into_iter()
+                    .filter(|m| {
+                        if let (Some(job_id), Some(uri)) = (m.job_id.as_ref(), m.uri.as_ref()) {
+                            !existing_keys.contains(&(job_id.clone(), uri.clone()))
+                        } else {
+                            false
+                        }
+                    })
+                    .collect();
+                
+                if !to_insert.is_empty() {
+                    let _ = JobSource::insert_many(to_insert)
+                        .exec(conn)
+                        .await
+                        .map_err(|e| errors.push(format!("JobSource batch insert error: {}", e)));
+                }
+            }
+
+            if !job_models.is_empty() {
                 let mut insert_count = 0;
                 let mut update_count = 0;
                 
-                for model in models {
+                for model in job_models {
                     let id = match &model.id {
                         ActiveValue::Set(v) => v.clone(),
                         _ => continue,
@@ -76,10 +133,10 @@ impl JobImporter {
                             insert_model.id = ActiveValue::Set(id);
                             
                             if insert_model.create_datetime.is_not_set() {
-                                insert_model.create_datetime = ActiveValue::Set(Some(Utc::now().with_timezone(&FixedOffset::west_opt(0).unwrap())));
+                                insert_model.create_datetime = ActiveValue::Set(Some(now));
                             }
                             if insert_model.update_datetime.is_not_set() {
-                                insert_model.update_datetime = ActiveValue::Set(Some(Utc::now().with_timezone(&FixedOffset::west_opt(0).unwrap())));
+                                insert_model.update_datetime = ActiveValue::Set(Some(now));
                             }
                             
                             match Job::insert(insert_model).exec(conn).await {
@@ -103,13 +160,13 @@ impl JobImporter {
         })
     }
 
-    fn should_update(existing: &Model, new: &ActiveModel) -> bool {
+    fn should_update(existing: &JobModel, new: &JobActiveModel) -> bool {
         let new_update_time = Self::parse_datetime(&new.update_datetime);
         
-        if let (Some(existing_update), Some(new_update)) = (existing.update_datetime, new_update_time) {
-            if new_update > existing_update {
-                return true;
-            }
+        if let (Some(existing_update), Some(new_update)) = (existing.update_datetime, new_update_time)
+            && new_update > existing_update
+        {
+            return true;
         }
         
         let new_is_full = Self::get_bool(&new.is_full_company_name);
@@ -118,16 +175,16 @@ impl JobImporter {
         }
         
         let new_create_time = Self::parse_datetime(&new.create_datetime);
-        if let (Some(existing_create), Some(new_create)) = (existing.create_datetime, new_create_time) {
-            if new_create < existing_create {
-                return true;
-            }
+        if let (Some(existing_create), Some(new_create)) = (existing.create_datetime, new_create_time)
+            && new_create < existing_create
+        {
+            return true;
         }
         
         false
     }
 
-    fn build_update_model(new: &ActiveModel, existing: &Model) -> ActiveModel {
+    fn build_update_model(new: &JobActiveModel, existing: &JobModel) -> JobActiveModel {
         let mut model = new.clone();
         
         let new_update_time = Self::parse_datetime(&new.update_datetime);
@@ -170,7 +227,7 @@ impl JobImporter {
         }
     }
 
-    fn parse_row(mapping: &JobHeaderMapping, row: &[String]) -> Result<ActiveModel, String> {
+    fn parse_row(mapping: &JobHeaderMapping, row: &[String], username: &str) -> Result<(entity::job_source::ActiveModel, JobActiveModel), String> {
         let get_string = |idx: Option<usize>| -> Option<String> {
             idx.and_then(|i| row.get(i).map(|s| s.trim().to_string()))
                 .filter(|s| !s.is_empty())
@@ -218,93 +275,135 @@ impl JobImporter {
                 })
         };
 
-        let id = get_string(mapping.job_id.clone())
+        let job_id = get_string(mapping.job_id.clone())
             .or_else(|| get_string(mapping.name.clone()));
 
-        let mut model = ActiveModel::new();
-        if let Some(id) = id {
-            model.id = ActiveValue::Set(id);
-        } else {
-            model.id = ActiveValue::Set(xid::new().to_string());
-        }
+        let now = Utc::now().with_timezone(&FixedOffset::west_opt(0).unwrap());
         
+        let uri = format!("data://{}@system", username);
+
+        let source_id = gen_id();
+        
+        let mut source_model = entity::job_source::ActiveModel::new();
+        source_model.id = ActiveValue::Set(source_id);
+        source_model.job_id = ActiveValue::Set(job_id.clone());
+        source_model.uri = ActiveValue::Set(Some(uri.clone()));
+        
+        let mut job_model = JobActiveModel::new();
+        if let Some(id) = job_id {
+            job_model.id = ActiveValue::Set(id);
+        } else {
+            job_model.id = ActiveValue::Set(xid::new().to_string());
+        }
+
         if let Some(v) = get_string(mapping.platform.clone()) {
-            model.platform = ActiveValue::Set(Some(v));
+            source_model.platform = ActiveValue::Set(Some(v.clone()));
+            job_model.platform = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.url.clone()) {
-            model.url = ActiveValue::Set(Some(v));
+            source_model.url = ActiveValue::Set(Some(v.clone()));
+            job_model.url = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.name.clone()) {
-            model.name = ActiveValue::Set(Some(v));
+            source_model.name = ActiveValue::Set(Some(v.clone()));
+            job_model.name = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.company_name.clone()) {
-            model.company_name = ActiveValue::Set(Some(v));
+            source_model.company_name = ActiveValue::Set(Some(v.clone()));
+            job_model.company_name = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.location_name.clone()) {
-            model.location_name = ActiveValue::Set(Some(v));
+            source_model.location_name = ActiveValue::Set(Some(v.clone()));
+            job_model.location_name = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.address.clone()) {
-            model.address = ActiveValue::Set(Some(v));
+            source_model.address = ActiveValue::Set(Some(v.clone()));
+            job_model.address = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_f64(mapping.longitude.clone()) {
-            model.longitude = ActiveValue::Set(Some(v));
+            source_model.longitude = ActiveValue::Set(Some(v));
+            job_model.longitude = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_f64(mapping.latitude.clone()) {
-            model.latitude = ActiveValue::Set(Some(v));
+            source_model.latitude = ActiveValue::Set(Some(v));
+            job_model.latitude = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.description.clone()) {
-            model.description = ActiveValue::Set(Some(v));
+            source_model.description = ActiveValue::Set(Some(v.clone()));
+            job_model.description = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.degree_name.clone()) {
-            model.degree_name = ActiveValue::Set(Some(v));
+            source_model.degree_name = ActiveValue::Set(Some(v.clone()));
+            job_model.degree_name = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_i32(mapping.year.clone()) {
-            model.year = ActiveValue::Set(Some(v));
+            source_model.year = ActiveValue::Set(Some(v));
+            job_model.year = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_f64(mapping.salary_min.clone()) {
-            model.salary_min = ActiveValue::Set(Some(v as f32));
+            source_model.salary_min = ActiveValue::Set(Some(v as f32));
+            job_model.salary_min = ActiveValue::Set(Some(v as f32));
         }
         if let Some(v) = get_f64(mapping.salary_max.clone()) {
-            model.salary_max = ActiveValue::Set(Some(v as f32));
+            source_model.salary_max = ActiveValue::Set(Some(v as f32));
+            job_model.salary_max = ActiveValue::Set(Some(v as f32));
         }
         if let Some(v) = get_i32(mapping.salary_total_month.clone()) {
-            model.salary_total_month = ActiveValue::Set(Some(v));
+            source_model.salary_total_month = ActiveValue::Set(Some(v));
+            job_model.salary_total_month = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.first_publish_datetime.clone()) {
             if let Ok(dt) = chrono::NaiveDate::parse_from_str(&v, "%Y-%m-%d") {
                 if let Some(nd) = dt.and_hms_opt(0, 0, 0) {
                     if let Some(fixed) = FixedOffset::west_opt(0).unwrap().from_local_datetime(&nd).single() {
-                        model.first_publish_datetime = ActiveValue::Set(Some(fixed));
+                        source_model.first_publish_datetime = ActiveValue::Set(Some(fixed));
+                        job_model.first_publish_datetime = ActiveValue::Set(Some(fixed));
                     }
                 }
             }
         }
         if let Some(v) = get_string(mapping.boss_name.clone()) {
-            model.boss_name = ActiveValue::Set(Some(v));
+            source_model.boss_name = ActiveValue::Set(Some(v.clone()));
+            job_model.boss_name = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.boss_company_name.clone()) {
-            model.boss_company_name = ActiveValue::Set(Some(v));
+            source_model.boss_company_name = ActiveValue::Set(Some(v.clone()));
+            job_model.boss_company_name = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.boss_position.clone()) {
-            model.boss_position = ActiveValue::Set(Some(v));
+            source_model.boss_position = ActiveValue::Set(Some(v.clone()));
+            job_model.boss_position = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.skill_tag.clone()) {
-            model.skill_tag = ActiveValue::Set(Some(v));
+            source_model.skill_tag = ActiveValue::Set(Some(v.clone()));
+            job_model.skill_tag = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_string(mapping.welfare_tag.clone()) {
-            model.welfare_tag = ActiveValue::Set(Some(v));
+            source_model.welfare_tag = ActiveValue::Set(Some(v.clone()));
+            job_model.welfare_tag = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_bool_from_string(mapping.is_full_company_name.clone()) {
-            model.is_full_company_name = ActiveValue::Set(Some(v));
+            source_model.is_full_company_name = ActiveValue::Set(Some(v));
+            job_model.is_full_company_name = ActiveValue::Set(Some(v));
         }
         
         if let Some(v) = get_datetime(mapping.create_datetime.clone()) {
-            model.create_datetime = ActiveValue::Set(Some(v));
+            source_model.first_scan_datetime = ActiveValue::Set(Some(v));
+            source_model.create_datetime = ActiveValue::Set(Some(v));
+            job_model.create_datetime = ActiveValue::Set(Some(v));
+            job_model.first_scan_datetime = ActiveValue::Set(Some(v));
         }
         if let Some(v) = get_datetime(mapping.update_datetime.clone()) {
-            model.update_datetime = ActiveValue::Set(Some(v));
+            source_model.update_datetime = ActiveValue::Set(Some(v));
+            job_model.update_datetime = ActiveValue::Set(Some(v));
         }
 
-        Ok(model)
+        source_model.publish_datetime = ActiveValue::Set(Some(now));
+        source_model.create_datetime = ActiveValue::Set(Some(now));
+        source_model.update_datetime = ActiveValue::Set(Some(now));
+
+        job_model.uri = ActiveValue::Set(Some(uri));
+
+        Ok((source_model, job_model))
     }
 }

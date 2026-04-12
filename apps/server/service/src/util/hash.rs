@@ -1,0 +1,16 @@
+use sha2::{Digest, Sha256};
+
+pub fn company_name_convert(name: &str) -> String {
+    name.replace('（', "(").replace('）', ")")
+}
+
+pub fn gen_sha256(value: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(value.as_bytes());
+    hex::encode(hasher.finalize())
+}
+
+pub fn gen_company_id(company_name: &str) -> String {
+    let converted = company_name_convert(company_name);
+    gen_sha256(&converted)
+}

@@ -29,6 +29,8 @@ calamine = "0.26"
 reqwest = { version = "0.12", features = ["json"] }
 tempfile = "3"
 xid = { workspace = true }
+sha2 = "0.10"
+hex = "0.4"
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 utoipa = { workspace = true }

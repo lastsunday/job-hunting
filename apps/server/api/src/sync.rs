@@ -1,10 +1,13 @@
 use base64::Engine;
+use axum::extract::Extension;
 use crate::AppState;
 use axum::{debug_handler, extract::State};
 use entity::{company::Entity as Company, job::Entity as Job};
 use framework::{
+    auth::Principal,
     data::{ApiResponse, valid::ValidJson},
     error::ApiResult,
+    middleware::get_auth_layer,
 };
 use sea_orm::{EntityTrait, Order, PaginatorTrait, QueryOrder};
 use serde::Deserialize;
@@ -24,6 +27,7 @@ pub fn create_routes(state: AppState) -> OpenApiRouter {
     OpenApiRouter::new()
         .routes(routes!(get_sync_status).with_state(sync_state.clone()))
         .routes(routes!(import_file).with_state(sync_state.clone()))
+        .route_layer(get_auth_layer())
 }
 
 #[derive(Clone)]
@@ -54,21 +58,23 @@ pub struct ImportFileRequest {
 ))]
 pub(crate) async fn import_file(
     State(state): State<SyncState>,
+    Extension(principal): Extension<Principal>,
     ValidJson(param): ValidJson<ImportFileRequest>,
 ) -> ApiResult<ApiResponse<ImportResult>> {
     let data = base64::engine::general_purpose::STANDARD.decode(&param.file)
         .map_err(|e| framework::error::ApiError::Validation(format!("Invalid file data: {}", e)))?;
 
+    let username = principal.name.as_str();
     let result = match param.data_type.as_str() {
         "job" => {
             let rows = FileParser::parse_job_file_from_bytes(&data)
-                .map_err(|e| framework::error::ApiError::Validation(e))?;
-            JobImporter::import(conn(&state), rows).await
+                .map_err(framework::error::ApiError::Validation)?;
+            JobImporter::import(conn(&state), rows, username).await
         }
         "company" => {
             let rows = FileParser::parse_company_file_from_bytes(&data)
-                .map_err(|e| framework::error::ApiError::Validation(e))?;
-            CompanyImporter::import(conn(&state), rows).await
+                .map_err(framework::error::ApiError::Validation)?;
+            CompanyImporter::import(conn(&state), rows, username).await
         }
         _ => {
             return Err(framework::error::ApiError::Validation(
@@ -76,7 +82,7 @@ pub(crate) async fn import_file(
             ));
         }
     }
-    .map_err(|e| framework::error::ApiError::Validation(e))?;
+    .map_err(framework::error::ApiError::Validation)?;
 
     Ok(ApiResponse::success(Some(result)))
 }
