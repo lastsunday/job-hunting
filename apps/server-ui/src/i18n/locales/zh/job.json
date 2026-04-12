@@ -51,7 +51,7 @@
   "updateTime": "更新时间",
   "jobLink": "职位链接",
   "noCoordinates": "暂无坐标信息",
-  "yearValue": "{year}年",
+  "yearValue": "{{year, number}}年",
   "salaryValue": "{min}k-{max}k",
   "yuan": "元",
   "month": "个月"

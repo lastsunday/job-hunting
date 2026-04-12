@@ -51,7 +51,7 @@
   "updateTime": "Update Time",
   "jobLink": "Job Link",
   "noCoordinates": "No Coordinates Info",
-  "yearValue": "{year} years",
+  "yearValue": "{{year, number}} years",
   "salaryValue": "{min}k-{max}k",
   "yuan": " yuan",
   "month": " months"

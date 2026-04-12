@@ -47,8 +47,5 @@
   "fieldList": "Field List",
   "fieldCount": "{{count, number}} fields",
   "pleaseEnterOwnerAndRepo": "Please enter owner and repo name",
-  "pleaseSelectFile": "Please select a file",
-  "importedRecords": "Imported {count} records",
-  "importedJobs": "Imported {count} jobs from {files} files",
-  "importedCompanies": "Imported {count} companies from {files} files"
+  "pleaseSelectFile": "Please select a file"
 }
