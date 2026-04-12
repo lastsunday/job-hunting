@@ -27,18 +27,46 @@ impl CompanyImporter {
         data: Vec<Vec<String>>,
         username: &str,
     ) -> Result<ImportResult, String> {
+        let start_time = std::time::Instant::now();
+        
         if data.is_empty() {
             return Ok(ImportResult {
                 success: true,
+                valid_result: true,
+                data_version: 0,
+                actual_version: 0,
+                lack_columns: vec![],
+                valid_columns: vec![],
                 total: 0,
                 imported: 0,
                 updated: 0,
+                cost_time: 0,
                 errors: vec![],
+                warnings: vec![],
             });
         }
 
         let headers = &data[0];
-        let mapping = FileParser::parse_company_headers(headers);
+        
+        let (valid, version, actual_version, lack_columns, warnings) = FileParser::validate_company_headers(headers);
+        if !valid {
+            return Ok(ImportResult {
+                success: false,
+                valid_result: false,
+                data_version: version,
+                actual_version,
+                lack_columns: lack_columns.clone(),
+                valid_columns: FileParser::get_company_valid_columns(actual_version),
+                total: 0,
+                imported: 0,
+                updated: 0,
+                cost_time: start_time.elapsed().as_millis() as i64,
+                errors: vec!["公司文件缺少必填字段".to_string()],
+                warnings,
+            });
+        }
+
+        let mapping = FileParser::parse_company_headers(headers, actual_version);
         
         if mapping.name.is_none() {
             return Err("Invalid company file: missing required headers".to_string());
@@ -56,7 +84,7 @@ impl CompanyImporter {
             let mut company_models = Vec::new();
             
             for row in chunk {
-                match Self::parse_row(&mapping, row, username) {
+                match Self::parse_row(&mapping, row, username, version, now) {
                     Ok((source_model, company_model)) => {
                         source_models.push(source_model);
                         company_models.push(company_model);
@@ -148,10 +176,17 @@ impl CompanyImporter {
 
         Ok(ImportResult {
             success: errors.is_empty(),
+            valid_result: true,
+            data_version: version,
+            actual_version,
+            lack_columns: vec![],
+            valid_columns: FileParser::get_company_valid_columns(actual_version),
             total,
             imported,
             updated,
+            cost_time: start_time.elapsed().as_millis() as i64,
             errors,
+            warnings,
         })
     }
 
@@ -180,7 +215,7 @@ impl CompanyImporter {
         }
     }
 
-    fn parse_row(mapping: &CompanyHeaderMapping, row: &[String], username: &str) -> Result<(entity::company_source::ActiveModel, CompanyActiveModel), String> {
+    fn parse_row(mapping: &CompanyHeaderMapping, row: &[String], username: &str, version: usize, now: DateTime<FixedOffset>) -> Result<(entity::company_source::ActiveModel, CompanyActiveModel), String> {
         let get_string = |idx: Option<usize>| -> Option<String> {
             idx.and_then(|i| row.get(i).map(|s| s.trim().to_string()))
                 .filter(|s| !s.is_empty())
@@ -196,12 +231,24 @@ impl CompanyImporter {
                 .and_then(|s| s.trim().parse().ok())
         };
 
+        let get_datetime = |idx: Option<usize>| -> Option<DateTime<FixedOffset>> {
+            idx.and_then(|i| row.get(i))
+                .and_then(|s| {
+                    let trimmed = s.trim();
+                    if trimmed.is_empty() {
+                        return None;
+                    }
+                    DateTime::parse_from_rfc3339(trimmed).ok()
+                    .or_else(|| DateTime::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S").ok())
+                    .or_else(|| DateTime::parse_from_str(trimmed, "%Y-%m-%dT%H:%M:%S").ok())
+                })
+        };
+
         let name = get_string(mapping.name.clone())
             .ok_or("Company name is required")?;
 
         let id = gen_company_id(&name);
         
-        let now = Utc::now().with_timezone(&FixedOffset::west_opt(0).unwrap());
         let source_id = gen_id();
         
         let uri = format!("data://{}@system", username);
@@ -316,6 +363,22 @@ impl CompanyImporter {
                 source_model.source_refresh_datetime = ActiveValue::Set(Some(dt));
                 company_model.source_refresh_datetime = ActiveValue::Set(Some(dt));
             }
+        }
+        
+        if version >= 1 {
+            if let Some(v) = get_datetime(mapping.create_datetime.clone()) {
+                company_model.create_datetime = ActiveValue::Set(Some(v));
+            } else {
+                company_model.create_datetime = ActiveValue::Set(Some(now));
+            }
+            if let Some(v) = get_datetime(mapping.update_datetime.clone()) {
+                company_model.update_datetime = ActiveValue::Set(Some(v));
+            } else {
+                company_model.update_datetime = ActiveValue::Set(Some(now));
+            }
+        } else {
+            company_model.create_datetime = ActiveValue::Set(Some(now));
+            company_model.update_datetime = ActiveValue::Set(Some(now));
         }
         
         source_model.publish_datetime = ActiveValue::Set(Some(now));

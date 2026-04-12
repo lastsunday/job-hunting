@@ -56,10 +56,17 @@ pub struct SyncConfig {
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct ImportResult {
     pub success: bool,
+    pub valid_result: bool,
+    pub data_version: usize,
+    pub actual_version: usize,
+    pub lack_columns: Vec<String>,
+    pub valid_columns: Vec<String>,
     pub total: usize,
     pub imported: usize,
     pub updated: usize,
+    pub cost_time: i64,
     pub errors: Vec<String>,
+    pub warnings: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]

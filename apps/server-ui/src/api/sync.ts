@@ -30,10 +30,17 @@ export interface SyncConfig {
 
 export interface ImportResult {
   success: boolean;
+  valid_result: boolean;
+  data_version: number;
+  actual_version: number;
+  lack_columns: string[];
+  valid_columns: string[];
   total: number;
   imported: number;
   updated: number;
+  cost_time: number;
   errors: string[];
+  warnings: string[];
 }
 
 export interface SyncResult {

@@ -23,18 +23,46 @@ impl JobImporter {
         data: Vec<Vec<String>>,
         username: &str,
     ) -> Result<ImportResult, String> {
+        let start_time = std::time::Instant::now();
+        
         if data.is_empty() {
             return Ok(ImportResult {
                 success: true,
+                valid_result: true,
+                data_version: 0,
+                actual_version: 0,
+                lack_columns: vec![],
+                valid_columns: vec![],
                 total: 0,
                 imported: 0,
                 updated: 0,
+                cost_time: 0,
                 errors: vec![],
+                warnings: vec![],
             });
         }
 
         let headers = &data[0];
-        let mapping = FileParser::parse_job_headers(headers);
+        
+        let (valid, version, actual_version, lack_columns, warnings) = FileParser::validate_job_headers(headers);
+        if !valid {
+            return Ok(ImportResult {
+                success: false,
+                valid_result: false,
+                data_version: version,
+                actual_version,
+                lack_columns: lack_columns.clone(),
+                valid_columns: FileParser::get_job_valid_columns(actual_version),
+                total: 0,
+                imported: 0,
+                updated: 0,
+                cost_time: start_time.elapsed().as_millis() as i64,
+                errors: vec!["职位文件缺少必填字段".to_string()],
+                warnings,
+            });
+        }
+
+        let mapping = FileParser::parse_job_headers(headers, actual_version);
         
         if mapping.job_id.is_none() && mapping.name.is_none() {
             return Err("Invalid job file: missing required headers".to_string());
@@ -153,10 +181,17 @@ impl JobImporter {
 
         Ok(ImportResult {
             success: errors.is_empty(),
+            valid_result: true,
+            data_version: version,
+            actual_version,
+            lack_columns: vec![],
+            valid_columns: FileParser::get_job_valid_columns(actual_version),
             total,
             imported,
             updated,
+            cost_time: start_time.elapsed().as_millis() as i64,
             errors,
+            warnings,
         })
     }
 
