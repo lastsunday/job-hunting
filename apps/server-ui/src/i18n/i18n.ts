@@ -19,6 +19,7 @@ i18n
   .init({
     lng: getInitialLanguage(),
     fallbackLng: 'zh',
+    ns: 'common',
     defaultNS: 'common',
     backend: {
       loadPath: '/locales/{{lng}}/{{ns}}.json',
