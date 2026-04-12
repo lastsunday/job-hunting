@@ -113,7 +113,7 @@ function RouteComponent() {
         onClose={() => setResultModalOpen(false)}
         title={
           <Title order={4}>
-            {isSuccess ? t('importSuccess') : t('importFailed2')}
+            {isSuccess ? t('importSuccess') : t('importFailed')}
           </Title>
         }
         size="md"
@@ -123,7 +123,7 @@ function RouteComponent() {
             <Text fw={500}>{t('fileVersion')}:</Text>
             <Text>{importResult.data_version}</Text>
             <Text c="dimmed">
-              ({'validationVersion'}: v{importResult.actual_version})
+              ({t('validationVersion')}: v{importResult.actual_version})
             </Text>
           </Group>
 
@@ -205,8 +205,7 @@ function RouteComponent() {
                     {t('total')}: {importResult.total}
                   </Text>
                   <Text size="sm" c="dimmed">
-                    {t('duration')}:{' '}
-                    {formatDuration(importResult.cost_time)}
+                    {t('duration')}: {formatDuration(importResult.cost_time)}
                   </Text>
                 </Stack>
               </Group>
