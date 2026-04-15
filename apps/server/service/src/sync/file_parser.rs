@@ -1,30 +1,21 @@
-use calamine::{open_workbook, Reader, Xlsx};
-use std::fs::File;
-use std::io::BufReader;
+use std::io::Cursor;
+
+use calamine::{Reader, Sheets, open_workbook_auto_from_rs};
 
 const HEADER_VERSION_PREFIX: &str = "__VERSION_";
 
 pub struct FileParser;
 
 impl FileParser {
-    pub fn parse_job_file(file_path: &str) -> Result<Vec<Vec<String>>, String> {
-        Self::parse_excel(file_path)
-    }
-
-    pub fn parse_company_file(file_path: &str) -> Result<Vec<Vec<String>>, String> {
-        Self::parse_excel(file_path)
-    }
-
-    fn parse_excel(file_path: &str) -> Result<Vec<Vec<String>>, String> {
-        let mut workbook: Xlsx<BufReader<File>> =
-            open_workbook(file_path).map_err(|e| format!("Failed to open workbook: {}", e))?;
-
-        let sheet_names = workbook.sheet_names().to_vec();
+    pub fn parse_excel(data: &[u8]) -> Result<Vec<Vec<String>>, Box<dyn std::error::Error>> {
+        let data: Cursor<Vec<u8>> = Cursor::new(data.to_vec());
+        let mut sheets: Sheets<_> = open_workbook_auto_from_rs(data)?;
+        let sheet_names = sheets.sheet_names().to_vec();
         let sheet = sheet_names
             .first()
             .ok_or_else(|| "No sheets found in workbook".to_string())?;
 
-        let range = workbook
+        let range = sheets
             .worksheet_range(sheet)
             .map_err(|e| format!("Failed to read sheet: {}", e))?;
 
@@ -40,34 +31,6 @@ impl FileParser {
         }
 
         Ok(result)
-    }
-
-    pub fn parse_job_file_from_bytes(data: &[u8]) -> Result<Vec<Vec<String>>, String> {
-        use std::io::Write;
-        let mut temp_file = tempfile::NamedTempFile::new()
-            .map_err(|e| format!("Failed to create temp file: {}", e))?;
-        temp_file
-            .write_all(data)
-            .map_err(|e| format!("Failed to write temp file: {}", e))?;
-        let path = temp_file
-            .path()
-            .to_str()
-            .ok_or_else(|| "Invalid temp file path".to_string())?;
-        Self::parse_excel(path)
-    }
-
-    pub fn parse_company_file_from_bytes(data: &[u8]) -> Result<Vec<Vec<String>>, String> {
-        use std::io::Write;
-        let mut temp_file = tempfile::NamedTempFile::new()
-            .map_err(|e| format!("Failed to create temp file: {}", e))?;
-        temp_file
-            .write_all(data)
-            .map_err(|e| format!("Failed to write temp file: {}", e))?;
-        let path = temp_file
-            .path()
-            .to_str()
-            .ok_or_else(|| "Invalid temp file path".to_string())?;
-        Self::parse_excel(path)
     }
 
     fn cell_to_string(cell: &calamine::Data) -> String {
@@ -230,47 +193,22 @@ impl FileParser {
     pub fn validate_job_headers(
         headers: &[String],
     ) -> (bool, usize, usize, Vec<String>, Vec<String>) {
-        let version = Self::parse_version(headers);
-        let max_supported_version = Self::JOB_FILE_HEADER.len() - 1;
-
-        let actual_version = if version <= max_supported_version {
-            version
-        } else {
-            max_supported_version
-        };
-
-        let mut warnings = Vec::new();
-        if version > max_supported_version {
-            warnings.push(format!(
-                "文件版本号v{}超出系统支持v{},将使用v{}字段验证",
-                version, max_supported_version, max_supported_version
-            ));
-        }
-
-        let valid_fields = if version < Self::JOB_FILE_HEADER.len() {
-            Self::JOB_FILE_HEADER[version]
-        } else {
-            Self::JOB_FILE_HEADER.last().unwrap()
-        };
-
-        let header_set: std::collections::HashSet<&str> =
-            headers.iter().map(|h| h.trim()).collect();
-
-        let lack_columns: Vec<String> = valid_fields
-            .iter()
-            .filter(|f| !header_set.contains(*f))
-            .map(|f| f.to_string())
-            .collect();
-
-        let valid = lack_columns.is_empty();
-        (valid, version, actual_version, lack_columns, warnings)
+        Self::validate_headers(headers, Self::JOB_FILE_HEADER, "职位")
     }
 
     pub fn validate_company_headers(
         headers: &[String],
     ) -> (bool, usize, usize, Vec<String>, Vec<String>) {
+        Self::validate_headers(headers, Self::COMPANY_FILE_HEADER, "公司")
+    }
+
+    fn validate_headers(
+        headers: &[String],
+        file_headers: &[&[&str]],
+        file_name: &str,
+    ) -> (bool, usize, usize, Vec<String>, Vec<String>) {
         let version = Self::parse_version(headers);
-        let max_supported_version = Self::COMPANY_FILE_HEADER.len() - 1;
+        let max_supported_version = file_headers.len() - 1;
 
         let actual_version = if version <= max_supported_version {
             version
@@ -281,15 +219,15 @@ impl FileParser {
         let mut warnings = Vec::new();
         if version > max_supported_version {
             warnings.push(format!(
-                "文件版本号v{}超出系统支持v{},将使用v{}字段验证",
-                version, max_supported_version, max_supported_version
+                "{}文件版本号v{}超出系统支持v{},将使用v{}字段验证",
+                file_name, version, max_supported_version, max_supported_version
             ));
         }
 
-        let valid_fields = if version < Self::COMPANY_FILE_HEADER.len() {
-            Self::COMPANY_FILE_HEADER[version]
+        let valid_fields = if version < file_headers.len() {
+            file_headers[version]
         } else {
-            Self::COMPANY_FILE_HEADER.last().unwrap()
+            file_headers.last().unwrap()
         };
 
         let header_set: std::collections::HashSet<&str> =
@@ -306,29 +244,21 @@ impl FileParser {
     }
 
     pub fn get_job_valid_columns(version: usize) -> Vec<String> {
-        if version < Self::JOB_FILE_HEADER.len() {
-            Self::JOB_FILE_HEADER[version]
-                .iter()
-                .map(|s| s.to_string())
-                .collect()
-        } else {
-            Self::JOB_FILE_HEADER
-                .last()
-                .unwrap()
-                .iter()
-                .map(|s| s.to_string())
-                .collect()
-        }
+        Self::get_valid_columns(version, Self::JOB_FILE_HEADER)
     }
 
     pub fn get_company_valid_columns(version: usize) -> Vec<String> {
-        if version < Self::COMPANY_FILE_HEADER.len() {
-            Self::COMPANY_FILE_HEADER[version]
+        Self::get_valid_columns(version, Self::COMPANY_FILE_HEADER)
+    }
+
+    fn get_valid_columns(version: usize, file_headers: &[&[&str]]) -> Vec<String> {
+        if version < file_headers.len() {
+            file_headers[version]
                 .iter()
                 .map(|s| s.to_string())
                 .collect()
         } else {
-            Self::COMPANY_FILE_HEADER
+            file_headers
                 .last()
                 .unwrap()
                 .iter()

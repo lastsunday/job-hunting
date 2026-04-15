@@ -318,6 +318,7 @@ function RouteComponent() {
               <Table>
                 <Table.Thead>
                   <Table.Tr>
+                    <Table.Th>{t('job:jobNo')}</Table.Th>
                     <Table.Th>{t('job:name')}</Table.Th>
                     <Table.Th>{t('job:company')}</Table.Th>
                     <Table.Th>{t('job:location')}</Table.Th>
@@ -332,6 +333,7 @@ function RouteComponent() {
                 <Table.Tbody>
                   {jobs.map((job) => (
                     <Table.Tr key={job.id}>
+                      <Table.Td>{job.id}</Table.Td>
                       <Table.Td>{job.name}</Table.Td>
                       <Table.Td>{job.company_name}</Table.Td>
                       <Table.Td>{job.address || job.location_name}</Table.Td>
@@ -352,7 +354,7 @@ function RouteComponent() {
                         {job.first_publish_datetime?.slice(0, 10) || '-'}
                       </Table.Td>
                       <Table.Td>
-                        {job.create_datetime?.slice(0, 10) || '-'}
+                        {job.first_scan_datetime?.slice(0, 10) || '-'}
                       </Table.Td>
                       <Table.Td>
                         <Group gap="xs">
@@ -660,7 +662,15 @@ function RouteComponent() {
           <Stack gap="md">
             <div>
               <Text size="sm" c="dimmed">
-                职位名称
+                {t('job:jobNo')}
+              </Text>
+              <Text size="md" fw={500}>
+                {viewingJob.id || '-'}
+              </Text>
+            </div>
+            <div>
+              <Text size="sm" c="dimmed">
+                {t('job:name')}
               </Text>
               <Text size="lg" fw={500}>
                 {viewingJob.name || '-'}
@@ -669,14 +679,14 @@ function RouteComponent() {
             <Divider />
             <div>
               <Text size="sm" c="dimmed">
-                公司名称
+                {t('job:companyName')}
               </Text>
               <Text size="md">{viewingJob.company_name || '-'}</Text>
             </div>
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  工作地点
+                  {t('job:location')}
                 </Text>
                 <Text size="md">
                   {viewingJob.address || viewingJob.location_name || '-'}
@@ -684,7 +694,7 @@ function RouteComponent() {
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  平台
+                  {t('job:platform')}
                 </Text>
                 <Text size="md">{viewingJob.platform || '-'}</Text>
               </div>
@@ -694,13 +704,13 @@ function RouteComponent() {
                 <Group grow>
                   <div>
                     <Text size="sm" c="dimmed">
-                      经度
+                      {t('job:longitude')}
                     </Text>
                     <Text size="md">{viewingJob.longitude}</Text>
                   </div>
                   <div>
                     <Text size="sm" c="dimmed">
-                      纬度
+                      {t('job:latitude')}
                     </Text>
                     <Text size="md">{viewingJob.latitude}</Text>
                   </div>
@@ -716,46 +726,52 @@ function RouteComponent() {
               </>
             ) : (
               <Text size="sm" c="dimmed">
-                暂无坐标信息
+                {t('job:noCoords')}
               </Text>
             )}
-            <Divider label="薪资信息" labelPosition="left" />
+            <Divider label={t('job:salaryInfo')} labelPosition="left" />
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  最低薪资
+                  {t('job:salaryMin')}
                 </Text>
                 <Text size="md">
-                  {viewingJob.salary_min ? `${viewingJob.salary_min}元` : '-'}
+                  {viewingJob.salary_min
+                    ? `${viewingJob.salary_min}${t('job:salaryUnit')}`
+                    : '-'}
                 </Text>
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  最高薪资
+                  {t('job:salaryMax')}
                 </Text>
                 <Text size="md">
-                  {viewingJob.salary_max ? `${viewingJob.salary_max}元` : '-'}
+                  {viewingJob.salary_max
+                    ? `${viewingJob.salary_max}${t('job:salaryUnit')}`
+                    : '-'}
                 </Text>
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  薪资月数
+                  {t('job:salaryTotalMonth')}
                 </Text>
                 <Text size="md">
                   {viewingJob.salary_total_month
-                    ? `${viewingJob.salary_total_month}个月`
+                    ? `${viewingJob.salary_total_month}${t(
+                        'job:salaryMonthUnit'
+                      )}`
                     : '-'}
                 </Text>
               </div>
             </Group>
-            <Divider label="职位描述" labelPosition="left" />
+            <Divider label={t('job:description')} labelPosition="left" />
             <Text size="md" style={{ whiteSpace: 'pre-wrap' }}>
               {viewingJob.description || '-'}
             </Text>
-            <Divider label="标签信息" labelPosition="left" />
+            <Divider label={t('job:tagInfo')} labelPosition="left" />
             <div>
               <Text size="sm" c="dimmed">
-                技能标签
+                {t('job:skillTag')}
               </Text>
               <Group mt="xs">
                 {viewingJob.skill_tag ? (
@@ -774,7 +790,7 @@ function RouteComponent() {
             </div>
             <div>
               <Text size="sm" c="dimmed">
-                福利标签
+                {t('job:welfareTag')}
               </Text>
               <Group mt="xs">
                 {viewingJob.welfare_tag ? (
@@ -791,47 +807,49 @@ function RouteComponent() {
                 )}
               </Group>
             </div>
-            <Divider label="Boss 信息" labelPosition="left" />
+            <Divider label={t('job:bossInfo')} labelPosition="left" />
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  Boss 名称
+                  {t('job:bossName')}
                 </Text>
                 <Text size="md">{viewingJob.boss_name || '-'}</Text>
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  Boss 职位
+                  {t('job:bossPosition')}
                 </Text>
                 <Text size="md">{viewingJob.boss_position || '-'}</Text>
               </div>
             </Group>
             <div>
               <Text size="sm" c="dimmed">
-                Boss 公司
+                {t('job:bossCompany')}
               </Text>
               <Text size="md">{viewingJob.boss_company_name || '-'}</Text>
             </div>
-            <Divider label="其他信息" labelPosition="left" />
+            <Divider label={t('job:otherInfo')} labelPosition="left" />
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  学历要求
+                  {t('job:degree')}
                 </Text>
                 <Text size="md">{viewingJob.degree_name || '-'}</Text>
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  工作年限
+                  {t('job:year')}
                 </Text>
                 <Text size="md">
-                  {viewingJob.year ? `${viewingJob.year}年` : '-'}
+                  {viewingJob.year
+                    ? `${viewingJob.year}${t('job:yearUnit')}`
+                    : '-'}
                 </Text>
               </div>
             </Group>
             <div>
               <Text size="sm" c="dimmed">
-                职位链接
+                {t('job:jobUrl')}
               </Text>
               {viewingJob.url ? (
                 <Text size="md" c="blue" style={{ wordBreak: 'break-all' }}>
@@ -847,11 +865,11 @@ function RouteComponent() {
                 <Text size="md">-</Text>
               )}
             </div>
-            <Divider label="时间信息" labelPosition="left" />
+            <Divider label={t('job:timeInfo')} labelPosition="left" />
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  发布时间
+                  {t('job:publishTime')}
                 </Text>
                 <Text size="md">
                   {viewingJob.first_publish_datetime
@@ -861,7 +879,19 @@ function RouteComponent() {
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  创建时间
+                  {t('job:firstScanTime')}
+                </Text>
+                <Text size="md">
+                  {viewingJob.first_scan_datetime
+                    ?.slice(0, 19)
+                    .replace('T', ' ') || '-'}
+                </Text>
+              </div>
+            </Group>
+            <Group grow>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('job:createTime')}
                 </Text>
                 <Text size="md">
                   {viewingJob.create_datetime?.slice(0, 19).replace('T', ' ') ||
@@ -870,7 +900,7 @@ function RouteComponent() {
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  更新时间
+                  {t('job:updateTime')}
                 </Text>
                 <Text size="md">
                   {viewingJob.update_datetime?.slice(0, 19).replace('T', ' ') ||

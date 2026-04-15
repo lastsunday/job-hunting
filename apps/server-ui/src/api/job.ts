@@ -23,6 +23,7 @@ export interface Job {
   create_datetime?: string;
   update_datetime?: string;
   is_full_company_name?: boolean;
+  first_scan_datetime?: string;
   skill_tag?: string;
   welfare_tag?: string;
 }

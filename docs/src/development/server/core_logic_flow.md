@@ -15,6 +15,33 @@
 - 数据贮藏与合并
   - task,task_data_merge <-> task,task_data_merge,job_source,company_source,job_tag_source,company_tag_source,job,company,job_tag,company_tag
 
+### 数据合并
+
+```mermaid
+sequenceDiagram
+  participant out_data as 外部数据
+  participant logic as 数据处理器
+  participant source as 来源表
+  participant main as 主表
+
+  out_data ->> logic: 发送外部数据
+  logic ->> logic: 提取外部数据中的唯一标识(业务主键+uri)列表
+  logic ->> source: 根据唯一标识列表查询现存来源数据
+  source ->> logic: 返回现存来源数据
+  logic ->> logic: 去掉外部数据中重复的现存来源数据，得到去重外部数据
+  logic ->> source: 插入去重外部数据
+  source ->> logic: 插入外部去重数据成功
+  logic ->> logic: 提取去重外部数据的业务主键列表
+  logic ->> main: 根据业务主键列表查询现存主数据
+  main ->> logic: 返回现存主数据
+  logic ->> logic: 根据现存主数据和去重外部数据，计算出主数据插入列表和主数据更新列表
+  logic ->> main: 插入主数据插入列表
+  main ->> logic: 插入主数据插入列表成功
+  logic ->> main: 更新主数据更新列表
+  main ->> logic: 更新主数据更新列表成功
+
+```
+
 ## 核心数据模型
 
 #### URI 规范
@@ -104,6 +131,7 @@ erDiagram
       welfare_tag text "福利标签: 逗号作为分隔符"
       first_scan_datetime timestamptz "首次扫描时间"
       uri varchar(255) "来源"
+      publish_datetime timestamptz "数据发布时间"
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }

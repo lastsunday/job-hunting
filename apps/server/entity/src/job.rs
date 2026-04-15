@@ -43,6 +43,8 @@ pub struct Model {
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub first_scan_datetime: Option<DateTimeWithTimeZone>,
     pub uri: Option<String>,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
+    pub publish_datetime: Option<DateTimeWithTimeZone>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

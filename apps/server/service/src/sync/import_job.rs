@@ -1,30 +1,86 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
-use sea_orm::{
-    DatabaseConnection, EntityTrait, ActiveValue, ActiveModelBehavior,
-    QueryFilter, ColumnTrait,
+use chrono::{DateTime, FixedOffset, Utc};
+use entity::job::{ActiveModel as JobActiveModel, Entity as Job};
+use entity::job_source::{
+    ActiveModel as JobSourceActiveModel, Entity as JobSource, Model as JobSourceModel,
 };
-use chrono::{DateTime, FixedOffset, Utc, TimeZone};
-use entity::job::{Entity as Job, Model as JobModel, ActiveModel as JobActiveModel};
-use entity::job_source::Entity as JobSource;
-use entity::job_source::Column as JobSourceColumn;
 
 use crate::sync::file_parser::{FileParser, JobHeaderMapping};
 use crate::sync::types::ImportResult;
-use framework::id::gen_id;
-
-const BATCH_SIZE: usize = 1000;
+use crate::util::gen_sha256;
+use sea_orm::{
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
+    QueryFilter, QuerySelect, TransactionTrait, TryIntoModel,
+};
 
 pub struct JobImporter;
 
 impl JobImporter {
+    const BATCH_SIZE: usize = 900;
+
+    async fn batch_query_job_sources(
+        ids: Vec<String>,
+        conn: &DatabaseConnection,
+    ) -> Result<Vec<JobSourceModel>, Box<dyn std::error::Error>> {
+        let mut results = Vec::new();
+        for chunk in ids.chunks(Self::BATCH_SIZE) {
+            let batch_results = JobSource::find()
+                .filter(entity::job_source::Column::Id.is_in(chunk.to_vec()))
+                .all(conn)
+                .await?;
+            results.extend(batch_results);
+        }
+        Ok(results)
+    }
+
+    async fn batch_query_jobs_locked(
+        ids: Vec<String>,
+        conn: &DatabaseConnection,
+    ) -> Result<Vec<entity::job::Model>, Box<dyn std::error::Error>> {
+        let mut results = Vec::new();
+        for chunk in ids.chunks(Self::BATCH_SIZE) {
+            let batch_results = Job::find()
+                .filter(entity::job::Column::Id.is_in(chunk.to_vec()))
+                .lock(migration::LockType::Update)
+                .all(conn)
+                .await?;
+            results.extend(batch_results);
+        }
+        Ok(results)
+    }
+
+    async fn batch_insert_job_sources(
+        sources: Vec<entity::job_source::ActiveModel>,
+        conn: &DatabaseConnection,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        for chunk in sources.chunks(Self::BATCH_SIZE) {
+            entity::job_source::Entity::insert_many(chunk.to_vec())
+                .exec(conn)
+                .await?;
+        }
+        Ok(())
+    }
+
+    async fn batch_insert_jobs(
+        jobs: Vec<entity::job::ActiveModel>,
+        conn: &DatabaseConnection,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        for chunk in jobs.chunks(Self::BATCH_SIZE) {
+            entity::job::Entity::insert_many(chunk.to_vec())
+                .exec(conn)
+                .await?;
+        }
+        Ok(())
+    }
+
     pub async fn import(
         conn: &DatabaseConnection,
         data: Vec<Vec<String>>,
         username: &str,
-    ) -> Result<ImportResult, String> {
+    ) -> Result<ImportResult, Box<dyn std::error::Error>> {
         let start_time = std::time::Instant::now();
-        
+
         if data.is_empty() {
             return Ok(ImportResult {
                 success: true,
@@ -43,8 +99,9 @@ impl JobImporter {
         }
 
         let headers = &data[0];
-        
-        let (valid, version, actual_version, lack_columns, warnings) = FileParser::validate_job_headers(headers);
+
+        let (valid, version, actual_version, lack_columns, warnings) =
+            FileParser::validate_job_headers(headers);
         if !valid {
             return Ok(ImportResult {
                 success: false,
@@ -63,121 +120,147 @@ impl JobImporter {
         }
 
         let mapping = FileParser::parse_job_headers(headers, actual_version);
-        
-        if mapping.job_id.is_none() && mapping.name.is_none() {
-            return Err("Invalid job file: missing required headers".to_string());
-        }
 
         let rows = &data[1..];
-        let mut imported = 0;
-        let mut updated = 0;
-        let mut errors = Vec::new();
+        let errors = Vec::new();
         let total = rows.len();
         let now = Utc::now().with_timezone(&FixedOffset::west_opt(0).unwrap());
 
-        for chunk in rows.chunks(BATCH_SIZE) {
-            let mut source_models = Vec::new();
-            let mut job_models = Vec::new();
-            
-            for row in chunk {
-                match Self::parse_row(&mapping, row, username) {
-                    Ok((source_model, job_model)) => {
-                        source_models.push(source_model);
-                        job_models.push(job_model);
-                    }
-                    Err(e) => errors.push(e),
-                }
-            }
+        let tx = conn.begin().await.map_err(|e| e.to_string())?;
 
-            if !source_models.is_empty() {
-                let job_ids: Vec<String> = source_models.iter()
-                    .filter_map(|m| m.job_id.clone().take().flatten())
-                    .collect();
-                let uris: Vec<String> = source_models.iter()
-                    .filter_map(|m| m.uri.clone().take().flatten())
-                    .collect();
-                
-                let existing: Vec<entity::job_source::Model> = if !job_ids.is_empty() && !uris.is_empty() {
-                    JobSource::find()
-                        .filter(JobSourceColumn::JobId.is_in(job_ids.clone()))
-                        .filter(JobSourceColumn::Uri.is_in(uris.clone()))
-                        .all(conn)
-                        .await
-                        .map_err(|e| e.to_string())?
-                } else {
-                    vec![]
-                };
-                
-                let existing_keys: HashSet<(String, String)> = existing.iter()
-                    .filter_map(|r| {
-                        Some((r.job_id.clone()?, r.uri.clone()?))
-                    })
-                    .collect();
-                
-                let to_insert: Vec<entity::job_source::ActiveModel> = source_models.into_iter()
-                    .filter(|m| {
-                        if let (Some(job_id), Some(uri)) = (m.job_id.as_ref(), m.uri.as_ref()) {
-                            !existing_keys.contains(&(job_id.clone(), uri.clone()))
-                        } else {
-                            false
-                        }
-                    })
-                    .collect();
-                
-                if !to_insert.is_empty() {
-                    let _ = JobSource::insert_many(to_insert)
-                        .exec(conn)
-                        .await
-                        .map_err(|e| errors.push(format!("JobSource batch insert error: {}", e)));
-                }
-            }
+        let mut job_ids_from_data: HashSet<String> = HashSet::new();
+        let mut job_source_map: HashMap<String, JobSourceActiveModel> = HashMap::new();
 
-            if !job_models.is_empty() {
-                let mut insert_count = 0;
-                let mut update_count = 0;
-                
-                for model in job_models {
-                    let id = match &model.id {
-                        ActiveValue::Set(v) => v.clone(),
-                        _ => continue,
-                    };
-                    let existing = Job::find_by_id(&id).one(conn).await.map_err(|e| e.to_string())?;
-                    
-                    match existing {
-                        Some(existing_record) => {
-                            let should_update = Self::should_update(&existing_record, &model);
-                            if should_update {
-                                let mut update_model = Self::build_update_model(&model, &existing_record);
-                                update_model.id = ActiveValue::Unchanged(id.clone());
-                                
-                                match Job::update(update_model).exec(conn).await {
-                                    Ok(_) => update_count += 1,
-                                    Err(e) => errors.push(format!("Update error for {}: {}", id, e)),
-                                }
-                            }
-                        }
-                        None => {
-                            let mut insert_model = model.clone();
-                            insert_model.id = ActiveValue::Set(id);
-                            
-                            if insert_model.create_datetime.is_not_set() {
-                                insert_model.create_datetime = ActiveValue::Set(Some(now));
-                            }
-                            if insert_model.update_datetime.is_not_set() {
-                                insert_model.update_datetime = ActiveValue::Set(Some(now));
-                            }
-                            
-                            match Job::insert(insert_model).exec(conn).await {
-                                Ok(_) => insert_count += 1,
-                                Err(e) => errors.push(format!("Insert error: {}", e)),
-                            }
-                        }
-                    }
-                }
-                imported += insert_count;
-                updated += update_count;
+        // 根据文件的rows构建job source列表
+        for row in rows {
+            let job_id = Self::get_field_value(&mapping.job_id, row);
+            let uri = format!("data://{}@system", username);
+            let job_source_id = Self::gen_job_source_id(job_id.as_str(), uri.as_str());
+            job_ids_from_data.insert(job_source_id.clone());
+            job_source_map.insert(
+                job_source_id.clone(),
+                Self::build_job_source(
+                    job_source_id.as_str(),
+                    job_id.as_str(),
+                    &mapping,
+                    row,
+                    &now,
+                    uri.as_str(),
+                )?,
+            );
+        }
+
+        // 根据data job_source id获取已存在数据中的job_source记录
+        let exists_job_source =
+            Self::batch_query_job_sources(job_ids_from_data.into_iter().collect(), conn).await?;
+        // 过滤数据库中的job_source记录
+        let exists_job_source_ids = exists_job_source
+            .iter()
+            .map(|item| item.id.clone())
+            .collect::<Vec<String>>();
+        for id in exists_job_source_ids {
+            job_source_map.remove(&id);
+        }
+
+        let filter_job_source_map = job_source_map;
+
+        let filter_job_source = filter_job_source_map
+            .clone()
+            .into_values()
+            .collect::<Vec<entity::job_source::ActiveModel>>();
+
+        // 保存过滤后的job_source记录
+        Self::batch_insert_job_sources(filter_job_source.clone(), conn).await?;
+        let mut filter_job_id_and_job_source_map = HashMap::new();
+        let mut job_ids = Vec::new();
+        // 根据过滤后的job source更新或插入对应的job记录
+        for item in filter_job_source {
+            let model = item.try_into_model()?;
+            let job_id = model.job_id.clone().ok_or("job_id is empty")?;
+            filter_job_id_and_job_source_map.insert(job_id.clone(), model);
+            job_ids.push(job_id);
+        }
+
+        let exists_job = Self::batch_query_jobs_locked(job_ids, conn).await?;
+
+        let exists_job_id_model_map = exists_job
+            .iter()
+            .map(|item| (item.id.as_str(), item))
+            .collect::<HashMap<&str, &entity::job::Model>>();
+
+        let mut exists_job_source = Vec::new();
+        let mut not_exists_job_source = Vec::new();
+        for (id, job_source) in &filter_job_id_and_job_source_map {
+            if exists_job_id_model_map.contains_key(id.as_str()) {
+                exists_job_source.push(job_source);
+            } else {
+                not_exists_job_source.push(job_source);
             }
         }
+        let mut insert_job = Vec::new();
+        //如果job不存在，则进行插入逻辑
+        for item in not_exists_job_source {
+            let job = Self::build_job(item, &now, &now)?;
+            insert_job.push(job);
+        }
+
+        let mut update_job_list = Vec::new();
+        //如果job已存在，则进行更新处理逻辑
+        for item in exists_job_source {
+            let id = item.job_id.clone().ok_or("job_source job_id is empty")?;
+            let job_source = item;
+            let job = exists_job_id_model_map
+                .get(id.as_str())
+                .ok_or(format!("cant' get job model by id : {}", id))?;
+            // 规则1:更新的数据发布时间,如果job source列表的记录的publish datetime更加新， 那么job的所有字段(除公司名称，公司名是否为全称，首次扫描时间)需要更新
+            let mut update_job = job.to_owned().clone().try_into_model()?;
+            if update_job
+                .publish_datetime
+                .ok_or("job publish_datetime is empty")
+                < job_source
+                    .publish_datetime
+                    .ok_or("job_source publish_datetime is empty")
+            {
+                update_job = Self::build_job(
+                    job_source,
+                    &now,
+                    &job.create_datetime.ok_or("job create_datetime is empty")?,
+                )?
+                .try_into_model()?;
+            }
+            // 规则2:获得公司全称,如果原job的公司名称不是全称，而job source的是全称，那么更新
+            if !job
+                .is_full_company_name
+                .ok_or("job is_full_company_name is empty")?
+                && job_source
+                    .is_full_company_name
+                    .ok_or("job_source is_full_company_name is empty")?
+            {
+                update_job.is_full_company_name = Some(true);
+                update_job.company_name = job_source.company_name.clone();
+            }
+            // 规则3:更早的首次扫描时间,如果原job source的首次扫描时间比job的更早，那么更新job source的首次扫描时间到job
+            if job_source
+                .first_scan_datetime
+                .ok_or("job_source first_scan_datetime is empty")?
+                < job
+                    .first_scan_datetime
+                    .ok_or("job first_scan_datetime is empty")?
+            {
+                update_job.first_scan_datetime = job_source.first_scan_datetime;
+            } else {
+                update_job.first_scan_datetime = job.first_scan_datetime;
+            }
+            update_job_list.push(update_job.into_active_model());
+        }
+
+        let imported = insert_job.len();
+        let updated = update_job_list.len();
+        Self::batch_insert_jobs(insert_job, conn).await?;
+        for item in update_job_list {
+            item.update(conn).await?;
+        }
+        tx.commit().await.map_err(|e| e.to_string())?;
 
         Ok(ImportResult {
             success: errors.is_empty(),
@@ -195,250 +278,153 @@ impl JobImporter {
         })
     }
 
-    fn should_update(existing: &JobModel, new: &JobActiveModel) -> bool {
-        let new_update_time = Self::parse_datetime(&new.update_datetime);
-        
-        if let (Some(existing_update), Some(new_update)) = (existing.update_datetime, new_update_time)
-            && new_update > existing_update
-        {
-            return true;
-        }
-        
-        let new_is_full = Self::get_bool(&new.is_full_company_name);
-        if new_is_full == Some(true) && existing.is_full_company_name != Some(true) {
-            return true;
-        }
-        
-        let new_create_time = Self::parse_datetime(&new.create_datetime);
-        if let (Some(existing_create), Some(new_create)) = (existing.create_datetime, new_create_time)
-            && new_create < existing_create
-        {
-            return true;
-        }
-        
-        false
-    }
-
-    fn build_update_model(new: &JobActiveModel, existing: &JobModel) -> JobActiveModel {
-        let mut model = new.clone();
-        
-        let new_update_time = Self::parse_datetime(&new.update_datetime);
-        let new_create_time = Self::parse_datetime(&new.create_datetime);
-        
-        if let (Some(existing_create), Some(new_create)) = (existing.create_datetime, new_create_time) {
-            if new_create > existing_create {
-                model.create_datetime = ActiveValue::Set(Some(existing_create));
-            } else {
-                model.create_datetime = ActiveValue::NotSet;
-            }
-        } else {
-            model.create_datetime = ActiveValue::NotSet;
-        }
-        
-        if new.update_datetime.is_not_set() || new_update_time.is_none() {
-            model.update_datetime = ActiveValue::Set(Some(Utc::now().with_timezone(&FixedOffset::west_opt(0).unwrap())));
-        }
-        
-        let new_is_full = Self::get_bool(&new.is_full_company_name);
-        if new_is_full != Some(true) && existing.is_full_company_name == Some(true) {
-            model.company_name = ActiveValue::Set(existing.company_name.clone());
-            model.is_full_company_name = ActiveValue::Set(Some(true));
-        }
-        
-        model
-    }
-
-    fn parse_datetime(active_value: &ActiveValue<Option<DateTime<FixedOffset>>>) -> Option<DateTime<FixedOffset>> {
-        match active_value {
-            ActiveValue::Set(v) => *v,
-            _ => None,
+    fn get_field_value(field_idx: &Option<usize>, row: &[String]) -> String {
+        match field_idx {
+            Some(idx) if *idx < row.len() => row[*idx].clone(),
+            _ => String::new(),
         }
     }
 
-    fn get_bool(active_value: &ActiveValue<Option<bool>>) -> Option<bool> {
-        match active_value {
-            ActiveValue::Set(v) => *v,
-            _ => None,
-        }
+    fn gen_job_source_id(job_id: &str, uri: &str) -> String {
+        gen_sha256(format!("{}_{}", job_id, uri).as_str())
     }
 
-    fn parse_row(mapping: &JobHeaderMapping, row: &[String], username: &str) -> Result<(entity::job_source::ActiveModel, JobActiveModel), String> {
-        let get_string = |idx: Option<usize>| -> Option<String> {
-            idx.and_then(|i| row.get(i).map(|s| s.trim().to_string()))
-                .filter(|s| !s.is_empty())
-        };
-
-        let get_f64 = |idx: Option<usize>| -> Option<f64> {
-            idx.and_then(|i| row.get(i))
-                .and_then(|s| s.trim().parse().ok())
-        };
-
-        let get_i32 = |idx: Option<usize>| -> Option<i32> {
-            idx.and_then(|i| row.get(i))
-                .and_then(|s| s.trim().parse().ok())
-        };
-
-        let get_bool_from_string = |idx: Option<usize>| -> Option<bool> {
-            idx.and_then(|i| row.get(i))
-                .and_then(|s| {
-                    let trimmed = s.trim().to_lowercase();
-                    match trimmed.as_str() {
-                        "true" | "1" | "是" => Some(true),
-                        "false" | "0" | "否" => Some(false),
-                        _ => None,
-                    }
-                })
-        };
-
-        let get_datetime = |idx: Option<usize>| -> Option<DateTime<FixedOffset>> {
-            idx.and_then(|i| row.get(i))
-                .and_then(|s| {
-                    let trimmed = s.trim();
-                    if trimmed.is_empty() {
-                        return None;
-                    }
-                    chrono::NaiveDate::parse_from_str(trimmed, "%Y-%m-%d %H:%M:%S")
-                        .ok()
-                        .map(|d| d.and_hms_opt(0, 0, 0).unwrap())
-                        .and_then(|nd| FixedOffset::west_opt(0).unwrap().from_local_datetime(&nd).single())
-                        .or_else(|| {
-                            chrono::NaiveDate::parse_from_str(trimmed, "%Y-%m-%d")
-                                .ok()
-                                .and_then(|d| Some(d.and_hms_opt(0, 0, 0).unwrap()))
-                                .and_then(|nd| FixedOffset::west_opt(0).unwrap().from_local_datetime(&nd).single())
-                        })
-                })
-        };
-
-        let job_id = get_string(mapping.job_id.clone())
-            .or_else(|| get_string(mapping.name.clone()));
-
-        let now = Utc::now().with_timezone(&FixedOffset::west_opt(0).unwrap());
-        
-        let uri = format!("data://{}@system", username);
-
-        let source_id = gen_id();
-        
-        let mut source_model = entity::job_source::ActiveModel::new();
-        source_model.id = ActiveValue::Set(source_id);
-        source_model.job_id = ActiveValue::Set(job_id.clone());
-        source_model.uri = ActiveValue::Set(Some(uri.clone()));
-        
-        let mut job_model = JobActiveModel::new();
-        if let Some(id) = job_id {
-            job_model.id = ActiveValue::Set(id);
-        } else {
-            job_model.id = ActiveValue::Set(xid::new().to_string());
-        }
-
-        if let Some(v) = get_string(mapping.platform.clone()) {
-            source_model.platform = ActiveValue::Set(Some(v.clone()));
-            job_model.platform = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_string(mapping.url.clone()) {
-            source_model.url = ActiveValue::Set(Some(v.clone()));
-            job_model.url = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_string(mapping.name.clone()) {
-            source_model.name = ActiveValue::Set(Some(v.clone()));
-            job_model.name = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_string(mapping.company_name.clone()) {
-            source_model.company_name = ActiveValue::Set(Some(v.clone()));
-            job_model.company_name = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_string(mapping.location_name.clone()) {
-            source_model.location_name = ActiveValue::Set(Some(v.clone()));
-            job_model.location_name = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_string(mapping.address.clone()) {
-            source_model.address = ActiveValue::Set(Some(v.clone()));
-            job_model.address = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_f64(mapping.longitude.clone()) {
-            source_model.longitude = ActiveValue::Set(Some(v));
-            job_model.longitude = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_f64(mapping.latitude.clone()) {
-            source_model.latitude = ActiveValue::Set(Some(v));
-            job_model.latitude = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_string(mapping.description.clone()) {
-            source_model.description = ActiveValue::Set(Some(v.clone()));
-            job_model.description = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_string(mapping.degree_name.clone()) {
-            source_model.degree_name = ActiveValue::Set(Some(v.clone()));
-            job_model.degree_name = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_i32(mapping.year.clone()) {
-            source_model.year = ActiveValue::Set(Some(v));
-            job_model.year = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_f64(mapping.salary_min.clone()) {
-            source_model.salary_min = ActiveValue::Set(Some(v as f32));
-            job_model.salary_min = ActiveValue::Set(Some(v as f32));
-        }
-        if let Some(v) = get_f64(mapping.salary_max.clone()) {
-            source_model.salary_max = ActiveValue::Set(Some(v as f32));
-            job_model.salary_max = ActiveValue::Set(Some(v as f32));
-        }
-        if let Some(v) = get_i32(mapping.salary_total_month.clone()) {
-            source_model.salary_total_month = ActiveValue::Set(Some(v));
-            job_model.salary_total_month = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_string(mapping.first_publish_datetime.clone()) {
-            if let Ok(dt) = chrono::NaiveDate::parse_from_str(&v, "%Y-%m-%d") {
-                if let Some(nd) = dt.and_hms_opt(0, 0, 0) {
-                    if let Some(fixed) = FixedOffset::west_opt(0).unwrap().from_local_datetime(&nd).single() {
-                        source_model.first_publish_datetime = ActiveValue::Set(Some(fixed));
-                        job_model.first_publish_datetime = ActiveValue::Set(Some(fixed));
-                    }
+    fn build_job_source(
+        id: &str,
+        job_id: &str,
+        mapping: &JobHeaderMapping,
+        row: &[String],
+        now: &DateTime<FixedOffset>,
+        uri: &str,
+    ) -> Result<JobSourceActiveModel, Box<dyn std::error::Error>> {
+        Ok(JobSourceActiveModel {
+            id: ActiveValue::set(id.to_string()),
+            job_id: ActiveValue::set(Some(job_id.to_string())),
+            platform: ActiveValue::set(Some(Self::get_field_value(&mapping.platform, row))),
+            url: ActiveValue::set(Some(Self::get_field_value(&mapping.url, row))),
+            name: ActiveValue::set(Some(Self::get_field_value(&mapping.name, row))),
+            company_name: ActiveValue::set(Some(Self::get_field_value(&mapping.company_name, row))),
+            location_name: ActiveValue::set(Some(Self::get_field_value(
+                &mapping.location_name,
+                row,
+            ))),
+            address: ActiveValue::set(Some(Self::get_field_value(&mapping.address, row))),
+            longitude: ActiveValue::set(Self::parse_f64(&Self::get_field_value(
+                &mapping.longitude,
+                row,
+            ))),
+            latitude: ActiveValue::set(Self::parse_f64(&Self::get_field_value(
+                &mapping.latitude,
+                row,
+            ))),
+            description: ActiveValue::set(Some(Self::get_field_value(&mapping.description, row))),
+            degree_name: ActiveValue::set(Some(Self::get_field_value(&mapping.degree_name, row))),
+            year: ActiveValue::set(Self::parse_int(&Self::get_field_value(&mapping.year, row))),
+            salary_min: ActiveValue::set(Self::parse_float(&Self::get_field_value(
+                &mapping.salary_min,
+                row,
+            ))),
+            salary_max: ActiveValue::set(Self::parse_float(&Self::get_field_value(
+                &mapping.salary_max,
+                row,
+            ))),
+            salary_total_month: ActiveValue::set(Self::parse_int(&Self::get_field_value(
+                &mapping.salary_total_month,
+                row,
+            ))),
+            first_publish_datetime: {
+                let text = Self::get_field_value(&mapping.first_publish_datetime, row);
+                if text.is_empty() {
+                    ActiveValue::set(None)
+                } else {
+                    ActiveValue::set(Some(DateTime::parse_from_rfc3339(text.as_str())?))
                 }
-            }
-        }
-        if let Some(v) = get_string(mapping.boss_name.clone()) {
-            source_model.boss_name = ActiveValue::Set(Some(v.clone()));
-            job_model.boss_name = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_string(mapping.boss_company_name.clone()) {
-            source_model.boss_company_name = ActiveValue::Set(Some(v.clone()));
-            job_model.boss_company_name = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_string(mapping.boss_position.clone()) {
-            source_model.boss_position = ActiveValue::Set(Some(v.clone()));
-            job_model.boss_position = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_string(mapping.skill_tag.clone()) {
-            source_model.skill_tag = ActiveValue::Set(Some(v.clone()));
-            job_model.skill_tag = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_string(mapping.welfare_tag.clone()) {
-            source_model.welfare_tag = ActiveValue::Set(Some(v.clone()));
-            job_model.welfare_tag = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_bool_from_string(mapping.is_full_company_name.clone()) {
-            source_model.is_full_company_name = ActiveValue::Set(Some(v));
-            job_model.is_full_company_name = ActiveValue::Set(Some(v));
-        }
-        
-        if let Some(v) = get_datetime(mapping.create_datetime.clone()) {
-            source_model.first_scan_datetime = ActiveValue::Set(Some(v));
-            source_model.create_datetime = ActiveValue::Set(Some(v));
-            job_model.create_datetime = ActiveValue::Set(Some(v));
-            job_model.first_scan_datetime = ActiveValue::Set(Some(v));
-        }
-        if let Some(v) = get_datetime(mapping.update_datetime.clone()) {
-            source_model.update_datetime = ActiveValue::Set(Some(v));
-            job_model.update_datetime = ActiveValue::Set(Some(v));
-        }
+            },
+            boss_name: ActiveValue::set(Some(Self::get_field_value(&mapping.boss_name, row))),
+            boss_company_name: ActiveValue::set(Some(Self::get_field_value(
+                &mapping.boss_company_name,
+                row,
+            ))),
+            boss_position: ActiveValue::set(Some(Self::get_field_value(
+                &mapping.boss_position,
+                row,
+            ))),
+            is_full_company_name: ActiveValue::set(Self::parse_bool(&Self::get_field_value(
+                &mapping.is_full_company_name,
+                row,
+            ))),
+            skill_tag: ActiveValue::set(Some(Self::get_field_value(&mapping.skill_tag, row))),
+            welfare_tag: ActiveValue::set(Some(Self::get_field_value(&mapping.welfare_tag, row))),
+            first_scan_datetime: ActiveValue::set(Some(DateTime::parse_from_rfc3339(
+                Self::get_field_value(&mapping.create_datetime, row).as_str(),
+            )?)),
+            uri: ActiveValue::set(Some(uri.to_string())),
+            publish_datetime: ActiveValue::set(Some(DateTime::parse_from_rfc3339(
+                Self::get_field_value(&mapping.update_datetime, row).as_str(),
+            )?)),
+            create_datetime: ActiveValue::set(Some(*now)),
+            update_datetime: ActiveValue::set(Some(*now)),
+        })
+    }
 
-        source_model.publish_datetime = ActiveValue::Set(Some(now));
-        source_model.create_datetime = ActiveValue::Set(Some(now));
-        source_model.update_datetime = ActiveValue::Set(Some(now));
+    fn build_job(
+        source: &JobSourceModel,
+        update_datetime: &DateTime<FixedOffset>,
+        create_datetime: &DateTime<FixedOffset>,
+    ) -> Result<JobActiveModel, Box<dyn std::error::Error>> {
+        Ok(JobActiveModel {
+            id: ActiveValue::set(
+                source
+                    .job_id
+                    .clone()
+                    .ok_or("job_source job_id is required")?,
+            ),
+            platform: ActiveValue::set(source.platform.clone()),
+            url: ActiveValue::set(source.url.clone()),
+            name: ActiveValue::set(source.name.clone()),
+            company_name: ActiveValue::set(source.company_name.clone()),
+            location_name: ActiveValue::set(source.location_name.clone()),
+            address: ActiveValue::set(source.address.clone()),
+            longitude: ActiveValue::set(source.longitude),
+            latitude: ActiveValue::set(source.latitude),
+            description: ActiveValue::set(source.description.clone()),
+            degree_name: ActiveValue::set(source.degree_name.clone()),
+            year: ActiveValue::set(source.year),
+            salary_min: ActiveValue::set(source.salary_min),
+            salary_max: ActiveValue::set(source.salary_max),
+            salary_total_month: ActiveValue::set(source.salary_total_month),
+            first_publish_datetime: ActiveValue::set(source.first_publish_datetime.clone()),
+            boss_name: ActiveValue::set(source.boss_name.clone()),
+            boss_company_name: ActiveValue::set(source.boss_company_name.clone()),
+            boss_position: ActiveValue::set(source.boss_position.clone()),
+            create_datetime: ActiveValue::set(Some(*create_datetime)),
+            update_datetime: ActiveValue::set(Some(*update_datetime)),
+            is_full_company_name: ActiveValue::set(source.is_full_company_name),
+            skill_tag: ActiveValue::set(source.skill_tag.clone()),
+            welfare_tag: ActiveValue::set(source.welfare_tag.clone()),
+            first_scan_datetime: ActiveValue::set(source.first_scan_datetime.clone()),
+            uri: ActiveValue::set(source.uri.clone()),
+            publish_datetime: ActiveValue::set(source.publish_datetime.clone()),
+        })
+    }
 
-        job_model.uri = ActiveValue::Set(Some(uri));
+    fn parse_float(s: &str) -> Option<f32> {
+        s.trim().parse::<f32>().ok()
+    }
 
-        Ok((source_model, job_model))
+    fn parse_f64(s: &str) -> Option<f64> {
+        s.trim().parse::<f64>().ok()
+    }
+
+    fn parse_int(s: &str) -> Option<i32> {
+        s.trim().parse::<i32>().ok()
+    }
+
+    fn parse_bool(s: &str) -> Option<bool> {
+        match s.trim() {
+            "是" | "true" | "1" => Some(true),
+            "否" | "false" | "0" => Some(false),
+            _ => None,
+        }
     }
 }

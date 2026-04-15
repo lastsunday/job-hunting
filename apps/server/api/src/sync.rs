@@ -1,7 +1,7 @@
-use base64::Engine;
-use axum::extract::Extension;
 use crate::AppState;
+use axum::extract::Extension;
 use axum::{debug_handler, extract::State};
+use base64::Engine;
 use entity::{company::Entity as Company, job::Entity as Job};
 use framework::{
     auth::Principal,
@@ -61,20 +61,24 @@ pub(crate) async fn import_file(
     Extension(principal): Extension<Principal>,
     ValidJson(param): ValidJson<ImportFileRequest>,
 ) -> ApiResult<ApiResponse<ImportResult>> {
-    let data = base64::engine::general_purpose::STANDARD.decode(&param.file)
+    let data = base64::engine::general_purpose::STANDARD
+        .decode(&param.file)
         .map_err(|e| framework::error::ApiError::Validation(format!("Invalid file data: {}", e)))?;
 
     let username = principal.name.as_str();
     let result = match param.data_type.as_str() {
         "job" => {
-            let rows = FileParser::parse_job_file_from_bytes(&data)
-                .map_err(framework::error::ApiError::Validation)?;
+            let rows = FileParser::parse_excel(&data).map_err(|e| {
+                framework::error::ApiError::Biz(format!("parse excel failure: {}", e))
+            })?;
             JobImporter::import(conn(&state), rows, username).await
         }
         "company" => {
-            let rows = FileParser::parse_company_file_from_bytes(&data)
-                .map_err(framework::error::ApiError::Validation)?;
-            CompanyImporter::import(conn(&state), rows, username).await
+            todo!();
+            // let rows = FileParser::parse_excel(&data).map_err(|e| {
+            //     framework::error::ApiError::Biz(format!("parse excel failure: {}", e))
+            // })?;
+            // CompanyImporter::import(conn(&state), rows, username).await
         }
         _ => {
             return Err(framework::error::ApiError::Validation(
@@ -82,7 +86,7 @@ pub(crate) async fn import_file(
             ));
         }
     }
-    .map_err(framework::error::ApiError::Validation)?;
+    .map_err(|e| framework::error::ApiError::Biz(format!("import data failre: {}", e)))?;
 
     Ok(ApiResponse::success(Some(result)))
 }
@@ -91,7 +95,9 @@ pub(crate) async fn import_file(
 #[utoipa::path(get, path = "/sync/status", tag = TAG, security(()), responses(
     (status = OK, body = ApiResponse<SyncStatus>)
 ))]
-pub(crate) async fn get_sync_status(State(state): State<SyncState>) -> ApiResult<ApiResponse<SyncStatus>> {
+pub(crate) async fn get_sync_status(
+    State(state): State<SyncState>,
+) -> ApiResult<ApiResponse<SyncStatus>> {
     let conn = conn(&state);
 
     let last_job = Job::find()

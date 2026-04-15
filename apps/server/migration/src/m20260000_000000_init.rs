@@ -1,6 +1,6 @@
 use entity::*;
-use sea_orm::entity::*;
 use sea_orm::Set;
+use sea_orm::entity::*;
 use sea_orm_migration::{async_trait::async_trait, prelude::*, schema::*};
 
 #[derive(DeriveMigrationName)]
@@ -84,6 +84,7 @@ impl MigrationTrait for Migration {
                     .col(string_null(Job::WelfareTag))
                     .col(timestamp_with_time_zone_null(Job::FirstScanDatetime))
                     .col(string_null(Job::Uri))
+                    .col(timestamp_with_time_zone_null(JobSource::PublishDatetime))
                     .primary_key(Index::create().name("pk-job-id").col(Job::Id))
                     .to_owned(),
             )
@@ -150,7 +151,9 @@ impl MigrationTrait for Migration {
                     .col(string_null(Company::SourcePlatform))
                     .col(string_null(Company::SourceUrl))
                     .col(string_null(Company::SourceRecordId))
-                    .col(timestamp_with_time_zone_null(Company::SourceRefreshDatetime))
+                    .col(timestamp_with_time_zone_null(
+                        Company::SourceRefreshDatetime,
+                    ))
                     .col(string_null(Company::Uri))
                     .col(timestamp_with_time_zone_null(Company::CreateDatetime))
                     .col(timestamp_with_time_zone_null(Company::UpdateDatetime))
@@ -172,7 +175,11 @@ impl MigrationTrait for Migration {
                     .col(string_null(CompanyTag::Uri))
                     .col(timestamp_with_time_zone_null(CompanyTag::CreateDatetime))
                     .col(timestamp_with_time_zone_null(CompanyTag::UpdateDatetime))
-                    .primary_key(Index::create().name("pk-company-tag-id").col(CompanyTag::Id))
+                    .primary_key(
+                        Index::create()
+                            .name("pk-company-tag-id")
+                            .col(CompanyTag::Id),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -244,7 +251,11 @@ impl MigrationTrait for Migration {
                     .col(string_null(TaskDataPlan::RepoType))
                     .col(timestamp_with_time_zone_null(TaskDataPlan::CreateDatetime))
                     .col(timestamp_with_time_zone_null(TaskDataPlan::UpdateDatetime))
-                    .primary_key(Index::create().name("pk-task-data-plan-id").col(TaskDataPlan::Id))
+                    .primary_key(
+                        Index::create()
+                            .name("pk-task-data-plan-id")
+                            .col(TaskDataPlan::Id),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -259,9 +270,17 @@ impl MigrationTrait for Migration {
                     .col(string_null(TaskDataSourcePlan::Username))
                     .col(string_null(TaskDataSourcePlan::RepoName))
                     .col(string_null(TaskDataSourcePlan::RepoType))
-                    .col(timestamp_with_time_zone_null(TaskDataSourcePlan::CreateDatetime))
-                    .col(timestamp_with_time_zone_null(TaskDataSourcePlan::UpdateDatetime))
-                    .primary_key(Index::create().name("pk-task-data-source-plan-id").col(TaskDataSourcePlan::Id))
+                    .col(timestamp_with_time_zone_null(
+                        TaskDataSourcePlan::CreateDatetime,
+                    ))
+                    .col(timestamp_with_time_zone_null(
+                        TaskDataSourcePlan::UpdateDatetime,
+                    ))
+                    .primary_key(
+                        Index::create()
+                            .name("pk-task-data-source-plan-id")
+                            .col(TaskDataSourcePlan::Id),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -279,9 +298,17 @@ impl MigrationTrait for Migration {
                     .col(json_binary_null(TaskDataDownload::Config))
                     .col(string_null(TaskDataDownload::DataId))
                     .col(integer_null(TaskDataDownload::Seq))
-                    .col(timestamp_with_time_zone_null(TaskDataDownload::CreateDatetime))
-                    .col(timestamp_with_time_zone_null(TaskDataDownload::UpdateDatetime))
-                    .primary_key(Index::create().name("pk-task-data-download-id").col(TaskDataDownload::Id))
+                    .col(timestamp_with_time_zone_null(
+                        TaskDataDownload::CreateDatetime,
+                    ))
+                    .col(timestamp_with_time_zone_null(
+                        TaskDataDownload::UpdateDatetime,
+                    ))
+                    .primary_key(
+                        Index::create()
+                            .name("pk-task-data-download-id")
+                            .col(TaskDataDownload::Id),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -303,7 +330,11 @@ impl MigrationTrait for Migration {
                     .col(integer_null(TaskDataMerge::DataPageSize))
                     .col(timestamp_with_time_zone_null(TaskDataMerge::CreateDatetime))
                     .col(timestamp_with_time_zone_null(TaskDataMerge::UpdateDatetime))
-                    .primary_key(Index::create().name("pk-task-data-merge-id").col(TaskDataMerge::Id))
+                    .primary_key(
+                        Index::create()
+                            .name("pk-task-data-merge-id")
+                            .col(TaskDataMerge::Id),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -329,7 +360,9 @@ impl MigrationTrait for Migration {
                     .col(float_null(JobSource::SalaryMin))
                     .col(float_null(JobSource::SalaryMax))
                     .col(integer_null(JobSource::SalaryTotalMonth))
-                    .col(timestamp_with_time_zone_null(JobSource::FirstPublishDatetime))
+                    .col(timestamp_with_time_zone_null(
+                        JobSource::FirstPublishDatetime,
+                    ))
                     .col(string_null(JobSource::BossName))
                     .col(string_null(JobSource::BossCompanyName))
                     .col(string_null(JobSource::BossPosition))
@@ -373,16 +406,24 @@ impl MigrationTrait for Migration {
                     .col(text_null(CompanySource::SourceUrl))
                     .col(string_null(CompanySource::SourcePlatform))
                     .col(string_null(CompanySource::SourceRecordId))
-                    .col(timestamp_with_time_zone_null(CompanySource::SourceRefreshDatetime))
+                    .col(timestamp_with_time_zone_null(
+                        CompanySource::SourceRefreshDatetime,
+                    ))
                     .col(float_null(CompanySource::RegCapitalValue))
                     .col(string_null(CompanySource::RegCapitalCurrency))
                     .col(float_null(CompanySource::PaidinCapitalValue))
                     .col(string_null(CompanySource::PaidinCapitalCurrency))
                     .col(string_null(CompanySource::Uri))
-                    .col(timestamp_with_time_zone_null(CompanySource::PublishDatetime))
+                    .col(timestamp_with_time_zone_null(
+                        CompanySource::PublishDatetime,
+                    ))
                     .col(timestamp_with_time_zone_null(CompanySource::CreateDatetime))
                     .col(timestamp_with_time_zone_null(CompanySource::UpdateDatetime))
-                    .primary_key(Index::create().name("pk-company-source-id").col(CompanySource::Id))
+                    .primary_key(
+                        Index::create()
+                            .name("pk-company-source-id")
+                            .col(CompanySource::Id),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -400,7 +441,11 @@ impl MigrationTrait for Migration {
                     .col(timestamp_with_time_zone_null(JobTagSource::PublishDatetime))
                     .col(timestamp_with_time_zone_null(JobTagSource::CreateDatetime))
                     .col(timestamp_with_time_zone_null(JobTagSource::UpdateDatetime))
-                    .primary_key(Index::create().name("pk-job-tag-source-id").col(JobTagSource::Id))
+                    .primary_key(
+                        Index::create()
+                            .name("pk-job-tag-source-id")
+                            .col(JobTagSource::Id),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -416,10 +461,20 @@ impl MigrationTrait for Migration {
                     .col(string_null(CompanyTagSource::TagId))
                     .col(integer_null(CompanyTagSource::Seq))
                     .col(string_null(CompanyTagSource::Uri))
-                    .col(timestamp_with_time_zone_null(CompanyTagSource::PublishDatetime))
-                    .col(timestamp_with_time_zone_null(CompanyTagSource::CreateDatetime))
-                    .col(timestamp_with_time_zone_null(CompanyTagSource::UpdateDatetime))
-                    .primary_key(Index::create().name("pk-company-tag-source-id").col(CompanyTagSource::Id))
+                    .col(timestamp_with_time_zone_null(
+                        CompanyTagSource::PublishDatetime,
+                    ))
+                    .col(timestamp_with_time_zone_null(
+                        CompanyTagSource::CreateDatetime,
+                    ))
+                    .col(timestamp_with_time_zone_null(
+                        CompanyTagSource::UpdateDatetime,
+                    ))
+                    .primary_key(
+                        Index::create()
+                            .name("pk-company-tag-source-id")
+                            .col(CompanyTagSource::Id),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -537,6 +592,7 @@ enum Job {
     WelfareTag,
     FirstScanDatetime,
     Uri,
+    PublishDatetime,
 }
 
 #[derive(DeriveIden)]
