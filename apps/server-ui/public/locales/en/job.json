@@ -17,6 +17,7 @@
   "jobList": "Job List",
   "pleaseEnterJobName": "Please enter job name",
   "pleaseEnterCompanyName": "Please enter company name",
+  "pleaseEnterPlatform": "Please enter platform",
   "pleaseEnterMinSalary": "Min salary (k)",
   "pleaseEnterLocation": "Please enter location",
   "selectOrderBy": "Order by",

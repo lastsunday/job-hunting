@@ -17,6 +17,7 @@
   "jobList": "职位列表",
   "pleaseEnterJobName": "请输入职位名称",
   "pleaseEnterCompanyName": "请输入公司名称",
+  "pleaseEnterPlatform": "请输入平台",
   "pleaseEnterMinSalary": "最低薪资(k)",
   "pleaseEnterLocation": "请输入工作地点",
   "selectOrderBy": "排序",

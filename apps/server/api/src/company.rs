@@ -33,6 +33,8 @@ pub async fn search(
 ) -> ApiResult<ApiResponse<ApiPageResult<company::Model>>> {
     let num = param.page.num;
     let size = param.page.size;
+    let order_by = param.order_by.clone();
+    let order_dir = param.order_dir.clone();
     let selection = Company::find().apply_if(Some(param), |query, v| {
         query
             .apply_if(v.name, |query, v| {
@@ -44,12 +46,117 @@ pub async fn search(
             .apply_if(v.industry, |query, v| {
                 query.filter(company::Column::Industry.like(format!("%{}%", v)))
             })
+            .apply_if(v.legal_person, |query, v| {
+                query.filter(company::Column::LegalPerson.like(format!("%{}%", v)))
+            })
+            .apply_if(v.start_date_start, |query, v| {
+                query.filter(company::Column::StartDate.gte(v))
+            })
+            .apply_if(v.start_date_end, |query, v| {
+                query.filter(company::Column::StartDate.lt(v))
+            })
+            .apply_if(v.address, |query, v| {
+                query.filter(company::Column::Address.like(format!("%{}%", v)))
+            })
+            .apply_if(v.status, |query, v| {
+                query.filter(company::Column::Status.like(format!("%{}%", v)))
+            })
     });
-    let paginate = selection
-        .clone()
-        .order_by_desc(company::Column::UpdateDatetime)
-        .order_by_asc(company::Column::Id)
-        .paginate(&conn, size);
+    let order_by = order_by.as_deref().unwrap_or("update_datetime");
+    let order_dir = order_dir.as_deref().unwrap_or("desc");
+    let is_asc = order_dir == "asc";
+    let paginate = match order_by {
+        "source_refresh_datetime" => {
+            if is_asc {
+                selection
+                    .clone()
+                    .order_by_asc(company::Column::SourceRefreshDatetime)
+                    .order_by_asc(company::Column::Id)
+                    .paginate(&conn, size)
+            } else {
+                selection
+                    .clone()
+                    .order_by_desc(company::Column::SourceRefreshDatetime)
+                    .order_by_asc(company::Column::Id)
+                    .paginate(&conn, size)
+            }
+        }
+        "start_date" => {
+            if is_asc {
+                selection
+                    .clone()
+                    .order_by_asc(company::Column::StartDate)
+                    .order_by_asc(company::Column::Id)
+                    .paginate(&conn, size)
+            } else {
+                selection
+                    .clone()
+                    .order_by_desc(company::Column::StartDate)
+                    .order_by_asc(company::Column::Id)
+                    .paginate(&conn, size)
+            }
+        }
+        "insurance_num" => {
+            if is_asc {
+                selection
+                    .clone()
+                    .order_by_asc(company::Column::InsuranceNum)
+                    .order_by_asc(company::Column::Id)
+                    .paginate(&conn, size)
+            } else {
+                selection
+                    .clone()
+                    .order_by_desc(company::Column::InsuranceNum)
+                    .order_by_asc(company::Column::Id)
+                    .paginate(&conn, size)
+            }
+        }
+        "self_risk" => {
+            if is_asc {
+                selection
+                    .clone()
+                    .order_by_asc(company::Column::SelfRisk)
+                    .order_by_asc(company::Column::Id)
+                    .paginate(&conn, size)
+            } else {
+                selection
+                    .clone()
+                    .order_by_desc(company::Column::SelfRisk)
+                    .order_by_asc(company::Column::Id)
+                    .paginate(&conn, size)
+            }
+        }
+        "union_risk" => {
+            if is_asc {
+                selection
+                    .clone()
+                    .order_by_asc(company::Column::UnionRisk)
+                    .order_by_asc(company::Column::Id)
+                    .paginate(&conn, size)
+            } else {
+                selection
+                    .clone()
+                    .order_by_desc(company::Column::UnionRisk)
+                    .order_by_asc(company::Column::Id)
+                    .paginate(&conn, size)
+            }
+        }
+        _ => {
+            if is_asc {
+                selection
+                    .clone()
+                    .order_by_asc(company::Column::UpdateDatetime)
+                    .order_by_asc(company::Column::Id)
+                    .paginate(&conn, size)
+            } else {
+                selection
+                    .clone()
+                    .order_by_desc(company::Column::UpdateDatetime)
+                    .order_by_asc(company::Column::Id)
+                    .paginate(&conn, size)
+            }
+        }
+    };
     let total = paginate.num_items().await?;
     let items = paginate.fetch_page(num - 1).await?;
     Ok(ApiResponse::success(Some(ApiPageResult::new(items, total))))
@@ -195,6 +302,13 @@ pub struct SearchParam {
     pub name: Option<String>,
     pub platform: Option<String>,
     pub industry: Option<String>,
+    pub legal_person: Option<String>,
+    pub start_date_start: Option<DateTime<FixedOffset>>,
+    pub start_date_end: Option<DateTime<FixedOffset>>,
+    pub address: Option<String>,
+    pub status: Option<String>,
+    pub order_by: Option<String>,
+    pub order_dir: Option<String>,
 }
 
 #[derive(Default, Deserialize, Serialize, Debug, Clone, Validate, ToSchema)]

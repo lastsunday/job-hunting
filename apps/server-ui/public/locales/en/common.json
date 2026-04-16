@@ -10,6 +10,7 @@
   "create": "Create",
   "update": "Update",
   "search": "Search",
+  "reset": "Reset",
   "submit": "Submit",
   "all": "All",
   "noData": "No Data",

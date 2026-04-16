@@ -22,6 +22,7 @@ import {
   Select,
   ActionIcon,
   UnstyledButton,
+  Input,
 } from '@mantine/core';
 import {
   IconChevronUp,
@@ -81,6 +82,7 @@ interface SearchParam {
   page: { num: number; size: number };
   name?: string;
   company_name?: string;
+  platform?: string;
   address?: string;
   salary?: number;
   order_by?: string;
@@ -104,6 +106,7 @@ function RouteComponent() {
   const [searchName, setSearchName] = useState('');
   const [searchCompanyName, setSearchCompanyName] = useState('');
   const [searchSalary, setSearchSalary] = useState<number | string>('');
+  const [searchPlatform, setSearchPlatform] = useState('');
   const [searchAddress, setSearchAddress] = useState('');
   const [orderBy, setOrderBy] = useState('first_scan_datetime');
   const [orderDir, setOrderDir] = useState('desc');
@@ -155,6 +158,7 @@ function RouteComponent() {
         page: { num: page, size: pageSize },
         name: searchName || undefined,
         company_name: searchCompanyName || undefined,
+        platform: searchPlatform || undefined,
         address: searchAddress || undefined,
         salary: salaryValue,
         order_by: orderBy,
@@ -182,6 +186,16 @@ function RouteComponent() {
   }, [page, pageSize, orderBy, orderDir]);
 
   const handleSearch = () => {
+    setPage(1);
+    loadJobs();
+  };
+
+  const handleReset = () => {
+    setSearchName('');
+    setSearchCompanyName('');
+    setSearchPlatform('');
+    setSearchSalary('');
+    setSearchAddress('');
     setPage(1);
     loadJobs();
   };
@@ -352,12 +366,39 @@ function RouteComponent() {
             value={searchName}
             onChange={(e) => setSearchName(e.currentTarget.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            w={150}
+            rightSection={
+              searchName ? (
+                <Input.ClearButton onClick={() => setSearchName('')} />
+              ) : null
+            }
+            rightSectionPointerEvents="auto"
           />
           <TextInput
             placeholder={t('job:pleaseEnterCompanyName')}
             value={searchCompanyName}
             onChange={(e) => setSearchCompanyName(e.currentTarget.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            w={150}
+            rightSection={
+              searchCompanyName ? (
+                <Input.ClearButton onClick={() => setSearchCompanyName('')} />
+              ) : null
+            }
+            rightSectionPointerEvents="auto"
+          />
+          <TextInput
+            placeholder={t('job:pleaseEnterPlatform')}
+            value={searchPlatform}
+            onChange={(e) => setSearchPlatform(e.currentTarget.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            w={120}
+            rightSection={
+              searchPlatform ? (
+                <Input.ClearButton onClick={() => setSearchPlatform('')} />
+              ) : null
+            }
+            rightSectionPointerEvents="auto"
           />
           <NumberInput
             placeholder={t('job:pleaseEnterMinSalary')}
@@ -365,14 +406,25 @@ function RouteComponent() {
             onChange={(v) => setSearchSalary(v)}
             min={0}
             step={1000}
+            w={120}
           />
           <TextInput
             placeholder={t('job:pleaseEnterLocation')}
             value={searchAddress}
             onChange={(e) => setSearchAddress(e.currentTarget.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            w={120}
+            rightSection={
+              searchAddress ? (
+                <Input.ClearButton onClick={() => setSearchAddress('')} />
+              ) : null
+            }
+            rightSectionPointerEvents="auto"
           />
           <Button onClick={handleSearch}>{t('common:search')}</Button>
+          <Button variant="default" onClick={handleReset}>
+            {t('common:reset')}
+          </Button>
           <SegmentedControl
             value={viewMode}
             onChange={(v) => setViewMode(v as 'table' | 'map')}
@@ -403,14 +455,14 @@ function RouteComponent() {
                     <Table.Th style={{ minWidth: 50 }}>
                       {t('job:serialNumber')}
                     </Table.Th>
-                    <Table.Th style={{ minWidth: 115 }}>
-                      {t('job:jobNo')}
-                    </Table.Th>
                     <Table.Th style={{ minWidth: 150 }}>
                       {t('job:name')}
                     </Table.Th>
                     <Table.Th style={{ minWidth: 120 }}>
                       {t('job:company')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 80 }}>
+                      {t('job:platform')}
                     </Table.Th>
                     <Table.Th style={{ minWidth: 120 }}>
                       {t('job:location')}
@@ -458,42 +510,12 @@ function RouteComponent() {
                 </Table.Thead>
                 <Table.Tbody>
                   {jobs.map((job, index) => (
-                    <Table.Tr key={job.id}>
+                    <Table.Tr
+                      key={job.id}
+                      onClick={() => handleView(job)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <Table.Td>{(page - 1) * pageSize + index + 1}</Table.Td>
-                      <Table.Td>
-                        <Text
-                          size="sm"
-                          title={job.id}
-                          style={{ cursor: 'pointer', display: 'inline' }}
-                          onClick={() => {
-                            navigator.clipboard.writeText(job.id);
-                            showNotification({
-                              color: 'green',
-                              message: t('job:copiedToClipboard', {
-                                message: t('job:copiedToClipboard'),
-                              }),
-                            });
-                          }}
-                        >
-                          {job.id.slice(0, 8)}...
-                        </Text>
-                        <ActionIcon
-                          size="xs"
-                          variant="subtle"
-                          style={{ display: 'inline', verticalAlign: 'middle' }}
-                          onClick={() => {
-                            navigator.clipboard.writeText(job.id);
-                            showNotification({
-                              color: 'green',
-                              message: t('job:copiedToClipboard', {
-                                message: t('job:copiedToClipboard'),
-                              }),
-                            });
-                          }}
-                        >
-                          <div className="i-mdi:content-copy" />
-                        </ActionIcon>
-                      </Table.Td>
                       <Table.Td>
                         <div
                           style={{
@@ -506,22 +528,10 @@ function RouteComponent() {
                             size="sm"
                             title={job.name}
                             style={{
-                              cursor: 'pointer',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
                               flex: 1,
-                            }}
-                            onClick={() => {
-                              if (job.name) {
-                                navigator.clipboard.writeText(job.name);
-                                showNotification({
-                                  color: 'green',
-                                  message: t('job:copiedToClipboard', {
-                                    message: t('job:copiedToClipboard'),
-                                  }),
-                                });
-                              }
                             }}
                           >
                             {job.name || '-'}
@@ -530,10 +540,9 @@ function RouteComponent() {
                             <ActionIcon
                               size="xs"
                               variant="subtle"
-                              style={{
-                                flexShrink: 0,
-                              }}
-                              onClick={() => {
+                              style={{ flexShrink: 0 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 navigator.clipboard.writeText(job.name!);
                                 showNotification({
                                   color: 'green',
@@ -549,24 +558,52 @@ function RouteComponent() {
                         </div>
                       </Table.Td>
                       <Table.Td>
-                        <Text
-                          size="sm"
-                          style={{ cursor: 'pointer', display: 'inline' }}
-                          onClick={() => {
-                            if (job.company_name) {
-                              navigator.clipboard.writeText(job.company_name);
-                              showNotification({
-                                color: 'green',
-                                message: t('job:copiedToClipboard', {
-                                  message: t('job:copiedToClipboard'),
-                                }),
-                              });
-                            }
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            maxWidth: '180px',
                           }}
                         >
-                          {job.company_name || '-'}
-                        </Text>
-                        {job.company_name && (
+                          <Text
+                            size="sm"
+                            title={job.company_name}
+                            style={{
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              flex: 1,
+                            }}
+                          >
+                            {job.company_name || '-'}
+                          </Text>
+                          {job.company_name && (
+                            <ActionIcon
+                              size="xs"
+                              variant="subtle"
+                              style={{ flexShrink: 0 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigator.clipboard.writeText(
+                                  job.company_name!
+                                );
+                                showNotification({
+                                  color: 'green',
+                                  message: t('job:copiedToClipboard', {
+                                    message: t('job:copiedToClipboard'),
+                                  }),
+                                });
+                              }}
+                            >
+                              <div className="i-mdi:content-copy" />
+                            </ActionIcon>
+                          )}
+                        </div>
+                      </Table.Td>
+                      <Table.Td>{job.platform || '-'}</Table.Td>
+                      <Table.Td>
+                        {job.address || job.location_name || '-'}
+                        {(job.address || job.location_name) && (
                           <ActionIcon
                             size="xs"
                             variant="subtle"
@@ -574,8 +611,11 @@ function RouteComponent() {
                               display: 'inline',
                               verticalAlign: 'middle',
                             }}
-                            onClick={() => {
-                              navigator.clipboard.writeText(job.company_name!);
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(
+                                job.address || job.location_name || ''
+                              );
                               showNotification({
                                 color: 'green',
                                 message: t('job:copiedToClipboard', {
@@ -588,7 +628,6 @@ function RouteComponent() {
                           </ActionIcon>
                         )}
                       </Table.Td>
-                      <Table.Td>{job.address || job.location_name}</Table.Td>
                       <Table.Td>{job.degree_name || '-'}</Table.Td>
                       <Table.Td>
                         {job.year != null
@@ -611,19 +650,25 @@ function RouteComponent() {
                       <Table.Td>
                         {job.update_datetime?.slice(0, 10) || '-'}
                       </Table.Td>
-                      <Table.Td>
+                      <Table.Td onClick={(e) => e.stopPropagation()}>
                         <Group gap="xs">
                           <Button
                             size="xs"
                             variant="light"
-                            onClick={() => handleView(job)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleView(job);
+                            }}
                           >
                             {t('common:view')}
                           </Button>
                           <Button
                             size="xs"
                             variant="light"
-                            onClick={() => handleEdit(job)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(job);
+                            }}
                           >
                             {t('common:edit')}
                           </Button>
@@ -631,7 +676,10 @@ function RouteComponent() {
                             size="xs"
                             variant="light"
                             color="red"
-                            onClick={() => handleDelete(job)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(job);
+                            }}
                           >
                             {t('common:delete')}
                           </Button>
@@ -919,9 +967,26 @@ function RouteComponent() {
               <Text size="sm" c="dimmed">
                 {t('job:jobNo')}
               </Text>
-              <Text size="md" fw={500}>
-                {viewingJob.id || '-'}
-              </Text>
+              <Group gap={4}>
+                <Text size="md" fw={500}>
+                  {viewingJob.id || '-'}
+                </Text>
+                <ActionIcon
+                  size="xs"
+                  variant="subtle"
+                  onClick={() => {
+                    navigator.clipboard.writeText(viewingJob.id);
+                    showNotification({
+                      color: 'green',
+                      message: t('job:copiedToClipboard', {
+                        message: t('job:copiedToClipboard'),
+                      }),
+                    });
+                  }}
+                >
+                  <div className="i-mdi:content-copy" />
+                </ActionIcon>
+              </Group>
             </div>
             <div>
               <Text size="sm" c="dimmed">

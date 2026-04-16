@@ -43,6 +43,9 @@ pub async fn search(
             .apply_if(v.company_name, |query, v| {
                 query.filter(job::Column::CompanyName.like(format!("%{}%", v)))
             })
+            .apply_if(v.platform, |query, v| {
+                query.filter(job::Column::Platform.like(format!("%{}%", v)))
+            })
             .apply_if(v.address, |query, v| {
                 query.filter(job::Column::Address.like(format!("%{}%", v)))
             })
@@ -256,6 +259,7 @@ pub struct SearchParam {
     pub page: PageParam,
     pub name: Option<String>,
     pub company_name: Option<String>,
+    pub platform: Option<String>,
     pub salary: Option<f32>,
     pub address: Option<String>,
     pub first_publish_datetime_start: Option<DateTime<FixedOffset>>,

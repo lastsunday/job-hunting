@@ -20,7 +20,14 @@ import {
   Badge,
   Select,
   ActionIcon,
+  UnstyledButton,
+  Input,
 } from '@mantine/core';
+import {
+  IconChevronUp,
+  IconChevronDown,
+  IconSelector,
+} from '@tabler/icons-react';
 import classes from './companies.module.css';
 import { useDisclosure } from '@mantine/hooks';
 import { showNotification } from '@mantine/notifications';
@@ -43,6 +50,11 @@ interface SearchParam {
   page: { num: number; size: number };
   name?: string;
   industry?: string;
+  legal_person?: string;
+  address?: string;
+  status?: string;
+  order_by?: string;
+  order_dir?: string;
 }
 
 interface ApiPageResult<T> {
@@ -50,6 +62,42 @@ interface ApiPageResult<T> {
   total: number;
   num: number;
   size: number;
+}
+
+function SortableTh({
+  children,
+  field,
+  currentOrderBy,
+  currentOrderDir,
+  onSort,
+  minWidth = 80,
+}: {
+  children: React.ReactNode;
+  field: string;
+  currentOrderBy: string;
+  currentOrderDir: string;
+  onSort: (field: string) => void;
+  minWidth?: number | string;
+}) {
+  const sorted = currentOrderBy === field;
+  const reversed = sorted && currentOrderDir === 'asc';
+  const Icon = sorted
+    ? reversed
+      ? IconChevronUp
+      : IconChevronDown
+    : IconSelector;
+  return (
+    <Table.Th style={{ minWidth }}>
+      <UnstyledButton onClick={() => onSort(field)}>
+        <Group justify="space-between" gap={4}>
+          <Text fw={500} fz="sm">
+            {children}
+          </Text>
+          <Icon size={14} stroke={1.5} />
+        </Group>
+      </UnstyledButton>
+    </Table.Th>
+  );
 }
 
 function RouteComponent() {
@@ -61,6 +109,11 @@ function RouteComponent() {
   const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState('');
   const [searchIndustry, setSearchIndustry] = useState('');
+  const [searchLegalPerson, setSearchLegalPerson] = useState('');
+  const [searchAddress, setSearchAddress] = useState('');
+  const [searchStatus, setSearchStatus] = useState('');
+  const [orderBy, setOrderBy] = useState('update_datetime');
+  const [orderDir, setOrderDir] = useState('desc');
   const [openedModal, { open: openModal, close: closeModal }] =
     useDisclosure(false);
   const [openedDelete, { open: openDelete, close: closeDelete }] =
@@ -104,6 +157,11 @@ function RouteComponent() {
         page: { num: page, size: pageSize },
         name: searchName || undefined,
         industry: searchIndustry || undefined,
+        legal_person: searchLegalPerson || undefined,
+        address: searchAddress || undefined,
+        status: searchStatus || undefined,
+        order_by: orderBy,
+        order_dir: orderDir,
       };
       const result = await postJson<ApiPageResult<Company>>(
         '/api/company/search',
@@ -124,11 +182,29 @@ function RouteComponent() {
 
   useEffect(() => {
     loadCompanies();
-  }, [page, pageSize]);
+  }, [page, pageSize, orderBy, orderDir]);
 
   const handleSearch = () => {
     setPage(1);
     loadCompanies();
+  };
+
+  const handleReset = () => {
+    setSearchName('');
+    setSearchIndustry('');
+    setSearchLegalPerson('');
+    setSearchAddress('');
+    setSearchStatus('');
+    loadCompanies();
+  };
+
+  const handleSort = (field: string) => {
+    if (orderBy === field) {
+      setOrderDir(orderDir === 'desc' ? 'asc' : 'desc');
+    } else {
+      setOrderBy(field);
+      setOrderDir('desc');
+    }
   };
 
   const handlePageSizeChange = (value: string | null) => {
@@ -292,14 +368,70 @@ function RouteComponent() {
             value={searchName}
             onChange={(e) => setSearchName(e.currentTarget.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            w={150}
+            rightSection={
+              searchName ? (
+                <Input.ClearButton onClick={() => setSearchName('')} />
+              ) : null
+            }
+            rightSectionPointerEvents="auto"
           />
           <TextInput
             placeholder={t('company:pleaseEnterIndustry')}
             value={searchIndustry}
             onChange={(e) => setSearchIndustry(e.currentTarget.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            w={120}
+            rightSection={
+              searchIndustry ? (
+                <Input.ClearButton onClick={() => setSearchIndustry('')} />
+              ) : null
+            }
+            rightSectionPointerEvents="auto"
+          />
+          <TextInput
+            placeholder={t('company:pleaseEnterLegalPerson')}
+            value={searchLegalPerson}
+            onChange={(e) => setSearchLegalPerson(e.currentTarget.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            w={120}
+            rightSection={
+              searchLegalPerson ? (
+                <Input.ClearButton onClick={() => setSearchLegalPerson('')} />
+              ) : null
+            }
+            rightSectionPointerEvents="auto"
+          />
+          <TextInput
+            placeholder={t('company:pleaseEnterAddress')}
+            value={searchAddress}
+            onChange={(e) => setSearchAddress(e.currentTarget.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            w={120}
+            rightSection={
+              searchAddress ? (
+                <Input.ClearButton onClick={() => setSearchAddress('')} />
+              ) : null
+            }
+            rightSectionPointerEvents="auto"
+          />
+          <TextInput
+            placeholder={t('company:pleaseEnterStatus')}
+            value={searchStatus}
+            onChange={(e) => setSearchStatus(e.currentTarget.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            w={120}
+            rightSection={
+              searchStatus ? (
+                <Input.ClearButton onClick={() => setSearchStatus('')} />
+              ) : null
+            }
+            rightSectionPointerEvents="auto"
           />
           <Button onClick={handleSearch}>{t('common:search')}</Button>
+          <Button variant="default" onClick={handleReset}>
+            {t('common:reset')}
+          </Button>
           <SegmentedControl
             value={viewMode}
             onChange={(v) => setViewMode(v as 'table' | 'map')}
@@ -327,46 +459,107 @@ function RouteComponent() {
               <Table>
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th>{t('company:serialNumber')}</Table.Th>
-                    <Table.Th>{t('company:companyId')}</Table.Th>
-                    <Table.Th>{t('company:name')}</Table.Th>
-                    <Table.Th>{t('company:legalPerson')}</Table.Th>
-                    <Table.Th>{t('company:registeredCapital')}</Table.Th>
-                    <Table.Th>{t('company:establishmentDate')}</Table.Th>
-                    <Table.Th>{t('company:companyAddress')}</Table.Th>
-                    <Table.Th>{t('company:status')}</Table.Th>
-                    <Table.Th>{t('company:industry')}</Table.Th>
-                    <Table.Th>{t('company:insuranceNum')}</Table.Th>
-                    <Table.Th>{t('company:selfRisk')}</Table.Th>
-                    <Table.Th>{t('company:unionRisk')}</Table.Th>
-                    <Table.Th>{t('company:sourceUpdateTime')}</Table.Th>
-                    <Table.Th>{t('company:actions')}</Table.Th>
+                    <Table.Th style={{ minWidth: 50 }}>
+                      {t('company:serialNumber')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 115 }}>
+                      {t('company:companyId')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 150 }}>
+                      {t('company:name')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 100 }}>
+                      {t('company:legalPerson')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 100 }}>
+                      {t('company:registeredCapital')}
+                    </Table.Th>
+                    <SortableTh
+                      field="start_date"
+                      currentOrderBy={orderBy}
+                      currentOrderDir={orderDir}
+                      onSort={handleSort}
+                      minWidth={100}
+                    >
+                      {t('company:establishmentDate')}
+                    </SortableTh>
+                    <Table.Th style={{ minWidth: 150 }}>
+                      {t('company:companyAddress')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 80 }}>
+                      {t('company:status')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 80 }}>
+                      {t('company:industry')}
+                    </Table.Th>
+                    <SortableTh
+                      field="insurance_num"
+                      currentOrderBy={orderBy}
+                      currentOrderDir={orderDir}
+                      onSort={handleSort}
+                      minWidth={100}
+                    >
+                      {t('company:insuranceNum')}
+                    </SortableTh>
+                    <SortableTh
+                      field="self_risk"
+                      currentOrderBy={orderBy}
+                      currentOrderDir={orderDir}
+                      onSort={handleSort}
+                      minWidth={100}
+                    >
+                      {t('company:selfRisk')}
+                    </SortableTh>
+                    <SortableTh
+                      field="union_risk"
+                      currentOrderBy={orderBy}
+                      currentOrderDir={orderDir}
+                      onSort={handleSort}
+                      minWidth={100}
+                    >
+                      {t('company:unionRisk')}
+                    </SortableTh>
+                    <SortableTh
+                      field="source_refresh_datetime"
+                      currentOrderBy={orderBy}
+                      currentOrderDir={orderDir}
+                      onSort={handleSort}
+                      minWidth={130}
+                    >
+                      {t('company:sourceUpdateTime')}
+                    </SortableTh>
+                    <SortableTh
+                      field="update_datetime"
+                      currentOrderBy={orderBy}
+                      currentOrderDir={orderDir}
+                      onSort={handleSort}
+                      minWidth={100}
+                    >
+                      {t('company:updateTime')}
+                    </SortableTh>
+                    <Table.Th style={{ minWidth: 150 }}>
+                      {t('company:actions')}
+                    </Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
                   {companies.map((company, index) => (
-                    <Table.Tr key={company.id}>
+                    <Table.Tr
+                      key={company.id}
+                      onClick={() => handleView(company)}
+                      style={{ cursor: 'pointer' }}
+                    >
                       <Table.Td>{(page - 1) * pageSize + index + 1}</Table.Td>
                       <Table.Td>
-                        <Text
-                          size="sm"
-                          title={company.id}
-                          style={{ cursor: 'pointer', display: 'inline' }}
-                          onClick={() => {
-                            navigator.clipboard.writeText(company.id);
-                            showNotification({
-                              color: 'green',
-                              message: t('company:copiedToClipboard'),
-                            });
-                          }}
-                        >
+                        <Text size="sm" title={company.id}>
                           {company.id.slice(0, 8)}...
                         </Text>
                         <ActionIcon
                           size="xs"
                           variant="subtle"
                           style={{ display: 'inline', verticalAlign: 'middle' }}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             navigator.clipboard.writeText(company.id);
                             showNotification({
                               color: 'green',
@@ -382,27 +575,17 @@ function RouteComponent() {
                           style={{
                             display: 'flex',
                             alignItems: 'center',
-                            maxWidth: '200px',
+                            maxWidth: '150px',
                           }}
                         >
                           <Text
                             size="sm"
                             title={company.name}
                             style={{
-                              cursor: 'pointer',
                               overflow: 'hidden',
                               textOverflow: 'ellipsis',
                               whiteSpace: 'nowrap',
                               flex: 1,
-                            }}
-                            onClick={() => {
-                              if (company.name) {
-                                navigator.clipboard.writeText(company.name);
-                                showNotification({
-                                  color: 'green',
-                                  message: t('company:copiedToClipboard'),
-                                });
-                              }
                             }}
                           >
                             {company.name || '-'}
@@ -411,10 +594,9 @@ function RouteComponent() {
                             <ActionIcon
                               size="xs"
                               variant="subtle"
-                              style={{
-                                flexShrink: 0,
-                              }}
-                              onClick={() => {
+                              style={{ flexShrink: 0 }}
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 navigator.clipboard.writeText(company.name!);
                                 showNotification({
                                   color: 'green',
@@ -454,15 +636,6 @@ function RouteComponent() {
                               whiteSpace: 'nowrap',
                               flex: 1,
                             }}
-                            onClick={() => {
-                              if (company.address) {
-                                navigator.clipboard.writeText(company.address);
-                                showNotification({
-                                  color: 'green',
-                                  message: t('company:copiedToClipboard'),
-                                });
-                              }
-                            }}
                           >
                             {company.address || '-'}
                           </Text>
@@ -473,7 +646,8 @@ function RouteComponent() {
                               style={{
                                 flexShrink: 0,
                               }}
-                              onClick={() => {
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 navigator.clipboard.writeText(company.address!);
                                 showNotification({
                                   color: 'green',
@@ -497,18 +671,27 @@ function RouteComponent() {
                           : '-'}
                       </Table.Td>
                       <Table.Td>
+                        {company.update_datetime?.slice(0, 10) || '-'}
+                      </Table.Td>
+                      <Table.Td onClick={(e) => e.stopPropagation()}>
                         <Group gap="xs">
                           <Button
                             size="xs"
                             variant="light"
-                            onClick={() => handleView(company)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleView(company);
+                            }}
                           >
                             {t('common:view')}
                           </Button>
                           <Button
                             size="xs"
                             variant="light"
-                            onClick={() => handleEdit(company)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(company);
+                            }}
                           >
                             {t('common:edit')}
                           </Button>
@@ -516,7 +699,10 @@ function RouteComponent() {
                             size="xs"
                             variant="light"
                             color="red"
-                            onClick={() => handleDelete(company)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(company);
+                            }}
                           >
                             {t('common:delete')}
                           </Button>
