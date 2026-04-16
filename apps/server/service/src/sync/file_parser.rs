@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use calamine::{Reader, Sheets, open_workbook_auto_from_rs};
+use calamine::{open_workbook_auto_from_rs, Reader, Sheets};
 
 use crate::util::gen_bytes_sha256;
 
@@ -347,7 +347,7 @@ impl FileParser {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct JobHeaderMapping {
     pub job_id: Option<usize>,
     pub platform: Option<usize>,
