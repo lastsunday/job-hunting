@@ -250,7 +250,8 @@ impl JobImporter {
             } else {
                 update_job.first_scan_datetime = job.first_scan_datetime;
             }
-            update_job_list.push(update_job.into_active_model());
+            let active_model = update_job.into_active_model().reset_all();
+            update_job_list.push(active_model);
         }
 
         let imported = insert_job.len();
