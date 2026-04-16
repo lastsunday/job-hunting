@@ -21,7 +21,13 @@ import {
   Badge as MapBadge,
   Select,
   ActionIcon,
+  UnstyledButton,
 } from '@mantine/core';
+import {
+  IconChevronUp,
+  IconChevronDown,
+  IconSelector,
+} from '@tabler/icons-react';
 import classes from './jobs.module.css';
 import { useDisclosure } from '@mantine/hooks';
 import { showNotification } from '@mantine/notifications';
@@ -35,11 +41,50 @@ export const Route = createFileRoute('/_pathlessLayout/admin/jobs')({
   component: RouteComponent,
 });
 
+function SortableTh({
+  children,
+  field,
+  currentOrderBy,
+  currentOrderDir,
+  onSort,
+  minWidth = 80,
+}: {
+  children: React.ReactNode;
+  field: string;
+  currentOrderBy: string;
+  currentOrderDir: string;
+  onSort: (field: string) => void;
+  minWidth?: number | string;
+}) {
+  const sorted = currentOrderBy === field;
+  const reversed = sorted && currentOrderDir === 'asc';
+  const Icon = sorted
+    ? reversed
+      ? IconChevronUp
+      : IconChevronDown
+    : IconSelector;
+  return (
+    <Table.Th style={{ minWidth }}>
+      <UnstyledButton onClick={() => onSort(field)}>
+        <Group justify="space-between" gap={4}>
+          <Text fw={500} fz="sm">
+            {children}
+          </Text>
+          <Icon size={14} stroke={1.5} />
+        </Group>
+      </UnstyledButton>
+    </Table.Th>
+  );
+}
+
 interface SearchParam {
   page: { num: number; size: number };
   name?: string;
+  company_name?: string;
   address?: string;
   salary?: number;
+  order_by?: string;
+  order_dir?: string;
 }
 
 interface ApiPageResult<T> {
@@ -57,7 +102,11 @@ function RouteComponent() {
   const [pageSize, setPageSize] = useState(50);
   const [loading, setLoading] = useState(true);
   const [searchName, setSearchName] = useState('');
+  const [searchCompanyName, setSearchCompanyName] = useState('');
+  const [searchSalary, setSearchSalary] = useState<number | string>('');
   const [searchAddress, setSearchAddress] = useState('');
+  const [orderBy, setOrderBy] = useState('first_scan_datetime');
+  const [orderDir, setOrderDir] = useState('desc');
   const [openedModal, { open: openModal, close: closeModal }] =
     useDisclosure(false);
   const [openedDelete, { open: openDelete, close: closeDelete }] =
@@ -96,10 +145,20 @@ function RouteComponent() {
   const loadJobs = async () => {
     setLoading(true);
     try {
+      const salaryValue =
+        typeof searchSalary === 'number'
+          ? searchSalary
+          : searchSalary
+          ? Number(searchSalary)
+          : undefined;
       const param: SearchParam = {
         page: { num: page, size: pageSize },
         name: searchName || undefined,
+        company_name: searchCompanyName || undefined,
         address: searchAddress || undefined,
+        salary: salaryValue,
+        order_by: orderBy,
+        order_dir: orderDir,
       };
       const result = await postJson<ApiPageResult<Job>>(
         '/api/job/search',
@@ -120,11 +179,20 @@ function RouteComponent() {
 
   useEffect(() => {
     loadJobs();
-  }, [page, pageSize]);
+  }, [page, pageSize, orderBy, orderDir]);
 
   const handleSearch = () => {
     setPage(1);
     loadJobs();
+  };
+
+  const handleSort = (field: string) => {
+    if (orderBy === field) {
+      setOrderDir(orderDir === 'desc' ? 'asc' : 'desc');
+    } else {
+      setOrderBy(field);
+      setOrderDir('desc');
+    }
   };
 
   const handlePageSizeChange = (value: string | null) => {
@@ -286,6 +354,19 @@ function RouteComponent() {
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
           />
           <TextInput
+            placeholder={t('job:pleaseEnterCompanyName')}
+            value={searchCompanyName}
+            onChange={(e) => setSearchCompanyName(e.currentTarget.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+          />
+          <NumberInput
+            placeholder={t('job:pleaseEnterMinSalary')}
+            value={searchSalary}
+            onChange={(v) => setSearchSalary(v)}
+            min={0}
+            step={1000}
+          />
+          <TextInput
             placeholder={t('job:pleaseEnterLocation')}
             value={searchAddress}
             onChange={(e) => setSearchAddress(e.currentTarget.value)}
@@ -319,17 +400,60 @@ function RouteComponent() {
               <Table>
                 <Table.Thead>
                   <Table.Tr>
-                    <Table.Th>{t('job:serialNumber')}</Table.Th>
-                    <Table.Th>{t('job:jobNo')}</Table.Th>
-                    <Table.Th>{t('job:name')}</Table.Th>
-                    <Table.Th>{t('job:company')}</Table.Th>
-                    <Table.Th>{t('job:location')}</Table.Th>
-                    <Table.Th>{t('job:degree')}</Table.Th>
-                    <Table.Th>{t('job:year')}</Table.Th>
-                    <Table.Th>{t('job:salary')}</Table.Th>
-                    <Table.Th>{t('job:publishTime')}</Table.Th>
-                    <Table.Th>{t('job:firstScanTime')}</Table.Th>
-                    <Table.Th>{t('job:actions')}</Table.Th>
+                    <Table.Th style={{ minWidth: 50 }}>
+                      {t('job:serialNumber')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 115 }}>
+                      {t('job:jobNo')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 150 }}>
+                      {t('job:name')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 120 }}>
+                      {t('job:company')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 120 }}>
+                      {t('job:location')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 80 }}>
+                      {t('job:degree')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 80 }}>
+                      {t('job:year')}
+                    </Table.Th>
+                    <Table.Th style={{ minWidth: 80 }}>
+                      {t('job:salary')}
+                    </Table.Th>
+                    <SortableTh
+                      field="first_publish_datetime"
+                      currentOrderBy={orderBy}
+                      currentOrderDir={orderDir}
+                      onSort={handleSort}
+                      minWidth={100}
+                    >
+                      {t('job:publishTime')}
+                    </SortableTh>
+                    <SortableTh
+                      field="first_scan_datetime"
+                      currentOrderBy={orderBy}
+                      currentOrderDir={orderDir}
+                      onSort={handleSort}
+                      minWidth={130}
+                    >
+                      {t('job:firstScanTime')}
+                    </SortableTh>
+                    <SortableTh
+                      field="update_datetime"
+                      currentOrderBy={orderBy}
+                      currentOrderDir={orderDir}
+                      onSort={handleSort}
+                      minWidth={100}
+                    >
+                      {t('job:updateTime')}
+                    </SortableTh>
+                    <Table.Th style={{ minWidth: 180 }}>
+                      {t('job:actions')}
+                    </Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -483,6 +607,9 @@ function RouteComponent() {
                       </Table.Td>
                       <Table.Td>
                         {job.first_scan_datetime?.slice(0, 10) || '-'}
+                      </Table.Td>
+                      <Table.Td>
+                        {job.update_datetime?.slice(0, 10) || '-'}
                       </Table.Td>
                       <Table.Td>
                         <Group gap="xs">

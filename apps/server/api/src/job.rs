@@ -33,10 +33,15 @@ pub async fn search(
 ) -> ApiResult<ApiResponse<ApiPageResult<job::Model>>> {
     let num = param.page.num;
     let size = param.page.size;
+    let order_by = param.order_by.clone();
+    let order_dir = param.order_dir.clone();
     let selection = Job::find().apply_if(Some(param), |query, v| {
         query
             .apply_if(v.name, |query, v| {
                 query.filter(job::Column::Name.like(format!("%{}%", v)))
+            })
+            .apply_if(v.company_name, |query, v| {
+                query.filter(job::Column::CompanyName.like(format!("%{}%", v)))
             })
             .apply_if(v.address, |query, v| {
                 query.filter(job::Column::Address.like(format!("%{}%", v)))
@@ -44,11 +49,17 @@ pub async fn search(
             .apply_if(v.salary, |query, v| {
                 query.filter(job::Column::SalaryMax.gte(v))
             })
-            .apply_if(v.publish_datetime_start, |query, v| {
+            .apply_if(v.first_publish_datetime_start, |query, v| {
                 query.filter(job::Column::FirstPublishDatetime.gte(v))
             })
-            .apply_if(v.publish_datetime_end, |query, v| {
+            .apply_if(v.first_publish_datetime_end, |query, v| {
                 query.filter(job::Column::FirstPublishDatetime.lt(v))
+            })
+            .apply_if(v.first_scan_datetime_start, |query, v| {
+                query.filter(job::Column::FirstScanDatetime.gte(v))
+            })
+            .apply_if(v.first_scan_datetime_end, |query, v| {
+                query.filter(job::Column::FirstScanDatetime.lt(v))
             })
             .apply_if(v.create_datetime_start, |query, v| {
                 query.filter(job::Column::CreateDatetime.gte(v))
@@ -57,11 +68,56 @@ pub async fn search(
                 query.filter(job::Column::CreateDatetime.lt(v))
             })
     });
-    let paginate = selection
-        .clone()
-        .order_by_desc(job::Column::UpdateDatetime)
-        .order_by_asc(job::Column::Id)
-        .paginate(&conn, size);
+    let order_by = order_by.as_deref().unwrap_or("update_datetime");
+    let order_dir = order_dir.as_deref().unwrap_or("desc");
+    let is_asc = order_dir == "asc";
+    let paginate = match order_by {
+        "first_publish_datetime" => {
+            if is_asc {
+                selection
+                    .clone()
+                    .order_by_asc(job::Column::FirstPublishDatetime)
+                    .order_by_asc(job::Column::Id)
+                    .paginate(&conn, size)
+            } else {
+                selection
+                    .clone()
+                    .order_by_desc(job::Column::FirstPublishDatetime)
+                    .order_by_asc(job::Column::Id)
+                    .paginate(&conn, size)
+            }
+        }
+        "first_scan_datetime" => {
+            if is_asc {
+                selection
+                    .clone()
+                    .order_by_asc(job::Column::FirstScanDatetime)
+                    .order_by_asc(job::Column::Id)
+                    .paginate(&conn, size)
+            } else {
+                selection
+                    .clone()
+                    .order_by_desc(job::Column::FirstScanDatetime)
+                    .order_by_asc(job::Column::Id)
+                    .paginate(&conn, size)
+            }
+        }
+        _ => {
+            if is_asc {
+                selection
+                    .clone()
+                    .order_by_asc(job::Column::UpdateDatetime)
+                    .order_by_asc(job::Column::Id)
+                    .paginate(&conn, size)
+            } else {
+                selection
+                    .clone()
+                    .order_by_desc(job::Column::UpdateDatetime)
+                    .order_by_asc(job::Column::Id)
+                    .paginate(&conn, size)
+            }
+        }
+    };
     let total = paginate.num_items().await?;
     let items = paginate.fetch_page(num - 1).await?;
     Ok(ApiResponse::success(Some(ApiPageResult::new(items, total))))
@@ -199,12 +255,17 @@ pub struct SearchParam {
     #[validate(nested)]
     pub page: PageParam,
     pub name: Option<String>,
+    pub company_name: Option<String>,
     pub salary: Option<f32>,
     pub address: Option<String>,
-    pub publish_datetime_start: Option<DateTime<FixedOffset>>,
-    pub publish_datetime_end: Option<DateTime<FixedOffset>>,
+    pub first_publish_datetime_start: Option<DateTime<FixedOffset>>,
+    pub first_publish_datetime_end: Option<DateTime<FixedOffset>>,
+    pub first_scan_datetime_start: Option<DateTime<FixedOffset>>,
+    pub first_scan_datetime_end: Option<DateTime<FixedOffset>>,
     pub create_datetime_start: Option<DateTime<FixedOffset>>,
     pub create_datetime_end: Option<DateTime<FixedOffset>>,
+    pub order_by: Option<String>,
+    pub order_dir: Option<String>,
 }
 
 #[derive(Default, Deserialize, Serialize, Debug, Clone, Validate, ToSchema)]
