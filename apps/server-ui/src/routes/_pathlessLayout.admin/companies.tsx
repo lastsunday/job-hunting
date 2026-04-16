@@ -19,6 +19,7 @@ import {
   ScrollArea,
   Badge,
   Select,
+  ActionIcon,
 } from '@mantine/core';
 import classes from './companies.module.css';
 import { useDisclosure } from '@mantine/hooks';
@@ -326,7 +327,13 @@ function RouteComponent() {
               <Table>
                 <Table.Thead>
                   <Table.Tr>
+                    <Table.Th>{t('company:serialNumber')}</Table.Th>
+                    <Table.Th>{t('company:companyId')}</Table.Th>
                     <Table.Th>{t('company:name')}</Table.Th>
+                    <Table.Th>{t('company:legalPerson')}</Table.Th>
+                    <Table.Th>{t('company:registeredCapital')}</Table.Th>
+                    <Table.Th>{t('company:establishmentDate')}</Table.Th>
+                    <Table.Th>{t('company:companyAddress')}</Table.Th>
                     <Table.Th>{t('company:status')}</Table.Th>
                     <Table.Th>{t('company:industry')}</Table.Th>
                     <Table.Th>{t('company:insuranceNum')}</Table.Th>
@@ -337,9 +344,148 @@ function RouteComponent() {
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {companies.map((company) => (
+                  {companies.map((company, index) => (
                     <Table.Tr key={company.id}>
-                      <Table.Td>{company.name}</Table.Td>
+                      <Table.Td>{(page - 1) * pageSize + index + 1}</Table.Td>
+                      <Table.Td>
+                        <Text
+                          size="sm"
+                          title={company.id}
+                          style={{ cursor: 'pointer', display: 'inline' }}
+                          onClick={() => {
+                            navigator.clipboard.writeText(company.id);
+                            showNotification({
+                              color: 'green',
+                              message: t('company:copiedToClipboard'),
+                            });
+                          }}
+                        >
+                          {company.id.slice(0, 8)}...
+                        </Text>
+                        <ActionIcon
+                          size="xs"
+                          variant="subtle"
+                          style={{ display: 'inline', verticalAlign: 'middle' }}
+                          onClick={() => {
+                            navigator.clipboard.writeText(company.id);
+                            showNotification({
+                              color: 'green',
+                              message: t('company:copiedToClipboard'),
+                            });
+                          }}
+                        >
+                          <div className="i-mdi:content-copy" />
+                        </ActionIcon>
+                      </Table.Td>
+                      <Table.Td>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            maxWidth: '200px',
+                          }}
+                        >
+                          <Text
+                            size="sm"
+                            title={company.name}
+                            style={{
+                              cursor: 'pointer',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              flex: 1,
+                            }}
+                            onClick={() => {
+                              if (company.name) {
+                                navigator.clipboard.writeText(company.name);
+                                showNotification({
+                                  color: 'green',
+                                  message: t('company:copiedToClipboard'),
+                                });
+                              }
+                            }}
+                          >
+                            {company.name || '-'}
+                          </Text>
+                          {company.name && (
+                            <ActionIcon
+                              size="xs"
+                              variant="subtle"
+                              style={{
+                                flexShrink: 0,
+                              }}
+                              onClick={() => {
+                                navigator.clipboard.writeText(company.name!);
+                                showNotification({
+                                  color: 'green',
+                                  message: t('company:copiedToClipboard'),
+                                });
+                              }}
+                            >
+                              <div className="i-mdi:content-copy" />
+                            </ActionIcon>
+                          )}
+                        </div>
+                      </Table.Td>
+                      <Table.Td>{company.legal_person || '-'}</Table.Td>
+                      <Table.Td>
+                        {company.reg_capital_value
+                          ? `${company.reg_capital_value} ${
+                              company.reg_capital_currency || ''
+                            }`
+                          : '-'}
+                      </Table.Td>
+                      <Table.Td>{company.start_date || '-'}</Table.Td>
+                      <Table.Td>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            maxWidth: '200px',
+                          }}
+                        >
+                          <Text
+                            size="sm"
+                            title={company.address}
+                            style={{
+                              cursor: 'pointer',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              flex: 1,
+                            }}
+                            onClick={() => {
+                              if (company.address) {
+                                navigator.clipboard.writeText(company.address);
+                                showNotification({
+                                  color: 'green',
+                                  message: t('company:copiedToClipboard'),
+                                });
+                              }
+                            }}
+                          >
+                            {company.address || '-'}
+                          </Text>
+                          {company.address && (
+                            <ActionIcon
+                              size="xs"
+                              variant="subtle"
+                              style={{
+                                flexShrink: 0,
+                              }}
+                              onClick={() => {
+                                navigator.clipboard.writeText(company.address!);
+                                showNotification({
+                                  color: 'green',
+                                  message: t('company:copiedToClipboard'),
+                                });
+                              }}
+                            >
+                              <div className="i-mdi:content-copy" />
+                            </ActionIcon>
+                          )}
+                        </div>
+                      </Table.Td>
                       <Table.Td>{company.status || '-'}</Table.Td>
                       <Table.Td>{company.industry || '-'}</Table.Td>
                       <Table.Td>{company.insurance_num ?? '-'}</Table.Td>
@@ -393,7 +539,7 @@ function RouteComponent() {
             >
               <div className={classes.sidebarHeader}>
                 <Text size="sm" fw={500}>
-                  公司列表 ({total})
+                  {t('company:companyList')} ({total})
                 </Text>
               </div>
               <ScrollArea className={classes.sidebarContent}>
@@ -404,7 +550,7 @@ function RouteComponent() {
                     <Skeleton height={50} radius="md" />
                   </Stack>
                 ) : companies.length === 0 ? (
-                  <div className={classes.noCoords}>暂无数据</div>
+                  <div className={classes.noCoords}>{t('common:noData')}</div>
                 ) : (
                   companies.map((company) => (
                     <div
@@ -422,12 +568,22 @@ function RouteComponent() {
                         {company.industry || '-'}
                         {company.insurance_num != null && (
                           <Badge size="xs" variant="light" color="blue" ml="xs">
-                            社保{company.insurance_num}人
+                            {t('company:insuranceNum')}: {company.insurance_num}
                           </Badge>
                         )}
                       </div>
                       <div className={classes.listItemSubtitle}>
                         {company.address || '-'}
+                      </div>
+                      <div
+                        className={classes.listItemSubtitle}
+                        style={{ fontSize: '11px', color: 'dimmed' }}
+                      >
+                        {company.source_record_id
+                          ? `${t(
+                              'company:sourceRecordId'
+                            )}: ${company.source_record_id.slice(0, 12)}...`
+                          : '-'}
                       </div>
                     </div>
                   ))
@@ -448,11 +604,11 @@ function RouteComponent() {
                     value={String(pageSize)}
                     onChange={handlePageSizeChange}
                     data={[
-                      { value: '50', label: '50/页' },
-                      { value: '100', label: '100/页' },
-                      { value: '200', label: '200/页' },
-                      { value: '500', label: '500/页' },
-                      { value: '1000', label: '1000/页' },
+                      { value: '50', label: `50 ${t('company:perPage')}` },
+                      { value: '100', label: `100 ${t('company:perPage')}` },
+                      { value: '200', label: `200 ${t('company:perPage')}` },
+                      { value: '500', label: `500 ${t('company:perPage')}` },
+                      { value: '1000', label: `1000 ${t('company:perPage')}` },
                     ]}
                     style={{ width: 100 }}
                     size="sm"
@@ -504,11 +660,11 @@ function RouteComponent() {
               value={String(pageSize)}
               onChange={handlePageSizeChange}
               data={[
-                { value: '50', label: '50/页' },
-                { value: '100', label: '100/页' },
-                { value: '200', label: '200/页' },
-                { value: '500', label: '500/页' },
-                { value: '1000', label: '1000/页' },
+                { value: '50', label: `50 ${t('company:perPage')}` },
+                { value: '100', label: `100 ${t('company:perPage')}` },
+                { value: '200', label: `200 ${t('company:perPage')}` },
+                { value: '500', label: `500 ${t('company:perPage')}` },
+                { value: '1000', label: `1000 ${t('company:perPage')}` },
               ]}
               style={{ width: 100 }}
               size="sm"
@@ -520,12 +676,14 @@ function RouteComponent() {
       <Modal
         opened={openedModal}
         onClose={closeModal}
-        title={editingCompany ? '编辑公司' : '新增公司'}
+        title={
+          editingCompany ? t('company:editCompany') : t('company:addNewCompany')
+        }
         size="lg"
       >
         <Stack>
           <TextInput
-            label="公司名称"
+            label={t('company:name')}
             value={formData.name}
             onChange={(e) =>
               setFormData({ ...formData, name: e.currentTarget.value })
@@ -533,21 +691,21 @@ function RouteComponent() {
             required
           />
           <TextInput
-            label="平台"
+            label={t('company:platform')}
             value={formData.platform}
             onChange={(e) =>
               setFormData({ ...formData, platform: e.currentTarget.value })
             }
           />
           <TextInput
-            label="行业"
+            label={t('company:industry')}
             value={formData.industry}
             onChange={(e) =>
               setFormData({ ...formData, industry: e.currentTarget.value })
             }
           />
           <TextInput
-            label="公司地址"
+            label={t('company:companyAddress')}
             value={formData.address}
             onChange={(e) =>
               setFormData({ ...formData, address: e.currentTarget.value })
@@ -555,7 +713,7 @@ function RouteComponent() {
           />
           <Group grow>
             <NumberInput
-              label="经度"
+              label={t('company:longitude')}
               value={formData.longitude ?? ''}
               onChange={(val) =>
                 setFormData({
@@ -566,7 +724,7 @@ function RouteComponent() {
               decimalScale={6}
             />
             <NumberInput
-              label="纬度"
+              label={t('company:latitude')}
               value={formData.latitude ?? ''}
               onChange={(val) =>
                 setFormData({
@@ -578,14 +736,14 @@ function RouteComponent() {
             />
           </Group>
           <Textarea
-            label="公司简介"
+            label={t('company:companyDescription')}
             value={formData.desc}
             onChange={(e) =>
               setFormData({ ...formData, desc: e.currentTarget.value })
             }
           />
           <TextInput
-            label="公司官网"
+            label={t('company:officialWebsite')}
             value={formData.web_site}
             onChange={(e) =>
               setFormData({ ...formData, web_site: e.currentTarget.value })
@@ -593,7 +751,7 @@ function RouteComponent() {
           />
           <Group grow>
             <TextInput
-              label="法定代表人"
+              label={t('company:legalPerson')}
               value={formData.legal_person}
               onChange={(e) =>
                 setFormData({
@@ -603,7 +761,7 @@ function RouteComponent() {
               }
             />
             <TextInput
-              label="统一社会信用代码"
+              label={t('company:unifiedCode')}
               value={formData.unified_code}
               onChange={(e) =>
                 setFormData({
@@ -615,7 +773,7 @@ function RouteComponent() {
           </Group>
           <Group grow>
             <NumberInput
-              label="注册资本"
+              label={t('company:registeredCapital')}
               value={formData.reg_capital_value}
               onChange={(val) =>
                 setFormData({ ...formData, reg_capital_value: Number(val) })
@@ -623,7 +781,7 @@ function RouteComponent() {
               min={0}
             />
             <TextInput
-              label="注册资本货币"
+              label={t('company:registeredCapitalCurrency')}
               value={formData.reg_capital_currency}
               onChange={(e) =>
                 setFormData({
@@ -634,14 +792,14 @@ function RouteComponent() {
             />
           </Group>
           <TextInput
-            label="经营范围"
+            label={t('company:businessScope')}
             value={formData.scope}
             onChange={(e) =>
               setFormData({ ...formData, scope: e.currentTarget.value })
             }
           />
           <TextInput
-            label="营业执照号"
+            label={t('company:businessLicense')}
             value={formData.license_number}
             onChange={(e) =>
               setFormData({
@@ -651,39 +809,45 @@ function RouteComponent() {
             }
           />
           <TextInput
-            label="税务登记号"
+            label={t('company:taxNo')}
             value={formData.tax_no}
             onChange={(e) =>
               setFormData({ ...formData, tax_no: e.currentTarget.value })
             }
           />
           <TextInput
-            label="公司链接"
+            label={t('company:companyLink')}
             value={formData.source_url}
             onChange={(e) =>
               setFormData({ ...formData, source_url: e.currentTarget.value })
             }
           />
           <Button onClick={handleSubmit} loading={submitting}>
-            {editingCompany ? '更新' : '创建'}
+            {editingCompany ? t('common:update') : t('common:create')}
           </Button>
         </Stack>
       </Modal>
 
-      <Modal opened={openedDelete} onClose={closeDelete} title="确认删除">
+      <Modal
+        opened={openedDelete}
+        onClose={closeDelete}
+        title={t('company:confirmDelete')}
+      >
         <Text>
-          确定要删除公司 "{deletingCompany?.name}" 吗？此操作不可恢复。
+          {t('company:confirmDeleteMessage', {
+            name: deletingCompany?.name || '',
+          })}
         </Text>
         <Group justify="flex-end" mt="md">
           <Button variant="default" onClick={closeDelete}>
-            取消
+            {t('common:cancel')}
           </Button>
           <Button
             color="red"
             onClick={handleConfirmDelete}
             loading={submitting}
           >
-            删除
+            {t('common:delete')}
           </Button>
         </Group>
       </Modal>
@@ -691,7 +855,7 @@ function RouteComponent() {
       <Drawer
         opened={openedView}
         onClose={closeView}
-        title="公司详情"
+        title={t('company:companyDetails')}
         size="md"
         position="right"
       >
@@ -699,7 +863,69 @@ function RouteComponent() {
           <Stack gap="md">
             <div>
               <Text size="sm" c="dimmed">
-                公司名称
+                {t('company:companyId')}
+              </Text>
+              <Group gap="xs">
+                <Text
+                  size="md"
+                  fw={500}
+                  title={viewingCompany.id}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() =>
+                    navigator.clipboard.writeText(viewingCompany.id)
+                  }
+                >
+                  {viewingCompany.id.slice(0, 12)}...
+                </Text>
+                <ActionIcon
+                  size="xs"
+                  variant="subtle"
+                  onClick={() => {
+                    navigator.clipboard.writeText(viewingCompany.id);
+                    showNotification({
+                      color: 'green',
+                      message: t('company:copiedToClipboard'),
+                    });
+                  }}
+                >
+                  <div className="i-mdi:content-copy" />
+                </ActionIcon>
+              </Group>
+            </div>
+            <div>
+              <Text size="sm" c="dimmed">
+                {t('company:sourceRecordId')}
+              </Text>
+              <Group gap="xs">
+                <Text
+                  size="md"
+                  title={viewingCompany.source_record_id}
+                  style={{ wordBreak: 'break-all' }}
+                >
+                  {viewingCompany.source_record_id || '-'}
+                </Text>
+                {viewingCompany.source_record_id && (
+                  <ActionIcon
+                    size="xs"
+                    variant="subtle"
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        viewingCompany.source_record_id!
+                      );
+                      showNotification({
+                        color: 'green',
+                        message: t('company:copiedToClipboard'),
+                      });
+                    }}
+                  >
+                    <div className="i-mdi:content-copy" />
+                  </ActionIcon>
+                )}
+              </Group>
+            </div>
+            <div>
+              <Text size="sm" c="dimmed">
+                {t('company:name')}
               </Text>
               <Text size="lg" fw={500}>
                 {viewingCompany.name || '-'}
@@ -709,36 +935,36 @@ function RouteComponent() {
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  平台
+                  {t('company:platform')}
                 </Text>
                 <Text size="md">{viewingCompany.platform || '-'}</Text>
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  行业
+                  {t('company:industry')}
                 </Text>
                 <Text size="md">{viewingCompany.industry || '-'}</Text>
               </div>
             </Group>
             <div>
               <Text size="sm" c="dimmed">
-                公司简介
+                {t('company:companyDescription')}
               </Text>
               <Text size="md" style={{ whiteSpace: 'pre-wrap' }}>
                 {viewingCompany.desc || '-'}
               </Text>
             </div>
-            <Divider label="工商信息" labelPosition="left" />
+            <Divider label={t('company:businessInfo')} labelPosition="left" />
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  法定代表人
+                  {t('company:legalPerson')}
                 </Text>
                 <Text size="md">{viewingCompany.legal_person || '-'}</Text>
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  统一社会信用代码
+                  {t('company:unifiedCode')}
                 </Text>
                 <Text size="md">{viewingCompany.unified_code || '-'}</Text>
               </div>
@@ -746,7 +972,7 @@ function RouteComponent() {
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  注册资本
+                  {t('company:registeredCapital')}
                 </Text>
                 <Text size="md">
                   {viewingCompany.reg_capital_value
@@ -758,52 +984,66 @@ function RouteComponent() {
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  营业执照号
+                  {t('company:paidinCapital')}
+                </Text>
+                <Text size="md">
+                  {viewingCompany.paidin_capital_value
+                    ? `${viewingCompany.paidin_capital_value} ${
+                        viewingCompany.paidin_capital_currency || ''
+                      }`
+                    : '-'}
+                </Text>
+              </div>
+            </Group>
+            <Group grow>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('company:businessLicense')}
                 </Text>
                 <Text size="md">{viewingCompany.license_number || '-'}</Text>
               </div>
             </Group>
             <div>
               <Text size="sm" c="dimmed">
-                税务登记号
+                {t('company:taxNo')}
               </Text>
               <Text size="md">{viewingCompany.tax_no || '-'}</Text>
             </div>
             <div>
               <Text size="sm" c="dimmed">
-                成立日期
+                {t('company:establishmentDate')}
               </Text>
               <Text size="md">{viewingCompany.start_date || '-'}</Text>
             </div>
             <div>
               <Text size="sm" c="dimmed">
-                公司状态
+                {t('company:status')}
               </Text>
               <Text size="md">{viewingCompany.status || '-'}</Text>
             </div>
             <div>
               <Text size="sm" c="dimmed">
-                经营范围
+                {t('company:businessScope')}
               </Text>
               <Text size="md">{viewingCompany.scope || '-'}</Text>
             </div>
-            <Divider label="地址信息" labelPosition="left" />
+            <Divider label={t('company:addressInfo')} labelPosition="left" />
             <div>
               <Text size="sm" c="dimmed">
-                公司地址
+                {t('company:companyAddress')}
               </Text>
               <Text size="md">{viewingCompany.address || '-'}</Text>
             </div>
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  经度
+                  {t('company:longitude')}
                 </Text>
                 <Text size="md">{viewingCompany.longitude || '-'}</Text>
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  纬度
+                  {t('company:latitude')}
                 </Text>
                 <Text size="md">{viewingCompany.latitude || '-'}</Text>
               </div>
@@ -818,31 +1058,31 @@ function RouteComponent() {
                 height={250}
               />
             )}
-            <Divider label="风险信息" labelPosition="left" />
+            <Divider label={t('company:riskInfo')} labelPosition="left" />
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  社保人数
+                  {t('company:insuranceNum')}
                 </Text>
                 <Text size="md">{viewingCompany.insurance_num || '-'}</Text>
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  自身风险
+                  {t('company:selfRisk')}
                 </Text>
                 <Text size="md">{viewingCompany.self_risk || '-'}</Text>
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  关联风险
+                  {t('company:unionRisk')}
                 </Text>
                 <Text size="md">{viewingCompany.union_risk || '-'}</Text>
               </div>
             </Group>
-            <Divider label="联系方式" labelPosition="left" />
+            <Divider label={t('company:contactInfo')} labelPosition="left" />
             <div>
               <Text size="sm" c="dimmed">
-                官网
+                {t('company:officialWebsite')}
               </Text>
               {viewingCompany.web_site ? (
                 <Text size="md" c="blue">
@@ -860,7 +1100,7 @@ function RouteComponent() {
             </div>
             <div>
               <Text size="sm" c="dimmed">
-                公司链接
+                {t('company:companyLink')}
               </Text>
               {viewingCompany.source_url ? (
                 <Text size="md" c="blue" style={{ wordBreak: 'break-all' }}>
@@ -876,11 +1116,11 @@ function RouteComponent() {
                 <Text size="md">-</Text>
               )}
             </div>
-            <Divider label="时间信息" labelPosition="left" />
+            <Divider label={t('company:timeInfo')} labelPosition="left" />
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  数据来源更新时间
+                  {t('company:sourceRefreshTime')}
                 </Text>
                 <Text size="md">
                   {viewingCompany.source_refresh_datetime
@@ -888,9 +1128,11 @@ function RouteComponent() {
                     .replace('T', ' ') || '-'}
                 </Text>
               </div>
+            </Group>
+            <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  创建时间
+                  {t('company:createTime')}
                 </Text>
                 <Text size="md">
                   {viewingCompany.create_datetime
@@ -900,7 +1142,7 @@ function RouteComponent() {
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  更新时间
+                  {t('company:updateTime')}
                 </Text>
                 <Text size="md">
                   {viewingCompany.update_datetime

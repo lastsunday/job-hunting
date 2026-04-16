@@ -18,10 +18,9 @@
   "pleaseEnterJobName": "请输入职位名称",
   "pleaseEnterLocation": "请输入工作地点",
   "confirmDelete": "确认删除",
-  "confirmDeleteMessage": "确定要删除职位 \"{name}\" 吗？此操作不可恢复。",
+  "confirmDeleteMessage": "确定要删除职位 \"{{name}}\" 吗？此操作不可恢复。",
   "companyName": "公司名称",
   "jobDescription": "职位描述",
-  "jobUrl": "职位URL",
   "platform": "平台",
   "skillTag": "技能标签",
   "welfareTag": "福利标签",
@@ -31,6 +30,7 @@
   "latitude": "纬度",
   "yearValue": "{{year, number}}年",
   "jobNo": "职位编号",
+  "serialNumber": "序号",
   "noCoords": "暂无坐标信息",
   "salaryInfo": "薪资信息",
   "salaryMin": "最低薪资",
@@ -49,5 +49,7 @@
   "timeInfo": "时间信息",
   "createTime": "创建时间",
   "updateTime": "更新时间",
-  "yearUnit": "年"
+  "yearUnit": "年",
+  "copiedToClipboard": "已复制到剪贴板",
+  "perPage": "条/页"
 }

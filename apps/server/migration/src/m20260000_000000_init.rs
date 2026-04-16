@@ -84,7 +84,7 @@ impl MigrationTrait for Migration {
                     .col(string_null(Job::WelfareTag))
                     .col(timestamp_with_time_zone_null(Job::FirstScanDatetime))
                     .col(string_null(Job::Uri))
-                    .col(timestamp_with_time_zone_null(JobSource::PublishDatetime))
+                    .col(timestamp_with_time_zone_null(Job::PublishDatetime))
                     .primary_key(Index::create().name("pk-job-id").col(Job::Id))
                     .to_owned(),
             )

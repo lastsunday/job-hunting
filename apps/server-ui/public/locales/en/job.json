@@ -18,7 +18,7 @@
   "pleaseEnterJobName": "Please enter job name",
   "pleaseEnterLocation": "Please enter location",
   "confirmDelete": "Confirm Delete",
-  "confirmDeleteMessage": "Are you sure you want to delete job \"{name}\"? This action cannot be undone.",
+  "confirmDeleteMessage": "Are you sure you want to delete job \"{{name}}\"? This action cannot be undone.",
   "companyName": "Company Name",
   "jobDescription": "Job Description",
   "jobUrl": "Job URL",
@@ -31,6 +31,7 @@
   "latitude": "Latitude",
   "yearValue": "{{year, number}} years",
   "jobNo": "Job No.",
+  "serialNumber": "No.",
   "noCoords": "No coordinate info",
   "salaryInfo": "Salary Info",
   "salaryMin": "Min Salary",
@@ -49,5 +50,7 @@
   "timeInfo": "Time Info",
   "createTime": "Create Time",
   "updateTime": "Update Time",
-  "yearUnit": "years"
+  "yearUnit": "years",
+  "copiedToClipboard": "Copied to clipboard",
+  "perPage": "/page"
 }

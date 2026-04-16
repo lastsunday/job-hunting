@@ -20,6 +20,7 @@ import {
   ScrollArea,
   Badge as MapBadge,
   Select,
+  ActionIcon,
 } from '@mantine/core';
 import classes from './jobs.module.css';
 import { useDisclosure } from '@mantine/hooks';
@@ -318,6 +319,7 @@ function RouteComponent() {
               <Table>
                 <Table.Thead>
                   <Table.Tr>
+                    <Table.Th>{t('job:serialNumber')}</Table.Th>
                     <Table.Th>{t('job:jobNo')}</Table.Th>
                     <Table.Th>{t('job:name')}</Table.Th>
                     <Table.Th>{t('job:company')}</Table.Th>
@@ -331,11 +333,137 @@ function RouteComponent() {
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {jobs.map((job) => (
+                  {jobs.map((job, index) => (
                     <Table.Tr key={job.id}>
-                      <Table.Td>{job.id}</Table.Td>
-                      <Table.Td>{job.name}</Table.Td>
-                      <Table.Td>{job.company_name}</Table.Td>
+                      <Table.Td>{(page - 1) * pageSize + index + 1}</Table.Td>
+                      <Table.Td>
+                        <Text
+                          size="sm"
+                          title={job.id}
+                          style={{ cursor: 'pointer', display: 'inline' }}
+                          onClick={() => {
+                            navigator.clipboard.writeText(job.id);
+                            showNotification({
+                              color: 'green',
+                              message: t('job:copiedToClipboard', {
+                                message: t('job:copiedToClipboard'),
+                              }),
+                            });
+                          }}
+                        >
+                          {job.id.slice(0, 8)}...
+                        </Text>
+                        <ActionIcon
+                          size="xs"
+                          variant="subtle"
+                          style={{ display: 'inline', verticalAlign: 'middle' }}
+                          onClick={() => {
+                            navigator.clipboard.writeText(job.id);
+                            showNotification({
+                              color: 'green',
+                              message: t('job:copiedToClipboard', {
+                                message: t('job:copiedToClipboard'),
+                              }),
+                            });
+                          }}
+                        >
+                          <div className="i-mdi:content-copy" />
+                        </ActionIcon>
+                      </Table.Td>
+                      <Table.Td>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            maxWidth: '180px',
+                          }}
+                        >
+                          <Text
+                            size="sm"
+                            title={job.name}
+                            style={{
+                              cursor: 'pointer',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              flex: 1,
+                            }}
+                            onClick={() => {
+                              if (job.name) {
+                                navigator.clipboard.writeText(job.name);
+                                showNotification({
+                                  color: 'green',
+                                  message: t('job:copiedToClipboard', {
+                                    message: t('job:copiedToClipboard'),
+                                  }),
+                                });
+                              }
+                            }}
+                          >
+                            {job.name || '-'}
+                          </Text>
+                          {job.name && (
+                            <ActionIcon
+                              size="xs"
+                              variant="subtle"
+                              style={{
+                                flexShrink: 0,
+                              }}
+                              onClick={() => {
+                                navigator.clipboard.writeText(job.name!);
+                                showNotification({
+                                  color: 'green',
+                                  message: t('job:copiedToClipboard', {
+                                    message: t('job:copiedToClipboard'),
+                                  }),
+                                });
+                              }}
+                            >
+                              <div className="i-mdi:content-copy" />
+                            </ActionIcon>
+                          )}
+                        </div>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text
+                          size="sm"
+                          style={{ cursor: 'pointer', display: 'inline' }}
+                          onClick={() => {
+                            if (job.company_name) {
+                              navigator.clipboard.writeText(job.company_name);
+                              showNotification({
+                                color: 'green',
+                                message: t('job:copiedToClipboard', {
+                                  message: t('job:copiedToClipboard'),
+                                }),
+                              });
+                            }
+                          }}
+                        >
+                          {job.company_name || '-'}
+                        </Text>
+                        {job.company_name && (
+                          <ActionIcon
+                            size="xs"
+                            variant="subtle"
+                            style={{
+                              display: 'inline',
+                              verticalAlign: 'middle',
+                            }}
+                            onClick={() => {
+                              navigator.clipboard.writeText(job.company_name!);
+                              showNotification({
+                                color: 'green',
+                                message: t('job:copiedToClipboard', {
+                                  message: t('job:copiedToClipboard'),
+                                }),
+                              });
+                            }}
+                          >
+                            <div className="i-mdi:content-copy" />
+                          </ActionIcon>
+                        )}
+                      </Table.Td>
                       <Table.Td>{job.address || job.location_name}</Table.Td>
                       <Table.Td>{job.degree_name || '-'}</Table.Td>
                       <Table.Td>
@@ -459,11 +587,11 @@ function RouteComponent() {
                     value={String(pageSize)}
                     onChange={handlePageSizeChange}
                     data={[
-                      { value: '50', label: '50/页' },
-                      { value: '100', label: '100/页' },
-                      { value: '200', label: '200/页' },
-                      { value: '500', label: '500/页' },
-                      { value: '1000', label: '1000/页' },
+                      { value: '50', label: `50 ${t('job:perPage')}` },
+                      { value: '100', label: `100 ${t('job:perPage')}` },
+                      { value: '200', label: `200 ${t('job:perPage')}` },
+                      { value: '500', label: `500 ${t('job:perPage')}` },
+                      { value: '1000', label: `1000 ${t('job:perPage')}` },
                     ]}
                     style={{ width: 100 }}
                     size="sm"
@@ -520,11 +648,11 @@ function RouteComponent() {
               value={String(pageSize)}
               onChange={handlePageSizeChange}
               data={[
-                { value: '50', label: '50/页' },
-                { value: '100', label: '100/页' },
-                { value: '200', label: '200/页' },
-                { value: '500', label: '500/页' },
-                { value: '1000', label: '1000/页' },
+                { value: '50', label: `50 ${t('job:perPage')}` },
+                { value: '100', label: `100 ${t('job:perPage')}` },
+                { value: '200', label: `200 ${t('job:perPage')}` },
+                { value: '500', label: `500 ${t('job:perPage')}` },
+                { value: '1000', label: `1000 ${t('job:perPage')}` },
               ]}
               style={{ width: 100 }}
               size="sm"

@@ -375,7 +375,7 @@ pub struct JobHeaderMapping {
     pub update_datetime: Option<usize>,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct CompanyHeaderMapping {
     pub name: Option<usize>,
     pub description: Option<usize>,

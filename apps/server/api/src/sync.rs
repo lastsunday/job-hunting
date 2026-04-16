@@ -74,11 +74,10 @@ pub(crate) async fn import_file(
             JobImporter::import(conn(&state), rows, uri.as_str()).await
         }
         "company" => {
-            todo!();
-            // let rows = FileParser::parse_excel(&data).map_err(|e| {
-            //     framework::error::ApiError::Biz(format!("parse excel failure: {}", e))
-            // })?;
-            // CompanyImporter::import(conn(&state), rows, username).await
+            let rows = FileParser::parse_excel(&data).map_err(|e| {
+                framework::error::ApiError::Biz(format!("parse excel failure: {}", e))
+            })?;
+            CompanyImporter::import(conn(&state), rows, uri.as_str()).await
         }
         _ => {
             return Err(framework::error::ApiError::Validation(
