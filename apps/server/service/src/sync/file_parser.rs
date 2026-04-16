@@ -2,6 +2,8 @@ use std::io::Cursor;
 
 use calamine::{Reader, Sheets, open_workbook_auto_from_rs};
 
+use crate::util::gen_bytes_sha256;
+
 const HEADER_VERSION_PREFIX: &str = "__VERSION_";
 
 pub struct FileParser;
@@ -31,6 +33,10 @@ impl FileParser {
         }
 
         Ok(result)
+    }
+
+    pub fn gen_file_sha256(value: &Vec<u8>) -> String {
+        gen_bytes_sha256(value)
     }
 
     fn cell_to_string(cell: &calamine::Data) -> String {

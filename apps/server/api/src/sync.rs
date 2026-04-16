@@ -64,14 +64,14 @@ pub(crate) async fn import_file(
     let data = base64::engine::general_purpose::STANDARD
         .decode(&param.file)
         .map_err(|e| framework::error::ApiError::Validation(format!("Invalid file data: {}", e)))?;
-
-    let username = principal.name.as_str();
+    let hash = FileParser::gen_file_sha256(&data);
+    let uri = format!("data://{}@system/{}", principal.name, hash);
     let result = match param.data_type.as_str() {
         "job" => {
             let rows = FileParser::parse_excel(&data).map_err(|e| {
                 framework::error::ApiError::Biz(format!("parse excel failure: {}", e))
             })?;
-            JobImporter::import(conn(&state), rows, username).await
+            JobImporter::import(conn(&state), rows, uri.as_str()).await
         }
         "company" => {
             todo!();

@@ -48,7 +48,8 @@ sequenceDiagram
 
 > 参考：[RFC 3986](https://www.rfc-editor.org/rfc/rfc3986.html)
 
-格式：`data://[username[@]]host/path`
+第三方数据来源格式：`data://[username[@]]host/path`
+本地文件导入数据来源格式：`data://[username[@]]system/[file_hash]`
 
 字段说明：
 
@@ -59,8 +60,7 @@ sequenceDiagram
 ```txt
 data://lastsunday@github.com/lastsunday/job-hunting-data/blob/main/2026/03-03/job.zip
 data://lastsunday@github.com/lastsunday/job-hunting-data/blob/main/2024/12-20/company.zip
-data://lastsunday@aiqicha.baidu.com/company_detail_19146183042612
-data://admin@system
+data://admin@system/c38036efd481b06a5b0a4292ac7dfbcfb93e9eb0d1c4de0aef0f4d685cf6b3a9
 ```
 
 ### 职位相关表

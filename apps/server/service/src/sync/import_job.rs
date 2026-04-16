@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use chrono::{DateTime, FixedOffset, Utc};
+use chrono::{DateTime, FixedOffset, TimeZone, Utc};
 use entity::job::{ActiveModel as JobActiveModel, Entity as Job};
 use entity::job_source::{
     ActiveModel as JobSourceActiveModel, Entity as JobSource, Model as JobSourceModel,
@@ -77,7 +77,7 @@ impl JobImporter {
     pub async fn import(
         conn: &DatabaseConnection,
         data: Vec<Vec<String>>,
-        username: &str,
+        uri: &str,
     ) -> Result<ImportResult, Box<dyn std::error::Error>> {
         let start_time = std::time::Instant::now();
 
@@ -134,8 +134,7 @@ impl JobImporter {
         // 根据文件的rows构建job source列表
         for row in rows {
             let job_id = Self::get_field_value(&mapping.job_id, row);
-            let uri = format!("data://{}@system", username);
-            let job_source_id = Self::gen_job_source_id(job_id.as_str(), uri.as_str());
+            let job_source_id = Self::gen_job_source_id(job_id.as_str(), uri);
             job_ids_from_data.insert(job_source_id.clone());
             job_source_map.insert(
                 job_source_id.clone(),
@@ -145,7 +144,7 @@ impl JobImporter {
                     &mapping,
                     row,
                     &now,
-                    uri.as_str(),
+                    uri,
                 )?,
             );
         }
@@ -337,7 +336,7 @@ impl JobImporter {
                 if text.is_empty() {
                     ActiveValue::set(None)
                 } else {
-                    ActiveValue::set(Some(DateTime::parse_from_rfc3339(text.as_str())?))
+                    ActiveValue::set(Some(Self::parse_datetime(text.as_str())?))
                 }
             },
             boss_name: ActiveValue::set(Some(Self::get_field_value(&mapping.boss_name, row))),
@@ -355,11 +354,11 @@ impl JobImporter {
             ))),
             skill_tag: ActiveValue::set(Some(Self::get_field_value(&mapping.skill_tag, row))),
             welfare_tag: ActiveValue::set(Some(Self::get_field_value(&mapping.welfare_tag, row))),
-            first_scan_datetime: ActiveValue::set(Some(DateTime::parse_from_rfc3339(
+            first_scan_datetime: ActiveValue::set(Some(Self::parse_datetime(
                 Self::get_field_value(&mapping.create_datetime, row).as_str(),
             )?)),
             uri: ActiveValue::set(Some(uri.to_string())),
-            publish_datetime: ActiveValue::set(Some(DateTime::parse_from_rfc3339(
+            publish_datetime: ActiveValue::set(Some(Self::parse_datetime(
                 Self::get_field_value(&mapping.update_datetime, row).as_str(),
             )?)),
             create_datetime: ActiveValue::set(Some(*now)),
@@ -393,7 +392,7 @@ impl JobImporter {
             salary_min: ActiveValue::set(source.salary_min),
             salary_max: ActiveValue::set(source.salary_max),
             salary_total_month: ActiveValue::set(source.salary_total_month),
-            first_publish_datetime: ActiveValue::set(source.first_publish_datetime.clone()),
+            first_publish_datetime: ActiveValue::set(source.first_publish_datetime),
             boss_name: ActiveValue::set(source.boss_name.clone()),
             boss_company_name: ActiveValue::set(source.boss_company_name.clone()),
             boss_position: ActiveValue::set(source.boss_position.clone()),
@@ -402,9 +401,9 @@ impl JobImporter {
             is_full_company_name: ActiveValue::set(source.is_full_company_name),
             skill_tag: ActiveValue::set(source.skill_tag.clone()),
             welfare_tag: ActiveValue::set(source.welfare_tag.clone()),
-            first_scan_datetime: ActiveValue::set(source.first_scan_datetime.clone()),
+            first_scan_datetime: ActiveValue::set(source.first_scan_datetime),
             uri: ActiveValue::set(source.uri.clone()),
-            publish_datetime: ActiveValue::set(source.publish_datetime.clone()),
+            publish_datetime: ActiveValue::set(source.publish_datetime),
         })
     }
 
@@ -426,5 +425,14 @@ impl JobImporter {
             "否" | "false" | "0" => Some(false),
             _ => None,
         }
+    }
+
+    fn parse_datetime(s: &str) -> Result<DateTime<FixedOffset>, Box<dyn std::error::Error>> {
+        if let Ok(dt) = DateTime::parse_from_rfc3339(s) {
+            return Ok(dt);
+        }
+        let naive = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")?;
+        let offset = FixedOffset::east_opt(0).unwrap();
+        Ok(offset.from_utc_datetime(&naive))
     }
 }

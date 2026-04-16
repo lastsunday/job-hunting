@@ -896,108 +896,108 @@ sequenceDiagram
 
 #### 职位
 
-| 字段           | 类型     | 生效版本 |
-| -------------- | -------- | -------- |
-| 职位自编号     | string   | 0        |
-| 发布平台       | string   | 0        |
-| 职位访问地址   | string   | 0        |
-| 职位           | string   | 0        |
-| 公司           | string   | 0        |
-| 公司是否为全称 | bool     | 0        |
-| 地区           | string   | 0        |
-| 地址           | string   | 0        |
-| 经度           | number   | 0        |
-| 纬度           | number   | 0        |
-| 职位描述       | string   | 0        |
-| 学历           | string   | 0        |
-| 所需经验       | string   | 0        |
-| 技能           | string   | 1        |
-| 福利           | string   | 1        |
-| 最低薪资       | number   | 0        |
-| 最高薪资       | number   | 0        |
-| 首次发布时间   | datetime | 0        |
-| 招聘人         | string   | 0        |
-| 招聘公司       | string   | 0        |
-| 招聘者职位     | string   | 0        |
-| 首次扫描日期   | datetime | 0        |
-| 记录更新日期   | datetime | 0        |
+| 字段           | 类型     | 生效版本 | 格式                        |
+| -------------- | -------- | -------- | --------------------------- |
+| 职位自编号     | string   | 0        |                             |
+| 发布平台       | string   | 0        |                             |
+| 职位访问地址   | string   | 0        |                             |
+| 职位           | string   | 0        |                             |
+| 公司           | string   | 0        |                             |
+| 公司是否为全称 | bool     | 0        |                             |
+| 地区           | string   | 0        |                             |
+| 地址           | string   | 0        |                             |
+| 经度           | number   | 0        |                             |
+| 纬度           | number   | 0        |                             |
+| 职位描述       | string   | 0        |                             |
+| 学历           | string   | 0        |                             |
+| 所需经验       | string   | 0        |                             |
+| 技能           | string   | 1        |                             |
+| 福利           | string   | 1        |                             |
+| 最低薪资       | number   | 0        |                             |
+| 最高薪资       | number   | 0        |                             |
+| 首次发布时间   | datetime | 0        | rfc3339/yyyy-MM-dd HH:mm:ss |
+| 招聘人         | string   | 0        |                             |
+| 招聘公司       | string   | 0        |                             |
+| 招聘者职位     | string   | 0        |                             |
+| 首次扫描日期   | datetime | 0        | rfc3339/yyyy-MM-dd HH:mm:ss |
+| 记录更新日期   | datetime | 0        | rfc3339/yyyy-MM-dd HH:mm:ss |
 
 #### 职位标签
 
-| 字段         | 类型     | 生效版本 |
-| ------------ | -------- | -------- |
-| 职位编号     | string   | 0        |
-| 标签         | string   | 0        |
-| 记录更新日期 | datetime | 1        |
+| 字段         | 类型     | 生效版本 | 格式                        |
+| ------------ | -------- | -------- | --------------------------- |
+| 职位编号     | string   | 0        |                             |
+| 标签         | string   | 0        |                             |
+| 记录更新日期 | datetime | 1        | rfc3339/yyyy-MM-dd HH:mm:ss |
 
 #### 职位公开数据
 
-| 字段         | 类型     | 生效版本 |
-| ------------ | -------- | -------- |
-| 职位自编号   | string   | 0        |
-| 首次扫描日期 | datetime | 0        |
-| 记录更新日期 | datetime | 0        |
+| 字段         | 类型     | 生效版本 | 格式                        |
+| ------------ | -------- | -------- | --------------------------- |
+| 职位自编号   | string   | 0        |                             |
+| 首次扫描日期 | datetime | 0        | rfc3339/yyyy-MM-dd HH:mm:ss |
+| 记录更新日期 | datetime | 0        | rfc3339/yyyy-MM-dd HH:mm:ss |
 
 #### 职位快照
 
-| 字段     | 类型     | 生效版本 |
-| -------- | -------- | -------- |
-| 编号     | string   | 0        |
-| 职位编号 | string   | 0        |
-| 职位链接 | string   | 0        |
-| 内容     | string   | 0        |
-| 招聘平台 | string   | 0        |
-| 创建日期 | datetime | 0        |
-| 更新日期 | datetime | 0        |
+| 字段     | 类型     | 生效版本 | 格式                        |
+| -------- | -------- | -------- | --------------------------- |
+| 编号     | string   | 0        |                             |
+| 职位编号 | string   | 0        |                             |
+| 职位链接 | string   | 0        |                             |
+| 内容     | string   | 0        |                             |
+| 招聘平台 | string   | 0        |                             |
+| 创建日期 | datetime | 0        | rfc3339/yyyy-MM-dd HH:mm:ss |
+| 更新日期 | datetime | 0        | rfc3339/yyyy-MM-dd HH:mm:ss |
 
 #### 公司
 
-| 字段             | 类型     | 生效版本 |
-| ---------------- | -------- | -------- |
-| 公司             | string   | 0        |
-| 公司描述         | string   | 0        |
-| 成立时间         | string   | 0        |
-| 经营状态         | string   | 0        |
-| 法人             | string   | 0        |
-| 统一社会信用代码 | string   | 0        |
-| 官网             | string   | 0        |
-| 社保人数         | number   | 0        |
-| 自身风险数       | number   | 0        |
-| 关联风险数       | number   | 0        |
-| 地址             | string   | 0        |
-| 经营范围         | string   | 0        |
-| 纳税人识别号     | string   | 0        |
-| 所属行业         | string   | 0        |
-| 工商注册号       | string   | 0        |
-| 经度             | number   | 0        |
-| 纬度             | number   | 0        |
-| 注册资本         | string   | 2        |
-| 注册资本货币     | string   | 2        |
-| 数据来源地址     | string   | 0        |
-| 数据来源平台     | string   | 0        |
-| 数据来源记录编号 | string   | 0        |
-| 数据来源更新时间 | datetime | 0        |
-| 记录创建日期     | datetime | 1        |
-| 记录更新日期     | datetime | 1        |
+| 字段             | 类型     | 生效版本 | 格式                        |
+| ---------------- | -------- | -------- | --------------------------- |
+| 公司             | string   | 0        |                             |
+| 公司描述         | string   | 0        |                             |
+| 成立时间         | string   | 0        |                             |
+| 经营状态         | string   | 0        |                             |
+| 法人             | string   | 0        |                             |
+| 统一社会信用代码 | string   | 0        |                             |
+| 官网             | string   | 0        |                             |
+| 社保人数         | number   | 0        |                             |
+| 自身风险数       | number   | 0        |                             |
+| 关联风险数       | number   | 0        |                             |
+| 地址             | string   | 0        |                             |
+| 经营范围         | string   | 0        |                             |
+| 纳税人识别号     | string   | 0        |                             |
+| 所属行业         | string   | 0        |                             |
+| 工商注册号       | string   | 0        |                             |
+| 经度             | number   | 0        |                             |
+| 纬度             | number   | 0        |                             |
+| 注册资本         | string   | 2        |                             |
+| 注册资本货币     | string   | 2        |                             |
+| 数据来源地址     | string   | 0        |                             |
+| 数据来源平台     | string   | 0        |                             |
+| 数据来源记录编号 | string   | 0        |                             |
+| 数据来源更新时间 | datetime | 0        | rfc3339/yyyy-MM-dd HH:mm:ss |
+| 记录创建日期     | datetime | 1        | rfc3339/yyyy-MM-dd HH:mm:ss |
+| 记录更新日期     | datetime | 1        | rfc3339/yyyy-MM-dd HH:mm:ss |
 
 #### 公司标签
 
-| 字段         | 类型     | 生效版本 |
-| ------------ | -------- | -------- |
-| 公司         | string   | 0        |
-| 标签         | string   | 0        |
-| 记录更新日期 | datetime | 1        |
+| 字段         | 类型     | 生效版本 | 格式                        |
+| ------------ | -------- | -------- | --------------------------- |
+| 公司         | string   | 0        |                             |
+| 标签         | string   | 0        |                             |
+| 记录更新日期 | datetime | 1        | rfc3339/yyyy-MM-dd HH:mm:ss |
 
 #### 公司评论
 
-| 字段     | 类型     | 生效版本 |
-| -------- | -------- | -------- |
-| 公司     | string   | 0        |
-| 评论     | string   | 0        |
-| 情感     | string   | 1        |
-| 数据集   | string   | 1        |
-| 创建日期 | datetime | 1        |
-| 更新日期 | datetime | 1        |
+| 字段     | 类型     | 生效版本 | 格式                        |
+| -------- | -------- | -------- | --------------------------- |
+| 公司     | string   | 0        |                             |
+| 评论     | string   | 0        |                             |
+| 情感     | string   | 1        |                             |
+| 数据集   | string   | 1        |                             |
+| 创建日期 | datetime | 1        | rfc3339/yyyy-MM-dd HH:mm:ss |
+| 更新日期 | datetime | 1        | rfc3339/yyyy-MM-dd HH:mm:ss |
 
 ## 数据导入与导出
 
