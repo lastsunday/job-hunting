@@ -36,6 +36,7 @@
   "businessInfo": "Business Info",
   "unifiedCode": "Unified Credit Code",
   "paidinCapital": "Paid-in Capital",
+  "paidinCapitalCurrency": "Paid-in Capital Currency",
   "businessLicense": "Business License",
   "sourceRecordId": "Source Record ID",
   "taxNo": "Tax Registration No.",
@@ -48,6 +49,7 @@
   "contactInfo": "Contact",
   "timeInfo": "Time Info",
   "sourceRefreshTime": "Source Refresh Time",
+  "sourcePlatform": "Source Platform",
   "createTime": "Create Time",
   "updateTime": "Update Time",
   "cancel": "Cancel",
@@ -55,5 +57,11 @@
   "update": "Update",
   "create": "Create",
   "copiedToClipboard": "Copied to clipboard",
-  "perPage": "/page"
+  "perPage": "/page",
+  "loadError": "Failed to load companies",
+  "createSuccess": "Company created successfully",
+  "updateSuccess": "Company updated successfully",
+  "deleteSuccess": "Company deleted successfully",
+  "operationFailed": "Operation failed",
+  "loadFailed": "Load failed"
 }

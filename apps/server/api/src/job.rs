@@ -1,11 +1,27 @@
+use framework::prelude::*;
+
+#[error]
+pub enum JobErrorCode {
+    TitleRequired = 402001,
+    UrlRequired = 402002,
+    CompanyNameRequired = 402003,
+}
+
 use crate::AppState;
-use axum::{debug_handler, extract::State, extract::Path};
+use anyhow::anyhow;
+use axum::{debug_handler, extract::Extension, extract::Path, extract::State};
 use entity::job::{self, Entity as Job};
 use framework::{
+    auth::Principal,
     data::{ApiPageResult, ApiResponse, PageParam, valid::ValidJson},
-    error::ApiResult,
+    error::{ApiError, ApiResult, FrameworkErrorCode},
+    middleware::get_auth_layer,
 };
-use sea_orm::{ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait, ActiveValue::Set};
+use sea_orm::{
+    ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait,
+};
+use service::sync::{FileParser, JobImporter};
+use service::util::hash::gen_add_or_update_uri;
 use utoipa::ToSchema;
 use utoipa_axum::{
     router::{OpenApiRouter, UtoipaMethodRouterExt},
@@ -14,13 +30,169 @@ use utoipa_axum::{
 
 const TAG: &str = "job";
 
+const JOB_CSV_VERSION: usize = 1;
+
+fn convert_job_to_csv_data(id: &str, param: &CreateJobRequest) -> Vec<Vec<String>> {
+    let headers = FileParser::get_job_headers(JOB_CSV_VERSION);
+    let row = vec![
+        id.to_string(),
+        param.platform.clone().unwrap_or_default(),
+        param.url.clone().unwrap_or_default(),
+        param.name.clone().unwrap_or_default(),
+        param.company_name.clone().unwrap_or_default(),
+        param.is_full_company_name.unwrap_or(false).to_string(),
+        param.location_name.clone().unwrap_or_default(),
+        param.address.clone().unwrap_or_default(),
+        param.longitude.map(|v| v.to_string()).unwrap_or_default(),
+        param.latitude.map(|v| v.to_string()).unwrap_or_default(),
+        param.description.clone().unwrap_or_default(),
+        param.degree_name.clone().unwrap_or_default(),
+        param.year.map(|v| v.to_string()).unwrap_or_default(),
+        param.skill_tag.clone().unwrap_or_default(),
+        param.welfare_tag.clone().unwrap_or_default(),
+        param.salary_min.map(|v| v.to_string()).unwrap_or_default(),
+        param.salary_max.map(|v| v.to_string()).unwrap_or_default(),
+        param
+            .first_publish_datetime
+            .map(|v| v.to_rfc3339())
+            .unwrap_or_default(),
+        param.boss_name.clone().unwrap_or_default(),
+        param.boss_company_name.clone().unwrap_or_default(),
+        param.boss_position.clone().unwrap_or_default(),
+        String::new(),
+        String::new(),
+    ];
+    vec![headers, row]
+}
+
+fn convert_update_job_to_csv_data(
+    id: &str,
+    param: &UpdateJobRequest,
+    existing: &job::Model,
+) -> Vec<Vec<String>> {
+    let headers = FileParser::get_job_headers(JOB_CSV_VERSION);
+    let row = vec![
+        id.to_string(),
+        param
+            .platform
+            .clone()
+            .or_else(|| existing.platform.clone())
+            .unwrap_or_default(),
+        param
+            .url
+            .clone()
+            .or_else(|| existing.url.clone())
+            .unwrap_or_default(),
+        param
+            .name
+            .clone()
+            .or_else(|| existing.name.clone())
+            .unwrap_or_default(),
+        param
+            .company_name
+            .clone()
+            .or_else(|| existing.company_name.clone())
+            .unwrap_or_default(),
+        param
+            .is_full_company_name
+            .or(existing.is_full_company_name)
+            .unwrap_or(false)
+            .to_string(),
+        param
+            .location_name
+            .clone()
+            .or_else(|| existing.location_name.clone())
+            .unwrap_or_default(),
+        param
+            .address
+            .clone()
+            .or_else(|| existing.address.clone())
+            .unwrap_or_default(),
+        param
+            .longitude
+            .or(existing.longitude)
+            .map(|v| v.to_string())
+            .unwrap_or_default(),
+        param
+            .latitude
+            .or(existing.latitude)
+            .map(|v| v.to_string())
+            .unwrap_or_default(),
+        param
+            .description
+            .clone()
+            .or_else(|| existing.description.clone())
+            .unwrap_or_default(),
+        param
+            .degree_name
+            .clone()
+            .or_else(|| existing.degree_name.clone())
+            .unwrap_or_default(),
+        param
+            .year
+            .or(existing.year)
+            .map(|v| v.to_string())
+            .unwrap_or_default(),
+        param
+            .skill_tag
+            .clone()
+            .or_else(|| existing.skill_tag.clone())
+            .unwrap_or_default(),
+        param
+            .welfare_tag
+            .clone()
+            .or_else(|| existing.welfare_tag.clone())
+            .unwrap_or_default(),
+        param
+            .salary_min
+            .or(existing.salary_min)
+            .map(|v| v.to_string())
+            .unwrap_or_default(),
+        param
+            .salary_max
+            .or(existing.salary_max)
+            .map(|v| v.to_string())
+            .unwrap_or_default(),
+        param
+            .first_publish_datetime
+            .or(existing.first_publish_datetime)
+            .map(|v| v.to_rfc3339())
+            .unwrap_or_default(),
+        param
+            .boss_name
+            .clone()
+            .or_else(|| existing.boss_name.clone())
+            .unwrap_or_default(),
+        param
+            .boss_company_name
+            .clone()
+            .or_else(|| existing.boss_company_name.clone())
+            .unwrap_or_default(),
+        param
+            .boss_position
+            .clone()
+            .or_else(|| existing.boss_position.clone())
+            .unwrap_or_default(),
+        existing
+            .first_scan_datetime
+            .map(|v| v.to_rfc3339())
+            .unwrap_or_default(),
+        chrono::Utc::now().to_rfc3339(),
+    ];
+    vec![headers, row]
+}
+
 pub fn create_routes(state: AppState) -> OpenApiRouter {
     OpenApiRouter::new()
         .routes(routes!(search).with_state(state.clone()))
         .routes(routes!(get_by_id).with_state(state.clone()))
         .routes(routes!(create).with_state(state.clone()))
         .routes(routes!(update).with_state(state.clone()))
-        .route("/job/{id}", axum::routing::delete(delete_job).with_state(state))
+        .route(
+            "/job/{id}",
+            axum::routing::delete(delete_job).with_state(state),
+        )
+        .route_layer(get_auth_layer())
 }
 
 #[debug_handler]
@@ -137,7 +309,7 @@ pub async fn get_by_id(
     let job = Job::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or_else(|| framework::error::ApiError::NotFound)?;
+        .ok_or(ApiError::Framework(FrameworkErrorCode::ResourceNotFound))?;
     Ok(ApiResponse::success(Some(job)))
 }
 
@@ -147,41 +319,21 @@ pub async fn get_by_id(
 ))]
 pub async fn create(
     State(AppState { conn }): State<AppState>,
+    Extension(principal): Extension<Principal>,
     ValidJson(param): ValidJson<CreateJobRequest>,
 ) -> ApiResult<ApiResponse<job::Model>> {
-    let now: chrono::DateTime<chrono::Utc> = chrono::Utc::now();
-    let active_model = job::ActiveModel {
-        id: Set(param.id.unwrap_or_else(|| xid::new().to_string())),
-        platform: Set(param.platform),
-        url: Set(param.url),
-        name: Set(param.name),
-        company_name: Set(param.company_name),
-        location_name: Set(param.location_name),
-        address: Set(param.address),
-        longitude: Set(param.longitude),
-        latitude: Set(param.latitude),
-        description: Set(param.description),
-        degree_name: Set(param.degree_name),
-        year: Set(param.year),
-        salary_min: Set(param.salary_min),
-        salary_max: Set(param.salary_max),
-        salary_total_month: Set(param.salary_total_month),
-        first_publish_datetime: Set(param.first_publish_datetime),
-        boss_name: Set(param.boss_name),
-        boss_company_name: Set(param.boss_company_name),
-        boss_position: Set(param.boss_position),
-        create_datetime: Set(Some(now.into())),
-        update_datetime: Set(Some(now.into())),
-        is_full_company_name: Set(param.is_full_company_name),
-        skill_tag: Set(param.skill_tag),
-        welfare_tag: Set(param.welfare_tag),
-        ..Default::default()
-    };
-    let result = Job::insert(active_model).exec(&conn).await?;
-    let job = Job::find_by_id(result.last_insert_id)
+    let job_id = param.id.clone().unwrap_or_else(|| xid::new().to_string());
+    let csv_data = convert_job_to_csv_data(&job_id, &param);
+    let uri = gen_add_or_update_uri(&principal.name, JOB_CSV_VERSION, &csv_data);
+
+    JobImporter::import(&conn, csv_data, &uri)
+        .await
+        .map_err(|e| ApiError::Internal(anyhow!("Import failed: {}", e)))?;
+
+    let job = Job::find_by_id(&job_id)
         .one(&conn)
         .await?
-        .ok_or_else(|| framework::error::ApiError::NotFound)?;
+        .ok_or(ApiError::from(JobErrorCode::TitleRequired))?;
     Ok(ApiResponse::success(Some(job)))
 }
 
@@ -191,45 +343,26 @@ pub async fn create(
 ))]
 pub async fn update(
     State(AppState { conn }): State<AppState>,
+    Extension(principal): Extension<Principal>,
     Path(id): Path<String>,
     ValidJson(param): ValidJson<UpdateJobRequest>,
 ) -> ApiResult<ApiResponse<job::Model>> {
     let existing = Job::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or_else(|| framework::error::ApiError::NotFound)?;
-    
-    let active_model = job::ActiveModel {
-        id: Set(id.clone()),
-        platform: Set(param.platform.or(existing.platform)),
-        url: Set(param.url.or(existing.url)),
-        name: Set(param.name.or(existing.name)),
-        company_name: Set(param.company_name.or(existing.company_name)),
-        location_name: Set(param.location_name.or(existing.location_name)),
-        address: Set(param.address.or(existing.address)),
-        longitude: Set(param.longitude.or(existing.longitude)),
-        latitude: Set(param.latitude.or(existing.latitude)),
-        description: Set(param.description.or(existing.description)),
-        degree_name: Set(param.degree_name.or(existing.degree_name)),
-        year: Set(param.year.or(existing.year)),
-        salary_min: Set(param.salary_min.or(existing.salary_min)),
-        salary_max: Set(param.salary_max.or(existing.salary_max)),
-        salary_total_month: Set(param.salary_total_month.or(existing.salary_total_month)),
-        first_publish_datetime: Set(param.first_publish_datetime.or(existing.first_publish_datetime)),
-        boss_name: Set(param.boss_name.or(existing.boss_name)),
-        boss_company_name: Set(param.boss_company_name.or(existing.boss_company_name)),
-        boss_position: Set(param.boss_position.or(existing.boss_position)),
-        update_datetime: Set(Some(chrono::Utc::now().into())),
-        is_full_company_name: Set(param.is_full_company_name.or(existing.is_full_company_name)),
-        skill_tag: Set(param.skill_tag.or(existing.skill_tag)),
-        welfare_tag: Set(param.welfare_tag.or(existing.welfare_tag)),
-        ..Default::default()
-    };
-    Job::update(active_model).exec(&conn).await?;
+        .ok_or(ApiError::from(JobErrorCode::TitleRequired))?;
+
+    let csv_data = convert_update_job_to_csv_data(&id, &param, &existing);
+    let uri = gen_add_or_update_uri(&principal.name, JOB_CSV_VERSION, &csv_data);
+
+    JobImporter::import(&conn, csv_data, &uri)
+        .await
+        .map_err(|e| ApiError::Internal(anyhow!("Import failed: {}", e)))?;
+
     let job = Job::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or_else(|| framework::error::ApiError::NotFound)?;
+        .ok_or(ApiError::Framework(FrameworkErrorCode::ResourceNotFound))?;
     Ok(ApiResponse::success(Some(job)))
 }
 
@@ -244,7 +377,7 @@ pub async fn delete_job(
     let job = Job::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or_else(|| framework::error::ApiError::NotFound)?;
+        .ok_or(ApiError::Framework(FrameworkErrorCode::ResourceNotFound))?;
     Job::delete(job.into_active_model()).exec(&conn).await?;
     Ok(ApiResponse::success(Some("Deleted".to_string())))
 }

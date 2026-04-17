@@ -1,3 +1,10 @@
+use framework::prelude::*;
+
+#[error]
+pub enum CompanyErrorCode {
+    NameRequired = 401001,
+}
+
 use crate::AppState;
 use axum::{debug_handler, extract::State, extract::Path};
 use entity::company::{self, Entity as Company};

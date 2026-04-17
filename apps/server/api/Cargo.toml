@@ -48,12 +48,15 @@ mime = { workspace = true }
 chrono = { workspace = true }
 testcontainers = { workspace = true }
 testcontainers-modules = { workspace = true, features = ["postgres", "gitea"] }
-base64 = "0.22"
+base64 = { workspace = true }
 entity = { path = "../entity" }
 migration = { path = "../migration" }
 service = { path = "../service" }
 framework = { path = "../framework" }
 web = { path = "../web" }
+framework-macros = { path = "../framework/macros" }
+strum = { workspace = true }
+strum_macros = { workspace = true }
 
 [dev-dependencies]
 tower = { workspace = true, features = ["util"] }

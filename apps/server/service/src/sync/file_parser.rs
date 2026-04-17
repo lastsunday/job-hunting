@@ -2,6 +2,7 @@ use std::io::Cursor;
 
 use calamine::{open_workbook_auto_from_rs, Reader, Sheets};
 
+use crate::sync::error::ImportError;
 use crate::util::gen_bytes_sha256;
 
 const HEADER_VERSION_PREFIX: &str = "__VERSION_";
@@ -9,17 +10,19 @@ const HEADER_VERSION_PREFIX: &str = "__VERSION_";
 pub struct FileParser;
 
 impl FileParser {
-    pub fn parse_excel(data: &[u8]) -> Result<Vec<Vec<String>>, Box<dyn std::error::Error>> {
+    pub fn parse_excel(data: &[u8]) -> Result<Vec<Vec<String>>, ImportError> {
+        if data.is_empty() {
+            return Err(ImportError::FileEmpty);
+        }
         let data: Cursor<Vec<u8>> = Cursor::new(data.to_vec());
-        let mut sheets: Sheets<_> = open_workbook_auto_from_rs(data)?;
+        let mut sheets: Sheets<_> = open_workbook_auto_from_rs(data)
+            .map_err(|e| ImportError::ExcelParseFailed(e.to_string()))?;
         let sheet_names = sheets.sheet_names().to_vec();
-        let sheet = sheet_names
-            .first()
-            .ok_or_else(|| "No sheets found in workbook".to_string())?;
+        let sheet = sheet_names.first().ok_or(ImportError::NoSheetsFound)?;
 
         let range = sheets
             .worksheet_range(sheet)
-            .map_err(|e| format!("Failed to read sheet: {}", e))?;
+            .map_err(|e| ImportError::ExcelParseFailed(e.to_string()))?;
 
         let mut result = Vec::new();
 
@@ -65,6 +68,10 @@ impl FileParser {
             }
         }
         0
+    }
+
+    pub fn get_job_headers(version: usize) -> Vec<String> {
+        Self::get_valid_columns(version, Self::JOB_FILE_HEADER)
     }
 
     const JOB_FILE_HEADER: &[&[&str]] = &[

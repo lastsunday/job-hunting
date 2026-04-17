@@ -1,0 +1,7 @@
+{
+  "invalid": "账户或密码错误",
+  "client_invalid": "客户端凭证无效",
+  "grant_invalid": "授权类型无效",
+  "account_not_found": "账户不存在",
+  "old_password_incorrect": "旧密码不正确"
+}

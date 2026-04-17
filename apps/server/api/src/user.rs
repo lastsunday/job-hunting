@@ -20,7 +20,18 @@ use utoipa::{IntoParams, ToSchema};
 use utoipa_axum::{router::OpenApiRouter, routes};
 use validator::Validate;
 
-use super::config;
+use crate::config;
+
+use framework::prelude::*;
+
+#[error]
+pub enum UserErrorCode {
+    Invalid = 303001,
+    ClientInvalid = 303002,
+    GrantInvalid = 303003,
+    AccountNotFound = 303004,
+    OldPasswordIncorrect = 303005,
+}
 
 use entity::{prelude::*, user};
 use sea_orm::{ActiveValue::Set, prelude::*};
@@ -29,7 +40,7 @@ const TAG: &str = "auth";
 
 pub fn create_routes(state: AppState) -> OpenApiRouter {
     OpenApiRouter::new()
-        .routes(routes!(user))
+        .routes(routes!(get_current_user))
         .routes(routes!(reset_password))
         .route_layer(get_auth_layer())
         .routes(routes!(access_token))
@@ -183,6 +194,6 @@ async fn reset_password(
 #[utoipa::path(get, path = "/auth/user",tag=TAG,security(()),responses(
     (status=OK,body=ApiResponse<Principal>)
 ))]
-async fn user(Extension(principal): Extension<Principal>) -> ApiResult<ApiResponse<Principal>> {
+async fn get_current_user(Extension(principal): Extension<Principal>) -> ApiResult<ApiResponse<Principal>> {
     Ok(ApiResponse::success(Some(principal)))
 }

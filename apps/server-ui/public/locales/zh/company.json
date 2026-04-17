@@ -36,6 +36,7 @@
   "businessInfo": "工商信息",
   "unifiedCode": "统一社会信用代码",
   "paidinCapital": "实缴资本",
+  "paidinCapitalCurrency": "实缴资本货币",
   "businessLicense": "营业执照号",
   "sourceRecordId": "源头记录编号",
   "taxNo": "税务登记号",
@@ -48,6 +49,7 @@
   "contactInfo": "联系方式",
   "timeInfo": "时间信息",
   "sourceRefreshTime": "数据来源更新时间",
+  "sourcePlatform": "来源平台",
   "createTime": "创建时间",
   "updateTime": "更新时间",
   "cancel": "取消",
@@ -55,5 +57,11 @@
   "update": "更新",
   "create": "创建",
   "copiedToClipboard": "已复制到剪贴板",
-  "perPage": "条/页"
+  "perPage": "条/页",
+  "loadError": "加载公司失败",
+  "createSuccess": "公司创建成功",
+  "updateSuccess": "公司更新成功",
+  "deleteSuccess": "公司删除成功",
+  "operationFailed": "操作失败",
+  "loadFailed": "加载失败"
 }

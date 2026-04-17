@@ -50,6 +50,7 @@ sequenceDiagram
 
 第三方数据来源格式：`data://[username[@]]host/path`
 本地文件导入数据来源格式：`data://[username[@]]system/[file_hash]`
+界面新增或编辑数据来源格式：`data://[username[@]]system-ui/[version]/[file_hash]/[rfc3339]`
 
 字段说明：
 
@@ -61,6 +62,7 @@ sequenceDiagram
 data://lastsunday@github.com/lastsunday/job-hunting-data/blob/main/2026/03-03/job.zip
 data://lastsunday@github.com/lastsunday/job-hunting-data/blob/main/2024/12-20/company.zip
 data://admin@system/c38036efd481b06a5b0a4292ac7dfbcfb93e9eb0d1c4de0aef0f4d685cf6b3a9
+data://admin@system-ui/1/c38036efd481b06a5b0a4292ac7dfbcfb93e9eb0d1c4de0aef0f4d685cf6b3a9/2026-04-16T14:08:17+00:00
 ```
 
 ### 职位相关表

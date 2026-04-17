@@ -33,6 +33,10 @@ impl<T> ApiResponse<T> {
         Self::new(0, None, data)
     }
 
+    pub fn error<M: AsRef<str>>(code: i32, message: M) -> Self {
+        Self::new(code, Some(String::from(message.as_ref())), None)
+    }
+
     pub fn failure<M: AsRef<str>>(message: M) -> Self {
         Self::new(-1, Some(String::from(message.as_ref())), None)
     }

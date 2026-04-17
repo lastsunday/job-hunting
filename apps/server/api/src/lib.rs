@@ -1,10 +1,10 @@
-pub mod auth;
 pub mod company;
 pub mod config;
 pub mod index;
 pub mod job;
 pub mod statistics;
 pub mod sync;
+pub mod user;
 
 use std::net::SocketAddr;
 use std::time::Duration;
@@ -19,7 +19,8 @@ use migration::MigratorTrait;
 use service::AppState;
 use tokio::net::TcpListener;
 
-use framework::error::*;
+use framework::error::{ApiError, ApiResult, FrameworkErrorCode};
+use framework::middleware::extract_language;
 use framework::trace::*;
 use framework::*;
 use tower_http::compression::CompressionLayer;
@@ -41,6 +42,8 @@ use framework::auth::Jwt;
 async fn start() -> anyhow::Result<()> {
     //init logger
     logger::init();
+    // init i18n
+    framework::i18n::init();
     // config
     let port = config::get().server().port();
     let database_url = config::get().database().url();
@@ -98,7 +101,7 @@ pub fn setup_default(router: Router) -> Router {
         .fallback(web::index_handler)
         .method_not_allowed_fallback(async || -> ApiResult<()> {
             tracing::warn!("Method not allowed");
-            Err(ApiError::MethodNotAllowed)
+            Err(ApiError::Framework(FrameworkErrorCode::MethodNotAllowed))
         });
     let timeout = TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, Duration::from_secs(300));
     let body_limit = DefaultBodyLimit::max(ByteSize::mib(100).as_u64() as usize);
@@ -119,11 +122,13 @@ pub fn setup_default(router: Router) -> Router {
         .on_request(())
         .on_failure(())
         .on_response(LatencyOnResponse);
+    let language = axum::middleware::from_fn(extract_language);
     app.layer(timeout)
         .layer(body_limit)
         .layer(tracing)
         .layer(cors)
         .layer(normalize_path)
+        .layer(language)
 }
 
 pub fn setup_index(router: OpenApiRouter) -> OpenApiRouter {
@@ -139,7 +144,7 @@ pub fn setup_company(router: OpenApiRouter, state: AppState) -> OpenApiRouter {
 }
 
 pub fn setup_auth(router: OpenApiRouter, state: AppState) -> OpenApiRouter {
-    api_setup(router, auth::create_routes(state))
+    api_setup(router, user::create_routes(state))
 }
 
 pub fn setup_sync(router: OpenApiRouter, state: AppState) -> OpenApiRouter {
@@ -159,7 +164,7 @@ fn setup_api_fallback(router: Router) -> Router {
         "/api",
         Router::new().fallback(async || -> ApiResult<()> {
             tracing::warn!("Not found");
-            Err(ApiError::NotFound)
+            Err(ApiError::Framework(FrameworkErrorCode::ResourceNotFound))
         }),
     )
 }

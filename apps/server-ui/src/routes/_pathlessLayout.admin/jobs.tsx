@@ -173,8 +173,8 @@ function RouteComponent() {
     } catch (error) {
       showNotification({
         color: 'red',
-        title: 'Error',
-        message: `Failed to load jobs: ${error}`,
+        title: t('common:error'),
+        message: t('job:loadError'),
       });
     } finally {
       setLoading(false);
@@ -306,15 +306,15 @@ function RouteComponent() {
         await jobApi.update(editingJob.id, data);
         showNotification({
           color: 'green',
-          title: 'Success',
-          message: 'Job updated successfully',
+          title: t('common:success'),
+          message: t('job:updateSuccess'),
         });
       } else {
         await jobApi.create(formData);
         showNotification({
           color: 'green',
-          title: 'Success',
-          message: 'Job created successfully',
+          title: t('common:success'),
+          message: t('job:createSuccess'),
         });
       }
       closeModal();
@@ -322,8 +322,8 @@ function RouteComponent() {
     } catch (error) {
       showNotification({
         color: 'red',
-        title: 'Error',
-        message: `Operation failed: ${error}`,
+        title: t('common:error'),
+        message: t('job:operationFailed'),
       });
     } finally {
       setSubmitting(false);
@@ -337,16 +337,16 @@ function RouteComponent() {
       await jobApi.delete(deletingJob.id);
       showNotification({
         color: 'green',
-        title: 'Success',
-        message: 'Job deleted successfully',
+        title: t('common:success'),
+        message: t('job:deleteSuccess'),
       });
       closeDelete();
       loadJobs();
     } catch (error) {
       showNotification({
         color: 'red',
-        title: 'Error',
-        message: `Delete failed: ${error}`,
+        title: t('common:error'),
+        message: t('job:operationFailed'),
       });
     } finally {
       setSubmitting(false);
@@ -908,6 +908,82 @@ function RouteComponent() {
             value={formData.platform}
             onChange={(e) =>
               setFormData({ ...formData, platform: e.currentTarget.value })
+            }
+          />
+          <TextInput
+            label={t('job:location')}
+            value={formData.location_name}
+            onChange={(e) =>
+              setFormData({ ...formData, location_name: e.currentTarget.value })
+            }
+          />
+          <Group grow>
+            <NumberInput
+              label={t('job:salaryMin')}
+              value={formData.salary_min}
+              onChange={(val) =>
+                setFormData({ ...formData, salary_min: Number(val) || 0 })
+              }
+              min={0}
+              step={1000}
+            />
+            <NumberInput
+              label={t('job:salaryMax')}
+              value={formData.salary_max}
+              onChange={(val) =>
+                setFormData({ ...formData, salary_max: Number(val) || 0 })
+              }
+              min={0}
+              step={1000}
+            />
+          </Group>
+          <Group grow>
+            <TextInput
+              label={t('job:degree')}
+              value={formData.degree_name}
+              onChange={(e) =>
+                setFormData({ ...formData, degree_name: e.currentTarget.value })
+              }
+            />
+            <NumberInput
+              label={t('job:year')}
+              value={formData.year ?? ''}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  year: val !== '' ? Number(val) : undefined,
+                })
+              }
+              min={0}
+            />
+          </Group>
+          <Group grow>
+            <TextInput
+              label={t('job:bossName')}
+              value={formData.boss_name}
+              onChange={(e) =>
+                setFormData({ ...formData, boss_name: e.currentTarget.value })
+              }
+            />
+            <TextInput
+              label={t('job:bossPosition')}
+              value={formData.boss_position}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  boss_position: e.currentTarget.value,
+                })
+              }
+            />
+          </Group>
+          <TextInput
+            label={t('job:bossCompany')}
+            value={formData.boss_company_name}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                boss_company_name: e.currentTarget.value,
+              })
             }
           />
           <Textarea

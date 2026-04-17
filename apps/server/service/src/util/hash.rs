@@ -20,3 +20,17 @@ pub fn gen_bytes_sha256(value: &Vec<u8>) -> String {
     hasher.update(value);
     hex::encode(hasher.finalize())
 }
+
+pub fn gen_add_or_update_uri(
+    _principal_name: &str,
+    _version: usize,
+    csv_data: &[Vec<String>],
+) -> String {
+    let csv_content: String = csv_data
+        .iter()
+        .map(|row| row.join(","))
+        .collect::<Vec<_>>()
+        .join("\n");
+    let hash = gen_sha256(&csv_content);
+    format!("data://{}@system/{}", _principal_name, hash)
+}

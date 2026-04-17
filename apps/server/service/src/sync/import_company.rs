@@ -6,6 +6,7 @@ use entity::company_source::{
     ActiveModel as CompanySourceActiveModel, Entity as CompanySource, Model as CompanySourceModel,
 };
 
+use crate::sync::error::ImportError;
 use crate::sync::file_parser::{CompanyHeaderMapping, FileParser};
 use crate::sync::types::ImportResult;
 use crate::util::gen_sha256;
@@ -71,7 +72,7 @@ impl CompanyImporter {
         conn: &DatabaseConnection,
         data: Vec<Vec<String>>,
         uri: &str,
-    ) -> Result<ImportResult, DbErr> {
+    ) -> Result<ImportResult, ImportError> {
         let start_time = std::time::Instant::now();
 
         // 空数据处理

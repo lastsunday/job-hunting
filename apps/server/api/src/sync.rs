@@ -1,3 +1,13 @@
+use framework::prelude::*;
+
+#[error]
+pub enum SyncErrorCode {
+    FileInvalid = 403001,
+    ExcelParseFailed = 403002,
+    ImportFailed = 403003,
+    DataTypeInvalid = 403004,
+}
+
 use crate::AppState;
 use axum::extract::Extension;
 use axum::{debug_handler, extract::State};
@@ -6,7 +16,7 @@ use entity::{company::Entity as Company, job::Entity as Job};
 use framework::{
     auth::Principal,
     data::{ApiResponse, valid::ValidJson},
-    error::ApiResult,
+    error::{ApiError, ApiResult, FrameworkErrorCode},
     middleware::get_auth_layer,
 };
 use sea_orm::{EntityTrait, Order, PaginatorTrait, QueryOrder};
@@ -17,9 +27,22 @@ use utoipa_axum::{
     routes,
 };
 
-use service::sync::{CompanyImporter, FileParser, JobImporter, SyncStatus, types::ImportResult};
+use service::sync::{CompanyImporter, FileParser, ImportError, JobImporter, SyncStatus, types::ImportResult};
 
 const TAG: &str = "sync";
+
+impl From<ImportError> for SyncErrorCode {
+    fn from(err: ImportError) -> Self {
+        match err {
+            ImportError::FileEmpty => SyncErrorCode::FileInvalid,
+            ImportError::ExcelParseFailed(_) => SyncErrorCode::ExcelParseFailed,
+            ImportError::ExcelHeadersInvalid { .. } => SyncErrorCode::ExcelParseFailed,
+            ImportError::NoSheetsFound => SyncErrorCode::ExcelParseFailed,
+            ImportError::DataTypeInvalid(_) => SyncErrorCode::DataTypeInvalid,
+            ImportError::Database(_) => SyncErrorCode::ImportFailed,
+        }
+    }
+}
 
 pub fn create_routes(state: AppState) -> OpenApiRouter {
     let sync_state = SyncState::new(state);
@@ -63,29 +86,30 @@ pub(crate) async fn import_file(
 ) -> ApiResult<ApiResponse<ImportResult>> {
     let data = base64::engine::general_purpose::STANDARD
         .decode(&param.file)
-        .map_err(|e| framework::error::ApiError::Validation(format!("Invalid file data: {}", e)))?;
+        .map_err(|_| ApiError::from(SyncErrorCode::FileInvalid))?;
     let hash = FileParser::gen_file_sha256(&data);
     let uri = format!("data://{}@system/{}", principal.name, hash);
     let result = match param.data_type.as_str() {
         "job" => {
-            let rows = FileParser::parse_excel(&data).map_err(|e| {
-                framework::error::ApiError::Biz(format!("parse excel failure: {}", e))
-            })?;
+            let rows = FileParser::parse_excel(&data)
+                .map_err(SyncErrorCode::from)?;
             JobImporter::import(conn(&state), rows, uri.as_str()).await
         }
         "company" => {
-            let rows = FileParser::parse_excel(&data).map_err(|e| {
-                framework::error::ApiError::Biz(format!("parse excel failure: {}", e))
-            })?;
+            let rows = FileParser::parse_excel(&data)
+                .map_err(SyncErrorCode::from)?;
             CompanyImporter::import(conn(&state), rows, uri.as_str()).await
         }
         _ => {
-            return Err(framework::error::ApiError::Validation(
-                "Invalid data type".to_string(),
-            ));
+            return Err(ApiError::from(SyncErrorCode::DataTypeInvalid));
         }
     }
-    .map_err(|e| framework::error::ApiError::Biz(format!("import data failre: {}", e)))?;
+    .map_err(|e: service::sync::ImportError| {
+        match e {
+            ImportError::Database(_) => ApiError::from(FrameworkErrorCode::DbError),
+            _ => ApiError::from(SyncErrorCode::ImportFailed),
+        }
+    })?;
 
     Ok(ApiResponse::success(Some(result)))
 }

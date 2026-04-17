@@ -55,6 +55,8 @@ export interface CreateCompanyRequest {
   latitude?: number;
   reg_capital_value?: number;
   reg_capital_currency?: string;
+  paidin_capital_value?: number;
+  paidin_capital_currency?: string;
   source_url?: string;
   source_record_id?: string;
   source_refresh_datetime?: string;
@@ -82,6 +84,8 @@ export interface UpdateCompanyRequest {
   latitude?: number;
   reg_capital_value?: number;
   reg_capital_currency?: string;
+  paidin_capital_value?: number;
+  paidin_capital_currency?: string;
   source_url?: string;
   source_record_id?: string;
   source_refresh_datetime?: string;

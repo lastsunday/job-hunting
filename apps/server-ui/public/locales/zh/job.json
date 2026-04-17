@@ -59,5 +59,11 @@
   "updateTime": "更新时间",
   "yearUnit": "年",
   "copiedToClipboard": "已复制到剪贴板",
-  "perPage": "条/页"
+  "perPage": "条/页",
+  "loadError": "加载职位失败",
+  "createSuccess": "职位创建成功",
+  "updateSuccess": "职位更新成功",
+  "deleteSuccess": "职位删除成功",
+  "operationFailed": "操作失败",
+  "loadFailed": "加载失败"
 }

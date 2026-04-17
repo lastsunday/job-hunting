@@ -6,6 +6,7 @@ use entity::job_source::{
     ActiveModel as JobSourceActiveModel, Entity as JobSource, Model as JobSourceModel,
 };
 
+use crate::sync::error::ImportError;
 use crate::sync::file_parser::{FileParser, JobHeaderMapping};
 use crate::sync::types::ImportResult;
 use crate::util::gen_sha256;
@@ -87,7 +88,7 @@ impl JobImporter {
         conn: &DatabaseConnection,
         data: Vec<Vec<String>>,
         uri: &str,
-    ) -> Result<ImportResult, DbErr> {
+    ) -> Result<ImportResult, ImportError> {
         let start_time = std::time::Instant::now();
 
         // 空数据处理

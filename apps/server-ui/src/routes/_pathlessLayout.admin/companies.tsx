@@ -145,6 +145,10 @@ function RouteComponent() {
     license_number: '',
     reg_capital_value: 0,
     reg_capital_currency: '',
+    paidin_capital_value: undefined,
+    paidin_capital_currency: '',
+    start_date: '',
+    source_platform: '',
     source_url: '',
     longitude: undefined,
     latitude: undefined,
@@ -172,8 +176,8 @@ function RouteComponent() {
     } catch (error) {
       showNotification({
         color: 'red',
-        title: 'Error',
-        message: `Failed to load companies: ${error}`,
+        title: t('common:error'),
+        message: t('company:loadError'),
       });
     } finally {
       setLoading(false);
@@ -234,6 +238,10 @@ function RouteComponent() {
       license_number: '',
       reg_capital_value: 0,
       reg_capital_currency: '',
+      paidin_capital_value: undefined,
+      paidin_capital_currency: '',
+      start_date: '',
+      source_platform: '',
       source_url: '',
       longitude: undefined,
       latitude: undefined,
@@ -262,6 +270,9 @@ function RouteComponent() {
       license_number: company.license_number || '',
       reg_capital_value: company.reg_capital_value || 0,
       reg_capital_currency: company.reg_capital_currency || '',
+      paidin_capital_value: company.paidin_capital_value,
+      paidin_capital_currency: company.paidin_capital_currency || '',
+      start_date: company.start_date || '',
       source_url: company.source_url || '',
       longitude: company.longitude,
       latitude: company.latitude,
@@ -301,6 +312,11 @@ function RouteComponent() {
           license_number: formData.license_number || undefined,
           reg_capital_value: formData.reg_capital_value || undefined,
           reg_capital_currency: formData.reg_capital_currency || undefined,
+          paidin_capital_value: formData.paidin_capital_value,
+          paidin_capital_currency:
+            formData.paidin_capital_currency || undefined,
+          start_date: formData.start_date || undefined,
+          source_platform: formData.source_platform || undefined,
           source_url: formData.source_url || undefined,
           longitude: formData.longitude,
           latitude: formData.latitude,
@@ -308,15 +324,15 @@ function RouteComponent() {
         await companyApi.update(editingCompany.id, data);
         showNotification({
           color: 'green',
-          title: 'Success',
-          message: 'Company updated successfully',
+          title: t('common:success'),
+          message: t('company:updateSuccess'),
         });
       } else {
         await companyApi.create(formData);
         showNotification({
           color: 'green',
-          title: 'Success',
-          message: 'Company created successfully',
+          title: t('common:success'),
+          message: t('company:createSuccess'),
         });
       }
       closeModal();
@@ -324,8 +340,8 @@ function RouteComponent() {
     } catch (error) {
       showNotification({
         color: 'red',
-        title: 'Error',
-        message: `Operation failed: ${error}`,
+        title: t('common:error'),
+        message: t('company:operationFailed'),
       });
     } finally {
       setSubmitting(false);
@@ -339,16 +355,16 @@ function RouteComponent() {
       await companyApi.delete(deletingCompany.id);
       showNotification({
         color: 'green',
-        title: 'Success',
-        message: 'Company deleted successfully',
+        title: t('common:success'),
+        message: t('company:deleteSuccess'),
       });
       closeDelete();
       loadCompanies();
     } catch (error) {
       showNotification({
         color: 'red',
-        title: 'Error',
-        message: `Delete failed: ${error}`,
+        title: t('common:error'),
+        message: t('company:operationFailed'),
       });
     } finally {
       setSubmitting(false);
@@ -977,6 +993,80 @@ function RouteComponent() {
               }
             />
           </Group>
+          <Group grow>
+            <NumberInput
+              label={t('company:paidinCapital')}
+              value={formData.paidin_capital_value}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  paidin_capital_value: Number(val) || undefined,
+                })
+              }
+              min={0}
+            />
+            <TextInput
+              label={t('company:paidinCapitalCurrency')}
+              value={formData.paidin_capital_currency}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  paidin_capital_currency: e.currentTarget.value,
+                })
+              }
+            />
+          </Group>
+          <Group grow>
+            <TextInput
+              label={t('company:establishmentDate')}
+              value={formData.start_date}
+              onChange={(e) =>
+                setFormData({ ...formData, start_date: e.currentTarget.value })
+              }
+            />
+            <TextInput
+              label={t('company:status')}
+              value={formData.status}
+              onChange={(e) =>
+                setFormData({ ...formData, status: e.currentTarget.value })
+              }
+            />
+          </Group>
+          <Group grow>
+            <NumberInput
+              label={t('company:insuranceNum')}
+              value={formData.insurance_num}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  insurance_num: Number(val) || undefined,
+                })
+              }
+              min={0}
+            />
+            <NumberInput
+              label={t('company:selfRisk')}
+              value={formData.self_risk}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  self_risk: Number(val) || undefined,
+                })
+              }
+              min={0}
+            />
+            <NumberInput
+              label={t('company:unionRisk')}
+              value={formData.union_risk}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  union_risk: Number(val) || undefined,
+                })
+              }
+              min={0}
+            />
+          </Group>
           <TextInput
             label={t('company:businessScope')}
             value={formData.scope}
@@ -999,6 +1089,16 @@ function RouteComponent() {
             value={formData.tax_no}
             onChange={(e) =>
               setFormData({ ...formData, tax_no: e.currentTarget.value })
+            }
+          />
+          <TextInput
+            label={t('company:sourcePlatform')}
+            value={formData.source_platform}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                source_platform: e.currentTarget.value,
+              })
             }
           />
           <TextInput

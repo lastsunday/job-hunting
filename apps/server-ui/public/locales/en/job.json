@@ -60,5 +60,11 @@
   "updateTime": "Update Time",
   "yearUnit": "years",
   "copiedToClipboard": "Copied to clipboard",
-  "perPage": "/page"
+  "perPage": "/page",
+  "loadError": "Failed to load jobs",
+  "createSuccess": "Job created successfully",
+  "updateSuccess": "Job updated successfully",
+  "deleteSuccess": "Job deleted successfully",
+  "operationFailed": "Operation failed",
+  "loadFailed": "Load failed"
 }
