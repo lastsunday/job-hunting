@@ -1,12 +1,12 @@
 use proc_macro::TokenStream;
 use quote::{quote, quote_spanned};
-use syn::{parse_macro_input, Ident, Item, Type};
+use syn::{parse_macro_input, Ident, Type};
 
 #[proc_macro_attribute]
 pub fn error(_attr: TokenStream, input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as Item);
-    let item = match &input {
-        Item::Enum(e) => e,
+    let input = parse_macro_input!(input);
+    let item = match input {
+        syn::Item::Enum(e) => e,
         _ => panic!("error only works on enums"),
     };
 
@@ -38,6 +38,10 @@ pub fn error(_attr: TokenStream, input: TokenStream) -> TokenStream {
         })
         .collect();
 
+    let variant_names: Vec<String> = variants.iter().map(|v| v.ident.to_string()).collect();
+
+    let variant_name_strs: Vec<&str> = variant_names.iter().map(|s| s.as_str()).collect();
+
     let variant_tokens: proc_macro2::TokenStream = variants
         .iter()
         .flat_map(|v| quote_spanned! { v.ident.span() => #v, })
@@ -67,6 +71,10 @@ pub fn error(_attr: TokenStream, input: TokenStream) -> TokenStream {
         impl #impl_generics #name #ty_generics #where_clause {
             pub const fn all_codes() -> &'static [u32] {
                 &[#(#values),*]
+            }
+
+            pub const fn all_variant_names() -> &'static [&'static str] {
+                &[#(#variant_name_strs),*]
             }
 
             pub fn i18n_key(&self) -> &'static str {
