@@ -1,26 +1,25 @@
-use framework::prelude::*;
+use framework::{error::critical_code::CriticalErrorCode, prelude::*};
 
 #[error]
 pub enum JobErrorCode {
-    TitleRequired = 402001,
-    UrlRequired = 402002,
-    CompanyNameRequired = 402003,
+    TitleRequired = 502001,
+    UrlRequired = 502002,
+    CompanyNameRequired = 502003,
 }
 
-use crate::AppState;
-use anyhow::anyhow;
+use crate::{AppState, sync::SyncErrorCode};
 use axum::{debug_handler, extract::Extension, extract::Path, extract::State};
 use entity::job::{self, Entity as Job};
 use framework::{
     auth::Principal,
     data::{ApiPageResult, ApiResponse, PageParam, valid::ValidJson},
-    error::{ApiError, ApiResult, FrameworkErrorCode},
+    error::{ApiError, ApiResult},
     middleware::get_auth_layer,
 };
 use sea_orm::{
     ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait,
 };
-use service::sync::{FileParser, JobImporter};
+use service::sync::{FileParser, ImportError, JobImporter};
 use service::util::hash::gen_add_or_update_uri;
 use utoipa::ToSchema;
 use utoipa_axum::{
@@ -309,7 +308,7 @@ pub async fn get_by_id(
     let job = Job::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or(ApiError::Framework(FrameworkErrorCode::ResourceNotFound))?;
+        .ok_or(CriticalErrorCode::ResourceNotFound)?;
     Ok(ApiResponse::success(Some(job)))
 }
 
@@ -328,12 +327,15 @@ pub async fn create(
 
     JobImporter::import(&conn, csv_data, &uri)
         .await
-        .map_err(|e| ApiError::Internal(anyhow!("Import failed: {}", e)))?;
+        .map_err(|e: service::sync::ImportError| match e {
+            ImportError::Database(e) => ApiError::from(e),
+            _ => ApiError::from_app_error(SyncErrorCode::ImportFailed),
+        })?;
 
     let job = Job::find_by_id(&job_id)
         .one(&conn)
         .await?
-        .ok_or(ApiError::from(JobErrorCode::TitleRequired))?;
+        .ok_or(JobErrorCode::TitleRequired)?;
     Ok(ApiResponse::success(Some(job)))
 }
 
@@ -357,12 +359,15 @@ pub async fn update(
 
     JobImporter::import(&conn, csv_data, &uri)
         .await
-        .map_err(|e| ApiError::Internal(anyhow!("Import failed: {}", e)))?;
+        .map_err(|e: service::sync::ImportError| match e {
+            ImportError::Database(e) => ApiError::from(e),
+            _ => ApiError::from_app_error(SyncErrorCode::ImportFailed),
+        })?;
 
     let job = Job::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or(ApiError::Framework(FrameworkErrorCode::ResourceNotFound))?;
+        .ok_or(CriticalErrorCode::ResourceNotFound)?;
     Ok(ApiResponse::success(Some(job)))
 }
 
@@ -377,7 +382,7 @@ pub async fn delete_job(
     let job = Job::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or(ApiError::Framework(FrameworkErrorCode::ResourceNotFound))?;
+        .ok_or(CriticalErrorCode::ResourceNotFound)?;
     Job::delete(job.into_active_model()).exec(&conn).await?;
     Ok(ApiResponse::success(Some("Deleted".to_string())))
 }

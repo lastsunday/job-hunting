@@ -1,3 +1,8 @@
+use proc_macro::TokenStream;
+use quote::quote;
+use quote::quote_spanned;
+use syn::{Ident, Type, parse_macro_input};
+
 // Proc-macro attribute for automatically implementing standard error code enums.
 // Only works on enums, automatically implements AppErrorCode trait
 // and generates all_codes(), all_variant_names(), i18n_key(), code() methods.
@@ -55,14 +60,10 @@ pub fn error(_attr: TokenStream, input: TokenStream) -> TokenStream {
     let target: Type = syn::parse_quote!(crate::error::ApiError);
 
     // Skip From impl for framework module (direct usage)
-    let from_impl = if module == "framework" {
-        quote! {}
-    } else {
-        quote! {
-            impl #impl_generics From<#name #ty_generics> for #target #where_clause {
-                fn from(err: #name #ty_generics) -> Self {
-                    #target::from_app_error(err)
-                }
+    let from_impl = quote! {
+        impl #impl_generics From<#name #ty_generics> for #target #where_clause {
+            fn from(err: #name #ty_generics) -> Self {
+                #target::from_app_error(err)
             }
         }
     };
@@ -112,6 +113,11 @@ pub fn error(_attr: TokenStream, input: TokenStream) -> TokenStream {
             fn i18n_key(&self) -> &'static str {
                 #name::i18n_key(self)
             }
+
+            fn message(&self) -> Option<String>{
+                None
+            }
+
         }
 
         #from_impl

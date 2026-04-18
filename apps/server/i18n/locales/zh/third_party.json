@@ -1,0 +1,4 @@
+{
+  "jwt_error": "JWT 认证错误",
+  "password_error": "密码加密错误"
+}

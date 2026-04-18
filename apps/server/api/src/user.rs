@@ -10,7 +10,7 @@ use framework::{
         ApiResponse,
         valid::{ValidJson, ValidQuery},
     },
-    error::{ApiError, ApiResult},
+    error::ApiResult,
     middleware::get_auth_layer,
     password::{hash, verify},
 };
@@ -26,11 +26,11 @@ use framework::prelude::*;
 
 #[error]
 pub enum UserErrorCode {
-    Invalid = 303001,
-    ClientInvalid = 303002,
-    GrantInvalid = 303003,
-    AccountNotFound = 303004,
-    OldPasswordIncorrect = 303005,
+    Invalid = 503001,
+    ClientInvalid = 503002,
+    GrantInvalid = 503003,
+    AccountNotFound = 503004,
+    OldPasswordIncorrect = 503005,
 }
 
 use entity::{prelude::*, user};
@@ -81,11 +81,9 @@ async fn login(
         .filter(user::Column::Account.eq(&param.account))
         .one(&conn)
         .await?
-        .ok_or_else(|| ApiError::Biz(String::from("Account or password not correct")))?;
+        .ok_or(UserErrorCode::Invalid)?;
     if !verify(&param.password, &user.password)? {
-        return Err(ApiError::Biz(String::from(
-            "Account or password not correct",
-        )));
+        return Err(UserErrorCode::Invalid.into());
     }
     let principal = Principal {
         id: user.id,
@@ -130,13 +128,9 @@ async fn access_token(
 ) -> ApiResult<ApiResponse<LoginResult>> {
     let auth = config::get().auth();
     if !param.client_id.eq(auth.client_id()) || !param.client_secret.eq(auth.client_secret()) {
-        return Err(ApiError::Biz(String::from(
-            "client_id or client_secret invalid",
-        )));
+        return Err(UserErrorCode::ClientInvalid.into());
     } else if !param.grant_type.eq("refresh_token") {
-        return Err(ApiError::Biz(String::from(
-            "grant_type must be refresh_token",
-        )));
+        return Err(UserErrorCode::GrantInvalid.into());
     } else {
         let refresh_token_principal = Jwt::global().refresh_token_decode(&param.refresh_token)?;
         let access_token = Jwt::global().access_token_encode(refresh_token_principal.clone())?;
@@ -176,9 +170,9 @@ async fn reset_password(
         .filter(user::Column::Id.eq(principal.id.clone()))
         .one(&conn)
         .await?
-        .ok_or_else(|| ApiError::Biz(String::from("Account not found")))?;
+        .ok_or(UserErrorCode::AccountNotFound)?;
     if !verify(&param.old_password, &user.password)? {
-        return Err(ApiError::Biz(String::from("Old password not correct")));
+        return Err(UserErrorCode::OldPasswordIncorrect.into());
     }
     let hash_password = hash(param.password.as_str())?;
     let model = user::ActiveModel {

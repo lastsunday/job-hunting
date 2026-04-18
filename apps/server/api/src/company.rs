@@ -1,18 +1,21 @@
-use framework::prelude::*;
+use framework::{error::critical_code::CriticalErrorCode, prelude::*};
 
 #[error]
 pub enum CompanyErrorCode {
-    NameRequired = 401001,
+    NameRequired = 504001,
 }
 
 use crate::AppState;
-use axum::{debug_handler, extract::State, extract::Path};
+use axum::{debug_handler, extract::Path, extract::State};
 use entity::company::{self, Entity as Company};
 use framework::{
     data::{ApiPageResult, ApiResponse, PageParam, valid::ValidJson},
     error::ApiResult,
 };
-use sea_orm::{ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait, ActiveValue::Set};
+use sea_orm::{
+    ActiveValue::Set, ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter,
+    QueryOrder, QueryTrait,
+};
 use utoipa::ToSchema;
 use utoipa_axum::{
     router::{OpenApiRouter, UtoipaMethodRouterExt},
@@ -27,7 +30,10 @@ pub fn create_routes(state: AppState) -> OpenApiRouter {
         .routes(routes!(get_by_id).with_state(state.clone()))
         .routes(routes!(create).with_state(state.clone()))
         .routes(routes!(update).with_state(state.clone()))
-        .route("/company/{id}", axum::routing::delete(delete_company).with_state(state))
+        .route(
+            "/company/{id}",
+            axum::routing::delete(delete_company).with_state(state),
+        )
 }
 
 #[debug_handler]
@@ -180,7 +186,7 @@ pub async fn get_by_id(
     let company = Company::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or_else(|| framework::error::ApiError::NotFound)?;
+        .ok_or(CriticalErrorCode::ResourceNotFound)?;
     Ok(ApiResponse::success(Some(company)))
 }
 
@@ -228,7 +234,7 @@ pub async fn create(
     let company = Company::find_by_id(result.last_insert_id)
         .one(&conn)
         .await?
-        .ok_or_else(|| framework::error::ApiError::NotFound)?;
+        .ok_or(CriticalErrorCode::ResourceNotFound)?;
     Ok(ApiResponse::success(Some(company)))
 }
 
@@ -244,8 +250,8 @@ pub async fn update(
     let existing = Company::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or_else(|| framework::error::ApiError::NotFound)?;
-    
+        .ok_or(CriticalErrorCode::ResourceNotFound)?;
+
     let active_model = company::ActiveModel {
         id: Set(id.clone()),
         name: Set(param.name.or(existing.name)),
@@ -270,7 +276,9 @@ pub async fn update(
         reg_capital_currency: Set(param.reg_capital_currency.or(existing.reg_capital_currency)),
         source_url: Set(param.source_url.or(existing.source_url)),
         source_record_id: Set(param.source_record_id.or(existing.source_record_id)),
-        source_refresh_datetime: Set(param.source_refresh_datetime.or(existing.source_refresh_datetime)),
+        source_refresh_datetime: Set(param
+            .source_refresh_datetime
+            .or(existing.source_refresh_datetime)),
         update_datetime: Set(Some(chrono::Utc::now().into())),
         ..Default::default()
     };
@@ -278,7 +286,7 @@ pub async fn update(
     let company = Company::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or_else(|| framework::error::ApiError::NotFound)?;
+        .ok_or(CriticalErrorCode::ResourceNotFound)?;
     Ok(ApiResponse::success(Some(company)))
 }
 
@@ -293,8 +301,10 @@ pub async fn delete_company(
     let company = Company::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or_else(|| framework::error::ApiError::NotFound)?;
-    Company::delete(company.into_active_model()).exec(&conn).await?;
+        .ok_or(CriticalErrorCode::ResourceNotFound)?;
+    Company::delete(company.into_active_model())
+        .exec(&conn)
+        .await?;
     Ok(ApiResponse::success(Some("Deleted".to_string())))
 }
 

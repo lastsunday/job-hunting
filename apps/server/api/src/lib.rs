@@ -12,14 +12,16 @@ use std::time::Duration;
 use axum::Router;
 use axum::extract::DefaultBodyLimit;
 use axum::extract::Request;
-use axum::routing::get;
 use axum::http::StatusCode;
+use axum::routing::get;
 use bytesize::ByteSize;
+use framework::error::critical_code::CriticalErrorCode;
+use framework::error::framework_code::FrameworkErrorCode;
 use migration::MigratorTrait;
 use service::AppState;
 use tokio::net::TcpListener;
 
-use framework::error::{ApiError, ApiResult, FrameworkErrorCode};
+use framework::error::ApiResult;
 use framework::middleware::extract_language;
 use framework::trace::*;
 use framework::*;
@@ -101,9 +103,10 @@ pub fn setup_default(router: Router) -> Router {
         .fallback(web::index_handler)
         .method_not_allowed_fallback(async || -> ApiResult<()> {
             tracing::warn!("Method not allowed");
-            Err(ApiError::Framework(FrameworkErrorCode::MethodNotAllowed))
+            Err(FrameworkErrorCode::MethodNotAllowed.into())
         });
-    let timeout = TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, Duration::from_secs(300));
+    let timeout =
+        TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, Duration::from_secs(300));
     let body_limit = DefaultBodyLimit::max(ByteSize::mib(100).as_u64() as usize);
     let cors = CorsLayer::new()
         .allow_origin(cors::Any)
@@ -164,7 +167,7 @@ fn setup_api_fallback(router: Router) -> Router {
         "/api",
         Router::new().fallback(async || -> ApiResult<()> {
             tracing::warn!("Not found");
-            Err(ApiError::Framework(FrameworkErrorCode::ResourceNotFound))
+            Err(CriticalErrorCode::ResourceNotFound.into())
         }),
     )
 }

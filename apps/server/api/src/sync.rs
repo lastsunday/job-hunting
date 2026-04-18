@@ -2,10 +2,10 @@ use framework::prelude::*;
 
 #[error]
 pub enum SyncErrorCode {
-    FileInvalid = 403001,
-    ExcelParseFailed = 403002,
-    ImportFailed = 403003,
-    DataTypeInvalid = 403004,
+    FileInvalid = 505001,
+    ExcelParseFailed = 505002,
+    ImportFailed = 505003,
+    DataTypeInvalid = 505004,
 }
 
 use crate::AppState;
@@ -16,7 +16,7 @@ use entity::{company::Entity as Company, job::Entity as Job};
 use framework::{
     auth::Principal,
     data::{ApiResponse, valid::ValidJson},
-    error::{ApiError, ApiResult, FrameworkErrorCode},
+    error::ApiResult,
     middleware::get_auth_layer,
 };
 use sea_orm::{EntityTrait, Order, PaginatorTrait, QueryOrder};
@@ -27,7 +27,9 @@ use utoipa_axum::{
     routes,
 };
 
-use service::sync::{CompanyImporter, FileParser, ImportError, JobImporter, SyncStatus, types::ImportResult};
+use service::sync::{
+    CompanyImporter, FileParser, ImportError, JobImporter, SyncStatus, types::ImportResult,
+};
 
 const TAG: &str = "sync";
 
@@ -91,24 +93,20 @@ pub(crate) async fn import_file(
     let uri = format!("data://{}@system/{}", principal.name, hash);
     let result = match param.data_type.as_str() {
         "job" => {
-            let rows = FileParser::parse_excel(&data)
-                .map_err(SyncErrorCode::from)?;
+            let rows = FileParser::parse_excel(&data).map_err(SyncErrorCode::from)?;
             JobImporter::import(conn(&state), rows, uri.as_str()).await
         }
         "company" => {
-            let rows = FileParser::parse_excel(&data)
-                .map_err(SyncErrorCode::from)?;
+            let rows = FileParser::parse_excel(&data).map_err(SyncErrorCode::from)?;
             CompanyImporter::import(conn(&state), rows, uri.as_str()).await
         }
         _ => {
             return Err(ApiError::from(SyncErrorCode::DataTypeInvalid));
         }
     }
-    .map_err(|e: service::sync::ImportError| {
-        match e {
-            ImportError::Database(_) => ApiError::from(FrameworkErrorCode::DbError),
-            _ => ApiError::from(SyncErrorCode::ImportFailed),
-        }
+    .map_err(|e: service::sync::ImportError| match e {
+        ImportError::Database(e) => ApiError::from(e),
+        _ => ApiError::from_app_error(SyncErrorCode::ImportFailed),
     })?;
 
     Ok(ApiResponse::success(Some(result)))
@@ -127,26 +125,25 @@ pub(crate) async fn get_sync_status(
         .order_by(entity::job::Column::CreateDatetime, Order::Desc)
         .one(conn)
         .await
-        .map_err(|e| framework::error::ApiError::Biz(e.to_string()))?
+        .map_err(|_| ApiError::from(SyncErrorCode::ImportFailed))?
         .and_then(|j| j.create_datetime);
 
     let last_company = Company::find()
         .order_by(entity::company::Column::CreateDatetime, Order::Desc)
         .one(conn)
         .await
-        .map_err(|e| framework::error::ApiError::Biz(e.to_string()))?
+        .map_err(|_| ApiError::from(SyncErrorCode::ImportFailed))?
         .and_then(|c| c.create_datetime);
 
     let total_jobs: i64 = Job::find()
         .count(conn)
         .await
-        .map_err(|e| framework::error::ApiError::Biz(e.to_string()))?
-        as i64;
+        .map_err(|_| ApiError::from(SyncErrorCode::ImportFailed))? as i64;
 
     let total_companies: i64 = Company::find()
         .count(conn)
         .await
-        .map_err(|e| framework::error::ApiError::Biz(e.to_string()))?
+        .map_err(|_| ApiError::from(SyncErrorCode::ImportFailed))?
         as i64;
 
     Ok(ApiResponse::success(Some(SyncStatus {

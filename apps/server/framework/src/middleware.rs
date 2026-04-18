@@ -3,7 +3,11 @@ use std::{pin::Pin, sync::LazyLock};
 use axum::{body::Body, extract::Request, http::Response, http::header, middleware::Next};
 use tower_http::auth::{AsyncAuthorizeRequest, AsyncRequireAuthorizationLayer};
 
-use crate::{auth::Jwt, error::{ApiError, FrameworkErrorCode}, i18n};
+use crate::{
+    auth::Jwt,
+    error::{ApiError, auth_code::AuthErrorCode},
+    i18n,
+};
 
 static AUTH_LAYER_INSTANCE: LazyLock<AsyncRequireAuthorizationLayer<JwtAuth>> =
     LazyLock::new(|| AsyncRequireAuthorizationLayer::new(JwtAuth::new(Jwt::global())));
@@ -41,16 +45,16 @@ impl AsyncAuthorizeRequest<Body> for JwtAuth {
                 .map(|value| -> Result<_, ApiError> {
                     let token = value
                         .to_str()
-                        .map_err(|_| ApiError::Framework(FrameworkErrorCode::AuthHeaderInvalid))?
+                        .map_err(|_| AuthErrorCode::AuthHeaderInvalid)?
                         .strip_prefix("Bearer ")
-                        .ok_or(ApiError::Framework(FrameworkErrorCode::BearerRequired))?;
+                        .ok_or(AuthErrorCode::BearerRequired)?;
                     Ok(token)
                 })
                 .transpose()?
-                .ok_or(ApiError::Framework(FrameworkErrorCode::AuthHeaderMissing))?;
+                .ok_or(ApiError::from_app_error(AuthErrorCode::AuthHeaderMissing))?;
             let pricipal = jwt
                 .access_token_decode(token)
-                .map_err(|_| ApiError::Framework(FrameworkErrorCode::TokenInvalid))?;
+                .map_err(|_| ApiError::from_app_error(AuthErrorCode::TokenInvalid))?;
             request.extensions_mut().insert(pricipal);
             Ok(request)
         })
@@ -77,9 +81,5 @@ pub async fn extract_language(request: Request, next: Next) -> Response<Body> {
 fn extract_primary_language(accept_language: &str) -> &str {
     let first = accept_language.split(',').next().unwrap_or("en");
     let lang = first.split(';').next().unwrap_or("en").trim();
-    if lang.starts_with("zh") {
-        "zh"
-    } else {
-        "en"
-    }
+    if lang.starts_with("zh") { "zh" } else { "en" }
 }

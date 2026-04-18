@@ -4,7 +4,6 @@
   "json_invalid": "Invalid JSON body",
   "validation_invalid": "Validation failed",
   "method_not_allowed": "Method not allowed",
-  "db_error": "Database error",
   "jwt_error": "JWT authentication error",
   "password_error": "Password encryption error",
   "internal_error": "Internal server error",

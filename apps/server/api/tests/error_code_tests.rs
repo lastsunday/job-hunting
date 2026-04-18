@@ -8,7 +8,11 @@
 // ============================================================
 
 use api::{company::CompanyErrorCode, job::JobErrorCode, sync::SyncErrorCode, user::UserErrorCode};
-use framework::error_code::FrameworkErrorCode;
+
+use framework::error::{
+    auth_code::AuthErrorCode, base_code::BaseErrorCode, critical_code::CriticalErrorCode,
+    framework_code::FrameworkErrorCode, third_party_code::ThirdPartyErrorCode,
+};
 use serde_json::Value;
 
 fn get_base_path() -> std::path::PathBuf {
@@ -117,7 +121,11 @@ macro_rules! error_tests {
 }
 
 error_tests! {
+    BaseErrorCode,
     FrameworkErrorCode,
+    ThirdPartyErrorCode,
+    CriticalErrorCode,
+    AuthErrorCode,
     UserErrorCode,
     CompanyErrorCode,
     JobErrorCode,

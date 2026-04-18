@@ -4,7 +4,6 @@
   "json_invalid": "请求体格式错误",
   "validation_invalid": "校验失败",
   "method_not_allowed": "方法不支持",
-  "db_error": "数据库错误",
   "jwt_error": "JWT 认证错误",
   "password_error": "密码加密错误",
   "internal_error": "服务器内部错误",

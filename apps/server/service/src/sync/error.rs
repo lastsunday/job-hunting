@@ -21,11 +21,11 @@ pub enum ImportError {
     DataTypeInvalid(String),
 
     #[error("Database error: {0}")]
-    Database(String),
+    Database(sea_orm::DbErr),
 }
 
 impl From<sea_orm::DbErr> for ImportError {
     fn from(err: sea_orm::DbErr) -> Self {
-        ImportError::Database(err.to_string())
+        ImportError::Database(err)
     }
 }

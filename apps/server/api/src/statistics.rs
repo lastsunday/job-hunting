@@ -1,16 +1,12 @@
 use crate::AppState;
 use axum::{debug_handler, extract::Query, extract::State};
-use entity::company::{Entity as Company, Column as CompanyColumn};
-use entity::job::{Entity as Job, Column as JobColumn};
-use framework::{
-    data::ApiResponse,
-    error::ApiResult,
-};
-use sea_orm::{
-    ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
-    QuerySelect, ExprTrait,
-};
+use entity::company::{Column as CompanyColumn, Entity as Company};
+use entity::job::{Column as JobColumn, Entity as Job};
+use framework::{data::ApiResponse, error::ApiResult};
 use sea_orm::sea_query::Expr;
+use sea_orm::{
+    ColumnTrait, EntityTrait, ExprTrait, PaginatorTrait, QueryFilter, QueryOrder, QuerySelect,
+};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use utoipa_axum::{
@@ -58,13 +54,23 @@ pub async fn job_scan_time(
         Job::find()
             .select_only()
             .column_as(
-                Expr::col(JobColumn::CreateDatetime).cast_as("TEXT").if_null("未知"),
-                "period"
+                Expr::col(JobColumn::CreateDatetime)
+                    .cast_as("TEXT")
+                    .if_null("未知"),
+                "period",
             )
             .column_as(JobColumn::Id.count(), "count")
             .filter(JobColumn::CreateDatetime.like(&pattern))
-            .group_by(Expr::col(JobColumn::CreateDatetime).cast_as("TEXT").if_null("未知"))
-            .order_by_asc(Expr::col(JobColumn::CreateDatetime).cast_as("TEXT").if_null("未知"))
+            .group_by(
+                Expr::col(JobColumn::CreateDatetime)
+                    .cast_as("TEXT")
+                    .if_null("未知"),
+            )
+            .order_by_asc(
+                Expr::col(JobColumn::CreateDatetime)
+                    .cast_as("TEXT")
+                    .if_null("未知"),
+            )
             .into_tuple::<(String, i64)>()
             .all(&conn)
             .await?
@@ -72,12 +78,22 @@ pub async fn job_scan_time(
         Job::find()
             .select_only()
             .column_as(
-                Expr::col(JobColumn::CreateDatetime).cast_as("TEXT").if_null("未知"),
-                "period"
+                Expr::col(JobColumn::CreateDatetime)
+                    .cast_as("TEXT")
+                    .if_null("未知"),
+                "period",
             )
             .column_as(JobColumn::Id.count(), "count")
-            .group_by(Expr::col(JobColumn::CreateDatetime).cast_as("TEXT").if_null("未知"))
-            .order_by_asc(Expr::col(JobColumn::CreateDatetime).cast_as("TEXT").if_null("未知"))
+            .group_by(
+                Expr::col(JobColumn::CreateDatetime)
+                    .cast_as("TEXT")
+                    .if_null("未知"),
+            )
+            .order_by_asc(
+                Expr::col(JobColumn::CreateDatetime)
+                    .cast_as("TEXT")
+                    .if_null("未知"),
+            )
             .into_tuple::<(String, i64)>()
             .all(&conn)
             .await?
@@ -189,7 +205,7 @@ pub async fn job_location(
         .select_only()
         .column_as(
             Expr::col(JobColumn::LocationName).if_null("未知"),
-            "location"
+            "location",
         )
         .column_as(JobColumn::Id.count(), "count")
         .filter(JobColumn::LocationName.is_not_null())
@@ -222,7 +238,11 @@ fn extract_city(location: &str) -> String {
     }
 
     let mut clean = location.to_string();
-    while clean.ends_with('·') || clean.ends_with('-') || clean.ends_with('/') || clean.ends_with(' ') {
+    while clean.ends_with('·')
+        || clean.ends_with('-')
+        || clean.ends_with('/')
+        || clean.ends_with(' ')
+    {
         clean.pop();
     }
     if clean.is_empty() {
@@ -251,10 +271,7 @@ pub async fn job_platform(
 ) -> ApiResult<ApiResponse<Vec<StatItem>>> {
     let results: Vec<(String, i64)> = Job::find()
         .select_only()
-        .column_as(
-            Expr::col(JobColumn::Platform).if_null("未知"),
-            "platform"
-        )
+        .column_as(Expr::col(JobColumn::Platform).if_null("未知"), "platform")
         .column_as(JobColumn::Id.count(), "count")
         .group_by(Expr::col(JobColumn::Platform).if_null("未知"))
         .having(JobColumn::Id.count().gt(0))
@@ -279,10 +296,7 @@ pub async fn job_degree(
 ) -> ApiResult<ApiResponse<Vec<StatItem>>> {
     let results: Vec<(String, i64)> = Job::find()
         .select_only()
-        .column_as(
-            Expr::col(JobColumn::DegreeName).if_null("未知"),
-            "degree"
-        )
+        .column_as(Expr::col(JobColumn::DegreeName).if_null("未知"), "degree")
         .column_as(JobColumn::Id.count(), "count")
         .filter(JobColumn::DegreeName.is_not_null())
         .group_by(Expr::col(JobColumn::DegreeName).if_null("未知"))
@@ -317,14 +331,26 @@ pub async fn job_degree(
 
 fn categorize_degree(degree: &str) -> String {
     let degree = degree.trim().to_lowercase();
-    
+
     if degree.is_empty() || degree == "未知" {
         return "其他".to_string();
     }
 
     let benke = ["本科", "学士", "大学本科"];
     let dazhuan = ["大专", "专科", "大学专科"];
-    let gaozhong = ["高中", "中职", "中专", "中技", "职高", "技校", "初中", "初中及以下", "中等专科", "普通高中", "技工学校"];
+    let gaozhong = [
+        "高中",
+        "中职",
+        "中专",
+        "中技",
+        "职高",
+        "技校",
+        "初中",
+        "初中及以下",
+        "中等专科",
+        "普通高中",
+        "技工学校",
+    ];
     let shuoshi = ["硕士", "研究生"];
     let boshi = ["博士", "博士后"];
     let buxian = ["不限", "学历不限", "无要求", "不限制"];
@@ -417,18 +443,22 @@ pub async fn company_insurance(
     for (label, min, max) in insurance_ranges {
         let count: i64 = if min == 0 && max == 0 {
             Company::find()
-                .filter(CompanyColumn::InsuranceNum.is_null().or(CompanyColumn::InsuranceNum.eq(0)))
+                .filter(
+                    CompanyColumn::InsuranceNum
+                        .is_null()
+                        .or(CompanyColumn::InsuranceNum.eq(0)),
+                )
                 .count(&conn)
                 .await? as i64
         } else if max == i32::MAX {
             Company::find()
-                .filter(CompanyColumn::InsuranceNum.gte(min as i32))
+                .filter(CompanyColumn::InsuranceNum.gte(min))
                 .count(&conn)
                 .await? as i64
         } else {
             Company::find()
-                .filter(CompanyColumn::InsuranceNum.gte(min as i32))
-                .filter(CompanyColumn::InsuranceNum.lte(max as i32))
+                .filter(CompanyColumn::InsuranceNum.gte(min))
+                .filter(CompanyColumn::InsuranceNum.lte(max))
                 .count(&conn)
                 .await? as i64
         };
@@ -453,7 +483,7 @@ pub async fn company_industry(
         .select_only()
         .column_as(
             Expr::col(CompanyColumn::Industry).if_null("未知"),
-            "industry"
+            "industry",
         )
         .column_as(CompanyColumn::Id.count(), "count")
         .group_by(Expr::col(CompanyColumn::Industry).if_null("未知"))
@@ -480,10 +510,7 @@ pub async fn company_status(
 ) -> ApiResult<ApiResponse<Vec<StatItem>>> {
     let results: Vec<(String, i64)> = Company::find()
         .select_only()
-        .column_as(
-            Expr::col(CompanyColumn::Status).if_null("未知"),
-            "status"
-        )
+        .column_as(Expr::col(CompanyColumn::Status).if_null("未知"), "status")
         .column_as(CompanyColumn::Id.count(), "count")
         .group_by(Expr::col(CompanyColumn::Status).if_null("未知"))
         .having(CompanyColumn::Id.count().gt(0))
@@ -512,13 +539,23 @@ pub async fn company_source_update(
         Company::find()
             .select_only()
             .column_as(
-                Expr::col(CompanyColumn::SourceRefreshDatetime).cast_as("TEXT").if_null("未知"),
-                "period"
+                Expr::col(CompanyColumn::SourceRefreshDatetime)
+                    .cast_as("TEXT")
+                    .if_null("未知"),
+                "period",
             )
             .column_as(CompanyColumn::Id.count(), "count")
             .filter(CompanyColumn::SourceRefreshDatetime.like(&pattern))
-            .group_by(Expr::col(CompanyColumn::SourceRefreshDatetime).cast_as("TEXT").if_null("未知"))
-            .order_by_asc(Expr::col(CompanyColumn::SourceRefreshDatetime).cast_as("TEXT").if_null("未知"))
+            .group_by(
+                Expr::col(CompanyColumn::SourceRefreshDatetime)
+                    .cast_as("TEXT")
+                    .if_null("未知"),
+            )
+            .order_by_asc(
+                Expr::col(CompanyColumn::SourceRefreshDatetime)
+                    .cast_as("TEXT")
+                    .if_null("未知"),
+            )
             .into_tuple::<(String, i64)>()
             .all(&conn)
             .await?
@@ -526,12 +563,22 @@ pub async fn company_source_update(
         Company::find()
             .select_only()
             .column_as(
-                Expr::col(CompanyColumn::SourceRefreshDatetime).cast_as("TEXT").if_null("未知"),
-                "period"
+                Expr::col(CompanyColumn::SourceRefreshDatetime)
+                    .cast_as("TEXT")
+                    .if_null("未知"),
+                "period",
             )
             .column_as(CompanyColumn::Id.count(), "count")
-            .group_by(Expr::col(CompanyColumn::SourceRefreshDatetime).cast_as("TEXT").if_null("未知"))
-            .order_by_asc(Expr::col(CompanyColumn::SourceRefreshDatetime).cast_as("TEXT").if_null("未知"))
+            .group_by(
+                Expr::col(CompanyColumn::SourceRefreshDatetime)
+                    .cast_as("TEXT")
+                    .if_null("未知"),
+            )
+            .order_by_asc(
+                Expr::col(CompanyColumn::SourceRefreshDatetime)
+                    .cast_as("TEXT")
+                    .if_null("未知"),
+            )
             .into_tuple::<(String, i64)>()
             .all(&conn)
             .await?
