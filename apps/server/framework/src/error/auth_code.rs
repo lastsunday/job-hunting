@@ -2,9 +2,9 @@ use framework_macros::error;
 
 #[error]
 pub enum AuthErrorCode {
-    Unauthenticated = 302001,
-    AuthHeaderMissing = 302002,
-    AuthHeaderInvalid = 302003,
-    BearerRequired = 302004,
-    TokenInvalid = 302005,
+    Unauthenticated = 402001,
+    AuthHeaderMissing = 402002,
+    AuthHeaderInvalid = 402003,
+    BearerRequired = 402004,
+    TokenInvalid = 402005,
 }

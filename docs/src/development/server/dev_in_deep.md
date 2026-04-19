@@ -42,24 +42,28 @@ block
 // framework/src/error/auth_code.rs
 #[error]
 pub enum AuthErrorCode {
-    TokenInvalid = 301001,
-    Unauthenticated = 301002,
+    Unauthenticated = 402001,
+    AuthHeaderMissing = 402002,
+    AuthHeaderInvalid = 402003,
+    BearerRequired = 402004,
+    TokenInvalid = 402005,
 }
 
 // framework/src/error/critical_code.rs
 #[error]
 pub enum CriticalErrorCode {
-    ResourceNotFound = 301001,
-    InternalError = 301002,
+    InternalError = 401001,
+    ResourceNotFound = 401002,
 }
 
 // framework/src/error/framework_code.rs
 #[error]
 pub enum FrameworkErrorCode {
-    ValidationInvalid = 401001,
-    QueryInvalid = 401002,
-    PathInvalid = 401003,
-    JsonInvalid = 401004,
+    ValidationInvalid = 301001,
+    QueryInvalid = 301002,
+    PathInvalid = 301003,
+    JsonInvalid = 301004,
+    MethodNotAllowed = 301005,
 }
 ```
 
@@ -133,8 +137,8 @@ let user = User::find_by_id(id).await?
 | ------ | ------------- | -------------------------------------- | -------- | -------- | ------------------------------------- |
 | 1xxyyy | 101001-199999 | 底层错误，预留                         | error    | 是       | 500/内部错误 code/内部错误            |
 | 2xxyyy | 201001-299999 | 第三方错误                             | error    | 是       | 500/内部错误 code/内部错误            |
-| 3xxyyy | 301001-399999 | 关键业务错误:如多次登录错误,数据不完整 | warn     | 否       | 500/内部错误 code/内部错误            |
-| 4xxyyy | 401001-499999 | 框架错误:如参数校验失败                | warn     | 否       | 500/内部错误 code/内部错误            |
+| 3xxyyy | 301001-399999 | 框架错误:如参数校验失败                | warn     | 否       | 500/内部错误 code/内部错误            |
+| 4xxyyy | 401001-499999 | 关键业务错误:如多次登录错误,数据不完整 | warn     | 否       | 500/内部错误 code/内部错误            |
 | 5xxyyy | 501001-599999 | 业务错误                               | info     | 否       | 200/直出/直出                         |
 
 注意事项

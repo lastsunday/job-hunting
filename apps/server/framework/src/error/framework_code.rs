@@ -2,9 +2,9 @@ use framework_macros::error;
 
 #[error]
 pub enum FrameworkErrorCode {
-    ValidationInvalid = 401001,
-    QueryInvalid = 401002,
-    PathInvalid = 401003,
-    JsonInvalid = 401004,
-    MethodNotAllowed = 401005,
+    ValidationInvalid = 301001,
+    QueryInvalid = 301002,
+    PathInvalid = 301003,
+    JsonInvalid = 301004,
+    MethodNotAllowed = 301005,
 }
