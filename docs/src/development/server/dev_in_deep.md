@@ -30,28 +30,46 @@ block
 
 | 枚举名称             | 模块名    | i18n key 前缀 |
 | -------------------- | --------- | ------------- |
+| `AuthErrorCode`      | auth      | `auth_`       |
+| `CriticalErrorCode`  | critical  | `critical_`   |
 | `FrameworkErrorCode` | framework | `framework_`  |
 | `UserErrorCode`      | user      | `user_`       |
 | `JobErrorCode`       | job       | `job_`        |
 
-**框架级错误码（3xx）** - 定义在 `framework/src/error_code.rs`
+**框架级错误码（3xx/4xx）** - 定义在 `framework/src/error/` 下各模块
 
-```rust
+```rust,ignore
+// framework/src/error/auth_code.rs
+#[error]
+pub enum AuthErrorCode {
+    TokenInvalid = 301001,
+    Unauthenticated = 301002,
+}
+
+// framework/src/error/critical_code.rs
+#[error]
+pub enum CriticalErrorCode {
+    ResourceNotFound = 301001,
+    InternalError = 301002,
+}
+
+// framework/src/error/framework_code.rs
 #[error]
 pub enum FrameworkErrorCode {
-    QueryInvalid = 101001,
-    JwtError = 201001,
-    InternalError = 301001,
+    ValidationInvalid = 401001,
+    QueryInvalid = 401002,
+    PathInvalid = 401003,
+    JsonInvalid = 401004,
 }
 ```
 
-**业务级错误码（4xx）** - 定义在各业务模块中
+**业务级错误码（5xx）** - 定义在各业务模块中
 
-```rust
+```rust,ignore
 #[error]
 pub enum UserErrorCode {
-    AccountNotFound = 403001,
-    InvalidPassword = 403002,
+    AccountNotFound = 503001,
+    InvalidPassword = 503002,
 }
 ```
 
@@ -72,13 +90,13 @@ pub enum UserErrorCode {
 
 **基本用法**
 
-```rust
+```rust,ignore
 return Err(UserErrorCode::AccountNotFound.into());
 ```
 
 **使用 ? 运算符**
 
-```rust
+```rust,ignore
 let user = User::find_by_id(id).await?
     .ok_or(UserErrorCode::AccountNotFound.into())?;
 ```
@@ -91,7 +109,7 @@ let user = User::find_by_id(id).await?
 
 1. 在 `error_tests!` 宏中添加新类型：
 
-   ```rust
+   ```rust,ignore
    error_tests! {
        FrameworkErrorCode,
        UserErrorCode,
@@ -133,5 +151,9 @@ let user = User::find_by_id(id).await?
 #### 核心组件
 
 - `framework/macros/src/lib.rs`: `#[error]` proc-macro 实现
-- `framework/src/error_code.rs`: FrameworkErrorCode 定义
-- `framework/src/error.rs`: ApiError 和 AppErrorCode trait
+- `framework/src/error/mod.rs`: ApiError、ApiResult、AppErrorCode trait
+- `framework/src/error/auth_code.rs`: AuthErrorCode
+- `framework/src/error/critical_code.rs`: CriticalErrorCode
+- `framework/src/error/framework_code.rs`: FrameworkErrorCode
+- `framework/src/error/base_code.rs`: BaseErrorCode
+- `framework/src/error/third_party_code.rs`: ThirdPartyErrorCode

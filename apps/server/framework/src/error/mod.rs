@@ -139,12 +139,8 @@ impl ApiError {
                 }
             }
         };
-        let body = if !i18n_key.is_empty() {
-            let message = i18n::translate(i18n_key);
-            axum::Json(ApiResponse::<()>::error(code, message))
-        } else {
-            axum::Json(ApiResponse::<()>::error(code, i18n_key))
-        };
+        let message = i18n::translate(i18n_key);
+        let body = axum::Json(ApiResponse::<()>::error(code, message));
         (status_code, body).into_response()
     }
 }
