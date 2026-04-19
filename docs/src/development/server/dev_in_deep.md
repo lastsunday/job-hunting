@@ -22,71 +22,37 @@ block
 
 #### 1. 定义错误码枚举
 
-使用 `#[error]` 宏定义错误码枚举。
+使用 `#[error]` 宏在 `framework/src/error/` 下定义枚举，或在各业务模块中定义。
 
-**命名规则**
-
-枚举名称必须以 `ErrorCode` 结尾，前缀即为模块名：
+**命名规则** - 枚举名称必须以 `ErrorCode` 结尾，前缀即为模块名
 
 | 枚举名称             | 模块名    | i18n key 前缀 |
 | -------------------- | --------- | ------------- |
-| `AuthErrorCode`      | auth      | `auth_`       |
-| `CriticalErrorCode`  | critical  | `critical_`   |
 | `FrameworkErrorCode` | framework | `framework_`  |
 | `UserErrorCode`      | user      | `user_`       |
-| `JobErrorCode`       | job       | `job_`        |
 
-**框架级错误码（3xx/4xx）** - 定义在 `framework/src/error/` 下各模块
+**框架级错误码** - 定义在 `framework/src/error/` 下
 
 ```rust,ignore
-// framework/src/error/auth_code.rs
-#[error]
-pub enum AuthErrorCode {
-    Unauthenticated = 402001,
-    AuthHeaderMissing = 402002,
-    AuthHeaderInvalid = 402003,
-    BearerRequired = 402004,
-    TokenInvalid = 402005,
-}
-
-// framework/src/error/critical_code.rs
-#[error]
-pub enum CriticalErrorCode {
-    InternalError = 401001,
-    ResourceNotFound = 401002,
-}
-
-// framework/src/error/framework_code.rs
 #[error]
 pub enum FrameworkErrorCode {
-    ValidationInvalid = 301001,
-    QueryInvalid = 301002,
-    PathInvalid = 301003,
-    JsonInvalid = 301004,
-    MethodNotAllowed = 301005,
+    // 3xx 框架错误: 参数校验失败、无效查询等
+    ValidationInvalid,
+    QueryInvalid,
 }
 ```
 
-**业务级错误码（5xx）** - 定义在各业务模块中
+**业务级错误码** - 定义在各业务模块中
 
 ```rust,ignore
 #[error]
 pub enum UserErrorCode {
-    AccountNotFound = 503001,
-    InvalidPassword = 503002,
+    // 5xx 业务错误
+    AccountNotFound,
 }
 ```
 
-**i18n key 规则**
-
-自动生成格式：`{模块名}_{变体名_snake_case}`
-
-例如：
-
-- `UserErrorCode::AccountNotFound` → `user_account_not_found`
-- `FrameworkErrorCode::ResourceNotFound` → `framework_resource_not_found`
-
-> **注意**：定义新错误码后，需在 i18n 配置文件中添加对应翻译。
+> **注意**：定义新错误码后，需在 i18n 配置文件中添加对应翻译（key 格式：`{模块名}_{变体名_snake_case}`）
 
 ---
 
@@ -149,15 +115,3 @@ let user = User::find_by_id(id).await?
 #### 编码规则
 
 6 位数字：`类别(1-5) + 模块(01-99) + 序号(001-999)`
-
-例如：`503001` = 5(业务错误) + 03(user 模块) + 001(第 1 个错误)
-
-#### 核心组件
-
-- `framework/macros/src/lib.rs`: `#[error]` proc-macro 实现
-- `framework/src/error/mod.rs`: ApiError、ApiResult、AppErrorCode trait
-- `framework/src/error/auth_code.rs`: AuthErrorCode
-- `framework/src/error/critical_code.rs`: CriticalErrorCode
-- `framework/src/error/framework_code.rs`: FrameworkErrorCode
-- `framework/src/error/base_code.rs`: BaseErrorCode
-- `framework/src/error/third_party_code.rs`: ThirdPartyErrorCode
