@@ -1,4 +1,5 @@
 import { getVersion } from '@/api';
+import { handleApiError } from '@/api/error';
 import {
   Button,
   Container,
@@ -10,7 +11,6 @@ import {
   Title,
   Select,
 } from '@mantine/core';
-import { showNotification } from '@mantine/notifications';
 import { useQuery } from '@tanstack/react-query';
 import {
   createFileRoute,
@@ -73,12 +73,7 @@ function RouteComponent() {
 
       await navigate({ to: search.redirect || fallback });
     } catch (error) {
-      console.error('Error logging in: ', error);
-      showNotification({
-        color: 'red',
-        title: t('common:error'),
-        message: `${error}`,
-      });
+      handleApiError(error);
     } finally {
       setIsSubmitting(false);
     }
@@ -109,8 +104,8 @@ function RouteComponent() {
           {isVersionLoading
             ? '...'
             : isVersionSuccess
-            ? version
-            : t('common:na')}
+              ? version
+              : t('common:na')}
         </Text>
       </Title>
 

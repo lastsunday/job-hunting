@@ -35,6 +35,7 @@ import { showNotification } from '@mantine/notifications';
 import { useEffect, useState } from 'react';
 import { jobApi, Job, CreateJobRequest, UpdateJobRequest } from '@/api/job';
 import { postJson } from '@/api/http';
+import { handleApiError } from '@/api/error';
 import { LocationMap } from '@/components/map/LocationMap';
 import { useTranslation } from 'react-i18next';
 
@@ -152,8 +153,8 @@ function RouteComponent() {
         typeof searchSalary === 'number'
           ? searchSalary
           : searchSalary
-          ? Number(searchSalary)
-          : undefined;
+            ? Number(searchSalary)
+            : undefined;
       const param: SearchParam = {
         page: { num: page, size: pageSize },
         name: searchName || undefined,
@@ -166,16 +167,12 @@ function RouteComponent() {
       };
       const result = await postJson<ApiPageResult<Job>>(
         '/api/job/search',
-        param
+        param,
       );
       setJobs(result.items);
       setTotal(result.total);
     } catch (error) {
-      showNotification({
-        color: 'red',
-        title: t('common:error'),
-        message: t('job:loadError'),
-      });
+      handleApiError(error);
     } finally {
       setLoading(false);
     }
@@ -320,11 +317,7 @@ function RouteComponent() {
       closeModal();
       loadJobs();
     } catch (error) {
-      showNotification({
-        color: 'red',
-        title: t('common:error'),
-        message: t('job:operationFailed'),
-      });
+      handleApiError(error);
     } finally {
       setSubmitting(false);
     }
@@ -343,11 +336,7 @@ function RouteComponent() {
       closeDelete();
       loadJobs();
     } catch (error) {
-      showNotification({
-        color: 'red',
-        title: t('common:error'),
-        message: t('job:operationFailed'),
-      });
+      handleApiError(error);
     } finally {
       setSubmitting(false);
     }
@@ -585,7 +574,7 @@ function RouteComponent() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 navigator.clipboard.writeText(
-                                  job.company_name!
+                                  job.company_name!,
                                 );
                                 showNotification({
                                   color: 'green',
@@ -614,7 +603,7 @@ function RouteComponent() {
                             onClick={(e) => {
                               e.stopPropagation();
                               navigator.clipboard.writeText(
-                                job.address || job.location_name || ''
+                                job.address || job.location_name || '',
                               );
                               showNotification({
                                 color: 'green',
@@ -786,7 +775,7 @@ function RouteComponent() {
                 type="job"
                 items={jobs
                   .filter(
-                    (job) => job.longitude != null && job.latitude != null
+                    (job) => job.longitude != null && job.latitude != null,
                   )
                   .map((job) => ({
                     id: job.id,
@@ -1154,7 +1143,7 @@ function RouteComponent() {
                 <Text size="md">
                   {viewingJob.salary_total_month
                     ? `${viewingJob.salary_total_month}${t(
-                        'job:salaryMonthUnit'
+                        'job:salaryMonthUnit',
                       )}`
                     : '-'}
                 </Text>

@@ -12,6 +12,16 @@ export interface ApiResult<T> {
   data: T;
 }
 
+export class ApiError extends Error {
+  constructor(
+    public code: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 export const instance = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL,
   headers: {
@@ -60,7 +70,7 @@ const refreshToken = async (refresh_token: string | null): Promise<Token> => {
       headers: {
         'Content-Type': 'application/json',
       },
-    }
+    },
   );
   if (status == HttpStatusCode.Ok || status == HttpStatusCode.BadRequest) {
     if (data) {
@@ -68,8 +78,7 @@ const refreshToken = async (refresh_token: string | null): Promise<Token> => {
       if (code == 0) {
         return data.data;
       } else {
-        const message = data.message;
-        throw `[${code}] ${message}`;
+        throw new ApiError(code, data.message);
       }
     } else {
       throw 'invalid data is null';
@@ -87,14 +96,13 @@ export async function postJson<T>(url: string, obj: Object): Promise<T> {
       if (code == 0) {
         return data.data;
       } else {
-        const message = data.message;
-        throw `[${code}] ${message}`;
+        throw new ApiError(code, data.message);
       }
     } else {
-      throw 'invalid data is null';
+      throw new ApiError(0, 'invalid data is null');
     }
   } else {
-    throw `invalid status code = ${status}`;
+    throw new ApiError(0, `invalid status code = ${status}`);
   }
 }
 
@@ -106,14 +114,13 @@ export async function getJson<T>(url: string, params?: any): Promise<T> {
       if (code == 0) {
         return data.data;
       } else {
-        const message = data.message;
-        throw `[${code}] ${message}`;
+        throw new ApiError(code, data.message);
       }
     } else {
-      throw 'invalid data is null';
+      throw new ApiError(0, 'invalid data is null');
     }
   } else {
-    throw `invalid status code = ${status}`;
+    throw new ApiError(0, `invalid status code = ${status}`);
   }
 }
 
@@ -125,14 +132,13 @@ export async function putJson<T>(url: string, obj: Object): Promise<T> {
       if (code == 0) {
         return data.data;
       } else {
-        const message = data.message;
-        throw `[${code}] ${message}`;
+        throw new ApiError(code, data.message);
       }
     } else {
-      throw 'invalid data is null';
+      throw new ApiError(0, 'invalid data is null');
     }
   } else {
-    throw `invalid status code = ${status}`;
+    throw new ApiError(0, `invalid status code = ${status}`);
   }
 }
 
@@ -144,13 +150,12 @@ export async function deleteJson<T>(url: string, params?: any): Promise<T> {
       if (code == 0) {
         return data.data;
       } else {
-        const message = data.message;
-        throw `[${code}] ${message}`;
+        throw new ApiError(code, data.message);
       }
     } else {
-      throw 'invalid data is null';
+      throw new ApiError(0, 'invalid data is null');
     }
   } else {
-    throw `invalid status code = ${status}`;
+    throw new ApiError(0, `invalid status code = ${status}`);
   }
 }

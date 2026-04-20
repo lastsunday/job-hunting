@@ -39,6 +39,7 @@ import {
   UpdateCompanyRequest,
 } from '@/api/company';
 import { postJson } from '@/api/http';
+import { ApiError, handleApiError } from '@/api/error';
 import { LocationMap } from '@/components/map/LocationMap';
 import { useTranslation } from 'react-i18next';
 
@@ -169,16 +170,12 @@ function RouteComponent() {
       };
       const result = await postJson<ApiPageResult<Company>>(
         '/api/company/search',
-        param
+        param,
       );
       setCompanies(result.items);
       setTotal(result.total);
     } catch (error) {
-      showNotification({
-        color: 'red',
-        title: t('common:error'),
-        message: t('company:loadError'),
-      });
+      handleApiError(error);
     } finally {
       setLoading(false);
     }
@@ -338,11 +335,7 @@ function RouteComponent() {
       closeModal();
       loadCompanies();
     } catch (error) {
-      showNotification({
-        color: 'red',
-        title: t('common:error'),
-        message: t('company:operationFailed'),
-      });
+      handleApiError(error);
     } finally {
       setSubmitting(false);
     }
@@ -361,11 +354,7 @@ function RouteComponent() {
       closeDelete();
       loadCompanies();
     } catch (error) {
-      showNotification({
-        color: 'red',
-        title: t('common:error'),
-        message: t('company:operationFailed'),
-      });
+      handleApiError(error);
     } finally {
       setSubmitting(false);
     }
@@ -783,7 +772,7 @@ function RouteComponent() {
                       >
                         {company.source_record_id
                           ? `${t(
-                              'company:sourceRecordId'
+                              'company:sourceRecordId',
                             )}: ${company.source_record_id.slice(0, 12)}...`
                           : '-'}
                       </div>
@@ -831,7 +820,7 @@ function RouteComponent() {
                 items={companies
                   .filter(
                     (company) =>
-                      company.longitude != null && company.latitude != null
+                      company.longitude != null && company.latitude != null,
                   )
                   .map((company) => ({
                     id: company.id,
@@ -1196,7 +1185,7 @@ function RouteComponent() {
                     variant="subtle"
                     onClick={() => {
                       navigator.clipboard.writeText(
-                        viewingCompany.source_record_id!
+                        viewingCompany.source_record_id!,
                       );
                       showNotification({
                         color: 'green',
