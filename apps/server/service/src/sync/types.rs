@@ -31,6 +31,7 @@ pub struct SyncStatus {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[serde(tag = "error_type")]
 pub enum ImportError {
     InvalidInteger {
         row: usize,
@@ -75,6 +76,7 @@ impl std::fmt::Display for ImportError {
 impl std::error::Error for ImportError {}
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+#[serde(tag = "error_type")]
 pub enum ImportWarning {
     VersionExceeded {
         file_version: usize,

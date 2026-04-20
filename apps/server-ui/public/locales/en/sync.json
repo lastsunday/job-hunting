@@ -24,12 +24,9 @@
   "fieldList": "Field List",
   "fieldCount": "{{count, number}} fields",
   "neverSynced": "Never Synced",
-  "error": {
-    "invalidInteger": "Row {{row}} field '{{field}}' value '{{value}}' is not a valid integer",
-    "invalidFloat": "Row {{row}} field '{{field}}' value '{{value}}' is not a valid decimal",
-    "missingRequiredField": "Row {{row}} missing required field '{{field}}'"
-  },
-  "warning": {
-    "versionExceeded": "File version v{{file_version}} exceeds maximum supported v{{max_supported_version}}, will use v{{actual_version}} for validation"
-  }
+  "errorInvalidInteger": "Row {{row}} field '{{field}}' value '{{value}}' is not a valid integer",
+  "errorInvalidFloat": "Row {{row}} field '{{field}}' value '{{value}}' is not a valid decimal",
+  "errorMissingRequiredField": "Row {{row}} missing required field '{{field}}'",
+  "warningVersionExceeded": "File version v{{file_version}} exceeds maximum supported v{{max_supported_version}}, will use v{{actual_version}} for validation",
+  "errorUnknown": "{{detail}}"
 }

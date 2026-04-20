@@ -23,43 +23,6 @@ import {
   ImportError,
   ImportWarning,
 } from '@/api/sync';
-
-const renderErrorMessage = (error: ImportError): string => {
-  switch (error.error_type) {
-    case 'InvalidInteger':
-      return t('error.invalidInteger', {
-        row: error.row,
-        field: error.field,
-        value: error.value,
-      });
-    case 'InvalidFloat':
-      return t('error.invalidFloat', {
-        row: error.row,
-        field: error.field,
-        value: error.value,
-      });
-    case 'MissingRequiredField':
-      return t('error.missingRequiredField', {
-        row: error.row,
-        field: error.field,
-      });
-    default:
-      return String(error);
-  }
-};
-
-const renderWarningMessage = (warning: ImportWarning): string => {
-  switch (warning.error_type) {
-    case 'VersionExceeded':
-      return t('warning.versionExceeded', {
-        file_version: warning.file_version,
-        max_supported_version: warning.max_supported_version,
-        actual_version: warning.actual_version,
-      });
-    default:
-      return String(warning);
-  }
-};
 import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/sync')({
@@ -67,7 +30,31 @@ export const Route = createFileRoute('/_pathlessLayout/admin/sync')({
 });
 
 function RouteComponent() {
-  const { t } = useTranslation('sync');
+  const { t } = useTranslation(['sync']);
+
+  const renderErrorMessage = (error: ImportError): string => {
+    const key = `error${error.error_type}`;
+    const params = {
+      row: error.row,
+      field: error.field,
+      value: error.value,
+    };
+    return (
+      t(key, params) ||
+      `${error.error_type}: row ${error.row}, field ${error.field}`
+    );
+  };
+
+  const renderWarningMessage = (warning: ImportWarning): string => {
+    const key = `warning${warning.error_type}`;
+    const params = {
+      file_version: warning.file_version,
+      max_supported_version: warning.max_supported_version,
+      actual_version: warning.actual_version,
+    };
+    return t(key, params) || `${warning.error_type}`;
+  };
+
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -126,7 +113,7 @@ function RouteComponent() {
           {
             error_type: 'InvalidInteger',
             row: 0,
-            field: String(error),
+            field: error instanceof Error ? error.message : String(error),
             value: '',
           },
         ],
