@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use calamine::{open_workbook_auto_from_rs, Reader, Sheets};
+use calamine::{Reader, Sheets, open_workbook_auto_from_rs};
 
 use crate::sync::error::ImportError;
 use crate::util::gen_bytes_sha256;
@@ -10,6 +10,10 @@ const HEADER_VERSION_PREFIX: &str = "__VERSION_";
 pub struct FileParser;
 
 impl FileParser {
+    pub fn gen_version_header(version: usize) -> String {
+        format!("{}{}", HEADER_VERSION_PREFIX, version)
+    }
+
     pub fn parse_excel(data: &[u8]) -> Result<Vec<Vec<String>>, ImportError> {
         if data.is_empty() {
             return Err(ImportError::FileEmpty);
@@ -265,19 +269,23 @@ impl FileParser {
     }
 
     fn get_valid_columns(version: usize, file_headers: &[&[&str]]) -> Vec<String> {
-        if version < file_headers.len() {
-            file_headers[version]
-                .iter()
-                .map(|s| s.to_string())
-                .collect()
-        } else {
-            file_headers
-                .last()
-                .unwrap()
-                .iter()
-                .map(|s| s.to_string())
-                .collect()
-        }
+        let mut result: Vec<String> = {
+            if version < file_headers.len() {
+                file_headers[version]
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect()
+            } else {
+                file_headers
+                    .last()
+                    .unwrap()
+                    .iter()
+                    .map(|s| s.to_string())
+                    .collect()
+            }
+        };
+        result.push(Self::gen_version_header(version));
+        result
     }
 
     pub fn parse_job_headers(headers: &[String], version: usize) -> JobHeaderMapping {

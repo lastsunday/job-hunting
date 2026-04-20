@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use chrono::{DateTime, FixedOffset, Utc};
+use chrono::{DateTime, FixedOffset, TimeZone, Utc};
 use entity::company::{ActiveModel as CompanyActiveModel, Entity as Company};
 use entity::company_source::{
     ActiveModel as CompanySourceActiveModel, Entity as CompanySource, Model as CompanySourceModel,
@@ -177,18 +177,15 @@ impl CompanyImporter {
                         company_source_map.into_values().collect();
 
                     // 保存过滤后的company_source记录
-                    Self::batch_insert_company_sources(filter_company_source.clone(), txn)
-                        .await?;
+                    Self::batch_insert_company_sources(filter_company_source.clone(), txn).await?;
 
                     // 构建 company_id 到 company_source 的映射
                     let mut filter_company_id_and_source_map = HashMap::new();
                     let mut company_ids = Vec::new();
                     for item in filter_company_source {
-                        let model = item
-                            .try_into_model()
-                            .map_err(|e| {
-                                DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
-                            })?;
+                        let model = item.try_into_model().map_err(|e| {
+                            DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
+                        })?;
                         let company_id = model.company_id.clone().ok_or_else(|| {
                             DbErr::Query(sea_orm::RuntimeErr::Internal(
                                 "company_id is empty".to_string(),
@@ -202,8 +199,10 @@ impl CompanyImporter {
                     // 查询已存在的company记录
                     let exists_company = Self::batch_query_companys(company_ids, txn).await?;
 
-                    let exists_company_map: HashMap<&str, &entity::company::Model> =
-                        exists_company.iter().map(|item| (item.id.as_str(), item)).collect();
+                    let exists_company_map: HashMap<&str, &entity::company::Model> = exists_company
+                        .iter()
+                        .map(|item| (item.id.as_str(), item))
+                        .collect();
 
                     let mut exists_company_source = Vec::new();
                     let mut not_exists_company_source = Vec::new();
@@ -237,21 +236,20 @@ impl CompanyImporter {
                         let (source_model, _) = filter_company_id_and_source_map
                             .get(&company_id)
                             .ok_or_else(|| {
-                                DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                    "can't find company source".to_string(),
-                                ))
-                            })?;
+                            DbErr::Query(sea_orm::RuntimeErr::Internal(
+                                "can't find company source".to_string(),
+                            ))
+                        })?;
 
-                        let existing_company = exists_company_map
-                            .get(company_id.as_str())
-                            .ok_or_else(|| {
+                        let existing_company =
+                            exists_company_map.get(company_id.as_str()).ok_or_else(|| {
                                 DbErr::Query(sea_orm::RuntimeErr::Internal(
                                     "can't find company".to_string(),
                                 ))
                             })?;
 
-                        let mut update_company =
-                            Self::build_company(source_model, &now, &now).map_err(|e| {
+                        let mut update_company = Self::build_company(source_model, &now, &now)
+                            .map_err(|e| {
                                 DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
                             })?;
 
@@ -263,9 +261,7 @@ impl CompanyImporter {
                                 // 从 company_source 重建
                                 update_company = Self::build_company(source_model, &now, &now)
                                     .map_err(|e| {
-                                        DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                            e.to_string(),
-                                        ))
+                                        DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
                                     })?;
                             }
                         }
@@ -372,7 +368,9 @@ impl CompanyImporter {
             company_id: ActiveValue::set(Some(company_id.to_string())),
             name: ActiveValue::set(get_string(mapping.name)),
             desc: ActiveValue::set(get_string(mapping.description)),
-            start_date: ActiveValue::Set(None),
+            start_date: ActiveValue::set(Self::parse_datetime(
+                Self::get_field_value(&mapping.start_date, row).as_str(),
+            )?),
             status: ActiveValue::set(get_string(mapping.status)),
             legal_person: ActiveValue::set(get_string(mapping.legal_person)),
             unified_code: ActiveValue::set(get_string(mapping.unified_code)),
@@ -401,21 +399,12 @@ impl CompanyImporter {
             update_datetime: ActiveValue::set(None),
         };
 
-        // 解析成立时间
-        if let Some(date_str) = get_string(mapping.start_date) {
-            if let Ok(dt) = DateTime::parse_from_rfc3339(&date_str) {
-                model.start_date = ActiveValue::Set(Some(dt.date_naive()));
-            } else if let Ok(naive) =
-                chrono::NaiveDate::parse_from_str(&date_str, "%Y-%m-%d")
-            {
-                model.start_date = ActiveValue::Set(Some(naive));
-            }
-        }
-
         // 解析 source_refresh_datetime
         if let Some(dt_str) = get_string(mapping.source_refresh_datetime) {
             if let Ok(dt) = DateTime::parse_from_rfc3339(&dt_str) {
                 model.source_refresh_datetime = ActiveValue::Set(Some(dt));
+            } else {
+                model.source_refresh_datetime = ActiveValue::Set(Some(*now));
             }
         }
 
@@ -430,13 +419,13 @@ impl CompanyImporter {
         if let Some(dt_str) = get_string(mapping.update_datetime) {
             if let Ok(dt) = DateTime::parse_from_rfc3339(&dt_str) {
                 model.update_datetime = ActiveValue::Set(Some(dt));
+                model.publish_datetime = ActiveValue::Set(Some(dt));
+            } else {
+                model.publish_datetime = ActiveValue::Set(Some(*now));
             }
         }
 
-        // 如果 create_datetime 未设置，使用 now
-        if matches!(model.create_datetime, ActiveValue::NotSet) {
-            model.create_datetime = ActiveValue::Set(Some(*now));
-        }
+        model.create_datetime = ActiveValue::Set(Some(*now));
         model.update_datetime = ActiveValue::Set(Some(*now));
 
         Ok(model)
@@ -483,5 +472,19 @@ impl CompanyImporter {
             create_datetime: ActiveValue::set(Some(*create_datetime)),
             update_datetime: ActiveValue::set(Some(*update_datetime)),
         })
+    }
+
+    fn parse_datetime(
+        s: &str,
+    ) -> Result<Option<DateTime<FixedOffset>>, Box<dyn std::error::Error>> {
+        if s.trim().is_empty() {
+            return Ok(None);
+        }
+        if let Ok(dt) = DateTime::parse_from_rfc3339(s) {
+            return Ok(Some(dt));
+        }
+        let naive = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")?;
+        let offset = FixedOffset::east_opt(0).unwrap();
+        Ok(Some(offset.from_utc_datetime(&naive)))
     }
 }

@@ -95,7 +95,7 @@ impl ApiError {
                 let c = code / 1_00000;
                 match c {
                     //Business
-                    5 => (StatusCode::OK, *code as i32, *i18n_key),
+                    5 => (StatusCode::BAD_REQUEST, *code as i32, *i18n_key),
                     3 | 4 => {
                         //Critical/framework
                         let code = *code;

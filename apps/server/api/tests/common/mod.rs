@@ -144,3 +144,52 @@ pub fn datetime_to_str(datetime: Option<DateTime<FixedOffset>>) -> String {
         None => "".to_owned(),
     }
 }
+
+#[allow(dead_code)]
+pub async fn put_json(app: Router, uri: &str, json: &Value) -> Response<Body> {
+    put_json_with_token(app, uri, json, None).await
+}
+
+#[allow(dead_code)]
+pub async fn put_json_with_token(
+    app: Router,
+    uri: &str,
+    json: &Value,
+    token: Option<String>,
+) -> Response<Body> {
+    let builder = Request::builder()
+        .method("PUT")
+        .uri(uri)
+        .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
+    let builder = match token {
+        Some(token) => builder.header(http::header::AUTHORIZATION, format!("Bearer {token}")),
+        None => builder,
+    };
+    let request = builder
+        .body(Body::from(serde_json::to_string(json).unwrap()))
+        .unwrap();
+    app.oneshot(request).await.unwrap()
+}
+
+#[allow(dead_code)]
+pub async fn delete_json(app: Router, uri: &str) -> Response<Body> {
+    delete_json_with_token(app, uri, None).await
+}
+
+#[allow(dead_code)]
+pub async fn delete_json_with_token(
+    app: Router,
+    uri: &str,
+    token: Option<String>,
+) -> Response<Body> {
+    let builder = Request::builder()
+        .method("DELETE")
+        .uri(uri)
+        .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
+    let builder = match token {
+        Some(token) => builder.header(http::header::AUTHORIZATION, format!("Bearer {token}")),
+        None => builder,
+    };
+    let request = builder.body(Body::from(())).unwrap();
+    app.oneshot(request).await.unwrap()
+}

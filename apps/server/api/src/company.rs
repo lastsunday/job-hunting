@@ -3,19 +3,23 @@ use framework::{error::critical_code::CriticalErrorCode, prelude::*};
 #[error]
 pub enum CompanyErrorCode {
     NameRequired = 504001,
+    NameImmutable = 504002,
 }
 
-use crate::AppState;
-use axum::{debug_handler, extract::Path, extract::State};
+use crate::{AppState, sync::SyncErrorCode};
+use axum::{debug_handler, extract::Extension, extract::Path, extract::State};
 use entity::company::{self, Entity as Company};
 use framework::{
+    auth::Principal,
     data::{ApiPageResult, ApiResponse, PageParam, valid::ValidJson},
-    error::ApiResult,
+    error::{ApiError, ApiResult},
+    middleware::get_auth_layer,
 };
 use sea_orm::{
-    ActiveValue::Set, ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter,
-    QueryOrder, QueryTrait,
+    ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait,
 };
+use service::sync::{CompanyImporter, FileParser, ImportError};
+use service::util::hash::{gen_add_or_update_uri, gen_company_id};
 use utoipa::ToSchema;
 use utoipa_axum::{
     router::{OpenApiRouter, UtoipaMethodRouterExt},
@@ -23,6 +27,146 @@ use utoipa_axum::{
 };
 
 const TAG: &str = "company";
+
+const COMPANY_CSV_VERSION: usize = 2;
+
+pub fn convert_company_to_csv_data(
+    param: &CreateCompanyRequest,
+    existing: Option<&company::Model>,
+) -> Vec<Vec<String>> {
+    let headers = FileParser::get_company_valid_columns(COMPANY_CSV_VERSION);
+    let ex = existing.as_ref();
+
+    let name = param
+        .name
+        .clone()
+        .unwrap_or_else(|| ex.and_then(|e| e.name.clone()).unwrap_or_default());
+    let desc = param
+        .desc
+        .clone()
+        .unwrap_or_else(|| ex.and_then(|e| e.desc.clone()).unwrap_or_default());
+    let status = param
+        .status
+        .clone()
+        .unwrap_or_else(|| ex.and_then(|e| e.status.clone()).unwrap_or_default());
+    let legal_person = param
+        .legal_person
+        .clone()
+        .unwrap_or_else(|| ex.and_then(|e| e.legal_person.clone()).unwrap_or_default());
+    let unified_code = param
+        .unified_code
+        .clone()
+        .unwrap_or_else(|| ex.and_then(|e| e.unified_code.clone()).unwrap_or_default());
+    let web_site = param
+        .web_site
+        .clone()
+        .unwrap_or_else(|| ex.and_then(|e| e.web_site.clone()).unwrap_or_default());
+    let insurance_num = param
+        .insurance_num
+        .or(ex.and_then(|e| e.insurance_num))
+        .map(|v| v.to_string())
+        .unwrap_or_default();
+    let self_risk = param
+        .self_risk
+        .or(ex.and_then(|e| e.self_risk))
+        .map(|v| v.to_string())
+        .unwrap_or_default();
+    let union_risk = param
+        .union_risk
+        .or(ex.and_then(|e| e.union_risk))
+        .map(|v| v.to_string())
+        .unwrap_or_default();
+    let address = param
+        .address
+        .clone()
+        .unwrap_or_else(|| ex.and_then(|e| e.address.clone()).unwrap_or_default());
+    let scope = param
+        .scope
+        .clone()
+        .unwrap_or_else(|| ex.and_then(|e| e.scope.clone()).unwrap_or_default());
+    let tax_no = param
+        .tax_no
+        .clone()
+        .unwrap_or_else(|| ex.and_then(|e| e.tax_no.clone()).unwrap_or_default());
+    let industry = param
+        .industry
+        .clone()
+        .unwrap_or_else(|| ex.and_then(|e| e.industry.clone()).unwrap_or_default());
+    let license_number = param.license_number.clone().unwrap_or_else(|| {
+        ex.and_then(|e| e.license_number.clone())
+            .unwrap_or_default()
+    });
+    let longitude = param
+        .longitude
+        .or(ex.and_then(|e| e.longitude))
+        .map(|v| v.to_string())
+        .unwrap_or_default();
+    let latitude = param
+        .latitude
+        .or(ex.and_then(|e| e.latitude))
+        .map(|v| v.to_string())
+        .unwrap_or_default();
+    let start_date = param
+        .start_date
+        .or(ex.and_then(|e| e.start_date))
+        .map(|v| v.to_rfc3339())
+        .unwrap_or_default();
+
+    let reg_capital_value = param
+        .reg_capital_value
+        .or(ex.and_then(|e| e.reg_capital_value))
+        .map(|v| v.to_string())
+        .unwrap_or_default();
+    let reg_capital_currency = param.reg_capital_currency.clone().unwrap_or_else(|| {
+        ex.and_then(|e| e.reg_capital_currency.clone())
+            .unwrap_or_default()
+    });
+    let source_url = param
+        .source_url
+        .clone()
+        .unwrap_or_else(|| ex.and_then(|e| e.source_url.clone()).unwrap_or_default());
+    let source_platform = param.source_platform.clone().unwrap_or_else(|| {
+        ex.and_then(|e| e.source_platform.clone())
+            .unwrap_or_default()
+    });
+    let source_record_id = param.source_record_id.clone().unwrap_or_else(|| {
+        ex.and_then(|e| e.source_record_id.clone())
+            .unwrap_or_default()
+    });
+    let create_datetime = ex
+        .and_then(|e| e.create_datetime)
+        .map(|v| v.to_rfc3339())
+        .unwrap_or_default();
+
+    let row = vec![
+        name,
+        desc,
+        start_date,
+        status,
+        legal_person,
+        unified_code,
+        web_site,
+        insurance_num,
+        self_risk,
+        union_risk,
+        address,
+        scope,
+        tax_no,
+        industry,
+        license_number,
+        longitude,
+        latitude,
+        reg_capital_value,
+        reg_capital_currency,
+        source_url,
+        source_platform,
+        source_record_id,
+        chrono::Utc::now().to_rfc3339(),
+        create_datetime,
+        chrono::Utc::now().to_rfc3339(),
+    ];
+    vec![headers, row]
+}
 
 pub fn create_routes(state: AppState) -> OpenApiRouter {
     OpenApiRouter::new()
@@ -34,6 +178,7 @@ pub fn create_routes(state: AppState) -> OpenApiRouter {
             "/company/{id}",
             axum::routing::delete(delete_company).with_state(state),
         )
+        .route_layer(get_auth_layer())
 }
 
 #[debug_handler]
@@ -196,42 +341,25 @@ pub async fn get_by_id(
 ))]
 pub async fn create(
     State(AppState { conn }): State<AppState>,
+    Extension(principal): Extension<Principal>,
     ValidJson(param): ValidJson<CreateCompanyRequest>,
 ) -> ApiResult<ApiResponse<company::Model>> {
-    let now: chrono::DateTime<chrono::Utc> = chrono::Utc::now();
-    let active_model = company::ActiveModel {
-        id: Set(param.id.unwrap_or_else(|| xid::new().to_string())),
-        name: Set(param.name),
-        desc: Set(param.desc),
-        start_date: Set(param.start_date),
-        status: Set(param.status),
-        legal_person: Set(param.legal_person),
-        unified_code: Set(param.unified_code),
-        web_site: Set(param.web_site),
-        source_platform: Set(param.source_platform),
-        insurance_num: Set(param.insurance_num),
-        self_risk: Set(param.self_risk),
-        union_risk: Set(param.union_risk),
-        address: Set(param.address),
-        scope: Set(param.scope),
-        tax_no: Set(param.tax_no),
-        industry: Set(param.industry),
-        license_number: Set(param.license_number),
-        longitude: Set(param.longitude),
-        latitude: Set(param.latitude),
-        reg_capital_value: Set(param.reg_capital_value),
-        reg_capital_currency: Set(param.reg_capital_currency),
-        source_url: Set(param.source_url),
-        source_record_id: Set(param.source_record_id),
-        source_refresh_datetime: Set(param.source_refresh_datetime),
-        paidin_capital_value: Set(param.paidin_capital_value),
-        paidin_capital_currency: Set(param.paidin_capital_currency),
-        uri: Set(param.uri),
-        create_datetime: Set(Some(now.into())),
-        update_datetime: Set(Some(now.into())),
-    };
-    let result = Company::insert(active_model).exec(&conn).await?;
-    let company = Company::find_by_id(result.last_insert_id)
+    let company_id = param
+        .id
+        .clone()
+        .or_else(|| param.name.as_deref().map(gen_company_id))
+        .ok_or(CompanyErrorCode::NameRequired)?;
+    let csv_data = convert_company_to_csv_data(&param, None);
+    let uri = gen_add_or_update_uri(&principal.name, COMPANY_CSV_VERSION, &csv_data);
+
+    CompanyImporter::import(&conn, csv_data, &uri)
+        .await
+        .map_err(|e: service::sync::ImportError| match e {
+            ImportError::Database(e) => ApiError::from(e),
+            _ => ApiError::from_app_error(SyncErrorCode::ImportFailed),
+        })?;
+
+    let company = Company::find_by_id(&company_id)
         .one(&conn)
         .await?
         .ok_or(CriticalErrorCode::ResourceNotFound)?;
@@ -244,6 +372,7 @@ pub async fn create(
 ))]
 pub async fn update(
     State(AppState { conn }): State<AppState>,
+    Extension(principal): Extension<Principal>,
     Path(id): Path<String>,
     ValidJson(param): ValidJson<UpdateCompanyRequest>,
 ) -> ApiResult<ApiResponse<company::Model>> {
@@ -252,37 +381,77 @@ pub async fn update(
         .await?
         .ok_or(CriticalErrorCode::ResourceNotFound)?;
 
-    let active_model = company::ActiveModel {
-        id: Set(id.clone()),
-        name: Set(param.name.or(existing.name)),
-        desc: Set(param.desc.or(existing.desc)),
-        start_date: Set(param.start_date.or(existing.start_date)),
-        status: Set(param.status.or(existing.status)),
-        legal_person: Set(param.legal_person.or(existing.legal_person)),
-        unified_code: Set(param.unified_code.or(existing.unified_code)),
-        web_site: Set(param.web_site.or(existing.web_site)),
-        source_platform: Set(param.source_platform.or(existing.source_platform)),
-        insurance_num: Set(param.insurance_num.or(existing.insurance_num)),
-        self_risk: Set(param.self_risk.or(existing.self_risk)),
-        union_risk: Set(param.union_risk.or(existing.union_risk)),
-        address: Set(param.address.or(existing.address)),
-        scope: Set(param.scope.or(existing.scope)),
-        tax_no: Set(param.tax_no.or(existing.tax_no)),
-        industry: Set(param.industry.or(existing.industry)),
-        license_number: Set(param.license_number.or(existing.license_number)),
-        longitude: Set(param.longitude.or(existing.longitude)),
-        latitude: Set(param.latitude.or(existing.latitude)),
-        reg_capital_value: Set(param.reg_capital_value.or(existing.reg_capital_value)),
-        reg_capital_currency: Set(param.reg_capital_currency.or(existing.reg_capital_currency)),
-        source_url: Set(param.source_url.or(existing.source_url)),
-        source_record_id: Set(param.source_record_id.or(existing.source_record_id)),
-        source_refresh_datetime: Set(param
-            .source_refresh_datetime
-            .or(existing.source_refresh_datetime)),
-        update_datetime: Set(Some(chrono::Utc::now().into())),
-        ..Default::default()
+    let param_name = param.name.clone();
+    let param_desc = param.desc.clone();
+    let param_status = param.status.clone();
+    let param_start_date = param.start_date;
+    let param_legal_person = param.legal_person.clone();
+    let param_unified_code = param.unified_code.clone();
+    let param_web_site = param.web_site.clone();
+    let param_source_platform = param.source_platform.clone();
+    let param_insurance_num = param.insurance_num;
+    let param_self_risk = param.self_risk;
+    let param_union_risk = param.union_risk;
+    let param_address = param.address.clone();
+    let param_scope = param.scope.clone();
+    let param_tax_no = param.tax_no.clone();
+    let param_industry = param.industry.clone();
+    let param_license_number = param.license_number.clone();
+    let param_longitude = param.longitude;
+    let param_latitude = param.latitude;
+    let param_reg_capital_value = param.reg_capital_value;
+    let param_reg_capital_currency = param.reg_capital_currency.clone();
+    let param_source_url = param.source_url.clone();
+    let param_source_record_id = param.source_record_id.clone();
+    let param_paidin_capital_value = param.paidin_capital_value;
+    let param_paidin_capital_currency = param.paidin_capital_currency.clone();
+    let param_uri = param.uri;
+
+    if let Some(ref new_name) = param_name {
+        if existing.name.as_deref() != Some(new_name) {
+            return Err(CompanyErrorCode::NameImmutable.into());
+        }
+    }
+
+    let param: CreateCompanyRequest = CreateCompanyRequest {
+        id: Some(id.clone()),
+        platform: param.platform,
+        name: param_name,
+        desc: param_desc,
+        start_date: param_start_date,
+        status: param_status,
+        legal_person: param_legal_person,
+        unified_code: param_unified_code,
+        web_site: param_web_site,
+        source_platform: param_source_platform,
+        insurance_num: param_insurance_num,
+        self_risk: param_self_risk,
+        union_risk: param_union_risk,
+        address: param_address,
+        scope: param_scope,
+        tax_no: param_tax_no,
+        industry: param_industry,
+        license_number: param_license_number,
+        longitude: param_longitude,
+        latitude: param_latitude,
+        reg_capital_value: param_reg_capital_value,
+        reg_capital_currency: param_reg_capital_currency,
+        source_url: param_source_url,
+        source_record_id: param_source_record_id,
+        paidin_capital_value: param_paidin_capital_value,
+        paidin_capital_currency: param_paidin_capital_currency,
+        uri: param_uri,
     };
-    Company::update(active_model).exec(&conn).await?;
+    let csv_data = convert_company_to_csv_data(&param, Some(&existing));
+    let uri = gen_add_or_update_uri(&principal.name, COMPANY_CSV_VERSION, &csv_data);
+
+    CompanyImporter::import(&conn, csv_data, &uri)
+        .await
+        .map_err(|e: service::sync::ImportError| match e {
+            ImportError::Database(e) => ApiError::from(e),
+            _ => ApiError::from_app_error(SyncErrorCode::ImportFailed),
+        })?;
+
     let company = Company::find_by_id(&id)
         .one(&conn)
         .await?
@@ -308,8 +477,8 @@ pub async fn delete_company(
     Ok(ApiResponse::success(Some("Deleted".to_string())))
 }
 
-use chrono::{DateTime, FixedOffset, NaiveDate};
-use serde::{Deserialize, Serialize};
+use chrono::{DateTime, FixedOffset};
+use serde::{Deserialize, Deserializer, Serialize, de::IntoDeserializer};
 use validator::Validate;
 
 #[derive(Default, Deserialize, Serialize, Debug, Clone, Validate, ToSchema)]
@@ -334,7 +503,8 @@ pub struct CreateCompanyRequest {
     pub platform: Option<String>,
     pub name: Option<String>,
     pub desc: Option<String>,
-    pub start_date: Option<NaiveDate>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
+    pub start_date: Option<DateTime<FixedOffset>>,
     pub status: Option<String>,
     pub legal_person: Option<String>,
     pub unified_code: Option<String>,
@@ -354,7 +524,6 @@ pub struct CreateCompanyRequest {
     pub reg_capital_currency: Option<String>,
     pub source_url: Option<String>,
     pub source_record_id: Option<String>,
-    pub source_refresh_datetime: Option<DateTime<FixedOffset>>,
     pub paidin_capital_value: Option<f64>,
     pub paidin_capital_currency: Option<String>,
     pub uri: Option<String>,
@@ -365,7 +534,8 @@ pub struct UpdateCompanyRequest {
     pub platform: Option<String>,
     pub name: Option<String>,
     pub desc: Option<String>,
-    pub start_date: Option<NaiveDate>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
+    pub start_date: Option<DateTime<FixedOffset>>,
     pub status: Option<String>,
     pub legal_person: Option<String>,
     pub unified_code: Option<String>,
@@ -385,8 +555,20 @@ pub struct UpdateCompanyRequest {
     pub reg_capital_currency: Option<String>,
     pub source_url: Option<String>,
     pub source_record_id: Option<String>,
-    pub source_refresh_datetime: Option<DateTime<FixedOffset>>,
     pub paidin_capital_value: Option<f64>,
     pub paidin_capital_currency: Option<String>,
     pub uri: Option<String>,
+}
+
+fn empty_string_as_none<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    T: serde::de::DeserializeOwned,
+    D: Deserializer<'de>,
+{
+    let opt: Option<String> = Option::deserialize(deserializer)?;
+    match opt {
+        Some(s) if s.is_empty() => Ok(None),
+        Some(s) => Ok(Some(T::deserialize(s.into_deserializer())?)),
+        None => Ok(None),
+    }
 }

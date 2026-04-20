@@ -13,7 +13,8 @@ pub struct Model {
     pub company_id: Option<String>,
     pub name: Option<String>,
     pub desc: Option<String>,
-    pub start_date: Option<chrono::NaiveDate>,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
+    pub start_date: Option<DateTimeWithTimeZone>,
     pub status: Option<String>,
     pub legal_person: Option<String>,
     pub unified_code: Option<String>,

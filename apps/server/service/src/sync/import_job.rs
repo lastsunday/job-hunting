@@ -20,7 +20,10 @@ pub struct JobImporter;
 impl JobImporter {
     const BATCH_SIZE: usize = 900;
 
-    async fn batch_query_job_sources<C>(ids: Vec<String>, conn: &C) -> Result<Vec<JobSourceModel>, DbErr>
+    async fn batch_query_job_sources<C>(
+        ids: Vec<String>,
+        conn: &C,
+    ) -> Result<Vec<JobSourceModel>, DbErr>
     where
         C: ConnectionTrait,
     {
@@ -159,15 +162,17 @@ impl JobImporter {
                                 row,
                                 &now,
                                 &uri,
-                            ).map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?,
+                            )
+                            .map_err(|e| {
+                                DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
+                            })?,
                         );
                     }
 
                     // 根据data job_source id获取已存在数据中的job_source记录
-                    let exists_job_source = Self::batch_query_job_sources(
-                        job_ids_from_data.into_iter().collect(),
-                        txn,
-                    ).await?;
+                    let exists_job_source =
+                        Self::batch_query_job_sources(job_ids_from_data.into_iter().collect(), txn)
+                            .await?;
 
                     // 过滤数据库中的job_source记录
                     let exists_job_source_ids: Vec<String> = exists_job_source
@@ -189,11 +194,13 @@ impl JobImporter {
 
                     // 根据过滤后的job source更新或插入对应的job记录
                     for item in filter_job_source {
-                        let model = item
-                            .try_into_model()
-                            .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?;
+                        let model = item.try_into_model().map_err(|e| {
+                            DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
+                        })?;
                         let job_id = model.job_id.clone().ok_or_else(|| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal("job_id is empty".to_string()))
+                            DbErr::Query(sea_orm::RuntimeErr::Internal(
+                                "job_id is empty".to_string(),
+                            ))
                         })?;
                         filter_job_id_and_job_source_map.insert(job_id.clone(), model);
                         job_ids.push(job_id);
@@ -220,8 +227,9 @@ impl JobImporter {
 
                     // 如果job不存在，则进行插入逻辑
                     for item in not_exists_job_source {
-                        let job = Self::build_job(item, &now, &now)
-                            .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?;
+                        let job = Self::build_job(item, &now, &now).map_err(|e| {
+                            DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
+                        })?;
                         insert_job.push(job);
                     }
 
@@ -230,74 +238,75 @@ impl JobImporter {
                     // 如果job已存在，则进行更新处理逻辑
                     for item in exists_job_source {
                         let id = item.job_id.clone().ok_or_else(|| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal("job_source job_id is empty".to_string()))
+                            DbErr::Query(sea_orm::RuntimeErr::Internal(
+                                "job_source job_id is empty".to_string(),
+                            ))
                         })?;
                         let job_source = item;
-                        let job = exists_job_id_model_map
-                            .get(id.as_str())
-                            .ok_or_else(|| {
-                                DbErr::Query(sea_orm::RuntimeErr::Internal("cant' get job model by id".to_string()))
+                        let job = exists_job_id_model_map.get(id.as_str()).ok_or_else(|| {
+                            DbErr::Query(sea_orm::RuntimeErr::Internal(
+                                "cant' get job model by id".to_string(),
+                            ))
+                        })?;
+                        let mut update_job =
+                            job.to_owned().clone().try_into_model().map_err(|e| {
+                                DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
                             })?;
-                        let mut update_job = job
-                            .to_owned()
-                            .clone()
-                            .try_into_model()
-                            .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?;
 
                         // 规则1: 更新的数据发布时间，如果job source列表的记录的publish datetime更加新，
                         // 那么job的所有字段（除公司名称，公司名是否为全称，首次扫描时间）需要更新
-                        if update_job
-                            .publish_datetime
-                            .ok_or_else(|| {
-                                DbErr::Query(sea_orm::RuntimeErr::Internal("job publish_datetime is empty".to_string()))
-                            })?
-                            < job_source
-                                .publish_datetime
-                                .ok_or_else(|| {
-                                    DbErr::Query(sea_orm::RuntimeErr::Internal("job_source publish_datetime is empty".to_string()))
-                                })?
-                        {
+                        if update_job.publish_datetime.ok_or_else(|| {
+                            DbErr::Query(sea_orm::RuntimeErr::Internal(
+                                "job publish_datetime is empty".to_string(),
+                            ))
+                        })? < job_source.publish_datetime.ok_or_else(|| {
+                            DbErr::Query(sea_orm::RuntimeErr::Internal(
+                                "job_source publish_datetime is empty".to_string(),
+                            ))
+                        })? {
                             update_job = Self::build_job(
                                 &job_source,
                                 &now,
                                 &job.create_datetime.ok_or_else(|| {
-                                    DbErr::Query(sea_orm::RuntimeErr::Internal("job create_datetime is empty".to_string()))
+                                    DbErr::Query(sea_orm::RuntimeErr::Internal(
+                                        "job create_datetime is empty".to_string(),
+                                    ))
                                 })?,
                             )
-                            .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?
+                            .map_err(|e| {
+                                DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
+                            })?
                             .try_into_model()
-                            .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?;
+                            .map_err(|e| {
+                                DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
+                            })?;
                         }
 
                         // 规则2: 获得公司全称，如果原job的公司名称不是全称，而job source的是全称，那么更新
-                        if !job
-                            .is_full_company_name
-                            .ok_or_else(|| {
-                                DbErr::Query(sea_orm::RuntimeErr::Internal("job is_full_company_name is empty".to_string()))
-                            })?
-                            && job_source
-                                .is_full_company_name
-                                .ok_or_else(|| {
-                                    DbErr::Query(sea_orm::RuntimeErr::Internal("job_source is_full_company_name is empty".to_string()))
-                                })?
-                        {
+                        if !job.is_full_company_name.ok_or_else(|| {
+                            DbErr::Query(sea_orm::RuntimeErr::Internal(
+                                "job is_full_company_name is empty".to_string(),
+                            ))
+                        })? && job_source.is_full_company_name.ok_or_else(|| {
+                            DbErr::Query(sea_orm::RuntimeErr::Internal(
+                                "job_source is_full_company_name is empty".to_string(),
+                            ))
+                        })? {
                             update_job.is_full_company_name = Some(true);
                             update_job.company_name = job_source.company_name.clone();
                         }
 
                         // 规则3: 更早的首次扫描时间，如果原job source的首次扫描时间比job的更早，
                         // 那么更新job source的首次扫描时间到job
-                        if job_source
-                            .first_scan_datetime
-                            .ok_or_else(|| {
-                                DbErr::Query(sea_orm::RuntimeErr::Internal("job_source first_scan_datetime is empty".to_string()))
-                            })?
-                            < job
-                                .first_scan_datetime
-                                .ok_or_else(|| {
-                                    DbErr::Query(sea_orm::RuntimeErr::Internal("job first_scan_datetime is empty".to_string()))
-                                })?
-                        {
+                        if job_source.first_scan_datetime.ok_or_else(|| {
+                            DbErr::Query(sea_orm::RuntimeErr::Internal(
+                                "job_source first_scan_datetime is empty".to_string(),
+                            ))
+                        })? < job.first_scan_datetime.ok_or_else(|| {
+                            DbErr::Query(sea_orm::RuntimeErr::Internal(
+                                "job first_scan_datetime is empty".to_string(),
+                            ))
+                        })? {
                             update_job.first_scan_datetime = job_source.first_scan_datetime;
                         } else {
                             update_job.first_scan_datetime = job.first_scan_datetime;
@@ -402,7 +411,7 @@ impl JobImporter {
                 if text.is_empty() {
                     ActiveValue::set(None)
                 } else {
-                    ActiveValue::set(Some(Self::parse_datetime(text.as_str())?))
+                    ActiveValue::set(Self::parse_datetime(text.as_str())?)
                 }
             },
             boss_name: ActiveValue::set(Some(Self::get_field_value(&mapping.boss_name, row))),
@@ -420,13 +429,13 @@ impl JobImporter {
             ))),
             skill_tag: ActiveValue::set(Some(Self::get_field_value(&mapping.skill_tag, row))),
             welfare_tag: ActiveValue::set(Some(Self::get_field_value(&mapping.welfare_tag, row))),
-            first_scan_datetime: ActiveValue::set(Some(Self::parse_datetime(
+            first_scan_datetime: ActiveValue::set(Self::parse_datetime(
                 Self::get_field_value(&mapping.create_datetime, row).as_str(),
-            )?)),
+            )?),
             uri: ActiveValue::set(Some(uri.to_string())),
-            publish_datetime: ActiveValue::set(Some(Self::parse_datetime(
+            publish_datetime: ActiveValue::set(Self::parse_datetime(
                 Self::get_field_value(&mapping.update_datetime, row).as_str(),
-            )?)),
+            )?),
             create_datetime: ActiveValue::set(Some(*now)),
             update_datetime: ActiveValue::set(Some(*now)),
         })
@@ -493,12 +502,17 @@ impl JobImporter {
         }
     }
 
-    fn parse_datetime(s: &str) -> Result<DateTime<FixedOffset>, Box<dyn std::error::Error>> {
+    fn parse_datetime(
+        s: &str,
+    ) -> Result<Option<DateTime<FixedOffset>>, Box<dyn std::error::Error>> {
+        if s.trim().is_empty() {
+            return Ok(None);
+        }
         if let Ok(dt) = DateTime::parse_from_rfc3339(s) {
-            return Ok(dt);
+            return Ok(Some(dt));
         }
         let naive = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")?;
         let offset = FixedOffset::east_opt(0).unwrap();
-        Ok(offset.from_utc_datetime(&naive))
+        Ok(Some(offset.from_utc_datetime(&naive)))
     }
 }
