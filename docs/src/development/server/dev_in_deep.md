@@ -165,7 +165,7 @@ let user = User::find_by_id(id).await?
 
 **日志输出**
 
-```
+```shell
 [503001]account not found at src/user.rs:86
 ```
 
