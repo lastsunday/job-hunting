@@ -23,7 +23,7 @@ tracing-subscriber = { workspace = true, features = ["env-filter", "chrono"] }
 tracing-error = { workspace = true, features = ["traced-error"] }
 validator = { workspace = true, features = ["derive"] }
 thiserror = { workspace = true }
-anyhow = { workspace = true }
+anyhow = { workspace = true, features = ["backtrace"] }
 jsonwebtoken = { workspace = true }
 sea-orm = { workspace = true, features = [
   "with-chrono",
@@ -42,4 +42,3 @@ num_cpus = { workspace = true }
 strum = { workspace = true }
 strum_macros = { workspace = true }
 framework-macros = { path = "macros" }
-i18n = { path = "../i18n" }

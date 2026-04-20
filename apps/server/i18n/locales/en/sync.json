@@ -1,6 +1,0 @@
-{
-  "file_invalid": "Invalid file data",
-  "excel_parse_failed": "Failed to parse Excel file",
-  "import_failed": "Import operation failed",
-  "data_type_invalid": "Invalid data type"
-}

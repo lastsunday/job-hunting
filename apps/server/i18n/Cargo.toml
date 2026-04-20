@@ -1,8 +1,0 @@
-[package]
-name = "i18n"
-version.workspace = true
-authors.workspace = true
-edition.workspace = true
-
-[dependencies]
-rust-i18n = { workspace = true }

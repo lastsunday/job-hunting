@@ -1,9 +1,10 @@
+use std::backtrace::Backtrace;
+
 use axum::{
     extract::rejection::{JsonRejection, PathRejection, QueryRejection},
     http::StatusCode,
     response::{IntoResponse, Response},
 };
-use i18n::translate;
 use sea_orm::DbErr;
 use tracing::{error, info, warn};
 
@@ -25,17 +26,17 @@ pub type ApiResult<T> = Result<T, ApiError>;
 
 pub trait AppErrorCode: Send + Sync {
     fn code(&self) -> u32;
-    fn i18n_key(&self) -> &'static str;
-    fn message(&self) -> Option<String>;
+    fn message(&self) -> String;
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum ApiError {
-    #[error("App error: {i18n_key} ({code})")]
+    #[error("App error: {code}")]
     App {
         code: u32,
-        i18n_key: &'static str,
-        message: Option<String>,
+        message: String,
+        extra_message: Option<String>,
+        backtrace: Option<Backtrace>,
     },
 }
 
@@ -43,8 +44,25 @@ impl ApiError {
     pub fn from_app_error<T: AppErrorCode + Send + Sync + 'static>(err: T) -> Self {
         ApiError::App {
             code: err.code(),
-            i18n_key: err.i18n_key(),
             message: err.message(),
+            extra_message: None,
+            backtrace: Some(Backtrace::capture()),
+        }
+    }
+
+    pub fn with_extra(self, extra: impl Into<String>) -> Self {
+        match self {
+            ApiError::App {
+                code,
+                message,
+                extra_message: _,
+                backtrace,
+            } => ApiError::App {
+                code,
+                message,
+                extra_message: Some(extra.into()),
+                backtrace,
+            },
         }
     }
 
@@ -52,32 +70,40 @@ impl ApiError {
         match self {
             ApiError::App {
                 code,
-                i18n_key,
                 message,
+                extra_message,
+                backtrace: _,
             } => {
                 let c = code / 1_00000;
                 match c {
                     5 => {
-                        //Business
-                        info!("{}({})-{:?}", code, translate(i18n_key), message);
-                    }
-                    3 | 4 => {
-                        //Critical/framework
-                        match message {
-                            Some(message) => {
-                                warn!("{}({}):{}", code, translate(i18n_key), message);
+                        // Business
+                        match extra_message {
+                            Some(extra) => {
+                                info!("[{}]{}: {}", code, message, extra);
                             }
                             None => {
-                                warn!("{}({})", code, translate(i18n_key));
+                                info!("[{}]{}", code, message);
                             }
                         }
                     }
-                    _ => match message {
-                        Some(message) => {
-                            error!("{}({}):{}", code, translate(i18n_key), message);
+                    3 | 4 => {
+                        // Critical/framework
+                        match extra_message {
+                            Some(extra) => {
+                                warn!("[{}]{}: {}", code, message, extra);
+                            }
+                            None => {
+                                warn!("[{}]{}", code, message);
+                            }
+                        }
+                    }
+                    _ => match extra_message {
+                        Some(extra) => {
+                            error!("[{}]{}: {}", code, message, extra);
                         }
                         None => {
-                            error!("{}({})", code, translate(i18n_key));
+                            error!("[{}]{}", code, message);
                         }
                     },
                 };
@@ -86,18 +112,19 @@ impl ApiError {
     }
 
     pub fn gen_response(&self) -> Response {
-        let (status_code, code, i18n_key) = match self {
+        let (status_code, code, message) = match self {
             ApiError::App {
                 code,
-                i18n_key,
-                message: _,
+                message,
+                extra_message: _,
+                backtrace: _,
             } => {
                 let c = code / 1_00000;
                 match c {
-                    //Business
-                    5 => (StatusCode::BAD_REQUEST, *code as i32, *i18n_key),
+                    // Business
+                    5 => (StatusCode::BAD_REQUEST, *code as i32, message.clone()),
                     3 | 4 => {
-                        //Critical/framework
+                        // Critical/framework
                         let code = *code;
                         if code == AuthErrorCode::TokenInvalid.code()
                             || code == AuthErrorCode::Unauthenticated.code()
@@ -108,13 +135,13 @@ impl ApiError {
                             (
                                 StatusCode::UNAUTHORIZED,
                                 AuthErrorCode::Unauthenticated.code() as i32,
-                                AuthErrorCode::Unauthenticated.i18n_key(),
+                                AuthErrorCode::Unauthenticated.message(),
                             )
                         } else if code == CriticalErrorCode::ResourceNotFound.code() {
                             (
                                 StatusCode::NOT_FOUND,
                                 CriticalErrorCode::ResourceNotFound.code() as i32,
-                                CriticalErrorCode::ResourceNotFound.i18n_key(),
+                                CriticalErrorCode::ResourceNotFound.message(),
                             )
                         } else if code == FrameworkErrorCode::ValidationInvalid.code()
                             || code == FrameworkErrorCode::QueryInvalid.code()
@@ -122,24 +149,23 @@ impl ApiError {
                             || code == FrameworkErrorCode::JsonInvalid.code()
                             || code == FrameworkErrorCode::MethodNotAllowed.code()
                         {
-                            (StatusCode::BAD_REQUEST, code as i32, *i18n_key)
+                            (StatusCode::BAD_REQUEST, code as i32, message.clone())
                         } else {
                             (
                                 StatusCode::INTERNAL_SERVER_ERROR,
                                 CriticalErrorCode::InternalError.code() as i32,
-                                CriticalErrorCode::InternalError.i18n_key(),
+                                CriticalErrorCode::InternalError.message(),
                             )
                         }
                     }
                     _ => (
                         StatusCode::INTERNAL_SERVER_ERROR,
                         CriticalErrorCode::InternalError.code() as i32,
-                        CriticalErrorCode::InternalError.i18n_key(),
+                        CriticalErrorCode::InternalError.message(),
                     ),
                 }
             }
         };
-        let message = i18n::translate(i18n_key);
         let body = axum::Json(ApiResponse::<()>::error(code, message));
         (status_code, body).into_response()
     }
@@ -163,8 +189,9 @@ impl From<anyhow::Error> for ApiError {
         let err = critical_code::CriticalErrorCode::InternalError;
         ApiError::App {
             code: err.code(),
-            i18n_key: err.i18n_key(),
-            message: Some(value.to_string()),
+            message: err.message(),
+            extra_message: Some(value.to_string()),
+            backtrace: Some(std::backtrace::Backtrace::capture()),
         }
     }
 }
@@ -174,8 +201,9 @@ impl From<DbErr> for ApiError {
         let err = base_code::BaseErrorCode::Database;
         ApiError::App {
             code: err.code(),
-            i18n_key: err.i18n_key(),
-            message: Some(value.to_string()),
+            message: err.message(),
+            extra_message: Some(value.to_string()),
+            backtrace: Some(Backtrace::capture()),
         }
     }
 }
@@ -185,8 +213,9 @@ impl From<QueryRejection> for ApiError {
         let err = framework_code::FrameworkErrorCode::QueryInvalid;
         ApiError::App {
             code: err.code(),
-            i18n_key: err.i18n_key(),
-            message: Some(value.to_string()),
+            message: err.message(),
+            extra_message: Some(value.to_string()),
+            backtrace: Some(Backtrace::capture()),
         }
     }
 }
@@ -196,8 +225,9 @@ impl From<PathRejection> for ApiError {
         let err = framework_code::FrameworkErrorCode::PathInvalid;
         ApiError::App {
             code: err.code(),
-            i18n_key: err.i18n_key(),
-            message: Some(value.to_string()),
+            message: err.message(),
+            extra_message: Some(value.to_string()),
+            backtrace: Some(Backtrace::capture()),
         }
     }
 }
@@ -207,19 +237,21 @@ impl From<JsonRejection> for ApiError {
         let err = framework_code::FrameworkErrorCode::JsonInvalid;
         ApiError::App {
             code: err.code(),
-            i18n_key: err.i18n_key(),
-            message: Some(value.to_string()),
+            message: err.message(),
+            extra_message: Some(value.to_string()),
+            backtrace: Some(Backtrace::capture()),
         }
     }
 }
 
 impl From<bcrypt::BcryptError> for ApiError {
     fn from(value: bcrypt::BcryptError) -> Self {
-        let err = third_party_code::ThirdPartyErrorCode::JwtError;
+        let err = third_party_code::ThirdPartyErrorCode::PasswordError;
         ApiError::App {
             code: err.code(),
-            i18n_key: err.i18n_key(),
-            message: Some(value.to_string()),
+            message: err.message(),
+            extra_message: Some(value.to_string()),
+            backtrace: Some(Backtrace::capture()),
         }
     }
 }
@@ -231,8 +263,9 @@ impl From<axum_valid::ValidRejection<ApiError>> for ApiError {
                 let err = framework_code::FrameworkErrorCode::ValidationInvalid;
                 ApiError::App {
                     code: err.code(),
-                    i18n_key: err.i18n_key(),
-                    message: Some(errors.to_string()),
+                    message: err.message(),
+                    extra_message: Some(errors.to_string()),
+                    backtrace: Some(Backtrace::capture()),
                 }
             }
             axum_valid::ValidRejection::Inner(errors) => errors,

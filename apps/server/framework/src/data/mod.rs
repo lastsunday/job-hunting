@@ -14,14 +14,13 @@ use serder::deserialize_number;
 #[derive(Debug, Serialize, Deserialize, ToSchema)]
 pub struct ApiResponse<T> {
     pub code: i32,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub message: Option<String>,
+    pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<T>,
 }
 
 impl<T> ApiResponse<T> {
-    pub fn new(code: i32, message: Option<String>, data: Option<T>) -> Self {
+    pub fn new(code: i32, message: String, data: Option<T>) -> Self {
         Self {
             code,
             message,
@@ -30,15 +29,15 @@ impl<T> ApiResponse<T> {
     }
 
     pub fn success(data: Option<T>) -> Self {
-        Self::new(0, None, data)
+        Self::new(0, String::new(), data)
     }
 
     pub fn error<M: AsRef<str>>(code: i32, message: M) -> Self {
-        Self::new(code, Some(String::from(message.as_ref())), None)
+        Self::new(code, String::from(message.as_ref()), None)
     }
 
     pub fn failure<M: AsRef<str>>(message: M) -> Self {
-        Self::new(-1, Some(String::from(message.as_ref())), None)
+        Self::new(-1, String::from(message.as_ref()), None)
     }
 }
 

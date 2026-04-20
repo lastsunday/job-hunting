@@ -344,11 +344,18 @@ pub async fn create(
     Extension(principal): Extension<Principal>,
     ValidJson(param): ValidJson<CreateCompanyRequest>,
 ) -> ApiResult<ApiResponse<company::Model>> {
-    let company_id = param
-        .id
-        .clone()
-        .or_else(|| param.name.as_deref().map(gen_company_id))
-        .ok_or(CompanyErrorCode::NameRequired)?;
+    let company_id = {
+        match &param.name {
+            Some(name) => {
+                if name.trim().is_empty() {
+                    Err(CompanyErrorCode::NameRequired)
+                } else {
+                    Ok(gen_company_id(name))
+                }
+            }
+            None => Err(CompanyErrorCode::NameRequired),
+        }
+    }?;
     let csv_data = convert_company_to_csv_data(&param, None);
     let uri = gen_add_or_update_uri(&principal.name, COMPANY_CSV_VERSION, &csv_data);
 

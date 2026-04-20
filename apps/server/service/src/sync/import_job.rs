@@ -424,14 +424,16 @@ impl JobImporter {
                     if trimmed.is_empty() {
                         Ok(0.0)
                     } else {
-                        trimmed.parse::<f32>()
-                            .map_err(|_| {
+                        trimmed.parse::<f32>().map_err(|_| {
+                            {
                                 ImportErrorType::InvalidFloat {
                                     row: row_index,
                                     field: field_name,
                                     value: trimmed.to_string(),
                                 }
-                            }.into())
+                            }
+                            .into()
+                        })
                     }
                 }
                 _ => Ok(0.0),
@@ -447,14 +449,16 @@ impl JobImporter {
                     if trimmed.is_empty() {
                         Ok(0.0)
                     } else {
-                        trimmed.parse::<f64>()
-                            .map_err(|_| {
+                        trimmed.parse::<f64>().map_err(|_| {
+                            {
                                 ImportErrorType::InvalidFloat {
                                     row: row_index,
                                     field: field_name,
                                     value: trimmed.to_string(),
                                 }
-                            }.into())
+                            }
+                            .into()
+                        })
                     }
                 }
                 _ => Ok(0.0),
@@ -470,14 +474,16 @@ impl JobImporter {
                     if trimmed.is_empty() {
                         Ok(0)
                     } else {
-                        trimmed.parse::<i32>()
-                            .map_err(|_| {
+                        trimmed.parse::<i32>().map_err(|_| {
+                            {
                                 ImportErrorType::InvalidInteger {
                                     row: row_index,
                                     field: field_name,
                                     value: trimmed.to_string(),
                                 }
-                            }.into())
+                            }
+                            .into()
+                        })
                     }
                 }
                 _ => Ok(0),
@@ -578,18 +584,6 @@ impl JobImporter {
             uri: ActiveValue::set(source.uri.clone()),
             publish_datetime: ActiveValue::set(source.publish_datetime),
         })
-    }
-
-    fn parse_float(s: &str) -> Option<f32> {
-        s.trim().parse::<f32>().ok()
-    }
-
-    fn parse_f64(s: &str) -> Option<f64> {
-        s.trim().parse::<f64>().ok()
-    }
-
-    fn parse_int(s: &str) -> Option<i32> {
-        s.trim().parse::<i32>().ok()
     }
 
     fn parse_bool(s: &str) -> Option<bool> {

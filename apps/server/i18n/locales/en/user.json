@@ -1,7 +1,0 @@
-{
-  "invalid": "Account or password incorrect",
-  "client_invalid": "Invalid client credentials",
-  "grant_invalid": "Invalid grant type",
-  "account_not_found": "Account not found",
-  "old_password_incorrect": "Incorrect old password"
-}

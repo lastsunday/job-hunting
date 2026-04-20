@@ -1,11 +1,12 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use quote::quote_spanned;
-use syn::{Ident, Type, parse_macro_input};
+use syn::{parse_macro_input, Ident, Type};
 
 // Proc-macro attribute for automatically implementing standard error code enums.
 // Only works on enums, automatically implements AppErrorCode trait
-// and generates all_codes(), all_variant_names(), i18n_key(), code() methods.
+// and generates all_codes(), all_variant_names(), message(), code() methods.
+// Supports custom message via #[error(message = "...")]
 #[proc_macro_attribute]
 pub fn error(_attr: TokenStream, input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input);
@@ -21,10 +22,8 @@ pub fn error(_attr: TokenStream, input: TokenStream) -> TokenStream {
     let (impl_generics, ty_generics, where_clause) = item.generics.split_for_impl();
     let variants = &item.variants;
 
-    // Infer module name from type name, e.g., ErrorCode1001 -> app
+    // Infer module name from type name, e.g., UserErrorCode -> user
     let module = infer_module(&name_str);
-    // i18n key prefix, e.g., app_xxx
-    let module_prefix = format!("{}_", module);
 
     // Collect all explicitly specified discriminant values
     let values: Vec<u32> = variants
@@ -33,16 +32,44 @@ pub fn error(_attr: TokenStream, input: TokenStream) -> TokenStream {
         .filter_map(|(_, expr)| parse_discriminant(expr))
         .collect();
 
-    // Generate match arms for i18n_key method, key format: module_variant
-    // E.g., AppErrorCode::NotFound -> "app_not_found"
-    let i18n_key_arms: Vec<proc_macro2::TokenStream> = variants
+    // Generate match arms for message method
+    // Priority: 1. Custom message from attribute 2. Auto-generated: "module variant_name_snake_case"
+    // E.g., UserErrorCode::AccountNotFound -> "user account not found"
+    let message_arms: Vec<proc_macro2::TokenStream> = variants
         .iter()
         .map(|v| {
             let variant_name = &v.ident;
-            let key = format!("{}{}", module_prefix, to_snake_case(&variant_name));
-            let key_str = syn::LitStr::new(&key, variant_name.span());
+            // Try to get custom message from attributes: #[error(message = "...")]
+            // Format: #[error(message = "custom message")]
+            let custom_message = v.attrs.iter().find_map(|attr| {
+                if attr.path().is_ident("error") {
+                    let tokens = attr.meta.require_list().ok()?.tokens.clone();
+                    let tokens_str = tokens.to_string();
+                    // Parse "message = \"...\""
+                    if tokens_str.contains("message") {
+                        let msg = tokens_str
+                            .split("message")
+                            .nth(1)?
+                            .split('"')
+                            .nth(1)?
+                            .to_string();
+                        return Some(msg);
+                    }
+                }
+                None
+            });
+
+            // Generate message: "module variant name" or custom
+            let message = match custom_message {
+                Some(msg) => msg,
+                None => {
+                    let variant_msg = to_snake_case(variant_name).replace('_', " ");
+                    format!("{} {}", module, variant_msg)
+                }
+            };
+            let message_str = syn::LitStr::new(&message, variant_name.span());
             quote_spanned! { variant_name.span() =>
-                #name::#variant_name => #key_str,
+                #name::#variant_name => #message_str.to_string(),
             }
         })
         .collect();
@@ -51,15 +78,19 @@ pub fn error(_attr: TokenStream, input: TokenStream) -> TokenStream {
 
     let variant_name_strs: Vec<&str> = variant_names.iter().map(|s| s.as_str()).collect();
 
-    // Extract variants for enum definition generation
+    // Extract variants for enum definition generation (filter out #[error] attribute)
     let variant_tokens: proc_macro2::TokenStream = variants
         .iter()
-        .flat_map(|v| quote_spanned! { v.ident.span() => #v, })
+        .map(|v| {
+            let mut v = v.clone();
+            v.attrs.retain(|attr| !attr.path().is_ident("error"));
+            quote_spanned! { v.ident.span() => #v, }
+        })
         .collect();
 
     let target: Type = syn::parse_quote!(crate::error::ApiError);
 
-    // Skip From impl for framework module (direct usage)
+    // From impl
     let from_impl = quote! {
         impl #impl_generics From<#name #ty_generics> for #target #where_clause {
             fn from(err: #name #ty_generics) -> Self {
@@ -74,10 +105,10 @@ pub fn error(_attr: TokenStream, input: TokenStream) -> TokenStream {
     // 3. Original enum definition
     // 4. all_codes() - returns all discriminant values
     // 5. all_variant_names() - returns all variant names
-    // 6. i18n_key() - returns i18n key
+    // 6. message() - returns message (custom or auto-generated)
     // 7. code() - returns enum value as u32
     // 8. AppErrorCode trait implementation
-    // 9. Optional From<Enum> for ApiError implementation
+    // 9. From<Enum> for ApiError implementation
     let expanded = quote! {
         #[derive(Debug, Clone, Copy, PartialEq, Eq, strum_macros::IntoStaticStr, strum_macros::Display)]
         #[repr(u32)]
@@ -94,14 +125,18 @@ pub fn error(_attr: TokenStream, input: TokenStream) -> TokenStream {
                 &[#(#variant_name_strs),*]
             }
 
-            pub fn i18n_key(&self) -> &'static str {
+            pub fn message(&self) -> String {
                 match self {
-                    #(#i18n_key_arms)*
+                    #(#message_arms)*
                 }
             }
 
             pub fn code(&self) -> u32 {
                 *self as u32
+            }
+
+            pub fn with_extra(self, extra: impl Into<String>) -> crate::error::ApiError {
+                crate::error::ApiError::from_app_error(self).with_extra(extra)
             }
         }
 
@@ -110,14 +145,9 @@ pub fn error(_attr: TokenStream, input: TokenStream) -> TokenStream {
                 *self as u32
             }
 
-            fn i18n_key(&self) -> &'static str {
-                #name::i18n_key(self)
+            fn message(&self) -> String {
+                #name::message(self)
             }
-
-            fn message(&self) -> Option<String>{
-                None
-            }
-
         }
 
         #from_impl
@@ -126,11 +156,11 @@ pub fn error(_attr: TokenStream, input: TokenStream) -> TokenStream {
     TokenStream::from(expanded)
 }
 
-// Infers module name from type name, e.g., ErrorCode1001 -> app, FrameworkErrorCode -> framework
-// Logic: strips trailing "ErrorCode" suffix, converts to snake_case
+// Infers module name from type name, e.g., UserErrorCode -> user
+// Logic: strips trailing "ErrorCode" suffix, converts to lowercase
 fn infer_module(type_name: &str) -> String {
     let name = type_name.trim_end_matches("ErrorCode");
-    to_snake_case_name(name)
+    name.to_lowercase()
 }
 
 // Converts an Ident to snake_case
@@ -141,7 +171,7 @@ fn to_snake_case(ident: &Ident) -> String {
 
 // Converts a string to snake_case format
 // Rule: prepend underscore before each uppercase letter, then lowercase
-// E.g., ErrorCode1001 -> error_code1001, OAuthError -> oauth_error
+// E.g., AccountNotFound -> account_not_found, OAuthError -> oauth_error
 fn to_snake_case_name(name: &str) -> String {
     let mut result = String::new();
     for (i, c) in name.chars().enumerate() {

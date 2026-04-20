@@ -1,12 +1,11 @@
 use std::{pin::Pin, sync::LazyLock};
 
-use axum::{body::Body, extract::Request, http::Response, http::header, middleware::Next};
+use axum::{body::Body, extract::Request, http::Response, http::header};
 use tower_http::auth::{AsyncAuthorizeRequest, AsyncRequireAuthorizationLayer};
 
 use crate::{
     auth::Jwt,
     error::{ApiError, auth_code::AuthErrorCode},
-    i18n,
 };
 
 static AUTH_LAYER_INSTANCE: LazyLock<AsyncRequireAuthorizationLayer<JwtAuth>> =
@@ -63,23 +62,4 @@ impl AsyncAuthorizeRequest<Body> for JwtAuth {
 
 pub fn get_auth_layer() -> &'static AsyncRequireAuthorizationLayer<JwtAuth> {
     &AUTH_LAYER_INSTANCE
-}
-
-pub async fn extract_language(request: Request, next: Next) -> Response<Body> {
-    let locale = request
-        .headers()
-        .get(header::ACCEPT_LANGUAGE)
-        .and_then(|v| v.to_str().ok())
-        .map(|v| extract_primary_language(v))
-        .unwrap_or("en");
-
-    i18n::set_locale(locale);
-
-    next.run(request).await
-}
-
-fn extract_primary_language(accept_language: &str) -> &str {
-    let first = accept_language.split(',').next().unwrap_or("en");
-    let lang = first.split(';').next().unwrap_or("en").trim();
-    if lang.starts_with("zh") { "zh" } else { "en" }
 }

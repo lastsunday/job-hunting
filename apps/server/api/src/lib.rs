@@ -22,7 +22,6 @@ use service::AppState;
 use tokio::net::TcpListener;
 
 use framework::error::ApiResult;
-use framework::middleware::extract_language;
 use framework::trace::*;
 use framework::*;
 use tower_http::compression::CompressionLayer;
@@ -44,8 +43,6 @@ use framework::auth::Jwt;
 async fn start() -> anyhow::Result<()> {
     //init logger
     logger::init();
-    // init i18n
-    framework::i18n::init();
     // config
     let port = config::get().server().port();
     let database_url = config::get().database().url();
@@ -125,13 +122,11 @@ pub fn setup_default(router: Router) -> Router {
         .on_request(())
         .on_failure(())
         .on_response(LatencyOnResponse);
-    let language = axum::middleware::from_fn(extract_language);
     app.layer(timeout)
         .layer(body_limit)
         .layer(tracing)
         .layer(cors)
         .layer(normalize_path)
-        .layer(language)
 }
 
 pub fn setup_index(router: OpenApiRouter) -> OpenApiRouter {
