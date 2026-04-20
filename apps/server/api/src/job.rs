@@ -308,7 +308,7 @@ pub async fn get_by_id(
     let job = Job::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or(CriticalErrorCode::ResourceNotFound)?;
+        .ok_or(err!(CriticalErrorCode::ResourceNotFound))?;
     Ok(ApiResponse::success(Some(job)))
 }
 
@@ -329,13 +329,13 @@ pub async fn create(
         .await
         .map_err(|e: service::sync::ImportError| match e {
             ImportError::Database(e) => ApiError::from(e),
-            _ => ApiError::from_app_error(SyncErrorCode::ImportFailed),
+            _ => err!(SyncErrorCode::ImportFailed),
         })?;
 
     let job = Job::find_by_id(&job_id)
         .one(&conn)
         .await?
-        .ok_or(JobErrorCode::TitleRequired)?;
+        .ok_or(err!(JobErrorCode::TitleRequired))?;
     Ok(ApiResponse::success(Some(job)))
 }
 
@@ -352,7 +352,7 @@ pub async fn update(
     let existing = Job::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or(ApiError::from(JobErrorCode::TitleRequired))?;
+        .ok_or(err!(JobErrorCode::TitleRequired))?;
 
     let csv_data = convert_update_job_to_csv_data(&id, &param, &existing);
     let uri = gen_add_or_update_uri(&principal.name, JOB_CSV_VERSION, &csv_data);
@@ -361,13 +361,13 @@ pub async fn update(
         .await
         .map_err(|e: service::sync::ImportError| match e {
             ImportError::Database(e) => ApiError::from(e),
-            _ => ApiError::from_app_error(SyncErrorCode::ImportFailed),
+            _ => err!(SyncErrorCode::ImportFailed),
         })?;
 
     let job = Job::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or(CriticalErrorCode::ResourceNotFound)?;
+        .ok_or(err!(CriticalErrorCode::ResourceNotFound))?;
     Ok(ApiResponse::success(Some(job)))
 }
 
@@ -382,7 +382,7 @@ pub async fn delete_job(
     let job = Job::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or(CriticalErrorCode::ResourceNotFound)?;
+        .ok_or(err!(CriticalErrorCode::ResourceNotFound))?;
     Job::delete(job.into_active_model()).exec(&conn).await?;
     Ok(ApiResponse::success(Some("Deleted".to_string())))
 }

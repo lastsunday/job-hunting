@@ -81,9 +81,9 @@ async fn login(
         .filter(user::Column::Account.eq(&param.account))
         .one(&conn)
         .await?
-        .ok_or(UserErrorCode::Invalid)?;
+        .ok_or(err!(UserErrorCode::Invalid))?;
     if !verify(&param.password, &user.password)? {
-        return Err(UserErrorCode::Invalid.into());
+        return Err(err!(UserErrorCode::Invalid));
     }
     let principal = Principal {
         id: user.id,
@@ -128,9 +128,9 @@ async fn access_token(
 ) -> ApiResult<ApiResponse<LoginResult>> {
     let auth = config::get().auth();
     if !param.client_id.eq(auth.client_id()) || !param.client_secret.eq(auth.client_secret()) {
-        return Err(UserErrorCode::ClientInvalid.into());
+        return Err(err!(UserErrorCode::ClientInvalid));
     } else if !param.grant_type.eq("refresh_token") {
-        return Err(UserErrorCode::GrantInvalid.into());
+        return Err(err!(UserErrorCode::GrantInvalid));
     } else {
         let refresh_token_principal = Jwt::global().refresh_token_decode(&param.refresh_token)?;
         let access_token = Jwt::global().access_token_encode(refresh_token_principal.clone())?;
@@ -170,9 +170,9 @@ async fn reset_password(
         .filter(user::Column::Id.eq(principal.id.clone()))
         .one(&conn)
         .await?
-        .ok_or(UserErrorCode::AccountNotFound)?;
+        .ok_or(err!(UserErrorCode::AccountNotFound))?;
     if !verify(&param.old_password, &user.password)? {
-        return Err(UserErrorCode::OldPasswordIncorrect.into());
+        return Err(err!(UserErrorCode::OldPasswordIncorrect));
     }
     let hash_password = hash(param.password.as_str())?;
     let model = user::ActiveModel {

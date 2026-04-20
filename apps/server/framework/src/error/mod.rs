@@ -1,12 +1,11 @@
-use std::backtrace::Backtrace;
-
+use anyhow::Error;
 use axum::{
     extract::rejection::{JsonRejection, PathRejection, QueryRejection},
     http::StatusCode,
     response::{IntoResponse, Response},
 };
 use sea_orm::DbErr;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 use crate::{
     data::ApiResponse,
@@ -36,7 +35,9 @@ pub enum ApiError {
         code: u32,
         message: String,
         extra_message: Option<String>,
-        backtrace: Option<Backtrace>,
+        file: Option<String>,
+        line: Option<u32>,
+        error: Option<Error>,
     },
 }
 
@@ -46,7 +47,9 @@ impl ApiError {
             code: err.code(),
             message: err.message(),
             extra_message: None,
-            backtrace: Some(Backtrace::capture()),
+            file: None,
+            line: None,
+            error: None,
         }
     }
 
@@ -56,12 +59,16 @@ impl ApiError {
                 code,
                 message,
                 extra_message: _,
-                backtrace,
+                file,
+                line,
+                error,
             } => ApiError::App {
                 code,
                 message,
                 extra_message: Some(extra.into()),
-                backtrace,
+                file,
+                line,
+                error,
             },
         }
     }
@@ -72,32 +79,28 @@ impl ApiError {
                 code,
                 message,
                 extra_message,
-                backtrace: _,
+                file,
+                line,
+                error,
             } => {
                 let c = code / 1_00000;
                 match c {
-                    5 => {
-                        // Business
-                        match extra_message {
-                            Some(extra) => {
-                                info!("[{}]{}: {}", code, message, extra);
-                            }
-                            None => {
-                                info!("[{}]{}", code, message);
-                            }
+                    5 => match extra_message {
+                        Some(extra) => {
+                            info!("[{}]{}: {}", code, message, extra);
                         }
-                    }
-                    3 | 4 => {
-                        // Critical/framework
-                        match extra_message {
-                            Some(extra) => {
-                                warn!("[{}]{}: {}", code, message, extra);
-                            }
-                            None => {
-                                warn!("[{}]{}", code, message);
-                            }
+                        None => {
+                            info!("[{}]{}", code, message);
                         }
-                    }
+                    },
+                    3 | 4 => match extra_message {
+                        Some(extra) => {
+                            warn!("[{}]{}: {}", code, message, extra);
+                        }
+                        None => {
+                            warn!("[{}]{}", code, message);
+                        }
+                    },
                     _ => match extra_message {
                         Some(extra) => {
                             error!("[{}]{}: {}", code, message, extra);
@@ -107,6 +110,12 @@ impl ApiError {
                         }
                     },
                 };
+                if let (Some(file), Some(line)) = (file, line) {
+                    debug!("[{}]{} at {}:{}", code, message, file, line);
+                }
+                if let Some(error) = error {
+                    error!("{:?}", error);
+                }
             }
         };
     }
@@ -117,7 +126,9 @@ impl ApiError {
                 code,
                 message,
                 extra_message: _,
-                backtrace: _,
+                file: _,
+                line: _,
+                error: _,
             } => {
                 let c = code / 1_00000;
                 match c {
@@ -191,7 +202,9 @@ impl From<anyhow::Error> for ApiError {
             code: err.code(),
             message: err.message(),
             extra_message: Some(value.to_string()),
-            backtrace: Some(std::backtrace::Backtrace::capture()),
+            file: None,
+            line: None,
+            error: Some(value),
         }
     }
 }
@@ -203,7 +216,9 @@ impl From<DbErr> for ApiError {
             code: err.code(),
             message: err.message(),
             extra_message: Some(value.to_string()),
-            backtrace: Some(Backtrace::capture()),
+            file: None,
+            line: None,
+            error: None,
         }
     }
 }
@@ -215,7 +230,9 @@ impl From<QueryRejection> for ApiError {
             code: err.code(),
             message: err.message(),
             extra_message: Some(value.to_string()),
-            backtrace: Some(Backtrace::capture()),
+            file: None,
+            line: None,
+            error: None,
         }
     }
 }
@@ -227,7 +244,9 @@ impl From<PathRejection> for ApiError {
             code: err.code(),
             message: err.message(),
             extra_message: Some(value.to_string()),
-            backtrace: Some(Backtrace::capture()),
+            file: None,
+            line: None,
+            error: None,
         }
     }
 }
@@ -239,7 +258,9 @@ impl From<JsonRejection> for ApiError {
             code: err.code(),
             message: err.message(),
             extra_message: Some(value.to_string()),
-            backtrace: Some(Backtrace::capture()),
+            file: None,
+            line: None,
+            error: None,
         }
     }
 }
@@ -251,7 +272,9 @@ impl From<bcrypt::BcryptError> for ApiError {
             code: err.code(),
             message: err.message(),
             extra_message: Some(value.to_string()),
-            backtrace: Some(Backtrace::capture()),
+            file: None,
+            line: None,
+            error: None,
         }
     }
 }
@@ -265,10 +288,40 @@ impl From<axum_valid::ValidRejection<ApiError>> for ApiError {
                     code: err.code(),
                     message: err.message(),
                     extra_message: Some(errors.to_string()),
-                    backtrace: Some(Backtrace::capture()),
+                    file: None,
+                    line: None,
+                    error: None,
                 }
             }
             axum_valid::ValidRejection::Inner(errors) => errors,
         }
     }
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! err {
+    ($code:expr) => {{
+        {
+            let api_err = $crate::error::ApiError::from_app_error($code);
+            let new_err = match api_err {
+                $crate::error::ApiError::App {
+                    code,
+                    message,
+                    extra_message,
+                    file: _,
+                    line: _,
+                    error,
+                } => $crate::error::ApiError::App {
+                    code,
+                    message: message.clone(),
+                    extra_message,
+                    file: Some(file!().to_string()),
+                    line: Some(line!()),
+                    error,
+                },
+            };
+            new_err
+        }
+    }};
 }

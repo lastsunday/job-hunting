@@ -88,7 +88,7 @@ pub(crate) async fn import_file(
 ) -> ApiResult<ApiResponse<ImportResult>> {
     let data = base64::engine::general_purpose::STANDARD
         .decode(&param.file)
-        .map_err(|_| ApiError::from(SyncErrorCode::FileInvalid))?;
+        .map_err(|_| err!(SyncErrorCode::FileInvalid))?;
     let hash = FileParser::gen_file_sha256(&data);
     let uri = format!("data://{}@system/{}", principal.name, hash);
     let result = match param.data_type.as_str() {
@@ -101,12 +101,12 @@ pub(crate) async fn import_file(
             CompanyImporter::import(conn(&state), rows, uri.as_str()).await
         }
         _ => {
-            return Err(ApiError::from(SyncErrorCode::DataTypeInvalid));
+            return Err(err!(SyncErrorCode::DataTypeInvalid));
         }
     }
     .map_err(|e: service::sync::ImportError| match e {
         ImportError::Database(e) => ApiError::from(e),
-        _ => ApiError::from_app_error(SyncErrorCode::ImportFailed),
+        _ => err!(SyncErrorCode::ImportFailed),
     })?;
 
     Ok(ApiResponse::success(Some(result)))
@@ -125,25 +125,25 @@ pub(crate) async fn get_sync_status(
         .order_by(entity::job::Column::CreateDatetime, Order::Desc)
         .one(conn)
         .await
-        .map_err(|_| ApiError::from(SyncErrorCode::ImportFailed))?
+        .map_err(|_| err!(SyncErrorCode::ImportFailed))?
         .and_then(|j| j.create_datetime);
 
     let last_company = Company::find()
         .order_by(entity::company::Column::CreateDatetime, Order::Desc)
         .one(conn)
         .await
-        .map_err(|_| ApiError::from(SyncErrorCode::ImportFailed))?
+        .map_err(|_| err!(SyncErrorCode::ImportFailed))?
         .and_then(|c| c.create_datetime);
 
     let total_jobs: i64 = Job::find()
         .count(conn)
         .await
-        .map_err(|_| ApiError::from(SyncErrorCode::ImportFailed))? as i64;
+        .map_err(|_| err!(SyncErrorCode::ImportFailed))? as i64;
 
     let total_companies: i64 = Company::find()
         .count(conn)
         .await
-        .map_err(|_| ApiError::from(SyncErrorCode::ImportFailed))?
+        .map_err(|_| err!(SyncErrorCode::ImportFailed))?
         as i64;
 
     Ok(ApiResponse::success(Some(SyncStatus {

@@ -331,7 +331,7 @@ pub async fn get_by_id(
     let company = Company::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or(CriticalErrorCode::ResourceNotFound)?;
+        .ok_or(err!(CriticalErrorCode::ResourceNotFound))?;
     Ok(ApiResponse::success(Some(company)))
 }
 
@@ -348,12 +348,12 @@ pub async fn create(
         match &param.name {
             Some(name) => {
                 if name.trim().is_empty() {
-                    Err(CompanyErrorCode::NameRequired)
+                    Err(err!(CompanyErrorCode::NameRequired))
                 } else {
                     Ok(gen_company_id(name))
                 }
             }
-            None => Err(CompanyErrorCode::NameRequired),
+            None => Err(err!(CompanyErrorCode::NameRequired)),
         }
     }?;
     let csv_data = convert_company_to_csv_data(&param, None);
@@ -363,13 +363,13 @@ pub async fn create(
         .await
         .map_err(|e: service::sync::ImportError| match e {
             ImportError::Database(e) => ApiError::from(e),
-            _ => ApiError::from_app_error(SyncErrorCode::ImportFailed),
+            _ => err!(SyncErrorCode::ImportFailed),
         })?;
 
     let company = Company::find_by_id(&company_id)
         .one(&conn)
         .await?
-        .ok_or(CriticalErrorCode::ResourceNotFound)?;
+        .ok_or(err!(CriticalErrorCode::ResourceNotFound))?;
     Ok(ApiResponse::success(Some(company)))
 }
 
@@ -386,7 +386,7 @@ pub async fn update(
     let existing = Company::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or(CriticalErrorCode::ResourceNotFound)?;
+        .ok_or(err!(CriticalErrorCode::ResourceNotFound))?;
 
     let param_name = param.name.clone();
     let param_desc = param.desc.clone();
@@ -416,7 +416,7 @@ pub async fn update(
 
     if let Some(ref new_name) = param_name {
         if existing.name.as_deref() != Some(new_name) {
-            return Err(CompanyErrorCode::NameImmutable.into());
+            return Err(err!(CompanyErrorCode::NameImmutable));
         }
     }
 
@@ -456,13 +456,13 @@ pub async fn update(
         .await
         .map_err(|e: service::sync::ImportError| match e {
             ImportError::Database(e) => ApiError::from(e),
-            _ => ApiError::from_app_error(SyncErrorCode::ImportFailed),
+            _ => err!(SyncErrorCode::ImportFailed),
         })?;
 
     let company = Company::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or(CriticalErrorCode::ResourceNotFound)?;
+        .ok_or(err!(CriticalErrorCode::ResourceNotFound))?;
     Ok(ApiResponse::success(Some(company)))
 }
 
@@ -477,7 +477,7 @@ pub async fn delete_company(
     let company = Company::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or(CriticalErrorCode::ResourceNotFound)?;
+        .ok_or(err!(CriticalErrorCode::ResourceNotFound))?;
     Company::delete(company.into_active_model())
         .exec(&conn)
         .await?;

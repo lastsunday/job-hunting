@@ -100,7 +100,7 @@ pub fn setup_default(router: Router) -> Router {
         .fallback(web::index_handler)
         .method_not_allowed_fallback(async || -> ApiResult<()> {
             tracing::warn!("Method not allowed");
-            Err(FrameworkErrorCode::MethodNotAllowed.into())
+            Err(err!(FrameworkErrorCode::MethodNotAllowed))
         });
     let timeout =
         TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, Duration::from_secs(300));
@@ -162,7 +162,7 @@ fn setup_api_fallback(router: Router) -> Router {
         "/api",
         Router::new().fallback(async || -> ApiResult<()> {
             tracing::warn!("Not found");
-            Err(CriticalErrorCode::ResourceNotFound.into())
+            Err(err!(CriticalErrorCode::ResourceNotFound))
         }),
     )
 }

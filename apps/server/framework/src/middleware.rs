@@ -7,6 +7,7 @@ use crate::{
     auth::Jwt,
     error::{ApiError, auth_code::AuthErrorCode},
 };
+use crate::prelude::*;
 
 static AUTH_LAYER_INSTANCE: LazyLock<AsyncRequireAuthorizationLayer<JwtAuth>> =
     LazyLock::new(|| AsyncRequireAuthorizationLayer::new(JwtAuth::new(Jwt::global())));
@@ -44,16 +45,16 @@ impl AsyncAuthorizeRequest<Body> for JwtAuth {
                 .map(|value| -> Result<_, ApiError> {
                     let token = value
                         .to_str()
-                        .map_err(|_| AuthErrorCode::AuthHeaderInvalid)?
+                        .map_err(|_| err!(AuthErrorCode::AuthHeaderInvalid))?
                         .strip_prefix("Bearer ")
-                        .ok_or(AuthErrorCode::BearerRequired)?;
+                        .ok_or(err!(AuthErrorCode::BearerRequired))?;
                     Ok(token)
                 })
                 .transpose()?
-                .ok_or(ApiError::from_app_error(AuthErrorCode::AuthHeaderMissing))?;
+                .ok_or(err!(AuthErrorCode::AuthHeaderMissing))?;
             let pricipal = jwt
                 .access_token_decode(token)
-                .map_err(|_| ApiError::from_app_error(AuthErrorCode::TokenInvalid))?;
+                .map_err(|_| err!(AuthErrorCode::TokenInvalid))?;
             request.extensions_mut().insert(pricipal);
             Ok(request)
         })
