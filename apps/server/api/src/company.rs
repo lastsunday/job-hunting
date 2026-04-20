@@ -11,7 +11,7 @@ use axum::{debug_handler, extract::Extension, extract::Path, extract::State};
 use entity::company::{self, Entity as Company};
 use framework::{
     auth::Principal,
-    data::{ApiPageResult, ApiResponse, PageParam, valid::ValidJson},
+    data::{ApiPageResult, ApiResponse, PageParam, empty_string_as_none, valid::ValidJson},
     error::{ApiError, ApiResult},
     middleware::get_auth_layer,
 };
@@ -485,7 +485,7 @@ pub async fn delete_company(
 }
 
 use chrono::{DateTime, FixedOffset};
-use serde::{Deserialize, Deserializer, Serialize, de::IntoDeserializer};
+use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 #[derive(Default, Deserialize, Serialize, Debug, Clone, Validate, ToSchema)]
@@ -496,7 +496,9 @@ pub struct SearchParam {
     pub platform: Option<String>,
     pub industry: Option<String>,
     pub legal_person: Option<String>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     pub start_date_start: Option<DateTime<FixedOffset>>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     pub start_date_end: Option<DateTime<FixedOffset>>,
     pub address: Option<String>,
     pub status: Option<String>,
@@ -565,17 +567,4 @@ pub struct UpdateCompanyRequest {
     pub paidin_capital_value: Option<f64>,
     pub paidin_capital_currency: Option<String>,
     pub uri: Option<String>,
-}
-
-fn empty_string_as_none<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
-where
-    T: serde::de::DeserializeOwned,
-    D: Deserializer<'de>,
-{
-    let opt: Option<String> = Option::deserialize(deserializer)?;
-    match opt {
-        Some(s) if s.is_empty() => Ok(None),
-        Some(s) => Ok(Some(T::deserialize(s.into_deserializer())?)),
-        None => Ok(None),
-    }
 }

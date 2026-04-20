@@ -12,10 +12,11 @@ use axum::{debug_handler, extract::Extension, extract::Path, extract::State};
 use entity::job::{self, Entity as Job};
 use framework::{
     auth::Principal,
-    data::{ApiPageResult, ApiResponse, PageParam, valid::ValidJson},
+    data::{ApiPageResult, ApiResponse, PageParam, valid::ValidJson, empty_string_as_none},
     error::{ApiError, ApiResult},
     middleware::get_auth_layer,
 };
+use serde::{Deserialize, Serialize};
 use sea_orm::{
     ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait,
 };
@@ -388,7 +389,6 @@ pub async fn delete_job(
 }
 
 use chrono::{DateTime, FixedOffset};
-use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 #[derive(Default, Deserialize, Serialize, Debug, Clone, Validate, ToSchema)]
@@ -400,11 +400,17 @@ pub struct SearchParam {
     pub platform: Option<String>,
     pub salary: Option<f32>,
     pub address: Option<String>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     pub first_publish_datetime_start: Option<DateTime<FixedOffset>>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     pub first_publish_datetime_end: Option<DateTime<FixedOffset>>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     pub first_scan_datetime_start: Option<DateTime<FixedOffset>>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     pub first_scan_datetime_end: Option<DateTime<FixedOffset>>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     pub create_datetime_start: Option<DateTime<FixedOffset>>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     pub create_datetime_end: Option<DateTime<FixedOffset>>,
     pub order_by: Option<String>,
     pub order_dir: Option<String>,
@@ -427,6 +433,7 @@ pub struct CreateJobRequest {
     pub salary_min: Option<f32>,
     pub salary_max: Option<f32>,
     pub salary_total_month: Option<i32>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     pub first_publish_datetime: Option<DateTime<FixedOffset>>,
     pub boss_name: Option<String>,
     pub boss_company_name: Option<String>,
@@ -452,6 +459,7 @@ pub struct UpdateJobRequest {
     pub salary_min: Option<f32>,
     pub salary_max: Option<f32>,
     pub salary_total_month: Option<i32>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     pub first_publish_datetime: Option<DateTime<FixedOffset>>,
     pub boss_name: Option<String>,
     pub boss_company_name: Option<String>,
