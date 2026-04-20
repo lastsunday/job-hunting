@@ -16,7 +16,50 @@ import {
   Alert,
 } from '@mantine/core';
 import { useEffect, useState } from 'react';
-import { syncApi, SyncStatus, ImportResult } from '@/api/sync';
+import {
+  syncApi,
+  SyncStatus,
+  ImportResult,
+  ImportError,
+  ImportWarning,
+} from '@/api/sync';
+
+const renderErrorMessage = (error: ImportError): string => {
+  switch (error.error_type) {
+    case 'InvalidInteger':
+      return t('error.invalidInteger', {
+        row: error.row,
+        field: error.field,
+        value: error.value,
+      });
+    case 'InvalidFloat':
+      return t('error.invalidFloat', {
+        row: error.row,
+        field: error.field,
+        value: error.value,
+      });
+    case 'MissingRequiredField':
+      return t('error.missingRequiredField', {
+        row: error.row,
+        field: error.field,
+      });
+    default:
+      return String(error);
+  }
+};
+
+const renderWarningMessage = (warning: ImportWarning): string => {
+  switch (warning.error_type) {
+    case 'VersionExceeded':
+      return t('warning.versionExceeded', {
+        file_version: warning.file_version,
+        max_supported_version: warning.max_supported_version,
+        actual_version: warning.actual_version,
+      });
+    default:
+      return String(warning);
+  }
+};
 import { useTranslation } from 'react-i18next';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/sync')({
@@ -79,7 +122,14 @@ function RouteComponent() {
         imported: 0,
         updated: 0,
         cost_time: 0,
-        errors: [String(error)],
+        errors: [
+          {
+            error_type: 'InvalidInteger',
+            row: 0,
+            field: String(error),
+            value: '',
+          },
+        ],
         warnings: [],
       };
       setImportResult(errorResult);
@@ -131,7 +181,7 @@ function RouteComponent() {
             <>
               {importResult.warnings.map((warning, index) => (
                 <Alert key={index} color="yellow" variant="light">
-                  {warning}
+                  {renderWarningMessage(warning)}
                 </Alert>
               ))}
             </>
@@ -219,7 +269,7 @@ function RouteComponent() {
                 </Text>
                 {importResult.errors.map((error, index) => (
                   <Text key={index} c="red" size="sm">
-                    {error}
+                    {renderErrorMessage(error)}
                   </Text>
                 ))}
                 {importResult.valid_columns.length > 0 && (

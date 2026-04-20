@@ -8,7 +8,7 @@ use entity::job_source::{
 
 use crate::sync::error::ImportError;
 use crate::sync::file_parser::{FileParser, JobHeaderMapping};
-use crate::sync::types::ImportResult;
+use crate::sync::types::{ImportError as ImportErrorType, ImportResult};
 use crate::util::gen_sha256;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, DbErr,
@@ -118,6 +118,13 @@ impl JobImporter {
         let (valid, version, actual_version, lack_columns, warnings) =
             FileParser::validate_job_headers(headers);
         if !valid {
+            let errors: Vec<ImportErrorType> = lack_columns
+                .iter()
+                .map(|field| ImportErrorType::MissingRequiredField {
+                    row: 1,
+                    field: field.clone(),
+                })
+                .collect();
             return Ok(ImportResult {
                 success: false,
                 valid_result: false,
@@ -129,7 +136,7 @@ impl JobImporter {
                 imported: 0,
                 updated: 0,
                 cost_time: start_time.elapsed().as_millis() as i64,
-                errors: vec!["职位文件缺少必填字段".to_string()],
+                errors,
                 warnings,
             });
         }
@@ -143,30 +150,60 @@ impl JobImporter {
         let result = conn
             .transaction::<_, _, DbErr>(|txn| {
                 let mapping = mapping.clone();
+                let headers = headers.clone();
                 let uri = uri.to_string();
                 Box::pin(async move {
                     let mut job_ids_from_data: HashSet<String> = HashSet::new();
                     let mut job_source_map: HashMap<String, JobSourceActiveModel> = HashMap::new();
 
                     // 根据文件的rows构建job source列表
-                    for row in &rows {
+                    let mut errors: Vec<ImportErrorType> = Vec::new();
+                    for (row_index, row) in rows.iter().enumerate() {
                         let job_id = Self::get_field_value(&mapping.job_id, row);
                         let job_source_id = Self::gen_job_source_id(job_id.as_str(), &uri);
-                        job_ids_from_data.insert(job_source_id.clone());
-                        job_source_map.insert(
-                            job_source_id.clone(),
-                            Self::build_job_source(
-                                job_source_id.as_str(),
-                                job_id.as_str(),
-                                &mapping,
-                                row,
-                                &now,
-                                &uri,
-                            )
-                            .map_err(|e| {
-                                DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
-                            })?,
-                        );
+                        match Self::build_job_source(
+                            job_source_id.as_str(),
+                            job_id.as_str(),
+                            &mapping,
+                            &headers,
+                            row,
+                            &now,
+                            &uri,
+                            row_index + 1,
+                        ) {
+                            Ok(model) => {
+                                job_ids_from_data.insert(job_source_id.clone());
+                                job_source_map.insert(job_source_id.clone(), model);
+                            }
+                            Err(e) => {
+                                if let Some(import_err) = e.downcast_ref::<ImportErrorType>() {
+                                    errors.push(import_err.clone());
+                                } else {
+                                    errors.push(ImportErrorType::InvalidInteger {
+                                        row: row_index + 1,
+                                        field: "unknown".to_string(),
+                                        value: e.to_string(),
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    if !errors.is_empty() {
+                        return Ok(ImportResult {
+                            success: false,
+                            valid_result: true,
+                            data_version: version,
+                            actual_version,
+                            lack_columns: vec![],
+                            valid_columns: FileParser::get_job_valid_columns(actual_version),
+                            total,
+                            imported: 0,
+                            updated: 0,
+                            cost_time: start_time.elapsed().as_millis() as i64,
+                            errors,
+                            warnings: vec![],
+                        });
                     }
 
                     // 根据data job_source id获取已存在数据中的job_source记录
@@ -367,10 +404,86 @@ impl JobImporter {
         id: &str,
         job_id: &str,
         mapping: &JobHeaderMapping,
+        headers: &[String],
         row: &[String],
         now: &DateTime<FixedOffset>,
         uri: &str,
+        row_index: usize,
     ) -> Result<JobSourceActiveModel, Box<dyn std::error::Error>> {
+        let get_field_name = |idx: Option<usize>| -> String {
+            idx.and_then(|i| headers.get(i).map(|s| s.trim().to_string()))
+                .unwrap_or_default()
+        };
+
+        let get_f32 = |idx: Option<usize>| -> Result<f32, Box<dyn std::error::Error>> {
+            let field_name = get_field_name(idx);
+            match idx {
+                Some(i) if i < row.len() => {
+                    let s = &row[i];
+                    let trimmed = s.trim();
+                    if trimmed.is_empty() {
+                        Ok(0.0)
+                    } else {
+                        trimmed.parse::<f32>()
+                            .map_err(|_| {
+                                ImportErrorType::InvalidFloat {
+                                    row: row_index,
+                                    field: field_name,
+                                    value: trimmed.to_string(),
+                                }
+                            }.into())
+                    }
+                }
+                _ => Ok(0.0),
+            }
+        };
+
+        let get_f64 = |idx: Option<usize>| -> Result<f64, Box<dyn std::error::Error>> {
+            let field_name = get_field_name(idx);
+            match idx {
+                Some(i) if i < row.len() => {
+                    let s = &row[i];
+                    let trimmed = s.trim();
+                    if trimmed.is_empty() {
+                        Ok(0.0)
+                    } else {
+                        trimmed.parse::<f64>()
+                            .map_err(|_| {
+                                ImportErrorType::InvalidFloat {
+                                    row: row_index,
+                                    field: field_name,
+                                    value: trimmed.to_string(),
+                                }
+                            }.into())
+                    }
+                }
+                _ => Ok(0.0),
+            }
+        };
+
+        let get_i32 = |idx: Option<usize>| -> Result<i32, Box<dyn std::error::Error>> {
+            let field_name = get_field_name(idx);
+            match idx {
+                Some(i) if i < row.len() => {
+                    let s = &row[i];
+                    let trimmed = s.trim();
+                    if trimmed.is_empty() {
+                        Ok(0)
+                    } else {
+                        trimmed.parse::<i32>()
+                            .map_err(|_| {
+                                ImportErrorType::InvalidInteger {
+                                    row: row_index,
+                                    field: field_name,
+                                    value: trimmed.to_string(),
+                                }
+                            }.into())
+                    }
+                }
+                _ => Ok(0),
+            }
+        };
+
         Ok(JobSourceActiveModel {
             id: ActiveValue::set(id.to_string()),
             job_id: ActiveValue::set(Some(job_id.to_string())),
@@ -383,29 +496,14 @@ impl JobImporter {
                 row,
             ))),
             address: ActiveValue::set(Some(Self::get_field_value(&mapping.address, row))),
-            longitude: ActiveValue::set(Self::parse_f64(&Self::get_field_value(
-                &mapping.longitude,
-                row,
-            ))),
-            latitude: ActiveValue::set(Self::parse_f64(&Self::get_field_value(
-                &mapping.latitude,
-                row,
-            ))),
+            longitude: ActiveValue::set(Some(get_f64(mapping.longitude)?)),
+            latitude: ActiveValue::set(Some(get_f64(mapping.latitude)?)),
             description: ActiveValue::set(Some(Self::get_field_value(&mapping.description, row))),
             degree_name: ActiveValue::set(Some(Self::get_field_value(&mapping.degree_name, row))),
-            year: ActiveValue::set(Self::parse_int(&Self::get_field_value(&mapping.year, row))),
-            salary_min: ActiveValue::set(Self::parse_float(&Self::get_field_value(
-                &mapping.salary_min,
-                row,
-            ))),
-            salary_max: ActiveValue::set(Self::parse_float(&Self::get_field_value(
-                &mapping.salary_max,
-                row,
-            ))),
-            salary_total_month: ActiveValue::set(Self::parse_int(&Self::get_field_value(
-                &mapping.salary_total_month,
-                row,
-            ))),
+            year: ActiveValue::set(Some(get_i32(mapping.year)?)),
+            salary_min: ActiveValue::set(Some(get_f32(mapping.salary_min)?)),
+            salary_max: ActiveValue::set(Some(get_f32(mapping.salary_max)?)),
+            salary_total_month: ActiveValue::set(Some(get_i32(mapping.salary_total_month)?)),
             first_publish_datetime: {
                 let text = Self::get_field_value(&mapping.first_publish_datetime, row);
                 if text.is_empty() {

@@ -1,8 +1,9 @@
 use std::io::Cursor;
 
-use calamine::{Reader, Sheets, open_workbook_auto_from_rs};
+use calamine::{open_workbook_auto_from_rs, Reader, Sheets};
 
 use crate::sync::error::ImportError;
+use crate::sync::types::ImportWarning;
 use crate::util::gen_bytes_sha256;
 
 const HEADER_VERSION_PREFIX: &str = "__VERSION_";
@@ -209,21 +210,20 @@ impl FileParser {
 
     pub fn validate_job_headers(
         headers: &[String],
-    ) -> (bool, usize, usize, Vec<String>, Vec<String>) {
-        Self::validate_headers(headers, Self::JOB_FILE_HEADER, "职位")
+    ) -> (bool, usize, usize, Vec<String>, Vec<ImportWarning>) {
+        Self::validate_headers(headers, Self::JOB_FILE_HEADER)
     }
 
     pub fn validate_company_headers(
         headers: &[String],
-    ) -> (bool, usize, usize, Vec<String>, Vec<String>) {
-        Self::validate_headers(headers, Self::COMPANY_FILE_HEADER, "公司")
+    ) -> (bool, usize, usize, Vec<String>, Vec<ImportWarning>) {
+        Self::validate_headers(headers, Self::COMPANY_FILE_HEADER)
     }
 
     fn validate_headers(
         headers: &[String],
         file_headers: &[&[&str]],
-        file_name: &str,
-    ) -> (bool, usize, usize, Vec<String>, Vec<String>) {
+    ) -> (bool, usize, usize, Vec<String>, Vec<ImportWarning>) {
         let version = Self::parse_version(headers);
         let max_supported_version = file_headers.len() - 1;
 
@@ -235,10 +235,11 @@ impl FileParser {
 
         let mut warnings = Vec::new();
         if version > max_supported_version {
-            warnings.push(format!(
-                "{}文件版本号v{}超出系统支持v{},将使用v{}字段验证",
-                file_name, version, max_supported_version, max_supported_version
-            ));
+            warnings.push(ImportWarning::VersionExceeded {
+                file_version: version,
+                max_supported_version,
+                actual_version,
+            });
         }
 
         let valid_fields = if version < file_headers.len() {

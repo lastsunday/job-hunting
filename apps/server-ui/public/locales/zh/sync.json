@@ -23,5 +23,13 @@
   "failureReason": "导入失败原因",
   "fieldList": "字段列表",
   "fieldCount": "{{count, number}} 个字段",
-  "neverSynced": "从未同步"
+  "neverSynced": "从未同步",
+  "error": {
+    "invalidInteger": "第{{row}}行 '{{field}}' 字段值 '{{value}}' 不是有效的整数",
+    "invalidFloat": "第{{row}}行 '{{field}}' 字段值 '{{value}}' 不是有效的小数",
+    "missingRequiredField": "第{{row}}行缺少必填字段 '{{field}}'"
+  },
+  "warning": {
+    "versionExceeded": "文件版本号v{{file_version}}超出系统支持v{{max_supported_version}},将使用v{{actual_version}}字段验证"
+  }
 }

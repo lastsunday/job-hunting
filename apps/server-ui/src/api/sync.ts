@@ -28,6 +28,18 @@ export interface SyncConfig {
   sync_companies: boolean;
 }
 
+export type ImportError =
+  | { error_type: 'InvalidInteger'; row: number; field: string; value: string }
+  | { error_type: 'InvalidFloat'; row: number; field: string; value: string }
+  | { error_type: 'MissingRequiredField'; row: number; field: string };
+
+export type ImportWarning = {
+  error_type: 'VersionExceeded';
+  file_version: number;
+  max_supported_version: number;
+  actual_version: number;
+};
+
 export interface ImportResult {
   success: boolean;
   valid_result: boolean;
@@ -39,8 +51,8 @@ export interface ImportResult {
   imported: number;
   updated: number;
   cost_time: number;
-  errors: string[];
-  warnings: string[];
+  errors: ImportError[];
+  warnings: ImportWarning[];
 }
 
 export interface SyncResult {

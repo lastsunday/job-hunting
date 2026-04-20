@@ -31,6 +31,79 @@ pub struct SyncStatus {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub enum ImportError {
+    InvalidInteger {
+        row: usize,
+        field: String,
+        value: String,
+    },
+    InvalidFloat {
+        row: usize,
+        field: String,
+        value: String,
+    },
+    MissingRequiredField {
+        row: usize,
+        field: String,
+    },
+}
+
+impl std::fmt::Display for ImportError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ImportError::InvalidInteger { row, field, value } => {
+                write!(
+                    f,
+                    "InvalidInteger row:{} field:{} value:{}",
+                    row, field, value
+                )
+            }
+            ImportError::InvalidFloat { row, field, value } => {
+                write!(
+                    f,
+                    "InvalidFloat row:{} field:{} value:{}",
+                    row, field, value
+                )
+            }
+            ImportError::MissingRequiredField { row, field } => {
+                write!(f, "MissingRequiredField row:{} field:{}", row, field)
+            }
+        }
+    }
+}
+
+impl std::error::Error for ImportError {}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub enum ImportWarning {
+    VersionExceeded {
+        file_version: usize,
+        max_supported_version: usize,
+        actual_version: usize,
+    },
+}
+
+impl std::fmt::Display for ImportWarning {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ImportWarning::VersionExceeded {
+                file_version,
+                max_supported_version,
+                actual_version,
+            } => {
+                write!(
+                    f,
+                    "VersionExceeded file_version:{} max:{} actual:{}",
+                    file_version, max_supported_version, actual_version
+                )
+            }
+        }
+    }
+}
+
+impl std::error::Error for ImportWarning {}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct ImportResult {
     pub success: bool,
     pub valid_result: bool,
@@ -42,8 +115,8 @@ pub struct ImportResult {
     pub imported: usize,
     pub updated: usize,
     pub cost_time: i64,
-    pub errors: Vec<String>,
-    pub warnings: Vec<String>,
+    pub errors: Vec<ImportError>,
+    pub warnings: Vec<ImportWarning>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]

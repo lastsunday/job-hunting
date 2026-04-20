@@ -115,3 +115,110 @@ async fn test_import_company_update() {
     let _ = state.conn.close().await.unwrap();
     tear_down(&container).await;
 }
+
+#[tokio::test]
+async fn test_import_company_missing_name() {
+    let (container, state) = setup_database().await;
+
+    let data = std::fs::read("tests/resources/data/company-v2.xlsx").unwrap();
+    let mut parsed_data = FileParser::parse_excel(&data).unwrap();
+
+    parsed_data[1][0] = "".to_string();
+    parsed_data[2][0] = "公司B".to_string();
+
+    let result = CompanyImporter::import(&state.conn, parsed_data, TEST_URI_V1)
+        .await
+        .unwrap();
+
+    println!("Result: success={}, imported={}, total={}", result.success, result.imported, result.total);
+    assert!(result.success, "缺失公司名应跳过该行");
+    assert_eq!(result.imported, 28, "应导入28条记录(跳过空公司名)");
+    assert_eq!(result.total, 29, "总行数应为29");
+
+    let _ = state.conn.close().await.unwrap();
+    tear_down(&container).await;
+}
+
+#[tokio::test]
+async fn test_import_company_same_uri_duplicate() {
+    let (container, state) = setup_database().await;
+
+    let data = std::fs::read("tests/resources/data/company-v2.xlsx").unwrap();
+    let parsed_data = FileParser::parse_excel(&data).unwrap();
+
+    let result1 = CompanyImporter::import(&state.conn, parsed_data.clone(), TEST_URI_V1)
+        .await
+        .unwrap();
+    assert_eq!(result1.imported, 29, "首次导入29条");
+
+    let result2 = CompanyImporter::import(&state.conn, parsed_data, TEST_URI_V1)
+        .await
+        .unwrap();
+    assert_eq!(result2.imported, 0, "相同URI不应重复导入");
+    assert_eq!(result2.updated, 0, "相同数据不应更新");
+
+    let sources = CompanySource::find().all(&state.conn).await.unwrap();
+    assert_eq!(sources.len(), 29, "CompanySource应为29条");
+
+    let _ = state.conn.close().await.unwrap();
+    tear_down(&container).await;
+}
+
+#[tokio::test]
+async fn test_import_company_partial_fields() {
+    let (container, state) = setup_database().await;
+
+    let data = std::fs::read("tests/resources/data/company-v2.xlsx").unwrap();
+    let parsed_data = FileParser::parse_excel(&data).unwrap();
+
+    let result = CompanyImporter::import(&state.conn, parsed_data, TEST_URI_V1)
+        .await
+        .unwrap();
+
+    assert!(result.success, "完整字段导入应成功");
+    assert_eq!(result.imported, 29, "应导入29条");
+
+    let _ = state.conn.close().await.unwrap();
+    tear_down(&container).await;
+}
+
+#[tokio::test]
+async fn test_import_company_invalid_number_format() {
+    let (container, state) = setup_database().await;
+
+    let data = std::fs::read("tests/resources/data/company-v2.xlsx").unwrap();
+    let mut parsed_data = FileParser::parse_excel(&data).unwrap();
+
+    parsed_data[1][7] = "未知".to_string();
+
+    let result = CompanyImporter::import(&state.conn, parsed_data, TEST_URI_V1)
+        .await
+        .unwrap();
+
+    println!("Result: success={}, errors={:?}", result.success, result.errors);
+    assert!(!result.success, "数字格式错误应返回失败");
+    assert!(!result.errors.is_empty(), "应有错误信息");
+
+    let _ = state.conn.close().await.unwrap();
+    tear_down(&container).await;
+}
+
+#[tokio::test]
+async fn test_import_company_date_formats() {
+    let (container, state) = setup_database().await;
+
+    let data = std::fs::read("tests/resources/data/company-v2.xlsx").unwrap();
+    let mut parsed_data = FileParser::parse_excel(&data).unwrap();
+
+    parsed_data[1][22] = "2024-06-01T08:00:00Z".to_string();
+
+    let result = CompanyImporter::import(&state.conn, parsed_data, TEST_URI_V1)
+        .await
+        .unwrap();
+
+    assert!(result.success, "日期格式解析应成功");
+    assert_eq!(result.imported, 29, "应导入29条");
+
+    let _ = state.conn.close().await.unwrap();
+    tear_down(&container).await;
+}

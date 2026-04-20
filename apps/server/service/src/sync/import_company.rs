@@ -8,7 +8,7 @@ use entity::company_source::{
 
 use crate::sync::error::ImportError;
 use crate::sync::file_parser::{CompanyHeaderMapping, FileParser};
-use crate::sync::types::ImportResult;
+use crate::sync::types::{ImportError as ImportErrorType, ImportResult};
 use crate::util::gen_sha256;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, DbErr,
@@ -99,6 +99,13 @@ impl CompanyImporter {
         let (valid, version, actual_version, lack_columns, warnings) =
             FileParser::validate_company_headers(headers);
         if !valid {
+            let errors: Vec<ImportErrorType> = lack_columns
+                .iter()
+                .map(|field| ImportErrorType::MissingRequiredField {
+                    row: 1,
+                    field: field.clone(),
+                })
+                .collect();
             return Ok(ImportResult {
                 success: false,
                 valid_result: false,
@@ -110,7 +117,7 @@ impl CompanyImporter {
                 imported: 0,
                 updated: 0,
                 cost_time: start_time.elapsed().as_millis() as i64,
-                errors: vec!["公司文件缺少必填字段".to_string()],
+                errors,
                 warnings,
             });
         }
@@ -124,6 +131,7 @@ impl CompanyImporter {
         let result = conn
             .transaction::<_, _, DbErr>(|txn| {
                 let mapping = mapping.clone();
+                let headers = headers.clone();
                 let uri = uri.to_string();
                 Box::pin(async move {
                     let mut company_ids_from_data: HashSet<String> = HashSet::new();
@@ -131,7 +139,8 @@ impl CompanyImporter {
                         HashMap::new();
 
                     // 根据文件的rows构建company source列表
-                    for row in &rows {
+                    let mut errors: Vec<ImportErrorType> = Vec::new();
+                    for (row_index, row) in rows.iter().enumerate() {
                         let company_name = Self::get_field_value(&mapping.name, row);
                         if company_name.is_empty() {
                             continue;
@@ -140,21 +149,49 @@ impl CompanyImporter {
                         let company_id = Self::gen_company_id(&company_name);
                         let company_source_id = Self::gen_company_source_id(&company_id, &uri);
 
-                        company_ids_from_data.insert(company_source_id.clone());
-                        company_source_map.insert(
-                            company_source_id.clone(),
-                            Self::build_company_source(
-                                company_source_id.as_str(),
-                                company_id.as_str(),
-                                &mapping,
-                                row,
-                                &now,
-                                &uri,
-                            )
-                            .map_err(|e| {
-                                DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
-                            })?,
-                        );
+                        match Self::build_company_source(
+                            company_source_id.as_str(),
+                            company_id.as_str(),
+                            &mapping,
+                            &headers,
+                            row,
+                            &now,
+                            &uri,
+                            row_index + 1,
+                        ) {
+                            Ok(model) => {
+                                company_ids_from_data.insert(company_source_id.clone());
+                                company_source_map.insert(company_source_id.clone(), model);
+                            }
+                            Err(e) => {
+                                if let Some(import_err) = e.downcast_ref::<ImportErrorType>() {
+                                    errors.push(import_err.clone());
+                                } else {
+                                    errors.push(ImportErrorType::InvalidInteger {
+                                        row: row_index + 1,
+                                        field: "unknown".to_string(),
+                                        value: e.to_string(),
+                                    });
+                                }
+                            }
+                        }
+                    }
+
+                    if !errors.is_empty() {
+                        return Ok(ImportResult {
+                            success: false,
+                            valid_result: true,
+                            data_version: version,
+                            actual_version,
+                            lack_columns: vec![],
+                            valid_columns: FileParser::get_company_valid_columns(actual_version),
+                            total,
+                            imported: 0,
+                            updated: 0,
+                            cost_time: start_time.elapsed().as_millis() as i64,
+                            errors,
+                            warnings: vec![],
+                        });
                     }
 
                     // 根据company_source id获取已存在的数据
@@ -344,23 +381,66 @@ impl CompanyImporter {
         id: &str,
         company_id: &str,
         mapping: &CompanyHeaderMapping,
+        headers: &[String],
         row: &[String],
         now: &DateTime<FixedOffset>,
         uri: &str,
+        row_index: usize,
     ) -> Result<CompanySourceActiveModel, Box<dyn std::error::Error>> {
         let get_string = |idx: Option<usize>| -> Option<String> {
             idx.and_then(|i| row.get(i).map(|s| s.trim().to_string()))
                 .filter(|s| !s.is_empty())
         };
 
-        let get_f64 = |idx: Option<usize>| -> Option<f64> {
-            idx.and_then(|i| row.get(i))
-                .and_then(|s| s.trim().parse().ok())
+        let get_field_name = |idx: Option<usize>| -> String {
+            idx.and_then(|i| headers.get(i).map(|s| s.trim().to_string()))
+                .unwrap_or_default()
         };
 
-        let get_i32 = |idx: Option<usize>| -> Option<i32> {
-            idx.and_then(|i| row.get(i))
-                .and_then(|s| s.trim().parse().ok())
+        let get_f64 = |idx: Option<usize>| -> Result<f64, Box<dyn std::error::Error>> {
+            let field_name = get_field_name(idx);
+            match idx {
+                Some(i) if i < row.len() => {
+                    let s = &row[i];
+                    let trimmed = s.trim();
+                    if trimmed.is_empty() {
+                        Ok(0.0)
+                    } else {
+                        trimmed.parse::<f64>()
+                            .map_err(|_| {
+                                ImportErrorType::InvalidFloat {
+                                    row: row_index + 1,
+                                    field: field_name,
+                                    value: trimmed.to_string(),
+                                }
+                            }.into())
+                    }
+                }
+                _ => Ok(0.0),
+            }
+        };
+
+        let get_i32 = |idx: Option<usize>| -> Result<i32, Box<dyn std::error::Error>> {
+            let field_name = get_field_name(idx);
+            match idx {
+                Some(i) if i < row.len() => {
+                    let s = &row[i];
+                    let trimmed = s.trim();
+                    if trimmed.is_empty() {
+                        Ok(0)
+                    } else {
+                        trimmed.parse::<i32>()
+                            .map_err(|_| {
+                                ImportErrorType::InvalidInteger {
+                                    row: row_index + 1,
+                                    field: field_name,
+                                    value: trimmed.to_string(),
+                                }
+                            }.into())
+                    }
+                }
+                _ => Ok(0),
+            }
         };
 
         let mut model = CompanySourceActiveModel {
@@ -375,21 +455,21 @@ impl CompanyImporter {
             legal_person: ActiveValue::set(get_string(mapping.legal_person)),
             unified_code: ActiveValue::set(get_string(mapping.unified_code)),
             web_site: ActiveValue::set(get_string(mapping.website)),
-            insurance_num: ActiveValue::set(get_i32(mapping.insurance_num)),
-            self_risk: ActiveValue::set(get_i32(mapping.self_risk)),
-            union_risk: ActiveValue::set(get_i32(mapping.union_risk)),
+            insurance_num: ActiveValue::set(Some(get_i32(mapping.insurance_num)?)),
+            self_risk: ActiveValue::set(Some(get_i32(mapping.self_risk)?)),
+            union_risk: ActiveValue::set(Some(get_i32(mapping.union_risk)?)),
             address: ActiveValue::set(get_string(mapping.address)),
             scope: ActiveValue::set(get_string(mapping.scope)),
             tax_no: ActiveValue::set(get_string(mapping.tax_no)),
             industry: ActiveValue::set(get_string(mapping.industry)),
             license_number: ActiveValue::set(get_string(mapping.license_number)),
-            longitude: ActiveValue::set(get_f64(mapping.longitude)),
-            latitude: ActiveValue::set(get_f64(mapping.latitude)),
+            longitude: ActiveValue::set(Some(get_f64(mapping.longitude)?)),
+            latitude: ActiveValue::set(Some(get_f64(mapping.latitude)?)),
             source_url: ActiveValue::set(get_string(mapping.source_url)),
             source_platform: ActiveValue::set(get_string(mapping.platform)),
             source_record_id: ActiveValue::set(get_string(mapping.source_record_id)),
             source_refresh_datetime: ActiveValue::Set(None),
-            reg_capital_value: ActiveValue::set(get_f64(mapping.reg_capital_value)),
+            reg_capital_value: ActiveValue::set(Some(get_f64(mapping.reg_capital_value)?)),
             reg_capital_currency: ActiveValue::set(get_string(mapping.reg_capital_currency)),
             paidin_capital_value: ActiveValue::set(None),
             paidin_capital_currency: ActiveValue::set(None),
