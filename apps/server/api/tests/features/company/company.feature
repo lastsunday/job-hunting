@@ -107,3 +107,30 @@ Feature: 公司管理
   Scenario: 删除公司 - 不存在
     When 小明删除不存在的公司
     Then 小明应该能看到公司删除失败
+
+  Scenario: 查询公司 - 按地址筛选
+    Given 已创建的公司表
+      | name | address |
+      | 腾讯科技 | 深圳市南山区 |
+      | 阿里云 | 杭州市余杭区 |
+    When 小明搜索公司
+      | address |
+      | 深圳 |
+    Then 小明应该能看到公司搜索成功
+    And 小明应该能看到搜索结果包含地址
+      | address |
+      | 深圳市南山区 |
+
+  Scenario: 多条件组合搜索
+    Given 已创建的公司表
+      | name | industry | status |
+      | 腾讯科技 | 互联网 | 开业 |
+      | 阿里云 | 互联网 | 注销 |
+      | 工商银行 | 金融 | 开业 |
+    When 小明搜索公司
+      | industry | status |
+      | 互联网 | 开业 |
+    Then 小明应该能看到公司搜索成功
+    And 小明应该能看到搜索结果包含行业
+      | industry |
+      | 互联网 |

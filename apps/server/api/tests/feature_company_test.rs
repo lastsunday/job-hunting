@@ -630,6 +630,24 @@ async fn company_sorted_correct(world: &mut CompanyWorld) {
     }
 }
 
+#[then("小明应该能看到搜索结果包含地址")]
+async fn company_search_contains_address(world: &mut CompanyWorld, step: &Step) {
+    if let Some(response) = world.last_response.take() {
+        let value = response_to_json(response).await;
+        let data = get_json_result(&value);
+        if let Some(items) = data.get("items").and_then(|v| v.as_array()) {
+            if let Some(table) = step.table.as_ref() {
+                for row in table.rows.iter().skip(1) {
+                    let has_address = items.iter().any(|item| {
+                        item.get("address").and_then(|n| n.as_str()).map(|a| a.contains(row[0].as_str())).unwrap_or(false)
+                    });
+                    assert!(has_address, "搜索结果应包含地址 {}", row[0]);
+                }
+            }
+        }
+    }
+}
+
 #[then("小明应该能看到公司详情返回成功")]
 async fn company_detail_success(world: &mut CompanyWorld) {
     let response = world.last_response.take().unwrap();

@@ -8,6 +8,7 @@ use chrono::Local;
 use common::datetime_to_str;
 use common::get_from_value;
 use common::get_json_paging_result_items;
+use common::get_json_result;
 use common::post_json;
 use common::response_to_json;
 use common::str_to_datetime;
@@ -340,13 +341,242 @@ async fn get_job_list_by_create_datetime(world: &mut JobWorld, step: &Step) {
     }
 }
 
+#[given("含有公司名的招聘职位表")]
+async fn job_list_with_company_name(world: &mut JobWorld, step: &Step) {
+    let conn: DatabaseConnection = world.state.clone().unwrap().conn;
+    let now = Local::now().fixed_offset();
+    let mut index: i64 = 0;
+    if let Some(table) = step.table.as_ref() {
+        for row in table.rows.iter().skip(1) {
+            index += 1;
+            let dt = (now + Duration::seconds(index)).fixed_offset();
+            Job::insert(ActiveModel {
+                id: Set(gen_id()),
+                name: Set(Some(row[0].to_string())),
+                company_name: Set(Some(row[1].to_string())),
+                create_datetime: Set(Some(dt)),
+                update_datetime: Set(Some(dt)),
+                ..Default::default()
+            })
+            .exec(&conn)
+            .await
+            .unwrap();
+        }
+    }
+}
+
+#[when(expr = "小明查询公司名为 {} 的职位")]
+async fn search_by_company_name(world: &mut JobWorld, company_name: String) {
+    let param_json = json!({"page":{"num":1,"size":10},"company_name":company_name});
+    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let jobs = get_json_paging_result_items(&response_to_json(response).await);
+    let mut result = Vec::new();
+    for job in jobs.iter() {
+        result.push(JobItem {
+            job_name: get_from_value(job, "name").unwrap(),
+            company_name: get_from_value(job, "company_name").unwrap(),
+            ..Default::default()
+        });
+    }
+    world.jobs = result;
+}
+
+#[then(expr = "小明应该能看到公司名为 {} 的职位信息")]
+async fn get_job_list_by_company_name(world: &mut JobWorld, step: &Step, _company_name: String) {
+    let jobs: &mut Vec<JobItem> = &mut world.jobs;
+    if let Some(table) = step.table.as_ref() {
+        assert_eq!(table.rows.len() - 1, jobs.len());
+        for row in table.rows.iter().skip(1) {
+            let job = jobs.remove(0);
+            assert_eq!(&row[0], job.job_name.as_str());
+            assert_eq!(&row[1], job.company_name.as_str());
+        }
+    }
+}
+
+#[given("含有平台的招聘职位表")]
+async fn job_list_with_platform(world: &mut JobWorld, step: &Step) {
+    let conn: DatabaseConnection = world.state.clone().unwrap().conn;
+    let now = Local::now().fixed_offset();
+    let mut index: i64 = 0;
+    if let Some(table) = step.table.as_ref() {
+        for row in table.rows.iter().skip(1) {
+            index += 1;
+            let dt = (now + Duration::seconds(index)).fixed_offset();
+            Job::insert(ActiveModel {
+                id: Set(gen_id()),
+                name: Set(Some(row[0].to_string())),
+                platform: Set(Some(row[1].to_string())),
+                create_datetime: Set(Some(dt)),
+                update_datetime: Set(Some(dt)),
+                ..Default::default()
+            })
+            .exec(&conn)
+            .await
+            .unwrap();
+        }
+    }
+}
+
+#[when(expr = "小明查询平台为 {} 的职位")]
+async fn search_by_platform(world: &mut JobWorld, platform: String) {
+    let param_json = json!({"page":{"num":1,"size":10},"platform":platform});
+    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let jobs = get_json_paging_result_items(&response_to_json(response).await);
+    let mut result = Vec::new();
+    for job in jobs.iter() {
+        result.push(JobItem {
+            job_name: get_from_value(job, "name").unwrap(),
+            platform: get_from_value(job, "platform").unwrap(),
+            ..Default::default()
+        });
+    }
+    world.jobs = result;
+}
+
+#[then(expr = "小明应该能看到平台为 {} 的职位信息")]
+async fn get_job_list_by_platform(world: &mut JobWorld, step: &Step, _platform: String) {
+    let jobs: &mut Vec<JobItem> = &mut world.jobs;
+    if let Some(table) = step.table.as_ref() {
+        assert_eq!(table.rows.len() - 1, jobs.len());
+        for row in table.rows.iter().skip(1) {
+            let job = jobs.remove(0);
+            assert_eq!(&row[0], job.job_name.as_str());
+            assert_eq!(&row[1], job.platform.as_str());
+        }
+    }
+}
+
+#[given("含有首次扫描时间的招聘职位表")]
+async fn job_list_with_first_scan_datetime(world: &mut JobWorld, step: &Step) {
+    let conn: DatabaseConnection = world.state.clone().unwrap().conn;
+    let now = Local::now().fixed_offset();
+    let mut index: i64 = 0;
+    if let Some(table) = step.table.as_ref() {
+        for row in table.rows.iter().skip(1) {
+            index += 1;
+            let dt = (now + Duration::seconds(index)).fixed_offset();
+            Job::insert(ActiveModel {
+                id: Set(gen_id()),
+                name: Set(Some(row[0].to_string())),
+                first_scan_datetime: Set(str_to_datetime(row[1].clone())),
+                create_datetime: Set(Some(dt)),
+                update_datetime: Set(Some(dt)),
+                ..Default::default()
+            })
+            .exec(&conn)
+            .await
+            .unwrap();
+        }
+    }
+}
+
+#[when(expr = "小明查询首次扫描时间范围{}至{}的职位")]
+async fn search_by_first_scan_datetime(
+    world: &mut JobWorld,
+    start_datetime: String,
+    end_datetime: String,
+) {
+    let start_datetime = str_to_datetime(start_datetime);
+    let end_datetime = str_to_datetime(end_datetime);
+    let param_json = json!({
+        "page":{"num":1,"size":10},
+        "first_scan_datetime_start":datetime_to_str(start_datetime),
+        "first_scan_datetime_end":datetime_to_str(end_datetime)
+    });
+    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let jobs = get_json_paging_result_items(&response_to_json(response).await);
+    let mut result = Vec::new();
+    for job in jobs.iter() {
+        result.push(JobItem {
+            job_name: get_from_value(job, "name").unwrap(),
+            first_scan_datetime: str_to_datetime(
+                get_from_value(job, "first_scan_datetime").unwrap(),
+            ),
+            ..Default::default()
+        });
+    }
+    world.jobs = result;
+}
+
+#[then("小明应该能看到指定首次扫描时间范围内的职位")]
+async fn get_job_list_by_first_scan_datetime(world: &mut JobWorld, step: &Step) {
+    let jobs: &mut Vec<JobItem> = &mut world.jobs;
+    if let Some(table) = step.table.as_ref() {
+        assert_eq!(table.rows.len() - 1, jobs.len());
+        for row in table.rows.iter().skip(1) {
+            let job = jobs.remove(0);
+            assert_eq!(&row[0], job.job_name.as_str());
+            assert_eq!(str_to_datetime(row[1].clone()), job.first_scan_datetime);
+        }
+    }
+}
+
+#[when("小明按发布时间升序查询职位")]
+async fn search_sorted_by_publish_datetime(world: &mut JobWorld) {
+    let param_json = json!({"page":{"num":1,"size":10},"order_by":"first_publish_datetime","order_dir":"asc"});
+    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let jobs = get_json_paging_result_items(&response_to_json(response).await);
+    let mut result = Vec::new();
+    for job in jobs.iter() {
+        result.push(JobItem {
+            job_name: get_from_value(job, "name").unwrap(),
+            first_publish_datetime: str_to_datetime(
+                get_from_value(job, "first_publish_datetime").unwrap(),
+            ),
+            ..Default::default()
+        });
+    }
+    world.jobs = result;
+}
+
+#[then("小明应该能看到按发布时间升序排列的职位")]
+async fn get_job_sorted_by_publish_datetime(world: &mut JobWorld) {
+    let jobs: &mut Vec<JobItem> = &mut world.jobs;
+    if jobs.len() >= 2 {
+        assert!(jobs[0].first_publish_datetime <= jobs[1].first_publish_datetime);
+    }
+}
+
+#[when("小明查询第1页每页2条职位")]
+async fn search_paged_jobs(world: &mut JobWorld) {
+    let param_json = json!({"page":{"num":1,"size":2}});
+    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    assert_eq!(response.status(), StatusCode::OK);
+    let value = response_to_json(response).await;
+    let data = get_json_result(&value);
+    let items = data.get("items").and_then(|v| v.as_array()).unwrap();
+    let mut result = Vec::new();
+    for job in items.iter() {
+        result.push(JobItem {
+            job_name: get_from_value(job, "name").unwrap(),
+            ..Default::default()
+        });
+    }
+    world.jobs = result;
+    world.last_page_size = Some(items.len());
+}
+
+#[then("小明应该能看到每页2条职位")]
+async fn get_paged_jobs(world: &mut JobWorld) {
+    let size = world.last_page_size.unwrap_or(0);
+    assert_eq!(size, 2);
+}
+
 #[derive(Debug, Default)]
 struct JobItem {
     pub job_name: String,
     pub job_salary_min: f32,
     pub job_salary_max: f32,
     pub address: String,
+    pub company_name: String,
+    pub platform: String,
     pub first_publish_datetime: Option<DateTime<FixedOffset>>,
+    pub first_scan_datetime: Option<DateTime<FixedOffset>>,
     pub create_datetime: Option<DateTime<FixedOffset>>,
 }
 
@@ -356,6 +586,7 @@ pub struct JobWorld {
     container: Option<ContainerAsync<Postgres>>,
     app: Option<Router>,
     state: Option<AppState>,
+    last_page_size: Option<usize>,
 }
 
 #[tokio::test]
