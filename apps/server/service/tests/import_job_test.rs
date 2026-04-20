@@ -545,3 +545,63 @@ async fn test_import_update_rule_first_scan_datetime() {
     state.conn.close().await.unwrap();
     tear_down(&container).await;
 }
+
+#[tokio::test]
+async fn test_import_job_same_uri_duplicate() {
+    let (container, state) = setup_database().await;
+
+    let now = Utc::now();
+    let date_str = format_naive_date(now - Duration::days(10));
+
+    let initial_data = vec![
+        build_job_headers_with_version(),
+        build_test_job_row("job_dup_001", &date_str),
+    ];
+    let result1 = JobImporter::import(&state.conn, initial_data, TEST_URI_V1)
+        .await
+        .unwrap();
+    assert_eq!(result1.imported, 1, "首次导入应有1条插入");
+
+    let duplicate_data = vec![
+        build_job_headers_with_version(),
+        build_test_job_row("job_dup_001", &date_str),
+    ];
+    let result2 = JobImporter::import(&state.conn, duplicate_data, TEST_URI_V1)
+        .await
+        .unwrap();
+
+    assert_eq!(result2.imported, 0, "相同URI+相同job_id不应重复导入");
+    assert_eq!(result2.updated, 0, "相同数据不应更新");
+
+    let sources = JobSource::find().all(&state.conn).await.unwrap();
+    assert_eq!(sources.len(), 1, "JobSource应为1条");
+
+    state.conn.close().await.unwrap();
+    tear_down(&container).await;
+}
+
+#[tokio::test]
+async fn test_import_job_invalid_number_format() {
+    let (container, state) = setup_database().await;
+
+    let now = Utc::now();
+    let date_str = format_naive_date(now - Duration::days(10));
+
+    let mut data = vec![
+        build_job_headers_with_version(),
+        build_test_job_row("job_invalid_001", &date_str),
+    ];
+
+    data[1][15] = "面议".to_string();
+
+    let result = JobImporter::import(&state.conn, data, TEST_URI_V1)
+        .await
+        .unwrap();
+
+    println!("Result: success={}, errors={:?}", result.success, result.errors);
+    assert!(!result.success, "数字格式错误应返回失败");
+    assert!(!result.errors.is_empty(), "应有错误信息");
+
+    state.conn.close().await.unwrap();
+    tear_down(&container).await;
+}
