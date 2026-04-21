@@ -406,14 +406,16 @@ impl CompanyImporter {
                     if trimmed.is_empty() {
                         Ok(0.0)
                     } else {
-                        trimmed.parse::<f64>()
-                            .map_err(|_| {
+                        trimmed.parse::<f64>().map_err(|_| {
+                            {
                                 ImportErrorType::InvalidFloat {
                                     row: row_index + 1,
                                     field: field_name,
                                     value: trimmed.to_string(),
                                 }
-                            }.into())
+                            }
+                            .into()
+                        })
                     }
                 }
                 _ => Ok(0.0),
@@ -429,14 +431,16 @@ impl CompanyImporter {
                     if trimmed.is_empty() {
                         Ok(0)
                     } else {
-                        trimmed.parse::<i32>()
-                            .map_err(|_| {
+                        trimmed.parse::<i32>().map_err(|_| {
+                            {
                                 ImportErrorType::InvalidInteger {
                                     row: row_index + 1,
                                     field: field_name,
                                     value: trimmed.to_string(),
                                 }
-                            }.into())
+                            }
+                            .into()
+                        })
                     }
                 }
                 _ => Ok(0),
@@ -549,6 +553,7 @@ impl CompanyImporter {
             paidin_capital_value: ActiveValue::set(source.paidin_capital_value),
             paidin_capital_currency: ActiveValue::set(source.paidin_capital_currency.clone()),
             uri: ActiveValue::set(source.uri.clone()),
+            publish_datetime: ActiveValue::set(source.publish_datetime),
             create_datetime: ActiveValue::set(Some(*create_datetime)),
             update_datetime: ActiveValue::set(Some(*update_datetime)),
         })

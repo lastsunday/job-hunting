@@ -213,6 +213,7 @@ erDiagram
       paidin_capital_value numeric(17_2) "实缴资本数值"
       paidin_capital_currency varchar(255) "实缴资本货币"
       uri varchar(255) "来源"
+      publish_datetime timestamptz "数据发布时间"
       create_datetime timestamptz "创建时间"
       update_datetime timestamptz "更新时间"
     }

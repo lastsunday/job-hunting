@@ -155,6 +155,7 @@ impl MigrationTrait for Migration {
                         Company::SourceRefreshDatetime,
                     ))
                     .col(string_null(Company::Uri))
+                    .col(timestamp_with_time_zone_null(Company::PublishDatetime))
                     .col(timestamp_with_time_zone_null(Company::CreateDatetime))
                     .col(timestamp_with_time_zone_null(Company::UpdateDatetime))
                     .primary_key(Index::create().name("pk-company-id").col(Company::Id))
@@ -646,6 +647,7 @@ enum Company {
     PaidinCapitalValue,
     PaidinCapitalCurrency,
     Uri,
+    PublishDatetime,
     CreateDatetime,
     UpdateDatetime,
 }

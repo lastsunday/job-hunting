@@ -43,6 +43,8 @@ pub struct Model {
     pub paidin_capital_currency: Option<String>,
     pub uri: Option<String>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
+    pub publish_datetime: Option<DateTimeWithTimeZone>,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub create_datetime: Option<DateTimeWithTimeZone>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub update_datetime: Option<DateTimeWithTimeZone>,

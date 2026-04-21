@@ -136,6 +136,9 @@ mod tests {
             paidin_capital_value: None,
             paidin_capital_currency: None,
             uri: None,
+            publish_datetime: Some(
+                DateTime::parse_from_rfc3339("2021-01-01T00:00:00+08:00").unwrap(),
+            ),
             create_datetime: None,
             update_datetime: None,
         };
