@@ -143,8 +143,7 @@ pub(crate) async fn get_sync_status(
     let total_companies: i64 = Company::find()
         .count(conn)
         .await
-        .map_err(|_| err!(SyncErrorCode::ImportFailed))?
-        as i64;
+        .map_err(|_| err!(SyncErrorCode::ImportFailed))? as i64;
 
     Ok(ApiResponse::success(Some(SyncStatus {
         last_sync_job: last_job,

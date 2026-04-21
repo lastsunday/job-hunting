@@ -37,7 +37,13 @@ import { jobApi, Job, CreateJobRequest, UpdateJobRequest } from '@/api/job';
 import { postJson } from '@/api/http';
 import { handleApiError } from '@/api/error';
 import { LocationMap } from '@/components/map/LocationMap';
+import dayjs from 'dayjs';
 import { useTranslation } from 'react-i18next';
+
+function formatLocalDate(utcString: string | undefined): string {
+  if (!utcString) return '-';
+  return dayjs(utcString).format('YYYY-MM-DD HH:mm:ss');
+}
 
 export const Route = createFileRoute('/_pathlessLayout/admin/jobs')({
   component: RouteComponent,
@@ -631,13 +637,20 @@ function RouteComponent() {
                           : '-'}
                       </Table.Td>
                       <Table.Td>
-                        {job.first_publish_datetime?.slice(0, 10) || '-'}
+                        {formatLocalDate(job.first_publish_datetime)?.slice(
+                          0,
+                          10,
+                        ) || '-'}
                       </Table.Td>
                       <Table.Td>
-                        {job.first_scan_datetime?.slice(0, 10) || '-'}
+                        {formatLocalDate(job.first_scan_datetime)?.slice(
+                          0,
+                          10,
+                        ) || '-'}
                       </Table.Td>
                       <Table.Td>
-                        {job.update_datetime?.slice(0, 10) || '-'}
+                        {formatLocalDate(job.update_datetime)?.slice(0, 10) ||
+                          '-'}
                       </Table.Td>
                       <Table.Td onClick={(e) => e.stopPropagation()}>
                         <Group gap="xs">
@@ -1073,10 +1086,16 @@ function RouteComponent() {
                 <Text size="sm" c="dimmed">
                   {t('job:location')}
                 </Text>
-                <Text size="md">
-                  {viewingJob.address || viewingJob.location_name || '-'}
-                </Text>
+                <Text size="md">{viewingJob.address || '-'}</Text>
               </div>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('job:locationName')}
+                </Text>
+                <Text size="md">{viewingJob.location_name || '-'}</Text>
+              </div>
+            </Group>
+            <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
                   {t('job:platform')}
@@ -1257,9 +1276,7 @@ function RouteComponent() {
                   {t('job:publishTime')}
                 </Text>
                 <Text size="md">
-                  {viewingJob.first_publish_datetime
-                    ?.slice(0, 19)
-                    .replace('T', ' ') || '-'}
+                  {formatLocalDate(viewingJob.first_publish_datetime) || '-'}
                 </Text>
               </div>
               <div>
@@ -1267,9 +1284,7 @@ function RouteComponent() {
                   {t('job:firstScanTime')}
                 </Text>
                 <Text size="md">
-                  {viewingJob.first_scan_datetime
-                    ?.slice(0, 19)
-                    .replace('T', ' ') || '-'}
+                  {formatLocalDate(viewingJob.first_scan_datetime) || '-'}
                 </Text>
               </div>
             </Group>
@@ -1279,8 +1294,7 @@ function RouteComponent() {
                   {t('job:createTime')}
                 </Text>
                 <Text size="md">
-                  {viewingJob.create_datetime?.slice(0, 19).replace('T', ' ') ||
-                    '-'}
+                  {formatLocalDate(viewingJob.create_datetime) || '-'}
                 </Text>
               </div>
               <div>
@@ -1288,8 +1302,7 @@ function RouteComponent() {
                   {t('job:updateTime')}
                 </Text>
                 <Text size="md">
-                  {viewingJob.update_datetime?.slice(0, 19).replace('T', ' ') ||
-                    '-'}
+                  {formatLocalDate(viewingJob.update_datetime) || '-'}
                 </Text>
               </div>
             </Group>
