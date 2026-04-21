@@ -5,6 +5,7 @@ pub enum JobErrorCode {
     TitleRequired = 502001,
     UrlRequired = 502002,
     CompanyNameRequired = 502003,
+    IdIsEmpty = 502004,
 }
 
 use crate::{AppState, sync::SyncErrorCode};
@@ -12,14 +13,14 @@ use axum::{debug_handler, extract::Extension, extract::Path, extract::State};
 use entity::job::{self, Entity as Job};
 use framework::{
     auth::Principal,
-    data::{ApiPageResult, ApiResponse, PageParam, valid::ValidJson, empty_string_as_none},
+    data::{ApiPageResult, ApiResponse, PageParam, empty_string_as_none, valid::ValidJson},
     error::{ApiError, ApiResult},
     middleware::get_auth_layer,
 };
-use serde::{Deserialize, Serialize};
 use sea_orm::{
     ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait,
 };
+use serde::{Deserialize, Serialize};
 use service::sync::{FileParser, ImportError, JobImporter};
 use service::util::hash::gen_add_or_update_uri;
 use utoipa::ToSchema;
@@ -53,14 +54,18 @@ fn convert_job_to_csv_data(id: &str, param: &CreateJobRequest) -> Vec<Vec<String
         param.salary_min.map(|v| v.to_string()).unwrap_or_default(),
         param.salary_max.map(|v| v.to_string()).unwrap_or_default(),
         param
+            .salary_total_month
+            .map(|v| v.to_string())
+            .unwrap_or_default(),
+        param
             .first_publish_datetime
             .map(|v| v.to_rfc3339())
             .unwrap_or_default(),
         param.boss_name.clone().unwrap_or_default(),
         param.boss_company_name.clone().unwrap_or_default(),
         param.boss_position.clone().unwrap_or_default(),
-        String::new(),
-        String::new(),
+        chrono::Utc::now().to_rfc3339(),
+        chrono::Utc::now().to_rfc3339(),
     ];
     vec![headers, row]
 }
@@ -151,6 +156,11 @@ fn convert_update_job_to_csv_data(
         param
             .salary_max
             .or(existing.salary_max)
+            .map(|v| v.to_string())
+            .unwrap_or_default(),
+        param
+            .salary_total_month
+            .or(existing.salary_total_month)
             .map(|v| v.to_string())
             .unwrap_or_default(),
         param
@@ -322,7 +332,16 @@ pub async fn create(
     Extension(principal): Extension<Principal>,
     ValidJson(param): ValidJson<CreateJobRequest>,
 ) -> ApiResult<ApiResponse<job::Model>> {
-    let job_id = param.id.clone().unwrap_or_else(|| xid::new().to_string());
+    let job_id = match &param.id {
+        Some(id) => {
+            if id.trim().is_empty() {
+                Err(err!(JobErrorCode::IdIsEmpty))
+            } else {
+                Ok(id.to_string())
+            }
+        }
+        None => Ok(xid::new().to_string()),
+    }?;
     let csv_data = convert_job_to_csv_data(&job_id, &param);
     let uri = gen_add_or_update_uri(&principal.name, JOB_CSV_VERSION, &csv_data);
 
@@ -353,7 +372,7 @@ pub async fn update(
     let existing = Job::find_by_id(&id)
         .one(&conn)
         .await?
-        .ok_or(err!(JobErrorCode::TitleRequired))?;
+        .ok_or(err!(CriticalErrorCode::ResourceNotFound))?;
 
     let csv_data = convert_update_job_to_csv_data(&id, &param, &existing);
     let uri = gen_add_or_update_uri(&principal.name, JOB_CSV_VERSION, &csv_data);
@@ -435,6 +454,8 @@ pub struct CreateJobRequest {
     pub salary_total_month: Option<i32>,
     #[serde(default, deserialize_with = "empty_string_as_none")]
     pub first_publish_datetime: Option<DateTime<FixedOffset>>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
+    pub first_scan_datetime: Option<DateTime<FixedOffset>>,
     pub boss_name: Option<String>,
     pub boss_company_name: Option<String>,
     pub boss_position: Option<String>,

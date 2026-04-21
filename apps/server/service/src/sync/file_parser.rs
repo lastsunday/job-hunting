@@ -1,6 +1,6 @@
 use std::io::Cursor;
 
-use calamine::{open_workbook_auto_from_rs, Reader, Sheets};
+use calamine::{Reader, Sheets, open_workbook_auto_from_rs};
 
 use crate::sync::error::ImportError;
 use crate::sync::types::ImportWarning;
@@ -96,6 +96,7 @@ impl FileParser {
             "所需经验",
             "最低薪资",
             "最高薪资",
+            "几薪",
             "首次发布时间",
             "招聘人",
             "招聘公司",
@@ -121,6 +122,7 @@ impl FileParser {
             "福利",
             "最低薪资",
             "最高薪资",
+            "几薪",
             "首次发布时间",
             "招聘人",
             "招聘公司",

@@ -915,6 +915,7 @@ sequenceDiagram
 | 福利           | string   | 1        |                             |
 | 最低薪资       | number   | 0        |                             |
 | 最高薪资       | number   | 0        |                             |
+| 几薪           | number   | 0        |                             |
 | 首次发布时间   | datetime | 0        | rfc3339/yyyy-MM-dd HH:mm:ss |
 | 招聘人         | string   | 0        |                             |
 | 招聘公司       | string   | 0        |                             |

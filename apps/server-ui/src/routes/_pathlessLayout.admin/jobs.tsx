@@ -23,7 +23,10 @@ import {
   ActionIcon,
   UnstyledButton,
   Input,
+  Checkbox,
 } from '@mantine/core';
+import { DateTimePickerProps } from '@mantine/dates';
+import { LocalizedDateTimePicker } from '@/components/DateTimePicker';
 import {
   IconChevronUp,
   IconChevronDown,
@@ -33,7 +36,7 @@ import classes from './jobs.module.css';
 import { useDisclosure } from '@mantine/hooks';
 import { showNotification } from '@mantine/notifications';
 import { useEffect, useState } from 'react';
-import { jobApi, Job, CreateJobRequest, UpdateJobRequest } from '@/api/job';
+import { jobApi, Job, UpdateJobRequest, JobFormData } from '@/api/job';
 import { postJson } from '@/api/http';
 import { handleApiError } from '@/api/error';
 import { LocationMap } from '@/components/map/LocationMap';
@@ -125,19 +128,22 @@ function RouteComponent() {
   const [viewMode, setViewMode] = useState<'table' | 'map'>('table');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<CreateJobRequest>({
+  const [formData, setFormData] = useState<JobFormData>({
+    id: '',
     name: '',
     company_name: '',
+    is_full_company_name: false,
     address: '',
+    location_name: '',
     salary_min: 0,
     salary_max: 0,
+    salary_total_month: 12,
+    first_publish_datetime: undefined,
     description: '',
     url: '',
     platform: '',
-    location_name: '',
     degree_name: '',
     year: undefined,
-    salary_total_month: 12,
     boss_name: '',
     boss_company_name: '',
     boss_position: '',
@@ -217,18 +223,21 @@ function RouteComponent() {
   const handleCreate = () => {
     setEditingJob(null);
     setFormData({
+      id: undefined,
       name: '',
       company_name: '',
+      is_full_company_name: false,
       address: '',
+      location_name: '',
       salary_min: 0,
       salary_max: 0,
+      salary_total_month: undefined,
+      first_publish_datetime: undefined,
       description: '',
       url: '',
       platform: '',
-      location_name: '',
       degree_name: '',
       year: undefined,
-      salary_total_month: 12,
       boss_name: '',
       boss_company_name: '',
       boss_position: '',
@@ -243,18 +252,23 @@ function RouteComponent() {
   const handleEdit = (job: Job) => {
     setEditingJob(job);
     setFormData({
+      id: job.id || '',
       name: job.name || '',
       company_name: job.company_name || '',
+      is_full_company_name: job.is_full_company_name || false,
       address: job.address || '',
+      location_name: job.location_name || '',
       salary_min: job.salary_min || 0,
       salary_max: job.salary_max || 0,
+      salary_total_month: job.salary_total_month || undefined,
+      first_publish_datetime: job.first_publish_datetime
+        ? new Date(job.first_publish_datetime)
+        : undefined,
       description: job.description || '',
       url: job.url || '',
       platform: job.platform || '',
-      location_name: job.location_name || '',
       degree_name: job.degree_name || '',
       year: job.year,
-      salary_total_month: job.salary_total_month || 12,
       boss_name: job.boss_name || '',
       boss_company_name: job.boss_company_name || '',
       boss_position: job.boss_position || '',
@@ -283,16 +297,20 @@ function RouteComponent() {
         const data: UpdateJobRequest = {
           name: formData.name || undefined,
           company_name: formData.company_name || undefined,
+          is_full_company_name: formData.is_full_company_name,
           address: formData.address || undefined,
+          location_name: formData.location_name || undefined,
           salary_min: formData.salary_min || undefined,
           salary_max: formData.salary_max || undefined,
+          salary_total_month: formData.salary_total_month || undefined,
+          first_publish_datetime: formData.first_publish_datetime
+            ? formData.first_publish_datetime.toISOString()
+            : undefined,
           description: formData.description || undefined,
           url: formData.url || undefined,
           platform: formData.platform || undefined,
-          location_name: formData.location_name || undefined,
           degree_name: formData.degree_name || undefined,
           year: formData.year || undefined,
-          salary_total_month: formData.salary_total_month || undefined,
           boss_name: formData.boss_name || undefined,
           boss_company_name: formData.boss_company_name || undefined,
           boss_position: formData.boss_position || undefined,
@@ -308,7 +326,13 @@ function RouteComponent() {
           message: t('job:updateSuccess'),
         });
       } else {
-        await jobApi.create(formData);
+        const createData = {
+          ...formData,
+          first_publish_datetime: formData.first_publish_datetime
+            ? formData.first_publish_datetime.toISOString()
+            : undefined,
+        };
+        await jobApi.create(createData);
         showNotification({
           color: 'green',
           title: t('common:success'),
@@ -626,9 +650,8 @@ function RouteComponent() {
                       </Table.Td>
                       <Table.Td>
                         {job.salary_min && job.salary_max
-                          ? `${job.salary_min / 1000}k-${
-                              job.salary_max / 1000
-                            }k`
+                          ? `${job.salary_min / 1000}k-${job.salary_max / 1000
+                          }k`
                           : '-'}
                       </Table.Td>
                       <Table.Td>
@@ -715,9 +738,8 @@ function RouteComponent() {
                   jobs.map((job) => (
                     <div
                       key={job.id}
-                      className={`${classes.listItem} ${
-                        selectedItemId === job.id ? classes.selected : ''
-                      }`}
+                      className={`${classes.listItem} ${selectedItemId === job.id ? classes.selected : ''
+                        }`}
                       onClick={() => setSelectedItemId(job.id)}
                       onDoubleClick={() => handleView(job)}
                     >
@@ -841,20 +863,44 @@ function RouteComponent() {
       >
         <Stack>
           <TextInput
+            label={t('job:jobNo')}
+            value={formData.id}
+            onChange={(e) =>
+              setFormData({ ...formData, id: e.currentTarget.value })
+            }
+            required={!editingJob}
+            disabled={!!editingJob}
+          />
+          <TextInput
             label={t('job:name')}
             value={formData.name}
             onChange={(e) =>
               setFormData({ ...formData, name: e.currentTarget.value })
             }
-            required
           />
-          <TextInput
-            label={t('job:companyName')}
-            value={formData.company_name}
-            onChange={(e) =>
-              setFormData({ ...formData, company_name: e.currentTarget.value })
-            }
-          />
+          <Group grow align="flex-end">
+            <TextInput
+              label={t('job:companyName')}
+              value={formData.company_name}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  company_name: e.currentTarget.value,
+                })
+              }
+            />
+            <Checkbox
+              label={t('job:isFullCompanyName')}
+              checked={formData.is_full_company_name}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  is_full_company_name: e.currentTarget.checked,
+                })
+              }
+              style={{ marginBottom: 8 }}
+            />
+          </Group>
           <TextInput
             label={t('job:location')}
             value={formData.address}
@@ -862,53 +908,8 @@ function RouteComponent() {
               setFormData({ ...formData, address: e.currentTarget.value })
             }
           />
-          <Group grow>
-            <NumberInput
-              label={t('job:longitude')}
-              value={formData.longitude ?? ''}
-              onChange={(val) =>
-                setFormData({
-                  ...formData,
-                  longitude: val !== '' ? Number(val) : undefined,
-                })
-              }
-              decimalScale={6}
-            />
-            <NumberInput
-              label={t('job:latitude')}
-              value={formData.latitude ?? ''}
-              onChange={(val) =>
-                setFormData({
-                  ...formData,
-                  latitude: val !== '' ? Number(val) : undefined,
-                })
-              }
-              decimalScale={6}
-            />
-          </Group>
           <TextInput
-            label={t('job:jobDescription')}
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.currentTarget.value })
-            }
-          />
-          <TextInput
-            label={t('job:jobUrl')}
-            value={formData.url}
-            onChange={(e) =>
-              setFormData({ ...formData, url: e.currentTarget.value })
-            }
-          />
-          <TextInput
-            label={t('job:platform')}
-            value={formData.platform}
-            onChange={(e) =>
-              setFormData({ ...formData, platform: e.currentTarget.value })
-            }
-          />
-          <TextInput
-            label={t('job:location')}
+            label={t('job:locationName')}
             value={formData.location_name}
             onChange={(e) =>
               setFormData({ ...formData, location_name: e.currentTarget.value })
@@ -933,7 +934,64 @@ function RouteComponent() {
               min={0}
               step={1000}
             />
+            <NumberInput
+              label={t('job:salaryTotalMonth')}
+              value={formData.salary_total_month ?? ''}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  salary_total_month: val !== '' ? Number(val) : undefined,
+                })
+              }
+              min={1}
+            />
           </Group>
+          <LocalizedDateTimePicker
+            label={t('job:firstPublishDatetime')}
+            value={
+              formData.first_publish_datetime
+                ? new Date(formData.first_publish_datetime)
+                : null
+            }
+            onChange={(val) => {
+              const newVal = val ? new Date(val) : undefined;
+              setFormData({
+                ...formData,
+                first_publish_datetime: newVal,
+              });
+            }}
+            placeholder={t('job:firstPublishDatetimePlaceholder')}
+            clearable
+          />
+          <NumberInput
+            label={t('job:longitude')}
+            value={formData.longitude ?? ''}
+            onChange={(val) =>
+              setFormData({
+                ...formData,
+                longitude: val !== '' ? Number(val) : undefined,
+              })
+            }
+            decimalScale={6}
+          />
+          <NumberInput
+            label={t('job:latitude')}
+            value={formData.latitude ?? ''}
+            onChange={(val) =>
+              setFormData({
+                ...formData,
+                latitude: val !== '' ? Number(val) : undefined,
+              })
+            }
+            decimalScale={6}
+          />
+          <TextInput
+            label={t('job:platform')}
+            value={formData.platform}
+            onChange={(e) =>
+              setFormData({ ...formData, platform: e.currentTarget.value })
+            }
+          />
           <Group grow>
             <TextInput
               label={t('job:degree')}
@@ -954,6 +1012,20 @@ function RouteComponent() {
               min={0}
             />
           </Group>
+          <TextInput
+            label={t('job:jobDescription')}
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.currentTarget.value })
+            }
+          />
+          <TextInput
+            label={t('job:jobUrl')}
+            value={formData.url}
+            onChange={(e) =>
+              setFormData({ ...formData, url: e.currentTarget.value })
+            }
+          />
           <Group grow>
             <TextInput
               label={t('job:bossName')}
@@ -1157,8 +1229,8 @@ function RouteComponent() {
                 <Text size="md">
                   {viewingJob.salary_total_month
                     ? `${viewingJob.salary_total_month}${t(
-                        'job:salaryMonthUnit',
-                      )}`
+                      'job:salaryMonthUnit',
+                    )}`
                     : '-'}
                 </Text>
               </div>

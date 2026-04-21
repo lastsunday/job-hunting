@@ -67,5 +67,8 @@
   "updateSuccess": "Job updated successfully",
   "deleteSuccess": "Job deleted successfully",
   "operationFailed": "Operation failed",
-  "loadFailed": "Load failed"
+  "loadFailed": "Load failed",
+  "isFullCompanyName": "Is Full Company Name",
+  "firstPublishDatetime": "First Publish Time",
+  "firstPublishDatetimePlaceholder": "Select first publish time"
 }

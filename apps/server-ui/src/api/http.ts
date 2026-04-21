@@ -81,10 +81,13 @@ const refreshToken = async (refresh_token: string | null): Promise<Token> => {
         throw new ApiError(code, data.message);
       }
     } else {
-      throw 'invalid data is null';
+      throw new ApiError(0, 'invalid data is null');
     }
   } else {
-    throw `invalid status code = ${status}`;
+    if (data?.code) {
+      throw new ApiError(data.code, data.message);
+    }
+    throw new ApiError(status, `invalid status code = ${status}`);
   }
 };
 
@@ -102,7 +105,10 @@ export async function postJson<T>(url: string, obj: Object): Promise<T> {
       throw new ApiError(0, 'invalid data is null');
     }
   } else {
-    throw new ApiError(0, `invalid status code = ${status}`);
+    if (data?.code) {
+      throw new ApiError(data.code, data.message);
+    }
+    throw new ApiError(status, `invalid status code = ${status}`);
   }
 }
 
@@ -120,7 +126,10 @@ export async function getJson<T>(url: string, params?: any): Promise<T> {
       throw new ApiError(0, 'invalid data is null');
     }
   } else {
-    throw new ApiError(0, `invalid status code = ${status}`);
+    if (data?.code) {
+      throw new ApiError(data.code, data.message);
+    }
+    throw new ApiError(status, `invalid status code = ${status}`);
   }
 }
 
@@ -138,7 +147,10 @@ export async function putJson<T>(url: string, obj: Object): Promise<T> {
       throw new ApiError(0, 'invalid data is null');
     }
   } else {
-    throw new ApiError(0, `invalid status code = ${status}`);
+    if (data?.code) {
+      throw new ApiError(data.code, data.message);
+    }
+    throw new ApiError(status, `invalid status code = ${status}`);
   }
 }
 
@@ -156,6 +168,9 @@ export async function deleteJson<T>(url: string, params?: any): Promise<T> {
       throw new ApiError(0, 'invalid data is null');
     }
   } else {
-    throw new ApiError(0, `invalid status code = ${status}`);
+    if (data?.code) {
+      throw new ApiError(data.code, data.message);
+    }
+    throw new ApiError(status, `invalid status code = ${status}`);
   }
 }

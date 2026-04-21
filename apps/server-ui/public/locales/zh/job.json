@@ -66,5 +66,8 @@
   "updateSuccess": "职位更新成功",
   "deleteSuccess": "职位删除成功",
   "operationFailed": "操作失败",
-  "loadFailed": "加载失败"
+  "loadFailed": "加载失败",
+  "isFullCompanyName": "公司是否为全称",
+  "firstPublishDatetime": "首次发布时间",
+  "firstPublishDatetimePlaceholder": "选择首次发布时间"
 }

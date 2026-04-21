@@ -1,4 +1,5 @@
 {
+  "0": "Request failed, please try again later",
   "101001": "Database error",
   "201001": "JWT error",
   "201002": "Password error",
@@ -17,6 +18,7 @@
   "502001": "Job title required",
   "502002": "Job URL required",
   "502003": "Company name required",
+  "502004": "Job No. is required",
   "503001": "Invalid account or password",
   "503002": "Client credentials invalid",
   "503003": "Grant type invalid",
@@ -27,5 +29,10 @@
   "505001": "Invalid file",
   "505002": "Excel parse failed",
   "505003": "Import failed",
-  "505004": "Data type invalid"
+  "505004": "Data type invalid",
+  "404": "Resource not found",
+  "500": "Internal server error",
+  "502": "Service unavailable",
+  "503": "Service unavailable",
+  "504": "Service response timeout"
 }

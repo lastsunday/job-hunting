@@ -53,6 +53,13 @@ export interface CreateJobRequest {
   welfare_tag?: string;
 }
 
+export interface JobFormData extends Omit<
+  CreateJobRequest,
+  'first_publish_datetime'
+> {
+  first_publish_datetime?: Date;
+}
+
 export interface UpdateJobRequest {
   platform?: string;
   url?: string;

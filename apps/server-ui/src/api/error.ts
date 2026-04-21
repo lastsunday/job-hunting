@@ -16,11 +16,11 @@ export function handleApiError(error: unknown) {
   }
 
   const key = String(code);
-  const translated = i18n.t(key, { ns: 'error' });
+  const translated = i18n.t(`error:${key}`);
 
   showNotification({
     color: 'red',
-    title: i18n.t('error', { ns: 'common' }),
-    message: translated !== key ? translated : message,
+    title: i18n.t('common:error'),
+    message: translated !== `error:${key}` ? translated : message,
   });
 }
