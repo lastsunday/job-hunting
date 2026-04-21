@@ -243,7 +243,7 @@ impl CompanyImporter {
 
                     let mut exists_company_source = Vec::new();
                     let mut not_exists_company_source = Vec::new();
-                    for (_, (_, company_id)) in &filter_company_id_and_source_map {
+                    for (_, company_id) in filter_company_id_and_source_map.values() {
                         if exists_company_map.contains_key(company_id.as_str()) {
                             exists_company_source.push(company_id.clone());
                         } else {
@@ -293,14 +293,14 @@ impl CompanyImporter {
                         // 规则1: source_refresh_datetime更新时，从company_source重建company
                         let existing_refresh = existing_company.source_refresh_datetime;
                         let new_refresh = source_model.source_refresh_datetime;
-                        if let (Some(existing_dt), Some(new_dt)) = (existing_refresh, new_refresh) {
-                            if new_dt > existing_dt {
-                                // 从 company_source 重建
-                                update_company = Self::build_company(source_model, &now, &now)
-                                    .map_err(|e| {
-                                        DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
-                                    })?;
-                            }
+                        if let (Some(existing_dt), Some(new_dt)) = (existing_refresh, new_refresh)
+                            && new_dt > existing_dt
+                        {
+                            // 从 company_source 重建
+                            update_company = Self::build_company(source_model, &now, &now)
+                                .map_err(|e| {
+                                    DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
+                                })?;
                         }
 
                         let active_model = update_company.into_active_model().reset_all();
@@ -493,10 +493,10 @@ impl CompanyImporter {
         }
 
         // 解析 create_datetime
-        if let Some(dt_str) = get_string(mapping.create_datetime) {
-            if let Ok(dt) = DateTime::parse_from_rfc3339(&dt_str) {
-                model.create_datetime = ActiveValue::Set(Some(dt));
-            }
+        if let Some(dt_str) = get_string(mapping.create_datetime)
+            && let Ok(dt) = DateTime::parse_from_rfc3339(&dt_str)
+        {
+            model.create_datetime = ActiveValue::Set(Some(dt));
         }
 
         // 解析 update_datetime

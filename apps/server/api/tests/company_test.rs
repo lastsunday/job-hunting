@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use api::company::{CreateCompanyRequest, convert_company_to_csv_data};
-    use chrono::{DateTime, NaiveDate};
+    use api::company::{convert_company_to_csv_data, CreateCompanyRequest};
+    use chrono::DateTime;
 
     // 基于 company-v2.xlsx 第2行数据
     fn get_xlsx_row2_request() -> CreateCompanyRequest {

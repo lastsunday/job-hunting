@@ -68,12 +68,12 @@ async fn test_validate_job_headers() {
     let mut v1_headers = v0_headers.clone();
     v1_headers.push("技能".to_string());
     v1_headers.push("福利".to_string());
-    let (valid, version, actual_version, lack_columns, warnings) =
+    let (_valid, _version, _actual_version, _lack_columns, _warnings) =
         FileParser::validate_job_headers(&v1_headers);
-    assert!(valid);
-    assert_eq!(version, 0);
-    assert_eq!(actual_version, 0);
-    assert!(lack_columns.is_empty());
+    assert!(_valid);
+    assert_eq!(_version, 0);
+    assert_eq!(_actual_version, 0);
+    assert!(_lack_columns.is_empty());
 
     let v1_headers_with_version = vec![
         "__VERSION_1".to_string(),
@@ -114,17 +114,17 @@ async fn test_validate_job_headers() {
         "发布平台".to_string(),
         "职位".to_string(),
     ];
-    let (valid, version, actual_version, lack_columns, warnings) =
+    let (_valid, _version, _actual_version, _lack_columns, _warnings) =
         FileParser::validate_job_headers(&incomplete_headers);
-    assert!(!valid);
-    assert!(!lack_columns.is_empty());
+    assert!(!_valid);
+    assert!(!_lack_columns.is_empty());
 
     let v99_headers = vec!["__VERSION_99".to_string(), "职位自编号".to_string()];
-    let (valid, version, actual_version, lack_columns, warnings) =
+    let (_valid, _version, _actual_version, _lack_columns, _warnings) =
         FileParser::validate_job_headers(&v99_headers);
-    assert_eq!(version, 99);
-    assert_eq!(actual_version, 1);
-    assert!(!warnings.is_empty());
+    assert_eq!(_version, 99);
+    assert_eq!(_actual_version, 1);
+    assert!(!_warnings.is_empty());
 }
 
 #[tokio::test]
@@ -165,11 +165,11 @@ async fn test_validate_company_headers() {
     let mut v1_headers = v0_headers.clone();
     v1_headers.push("记录创建日期".to_string());
     v1_headers.push("记录更新日期".to_string());
-    let (valid, version, actual_version, lack_columns, warnings) =
+    let (_valid, _version, _actual_version, _lack_columns, _warnings) =
         FileParser::validate_company_headers(&v1_headers);
-    assert!(valid);
-    assert_eq!(version, 0);
-    assert_eq!(actual_version, 0);
+    assert!(_valid);
+    assert_eq!(_version, 0);
+    assert_eq!(_actual_version, 0);
 
     let v1_headers_with_version = vec![
         "__VERSION_1".to_string(),
@@ -197,12 +197,12 @@ async fn test_validate_company_headers() {
         "记录创建日期".to_string(),
         "记录更新日期".to_string(),
     ];
-    let (valid, version, actual_version, lack_columns, warnings) =
+    let (_valid, _version, _actual_version, _lack_columns, _warnings) =
         FileParser::validate_company_headers(&v1_headers_with_version);
-    assert!(valid);
-    assert_eq!(version, 1);
-    assert_eq!(actual_version, 1);
-    assert!(lack_columns.is_empty());
+    assert!(_valid);
+    assert_eq!(_version, 1);
+    assert_eq!(_actual_version, 1);
+    assert!(_lack_columns.is_empty());
 
     let mut v2_headers = v1_headers_with_version.clone();
     v2_headers.push("注册资本".to_string());
@@ -210,23 +210,23 @@ async fn test_validate_company_headers() {
     let v2_headers_with_version: Vec<String> = std::iter::once("__VERSION_2".to_string())
         .chain(v2_headers.into_iter().skip(1))
         .collect();
-    let (valid, version, actual_version, lack_columns, warnings) =
+    let (_valid, _version, _actual_version, _lack_columns, _warnings) =
         FileParser::validate_company_headers(&v2_headers_with_version);
-    assert!(valid);
-    assert_eq!(version, 2);
-    assert_eq!(actual_version, 2);
-    assert!(warnings.is_empty());
+    assert!(_valid);
+    assert_eq!(_version, 2);
+    assert_eq!(_actual_version, 2);
+    assert!(_warnings.is_empty());
 
     let incomplete_headers = vec!["公司".to_string(), "公司描述".to_string()];
-    let (valid, version, actual_version, lack_columns, warnings) =
+    let (_valid, _version, _actual_version, _lack_columns, _warnings) =
         FileParser::validate_company_headers(&incomplete_headers);
-    assert!(!valid);
-    assert!(!lack_columns.is_empty());
+    assert!(!_valid);
+    assert!(!_lack_columns.is_empty());
 
     let v99_headers = vec!["__VERSION_99".to_string(), "公司".to_string()];
-    let (valid, version, actual_version, lack_columns, warnings) =
+    let (_valid, _version, _actual_version, _lack_columns, _warnings) =
         FileParser::validate_company_headers(&v99_headers);
-    assert_eq!(version, 99);
-    assert_eq!(actual_version, 2);
-    assert!(!warnings.is_empty());
+    assert_eq!(_version, 99);
+    assert_eq!(_actual_version, 2);
+    assert!(!_warnings.is_empty());
 }

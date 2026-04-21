@@ -414,10 +414,10 @@ pub async fn update(
     let param_paidin_capital_currency = param.paidin_capital_currency.clone();
     let param_uri = param.uri;
 
-    if let Some(ref new_name) = param_name {
-        if existing.name.as_deref() != Some(new_name) {
-            return Err(err!(CompanyErrorCode::NameImmutable));
-        }
+    if let Some(ref new_name) = param_name
+        && existing.name.as_deref() != Some(new_name)
+    {
+        return Err(err!(CompanyErrorCode::NameImmutable));
     }
 
     let param: CreateCompanyRequest = CreateCompanyRequest {

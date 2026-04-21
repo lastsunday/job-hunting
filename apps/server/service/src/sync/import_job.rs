@@ -302,7 +302,7 @@ impl JobImporter {
                             ))
                         })? {
                             update_job = Self::build_job(
-                                &job_source,
+                                job_source,
                                 &now,
                                 &job.create_datetime.ok_or_else(|| {
                                     DbErr::Query(sea_orm::RuntimeErr::Internal(
