@@ -1,5 +1,8 @@
+use api::config;
 use api::setup_default;
 use api::setup_job;
+use framework::auth::Jwt;
+use framework::auth::Principal;
 use axum::extract::connect_info::MockConnectInfo;
 use chrono::DateTime;
 use chrono::Duration;
@@ -9,7 +12,7 @@ use common::datetime_to_str;
 use common::get_from_value;
 use common::get_json_paging_result_items;
 use common::get_json_result;
-use common::post_json;
+use common::post_json_with_token;
 use common::response_to_json;
 use common::str_to_datetime;
 use core::option::Option;
@@ -68,7 +71,7 @@ async fn job_list_with_salary(world: &mut JobWorld, step: &Step) {
 #[when(expr = "小明查询能给到{float}元每月薪资的职位")]
 async fn search_by_salary(world: &mut JobWorld, salary: f32) {
     let param_json = json!({"page": {"num":1,"size":10},"salary":salary});
-    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    let response = post_json_with_token(world.app.clone().unwrap(), SEARCH_API_URL, &param_json, world.auth_token.clone()).await;
     assert_eq!(response.status(), StatusCode::OK);
     let jobs = get_json_paging_result_items(&response_to_json(response).await);
     let mut result = Vec::new();
@@ -126,7 +129,7 @@ async fn job_list_only_name(world: &mut JobWorld, step: &Step) {
 #[when(expr = "小明查询职位名含有 {} 的职位")]
 async fn search_by_name(world: &mut JobWorld, name: String) {
     let param_json = json!({"page":{"num":1,"size":10},"name":name});
-    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    let response = post_json_with_token(world.app.clone().unwrap(), SEARCH_API_URL, &param_json, world.auth_token.clone()).await;
     assert_eq!(response.status(), StatusCode::OK);
     let jobs = get_json_paging_result_items(&response_to_json(response).await);
     let mut result = Vec::new();
@@ -179,7 +182,7 @@ async fn job_list_with_address(world: &mut JobWorld, step: &Step) {
 #[when(expr = "小明查询地址含有 {} 的职位")]
 async fn search_by_address(world: &mut JobWorld, name: String) {
     let param_json = json!({"page":{"num":1,"size":10},"address":name});
-    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    let response = post_json_with_token(world.app.clone().unwrap(), SEARCH_API_URL, &param_json, world.auth_token.clone()).await;
     assert_eq!(response.status(), StatusCode::OK);
     let jobs = get_json_paging_result_items(&response_to_json(response).await);
     let mut result = Vec::new();
@@ -242,10 +245,10 @@ async fn search_by_publish_datetime(
     // tracing::info!("{:?},{:?}",start_datetime,end_datetime);
     let param_json = json!({
         "page":{"num":1,"size":10},
-        "publish_datetime_start":datetime_to_str(start_datetime),
-        "publish_datetime_end":datetime_to_str(end_datetime)
+        "first_publish_datetime_start":datetime_to_str(start_datetime),
+        "first_publish_datetime_end":datetime_to_str(end_datetime)
     });
-    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    let response = post_json_with_token(world.app.clone().unwrap(), SEARCH_API_URL, &param_json, world.auth_token.clone()).await;
     // tracing::info!("{:?}",from_utf8(&response.into_body().collect().await.unwrap().to_bytes()));
     assert_eq!(response.status(), StatusCode::OK);
     let jobs = get_json_paging_result_items(&response_to_json(response).await);
@@ -313,7 +316,7 @@ async fn search_by_create_datetime(
         "create_datetime_start":datetime_to_str(start_datetime),
         "create_datetime_end":datetime_to_str(end_datetime)
     });
-    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    let response = post_json_with_token(world.app.clone().unwrap(), SEARCH_API_URL, &param_json, world.auth_token.clone()).await;
     // tracing::info!("{:?}",from_utf8(&response.into_body().collect().await.unwrap().to_bytes()));
     assert_eq!(response.status(), StatusCode::OK);
     let jobs = get_json_paging_result_items(&response_to_json(response).await);
@@ -368,7 +371,7 @@ async fn job_list_with_company_name(world: &mut JobWorld, step: &Step) {
 #[when(expr = "小明查询公司名为 {} 的职位")]
 async fn search_by_company_name(world: &mut JobWorld, company_name: String) {
     let param_json = json!({"page":{"num":1,"size":10},"company_name":company_name});
-    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    let response = post_json_with_token(world.app.clone().unwrap(), SEARCH_API_URL, &param_json, world.auth_token.clone()).await;
     assert_eq!(response.status(), StatusCode::OK);
     let jobs = get_json_paging_result_items(&response_to_json(response).await);
     let mut result = Vec::new();
@@ -422,7 +425,7 @@ async fn job_list_with_platform(world: &mut JobWorld, step: &Step) {
 #[when(expr = "小明查询平台为 {} 的职位")]
 async fn search_by_platform(world: &mut JobWorld, platform: String) {
     let param_json = json!({"page":{"num":1,"size":10},"platform":platform});
-    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    let response = post_json_with_token(world.app.clone().unwrap(), SEARCH_API_URL, &param_json, world.auth_token.clone()).await;
     assert_eq!(response.status(), StatusCode::OK);
     let jobs = get_json_paging_result_items(&response_to_json(response).await);
     let mut result = Vec::new();
@@ -484,9 +487,11 @@ async fn search_by_first_scan_datetime(
     let param_json = json!({
         "page":{"num":1,"size":10},
         "first_scan_datetime_start":datetime_to_str(start_datetime),
-        "first_scan_datetime_end":datetime_to_str(end_datetime)
+        "first_scan_datetime_end":datetime_to_str(end_datetime),
+        "order_by":"first_scan_datetime",
+        "order_dir":"desc"
     });
-    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    let response = post_json_with_token(world.app.clone().unwrap(), SEARCH_API_URL, &param_json, world.auth_token.clone()).await;
     assert_eq!(response.status(), StatusCode::OK);
     let jobs = get_json_paging_result_items(&response_to_json(response).await);
     let mut result = Vec::new();
@@ -518,7 +523,7 @@ async fn get_job_list_by_first_scan_datetime(world: &mut JobWorld, step: &Step) 
 #[when("小明按发布时间升序查询职位")]
 async fn search_sorted_by_publish_datetime(world: &mut JobWorld) {
     let param_json = json!({"page":{"num":1,"size":10},"order_by":"first_publish_datetime","order_dir":"asc"});
-    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    let response = post_json_with_token(world.app.clone().unwrap(), SEARCH_API_URL, &param_json, world.auth_token.clone()).await;
     assert_eq!(response.status(), StatusCode::OK);
     let jobs = get_json_paging_result_items(&response_to_json(response).await);
     let mut result = Vec::new();
@@ -545,7 +550,7 @@ async fn get_job_sorted_by_publish_datetime(world: &mut JobWorld) {
 #[when("小明查询第1页每页2条职位")]
 async fn search_paged_jobs(world: &mut JobWorld) {
     let param_json = json!({"page":{"num":1,"size":2}});
-    let response = post_json(world.app.clone().unwrap(), SEARCH_API_URL, &param_json).await;
+    let response = post_json_with_token(world.app.clone().unwrap(), SEARCH_API_URL, &param_json, world.auth_token.clone()).await;
     assert_eq!(response.status(), StatusCode::OK);
     let value = response_to_json(response).await;
     let data = get_json_result(&value);
@@ -587,6 +592,7 @@ pub struct JobWorld {
     app: Option<Router>,
     state: Option<AppState>,
     last_page_size: Option<usize>,
+    auth_token: Option<String>,
 }
 
 #[tokio::test]
@@ -598,6 +604,12 @@ async fn main() {
                 let (container, state) = setup_database().await;
                 world.container = container;
                 world.state = Some(state.clone());
+                Jwt::init(config::get().auth().clone());
+                let principal = Principal {
+                    id: String::from("testid"),
+                    name: String::from("test"),
+                };
+                world.auth_token = Some(Jwt::global().access_token_encode(principal).unwrap());
                 let app = OpenApiRouter::new();
                 let app = setup_job(app, state).split_for_parts().0;
                 let app = setup_default(app);

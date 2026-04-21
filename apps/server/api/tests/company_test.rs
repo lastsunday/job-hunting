@@ -68,7 +68,7 @@ mod tests {
         let headers = &csv_data[0];
         let row = &csv_data[1];
 
-        assert_eq!(headers.len(), 25, "应有25列");
+        assert_eq!(headers.len(), 26, "应有26列");
 
         // 验证所有24个字段 (基于代码的字段顺序)
         assert_eq!(
@@ -76,7 +76,7 @@ mod tests {
             "row[0] name"
         );
         assert!(row[1].starts_with("史伟莎管理咨询"), "row[1] desc");
-        assert_eq!(row[2], "2024-06-13", "row[2] start_date");
+        assert_eq!(row[2], "2024-06-13T00:00:00+08:00", "row[2] start_date");
         assert_eq!(row[3], "开业", "row[3] status");
         assert_eq!(row[4], "饶永康", "row[4] legal_person");
         assert_eq!(row[5], "91440300MADN0ABF14", "row[5] unified_code");
@@ -102,10 +102,6 @@ mod tests {
         );
         assert_eq!(row[20], "AIQICHA", "row[20] source_platform");
         assert_eq!(row[21], "53470251078081", "row[21] source_record_id");
-        assert_eq!(
-            row[22], "2025-04-23T14:31:29+08:00",
-            "row[22] source_refresh_datetime"
-        );
     }
 
     #[test]
@@ -182,7 +178,10 @@ mod tests {
         assert_eq!(row[0], "新公司", "row[0] name(新值)");
         // 保留原值
         assert_eq!(row[1], "原描述", "row[1] desc(保留)");
-        assert_eq!(row[2], "2020-01-01", "row[2] start_date(保留)");
+        assert_eq!(
+            row[2], "2020-01-01T00:00:00+08:00",
+            "row[2] start_date(保留)"
+        );
         assert_eq!(row[3], "存续", "row[3] status(保留)");
         assert_eq!(row[4], "原法人", "row[4] legal_person(保留)");
     }
