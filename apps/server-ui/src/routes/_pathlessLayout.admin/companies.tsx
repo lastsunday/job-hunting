@@ -42,6 +42,7 @@ import { postJson } from '@/api/http';
 import { ApiError, handleApiError } from '@/api/error';
 import { LocationMap } from '@/components/map/LocationMap';
 import { useTranslation } from 'react-i18next';
+import { formatLocalDate } from '@/utils/date';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/companies')({
   component: RouteComponent,
@@ -467,9 +468,6 @@ function RouteComponent() {
                     <Table.Th style={{ minWidth: 50 }}>
                       {t('company:serialNumber')}
                     </Table.Th>
-                    <Table.Th style={{ minWidth: 115 }}>
-                      {t('company:companyId')}
-                    </Table.Th>
                     <Table.Th style={{ minWidth: 150 }}>
                       {t('company:name')}
                     </Table.Th>
@@ -556,26 +554,6 @@ function RouteComponent() {
                     >
                       <Table.Td>{(page - 1) * pageSize + index + 1}</Table.Td>
                       <Table.Td>
-                        <Text size="sm" title={company.id}>
-                          {company.id.slice(0, 8)}...
-                        </Text>
-                        <ActionIcon
-                          size="xs"
-                          variant="subtle"
-                          style={{ display: 'inline', verticalAlign: 'middle' }}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigator.clipboard.writeText(company.id);
-                            showNotification({
-                              color: 'green',
-                              message: t('company:copiedToClipboard'),
-                            });
-                          }}
-                        >
-                          <div className="i-mdi:content-copy" />
-                        </ActionIcon>
-                      </Table.Td>
-                      <Table.Td>
                         <div
                           style={{
                             display: 'flex',
@@ -622,7 +600,10 @@ function RouteComponent() {
                             }`
                           : '-'}
                       </Table.Td>
-                      <Table.Td>{company.start_date || '-'}</Table.Td>
+                      <Table.Td>
+                        {formatLocalDate(company.start_date)?.slice(0, 10) ||
+                          '-'}
+                      </Table.Td>
                       <Table.Td>
                         <div
                           style={{
@@ -671,12 +652,15 @@ function RouteComponent() {
                       <Table.Td>{company.self_risk ?? '-'}</Table.Td>
                       <Table.Td>{company.union_risk ?? '-'}</Table.Td>
                       <Table.Td>
-                        {company.source_refresh_datetime
-                          ? company.source_refresh_datetime.slice(0, 10)
-                          : '-'}
+                        {formatLocalDate(
+                          company.source_refresh_datetime,
+                        )?.slice(0, 10) || '-'}
                       </Table.Td>
                       <Table.Td>
-                        {company.update_datetime?.slice(0, 10) || '-'}
+                        {formatLocalDate(company.update_datetime)?.slice(
+                          0,
+                          10,
+                        ) || '-'}
                       </Table.Td>
                       <Table.Td onClick={(e) => e.stopPropagation()}>
                         <Group gap="xs">
@@ -1212,7 +1196,7 @@ function RouteComponent() {
                 <Text size="sm" c="dimmed">
                   {t('company:platform')}
                 </Text>
-                <Text size="md">{viewingCompany.platform || '-'}</Text>
+                <Text size="md">{viewingCompany.source_platform || '-'}</Text>
               </div>
               <div>
                 <Text size="sm" c="dimmed">
@@ -1288,7 +1272,10 @@ function RouteComponent() {
               <Text size="sm" c="dimmed">
                 {t('company:establishmentDate')}
               </Text>
-              <Text size="md">{viewingCompany.start_date || '-'}</Text>
+              <Text size="md">
+                {formatLocalDate(viewingCompany.start_date)?.slice(0, 10) ||
+                  '-'}
+              </Text>
             </div>
             <div>
               <Text size="sm" c="dimmed">
@@ -1398,9 +1385,8 @@ function RouteComponent() {
                   {t('company:sourceRefreshTime')}
                 </Text>
                 <Text size="md">
-                  {viewingCompany.source_refresh_datetime
-                    ?.slice(0, 19)
-                    .replace('T', ' ') || '-'}
+                  {formatLocalDate(viewingCompany.source_refresh_datetime) ||
+                    '-'}
                 </Text>
               </div>
             </Group>
@@ -1410,9 +1396,7 @@ function RouteComponent() {
                   {t('company:createTime')}
                 </Text>
                 <Text size="md">
-                  {viewingCompany.create_datetime
-                    ?.slice(0, 19)
-                    .replace('T', ' ') || '-'}
+                  {formatLocalDate(viewingCompany.create_datetime) || '-'}
                 </Text>
               </div>
               <div>
@@ -1420,9 +1404,7 @@ function RouteComponent() {
                   {t('company:updateTime')}
                 </Text>
                 <Text size="md">
-                  {viewingCompany.update_datetime
-                    ?.slice(0, 19)
-                    .replace('T', ' ') || '-'}
+                  {formatLocalDate(viewingCompany.update_datetime) || '-'}
                 </Text>
               </div>
             </Group>

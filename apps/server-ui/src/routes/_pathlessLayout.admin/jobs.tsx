@@ -37,13 +37,8 @@ import { jobApi, Job, CreateJobRequest, UpdateJobRequest } from '@/api/job';
 import { postJson } from '@/api/http';
 import { handleApiError } from '@/api/error';
 import { LocationMap } from '@/components/map/LocationMap';
-import dayjs from 'dayjs';
+import { formatLocalDate } from '@/utils/date';
 import { useTranslation } from 'react-i18next';
-
-function formatLocalDate(utcString: string | undefined): string {
-  if (!utcString) return '-';
-  return dayjs(utcString).format('YYYY-MM-DD HH:mm:ss');
-}
 
 export const Route = createFileRoute('/_pathlessLayout/admin/jobs')({
   component: RouteComponent,
