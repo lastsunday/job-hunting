@@ -109,7 +109,7 @@ pub fn convert_company_to_csv_data(
     let start_date = param
         .start_date
         .or(ex.and_then(|e| e.start_date))
-        .map(|v| v.to_rfc3339())
+        .map(|v| v.with_timezone(&chrono::Local).to_rfc3339())
         .unwrap_or_default();
 
     let reg_capital_value = param
@@ -129,13 +129,18 @@ pub fn convert_company_to_csv_data(
         ex.and_then(|e| e.source_platform.clone())
             .unwrap_or_default()
     });
+    let source_refresh_datetime = param
+        .source_refresh_datetime
+        .or(ex.and_then(|e| e.source_refresh_datetime))
+        .map(|v| v.with_timezone(&chrono::Local).to_rfc3339())
+        .unwrap_or_default();
     let source_record_id = param.source_record_id.clone().unwrap_or_else(|| {
         ex.and_then(|e| e.source_record_id.clone())
             .unwrap_or_default()
     });
     let create_datetime = ex
         .and_then(|e| e.create_datetime)
-        .map(|v| v.to_rfc3339())
+        .map(|v| v.with_timezone(&chrono::Local).to_rfc3339())
         .unwrap_or_default();
 
     let row = vec![
@@ -161,6 +166,7 @@ pub fn convert_company_to_csv_data(
         source_url,
         source_platform,
         source_record_id,
+        source_refresh_datetime,
         chrono::Utc::now().to_rfc3339(),
         create_datetime,
         chrono::Utc::now().to_rfc3339(),
@@ -396,6 +402,7 @@ pub async fn update(
     let param_unified_code = param.unified_code.clone();
     let param_web_site = param.web_site.clone();
     let param_source_platform = param.source_platform.clone();
+    let param_source_refresh_datetime = param.source_refresh_datetime;
     let param_insurance_num = param.insurance_num;
     let param_self_risk = param.self_risk;
     let param_union_risk = param.union_risk;
@@ -422,7 +429,6 @@ pub async fn update(
 
     let param: CreateCompanyRequest = CreateCompanyRequest {
         id: Some(id.clone()),
-        platform: param.platform,
         name: param_name,
         desc: param_desc,
         start_date: param_start_date,
@@ -431,6 +437,7 @@ pub async fn update(
         unified_code: param_unified_code,
         web_site: param_web_site,
         source_platform: param_source_platform,
+        source_refresh_datetime: param_source_refresh_datetime,
         insurance_num: param_insurance_num,
         self_risk: param_self_risk,
         union_risk: param_union_risk,
@@ -509,7 +516,6 @@ pub struct SearchParam {
 #[derive(Default, Deserialize, Serialize, Debug, Clone, Validate, ToSchema)]
 pub struct CreateCompanyRequest {
     pub id: Option<String>,
-    pub platform: Option<String>,
     pub name: Option<String>,
     pub desc: Option<String>,
     #[serde(default, deserialize_with = "empty_string_as_none")]
@@ -519,6 +525,8 @@ pub struct CreateCompanyRequest {
     pub unified_code: Option<String>,
     pub web_site: Option<String>,
     pub source_platform: Option<String>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
+    pub source_refresh_datetime: Option<DateTime<FixedOffset>>,
     pub insurance_num: Option<i32>,
     pub self_risk: Option<i32>,
     pub union_risk: Option<i32>,
@@ -540,7 +548,6 @@ pub struct CreateCompanyRequest {
 
 #[derive(Default, Deserialize, Serialize, Debug, Clone, Validate, ToSchema)]
 pub struct UpdateCompanyRequest {
-    pub platform: Option<String>,
     pub name: Option<String>,
     pub desc: Option<String>,
     #[serde(default, deserialize_with = "empty_string_as_none")]
@@ -550,6 +557,8 @@ pub struct UpdateCompanyRequest {
     pub unified_code: Option<String>,
     pub web_site: Option<String>,
     pub source_platform: Option<String>,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
+    pub source_refresh_datetime: Option<DateTime<FixedOffset>>,
     pub insurance_num: Option<i32>,
     pub self_risk: Option<i32>,
     pub union_risk: Option<i32>,

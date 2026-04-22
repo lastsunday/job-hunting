@@ -1,4 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { LocalizedDatePicker } from '@/components/LocalizedDatePicker';
+import { LocalizedDateTimePicker } from '@/components/LocalizedDateTimePicker';
 import {
   Title,
   Text,
@@ -39,10 +41,14 @@ import {
   UpdateCompanyRequest,
 } from '@/api/company';
 import { postJson } from '@/api/http';
-import { ApiError, handleApiError } from '@/api/error';
+import { handleApiError } from '@/api/error';
 import { LocationMap } from '@/components/map/LocationMap';
 import { useTranslation } from 'react-i18next';
-import { formatLocalDate } from '@/utils/date';
+import {
+  formatLocalDate,
+  toLocalISOString,
+  toLocalISOStringWithTime,
+} from '@/utils/date';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/companies')({
   component: RouteComponent,
@@ -129,7 +135,34 @@ function RouteComponent() {
   const [viewMode, setViewMode] = useState<'table' | 'map'>('table');
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<CreateCompanyRequest>({
+  const [formData, setFormData] = useState<{
+    name: string;
+    platform: string;
+    desc: string;
+    status: string;
+    legal_person: string;
+    unified_code: string;
+    web_site: string;
+    insurance_num: number;
+    self_risk: number;
+    union_risk: number;
+    address: string;
+    scope: string;
+    tax_no: string;
+    industry: string;
+    license_number: string;
+    reg_capital_value: number;
+    reg_capital_currency: string;
+    paidin_capital_value: number | undefined;
+    paidin_capital_currency: string;
+    start_date: Date | undefined;
+    source_platform: string;
+    source_url: string;
+    longitude: number | undefined;
+    latitude: number | undefined;
+    source_record_id: string;
+    source_refresh_datetime: Date | undefined;
+  }>({
     name: '',
     platform: '',
     desc: '',
@@ -149,11 +182,13 @@ function RouteComponent() {
     reg_capital_currency: '',
     paidin_capital_value: undefined,
     paidin_capital_currency: '',
-    start_date: '',
+    start_date: undefined,
     source_platform: '',
     source_url: '',
     longitude: undefined,
     latitude: undefined,
+    source_record_id: '',
+    source_refresh_datetime: undefined,
   });
 
   const loadCompanies = async () => {
@@ -238,11 +273,13 @@ function RouteComponent() {
       reg_capital_currency: '',
       paidin_capital_value: undefined,
       paidin_capital_currency: '',
-      start_date: '',
+      start_date: undefined,
       source_platform: '',
       source_url: '',
       longitude: undefined,
       latitude: undefined,
+      source_record_id: '',
+      source_refresh_datetime: undefined,
     });
     openModal();
   };
@@ -270,10 +307,14 @@ function RouteComponent() {
       reg_capital_currency: company.reg_capital_currency || '',
       paidin_capital_value: company.paidin_capital_value,
       paidin_capital_currency: company.paidin_capital_currency || '',
-      start_date: company.start_date || '',
+      start_date: company.start_date ? new Date(company.start_date) : undefined,
       source_url: company.source_url || '',
       longitude: company.longitude,
       latitude: company.latitude,
+      source_record_id: company.source_record_id || '',
+      source_refresh_datetime: company.source_refresh_datetime
+        ? new Date(company.source_refresh_datetime)
+        : undefined,
     });
     openModal();
   };
@@ -294,7 +335,6 @@ function RouteComponent() {
       if (editingCompany) {
         const data: UpdateCompanyRequest = {
           name: formData.name || undefined,
-          platform: formData.platform || undefined,
           desc: formData.desc || undefined,
           status: formData.status || undefined,
           legal_person: formData.legal_person || undefined,
@@ -313,11 +353,15 @@ function RouteComponent() {
           paidin_capital_value: formData.paidin_capital_value,
           paidin_capital_currency:
             formData.paidin_capital_currency || undefined,
-          start_date: formData.start_date || undefined,
+          start_date: toLocalISOString(formData.start_date) || undefined,
           source_platform: formData.source_platform || undefined,
           source_url: formData.source_url || undefined,
           longitude: formData.longitude,
           latitude: formData.latitude,
+          source_record_id: formData.source_record_id || undefined,
+          source_refresh_datetime:
+            toLocalISOStringWithTime(formData.source_refresh_datetime) ||
+            undefined,
         };
         await companyApi.update(editingCompany.id, data);
         showNotification({
@@ -326,7 +370,37 @@ function RouteComponent() {
           message: t('company:updateSuccess'),
         });
       } else {
-        await companyApi.create(formData);
+        const createData = {
+          name: formData.name,
+          platform: formData.platform,
+          desc: formData.desc,
+          status: formData.status,
+          legal_person: formData.legal_person,
+          unified_code: formData.unified_code,
+          web_site: formData.web_site,
+          insurance_num: formData.insurance_num,
+          self_risk: formData.self_risk,
+          union_risk: formData.union_risk,
+          address: formData.address,
+          scope: formData.scope,
+          tax_no: formData.tax_no,
+          industry: formData.industry,
+          license_number: formData.license_number,
+          reg_capital_value: formData.reg_capital_value,
+          reg_capital_currency: formData.reg_capital_currency,
+          paidin_capital_value: formData.paidin_capital_value,
+          paidin_capital_currency: formData.paidin_capital_currency,
+          start_date: toLocalISOString(formData.start_date) || undefined,
+          source_platform: formData.source_platform,
+          source_url: formData.source_url,
+          longitude: formData.longitude,
+          latitude: formData.latitude,
+          source_record_id: formData.source_record_id || undefined,
+          source_refresh_datetime:
+            toLocalISOStringWithTime(formData.source_refresh_datetime) ||
+            undefined,
+        };
+        await companyApi.create(createData);
         showNotification({
           color: 'green',
           title: t('common:success'),
@@ -864,13 +938,7 @@ function RouteComponent() {
               setFormData({ ...formData, name: e.currentTarget.value })
             }
             required
-          />
-          <TextInput
-            label={t('company:platform')}
-            value={formData.platform}
-            onChange={(e) =>
-              setFormData({ ...formData, platform: e.currentTarget.value })
-            }
+            disabled={editingCompany}
           />
           <TextInput
             label={t('company:industry')}
@@ -990,12 +1058,13 @@ function RouteComponent() {
             />
           </Group>
           <Group grow>
-            <TextInput
+            <LocalizedDatePicker
               label={t('company:establishmentDate')}
               value={formData.start_date}
-              onChange={(e) =>
-                setFormData({ ...formData, start_date: e.currentTarget.value })
+              onChange={(val) =>
+                setFormData({ ...formData, start_date: val || undefined })
               }
+              clearable
             />
             <TextInput
               label={t('company:status')}
@@ -1074,6 +1143,29 @@ function RouteComponent() {
               })
             }
           />
+          <Group grow>
+            <TextInput
+              label={t('company:sourceRecordId')}
+              value={formData.source_record_id}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  source_record_id: e.currentTarget.value,
+                })
+              }
+            />
+            <LocalizedDateTimePicker
+              label={t('company:sourceRefreshTime')}
+              value={formData.source_refresh_datetime}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  source_refresh_datetime: val || undefined,
+                })
+              }
+              clearable
+            />
+          </Group>
           <TextInput
             label={t('company:companyLink')}
             value={formData.source_url}
