@@ -669,9 +669,8 @@ function RouteComponent() {
                       <Table.Td>{company.legal_person || '-'}</Table.Td>
                       <Table.Td>
                         {company.reg_capital_value
-                          ? `${company.reg_capital_value} ${
-                              company.reg_capital_currency || ''
-                            }`
+                          ? `${company.reg_capital_value} ${company.reg_capital_currency || ''
+                          }`
                           : '-'}
                       </Table.Td>
                       <Table.Td>
@@ -804,9 +803,8 @@ function RouteComponent() {
                   companies.map((company) => (
                     <div
                       key={company.id}
-                      className={`${classes.listItem} ${
-                        selectedItemId === company.id ? classes.selected : ''
-                      }`}
+                      className={`${classes.listItem} ${selectedItemId === company.id ? classes.selected : ''
+                        }`}
                       onClick={() => setSelectedItemId(company.id)}
                       onDoubleClick={() => handleView(company)}
                     >
@@ -830,8 +828,8 @@ function RouteComponent() {
                       >
                         {company.source_record_id
                           ? `${t(
-                              'company:sourceRecordId',
-                            )}: ${company.source_record_id.slice(0, 12)}...`
+                            'company:sourceRecordId',
+                          )}: ${company.source_record_id.slice(0, 12)}...`
                           : '-'}
                       </div>
                     </div>
@@ -1238,24 +1236,37 @@ function RouteComponent() {
                 <Text size="md">{viewingCompany.unified_code || '-'}</Text>
               </div>
             </Group>
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('company:officialWebsite')}
-              </Text>
-              {viewingCompany.web_site ? (
-                <Text size="md" c="blue">
-                  <a
-                    href={viewingCompany.web_site}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {viewingCompany.web_site}
-                  </a>
+            <Group grow>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('company:registeredCapital')}
                 </Text>
-              ) : (
-                <Text size="md">-</Text>
-              )}
-            </div>
+                <Text size="md">
+                  {viewingCompany.reg_capital_value
+                    ? `${viewingCompany.reg_capital_value} ${viewingCompany.reg_capital_currency || ''
+                    }`
+                    : '-'}
+                </Text>
+              </div>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('company:officialWebsite')}
+                </Text>
+                {viewingCompany.web_site ? (
+                  <Text size="md" c="blue">
+                    <a
+                      href={viewingCompany.web_site}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {viewingCompany.web_site}
+                    </a>
+                  </Text>
+                ) : (
+                  <Text size="md">-</Text>
+                )}
+              </div>
+            </Group>
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
@@ -1334,20 +1345,6 @@ function RouteComponent() {
                 height={250}
               />
             )}
-            <Group grow>
-              <div>
-                <Text size="sm" c="dimmed">
-                  {t('company:registeredCapital')}
-                </Text>
-                <Text size="md">
-                  {viewingCompany.reg_capital_value
-                    ? `${viewingCompany.reg_capital_value} ${
-                        viewingCompany.reg_capital_currency || ''
-                      }`
-                    : '-'}
-                </Text>
-              </div>
-            </Group>
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
