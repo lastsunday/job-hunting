@@ -15,5 +15,7 @@
   "all": "All",
   "noData": "No Data",
   "version": "Version",
-  "na": "N/A"
+  "na": "N/A",
+  "yes": "Yes",
+  "no": "No"
 }

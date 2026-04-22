@@ -877,43 +877,6 @@ function RouteComponent() {
               setFormData({ ...formData, name: e.currentTarget.value })
             }
           />
-          <Group grow align="flex-end">
-            <TextInput
-              label={t('job:companyName')}
-              value={formData.company_name}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  company_name: e.currentTarget.value,
-                })
-              }
-            />
-            <Checkbox
-              label={t('job:isFullCompanyName')}
-              checked={formData.is_full_company_name}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  is_full_company_name: e.currentTarget.checked,
-                })
-              }
-              style={{ marginBottom: 8 }}
-            />
-          </Group>
-          <TextInput
-            label={t('job:location')}
-            value={formData.address}
-            onChange={(e) =>
-              setFormData({ ...formData, address: e.currentTarget.value })
-            }
-          />
-          <TextInput
-            label={t('job:locationName')}
-            value={formData.location_name}
-            onChange={(e) =>
-              setFormData({ ...formData, location_name: e.currentTarget.value })
-            }
-          />
           <Group grow>
             <NumberInput
               label={t('job:salaryMin')}
@@ -945,51 +908,21 @@ function RouteComponent() {
               min={1}
             />
           </Group>
-          <LocalizedDateTimePicker
-            label={t('job:firstPublishDatetime')}
-            value={
-              formData.first_publish_datetime
-                ? new Date(formData.first_publish_datetime)
-                : null
-            }
-            onChange={(val) => {
-              const newVal = val ? new Date(val) : undefined;
-              setFormData({
-                ...formData,
-                first_publish_datetime: newVal,
-              });
-            }}
-            placeholder={t('job:firstPublishDatetimePlaceholder')}
-            clearable
-          />
-          <NumberInput
-            label={t('job:longitude')}
-            value={formData.longitude ?? ''}
-            onChange={(val) =>
-              setFormData({
-                ...formData,
-                longitude: val !== '' ? Number(val) : undefined,
-              })
-            }
-            decimalScale={6}
-          />
-          <NumberInput
-            label={t('job:latitude')}
-            value={formData.latitude ?? ''}
-            onChange={(val) =>
-              setFormData({
-                ...formData,
-                latitude: val !== '' ? Number(val) : undefined,
-              })
-            }
-            decimalScale={6}
-          />
-          <TextInput
-            label={t('job:platform')}
-            value={formData.platform}
+          <Textarea
+            label={t('job:skillTag')}
+            value={formData.skill_tag}
             onChange={(e) =>
-              setFormData({ ...formData, platform: e.currentTarget.value })
+              setFormData({ ...formData, skill_tag: e.currentTarget.value })
             }
+            placeholder={t('job:skillTagPlaceholder')}
+          />
+          <Textarea
+            label={t('job:welfareTag')}
+            value={formData.welfare_tag}
+            onChange={(e) =>
+              setFormData({ ...formData, welfare_tag: e.currentTarget.value })
+            }
+            placeholder={t('job:welfareTagPlaceholder')}
           />
           <Group grow>
             <TextInput
@@ -1011,20 +944,84 @@ function RouteComponent() {
               min={0}
             />
           </Group>
+          <LocalizedDateTimePicker
+            label={t('job:firstPublishDatetime')}
+            value={
+              formData.first_publish_datetime
+                ? new Date(formData.first_publish_datetime)
+                : null
+            }
+            onChange={(val) => {
+              const newVal = val ? new Date(val) : undefined;
+              setFormData({
+                ...formData,
+                first_publish_datetime: newVal,
+              });
+            }}
+            placeholder={t('job:firstPublishDatetimePlaceholder')}
+            clearable
+          />
+          <Group grow align="flex-end">
+            <TextInput
+              label={t('job:companyName')}
+              value={formData.company_name}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  company_name: e.currentTarget.value,
+                })
+              }
+            />
+            <Checkbox
+              label={t('job:isFullCompanyName')}
+              checked={formData.is_full_company_name}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  is_full_company_name: e.currentTarget.checked,
+                })
+              }
+              style={{ marginBottom: 8 }}
+            />
+          </Group>
           <TextInput
-            label={t('job:jobDescription')}
-            value={formData.description}
+            label={t('job:locationName')}
+            value={formData.location_name}
             onChange={(e) =>
-              setFormData({ ...formData, description: e.currentTarget.value })
+              setFormData({ ...formData, location_name: e.currentTarget.value })
             }
           />
           <TextInput
-            label={t('job:jobUrl')}
-            value={formData.url}
+            label={t('job:location')}
+            value={formData.address}
             onChange={(e) =>
-              setFormData({ ...formData, url: e.currentTarget.value })
+              setFormData({ ...formData, address: e.currentTarget.value })
             }
           />
+          <Group grow>
+            <NumberInput
+              label={t('job:longitude')}
+              value={formData.longitude ?? ''}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  longitude: val !== '' ? Number(val) : undefined,
+                })
+              }
+              decimalScale={6}
+            />
+            <NumberInput
+              label={t('job:latitude')}
+              value={formData.latitude ?? ''}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  latitude: val !== '' ? Number(val) : undefined,
+                })
+              }
+              decimalScale={6}
+            />
+          </Group>
           <Group grow>
             <TextInput
               label={t('job:bossName')}
@@ -1034,41 +1031,46 @@ function RouteComponent() {
               }
             />
             <TextInput
-              label={t('job:bossPosition')}
-              value={formData.boss_position}
+              label={t('job:bossCompany')}
+              value={formData.boss_company_name}
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  boss_position: e.currentTarget.value,
+                  boss_company_name: e.currentTarget.value,
                 })
               }
             />
           </Group>
           <TextInput
-            label={t('job:bossCompany')}
-            value={formData.boss_company_name}
+            label={t('job:bossPosition')}
+            value={formData.boss_position}
             onChange={(e) =>
               setFormData({
                 ...formData,
-                boss_company_name: e.currentTarget.value,
+                boss_position: e.currentTarget.value,
               })
             }
           />
-          <Textarea
-            label={t('job:skillTag')}
-            value={formData.skill_tag}
+          <TextInput
+            label={t('job:platform')}
+            value={formData.platform}
             onChange={(e) =>
-              setFormData({ ...formData, skill_tag: e.currentTarget.value })
+              setFormData({ ...formData, platform: e.currentTarget.value })
             }
-            placeholder={t('job:skillTagPlaceholder')}
+          />
+          <TextInput
+            label={t('job:jobUrl')}
+            value={formData.url}
+            onChange={(e) =>
+              setFormData({ ...formData, url: e.currentTarget.value })
+            }
           />
           <Textarea
-            label={t('job:welfareTag')}
-            value={formData.welfare_tag}
+            label={t('job:jobDescription')}
+            value={formData.description}
             onChange={(e) =>
-              setFormData({ ...formData, welfare_tag: e.currentTarget.value })
+              setFormData({ ...formData, description: e.currentTarget.value })
             }
-            placeholder={t('job:welfareTagPlaceholder')}
           />
           <Button onClick={handleSubmit} loading={submitting}>
             {editingJob ? t('common:update') : t('common:create')}
@@ -1132,74 +1134,10 @@ function RouteComponent() {
                 </ActionIcon>
               </Group>
             </div>
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('job:name')}
-              </Text>
-              <Text size="lg" fw={500}>
-                {viewingJob.name || '-'}
-              </Text>
-            </div>
-            <Divider />
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('job:companyName')}
-              </Text>
-              <Text size="md">{viewingJob.company_name || '-'}</Text>
-            </div>
-            <Group grow>
-              <div>
-                <Text size="sm" c="dimmed">
-                  {t('job:location')}
-                </Text>
-                <Text size="md">{viewingJob.address || '-'}</Text>
-              </div>
-              <div>
-                <Text size="sm" c="dimmed">
-                  {t('job:locationName')}
-                </Text>
-                <Text size="md">{viewingJob.location_name || '-'}</Text>
-              </div>
-            </Group>
-            <Group grow>
-              <div>
-                <Text size="sm" c="dimmed">
-                  {t('job:platform')}
-                </Text>
-                <Text size="md">{viewingJob.platform || '-'}</Text>
-              </div>
-            </Group>
-            {viewingJob.longitude && viewingJob.latitude ? (
-              <>
-                <Group grow>
-                  <div>
-                    <Text size="sm" c="dimmed">
-                      {t('job:longitude')}
-                    </Text>
-                    <Text size="md">{viewingJob.longitude}</Text>
-                  </div>
-                  <div>
-                    <Text size="sm" c="dimmed">
-                      {t('job:latitude')}
-                    </Text>
-                    <Text size="md">{viewingJob.latitude}</Text>
-                  </div>
-                </Group>
-                <LocationMap
-                  mode="single"
-                  longitude={viewingJob.longitude}
-                  latitude={viewingJob.latitude}
-                  name={viewingJob.name}
-                  address={viewingJob.address || viewingJob.location_name}
-                  height={250}
-                />
-              </>
-            ) : (
-              <Text size="sm" c="dimmed">
-                {t('job:noCoords')}
-              </Text>
-            )}
-            <Divider label={t('job:salaryInfo')} labelPosition="left" />
+            <Divider label={t('job:name')} labelPosition="left" />
+            <Text size="lg" fw={500}>
+              {viewingJob.name || '-'}
+            </Text>
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
@@ -1234,71 +1172,6 @@ function RouteComponent() {
                 </Text>
               </div>
             </Group>
-            <Divider label={t('job:description')} labelPosition="left" />
-            <Text size="md" style={{ whiteSpace: 'pre-wrap' }}>
-              {viewingJob.description || '-'}
-            </Text>
-            <Divider label={t('job:tagInfo')} labelPosition="left" />
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('job:skillTag')}
-              </Text>
-              <Group mt="xs">
-                {viewingJob.skill_tag ? (
-                  viewingJob.skill_tag
-                    .split(',')
-                    .filter(Boolean)
-                    .map((tag, idx) => (
-                      <Badge key={idx} variant="light" color="blue">
-                        {tag.trim()}
-                      </Badge>
-                    ))
-                ) : (
-                  <Text size="md">-</Text>
-                )}
-              </Group>
-            </div>
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('job:welfareTag')}
-              </Text>
-              <Group mt="xs">
-                {viewingJob.welfare_tag ? (
-                  viewingJob.welfare_tag
-                    .split(',')
-                    .filter(Boolean)
-                    .map((tag, idx) => (
-                      <Badge key={idx} variant="light" color="green">
-                        {tag.trim()}
-                      </Badge>
-                    ))
-                ) : (
-                  <Text size="md">-</Text>
-                )}
-              </Group>
-            </div>
-            <Divider label={t('job:bossInfo')} labelPosition="left" />
-            <Group grow>
-              <div>
-                <Text size="sm" c="dimmed">
-                  {t('job:bossName')}
-                </Text>
-                <Text size="md">{viewingJob.boss_name || '-'}</Text>
-              </div>
-              <div>
-                <Text size="sm" c="dimmed">
-                  {t('job:bossPosition')}
-                </Text>
-                <Text size="md">{viewingJob.boss_position || '-'}</Text>
-              </div>
-            </Group>
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('job:bossCompany')}
-              </Text>
-              <Text size="md">{viewingJob.boss_company_name || '-'}</Text>
-            </div>
-            <Divider label={t('job:otherInfo')} labelPosition="left" />
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
@@ -1317,25 +1190,6 @@ function RouteComponent() {
                 </Text>
               </div>
             </Group>
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('job:jobUrl')}
-              </Text>
-              {viewingJob.url ? (
-                <Text size="md" c="blue" style={{ wordBreak: 'break-all' }}>
-                  <a
-                    href={viewingJob.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {viewingJob.url}
-                  </a>
-                </Text>
-              ) : (
-                <Text size="md">-</Text>
-              )}
-            </div>
-            <Divider label={t('job:timeInfo')} labelPosition="left" />
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
@@ -1354,6 +1208,160 @@ function RouteComponent() {
                 </Text>
               </div>
             </Group>
+            <div>
+              <Text size="sm" c="dimmed">
+                {t('job:description')}
+              </Text>
+              <Text size="md" style={{ whiteSpace: 'pre-wrap' }}>
+                {viewingJob.description || '-'}
+              </Text>
+            </div>
+            <Group>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('job:skillTag')}
+                </Text>
+                <Group mt="xs">
+                  {viewingJob.skill_tag ? (
+                    viewingJob.skill_tag
+                      .split(',')
+                      .filter(Boolean)
+                      .map((tag, idx) => (
+                        <Badge key={idx} variant="light" color="blue">
+                          {tag.trim()}
+                        </Badge>
+                      ))
+                  ) : (
+                    <Text size="md">-</Text>
+                  )}
+                </Group>
+              </div>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('job:welfareTag')}
+                </Text>
+                <Group mt="xs">
+                  {viewingJob.welfare_tag ? (
+                    viewingJob.welfare_tag
+                      .split(',')
+                      .filter(Boolean)
+                      .map((tag, idx) => (
+                        <Badge key={idx} variant="light" color="green">
+                          {tag.trim()}
+                        </Badge>
+                      ))
+                  ) : (
+                    <Text size="md">-</Text>
+                  )}
+                </Group>
+              </div>
+            </Group>
+
+            <Divider label={t('job:companyName')} labelPosition="left" />
+            <Group gap="xs" align="center">
+              <Text size="md">{viewingJob.company_name || '-'}</Text>
+              <Badge
+                color={viewingJob.is_full_company_name ? 'green' : 'gray'}
+                variant="light"
+                size="sm"
+              >
+                {viewingJob.is_full_company_name
+                  ? t('job:isFullCompanyName')
+                  : t('job:isNotFullCompanyName')}
+              </Badge>
+            </Group>
+            <Group grow>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('job:locationName')}
+                </Text>
+                <Text size="md">{viewingJob.location_name || '-'}</Text>
+              </div>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('job:location')}
+                </Text>
+                <Text size="md">{viewingJob.address || '-'}</Text>
+              </div>
+            </Group>
+            {viewingJob.longitude && viewingJob.latitude ? (
+              <>
+                <Group grow>
+                  <div>
+                    <Text size="sm" c="dimmed">
+                      {t('job:longitude')}
+                    </Text>
+                    <Text size="md">{viewingJob.longitude}</Text>
+                  </div>
+                  <div>
+                    <Text size="sm" c="dimmed">
+                      {t('job:latitude')}
+                    </Text>
+                    <Text size="md">{viewingJob.latitude}</Text>
+                  </div>
+                </Group>
+                <LocationMap
+                  mode="single"
+                  longitude={viewingJob.longitude}
+                  latitude={viewingJob.latitude}
+                  name={viewingJob.name}
+                  address={viewingJob.address || viewingJob.location_name}
+                  height={250}
+                />
+              </>
+            ) : (
+              <Text size="sm" c="dimmed">
+                {t('job:noCoords')}
+              </Text>
+            )}
+            <Divider label={t('job:bossInfo')} labelPosition="left" />
+            <Group grow>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('job:bossName')}
+                </Text>
+                <Text size="md">{viewingJob.boss_name || '-'}</Text>
+              </div>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('job:bossPosition')}
+                </Text>
+                <Text size="md">{viewingJob.boss_position || '-'}</Text>
+              </div>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('job:platform')}
+                </Text>
+                <Text size="md">{viewingJob.platform || '-'}</Text>
+              </div>
+            </Group>
+            <div>
+              <Text size="sm" c="dimmed">
+                {t('job:bossCompany')}
+              </Text>
+              <Text size="md">{viewingJob.boss_company_name || '-'}</Text>
+            </div>
+            <Group grow>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('job:jobUrl')}
+                </Text>
+                {viewingJob.url ? (
+                  <Text size="md" c="blue" style={{ wordBreak: 'break-all' }}>
+                    <a
+                      href={viewingJob.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {viewingJob.url}
+                    </a>
+                  </Text>
+                ) : (
+                  <Text size="md">-</Text>
+                )}
+              </div>
+            </Group>
+            <Divider label={t('job:timeInfo')} labelPosition="left" />
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
