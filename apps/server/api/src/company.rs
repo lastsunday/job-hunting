@@ -109,7 +109,7 @@ pub fn convert_company_to_csv_data(
     let start_date = param
         .start_date
         .or(ex.and_then(|e| e.start_date))
-        .map(|v| v.with_timezone(&chrono::Local).to_rfc3339())
+        .map(|v| v.to_rfc3339())
         .unwrap_or_default();
 
     let reg_capital_value = param
@@ -132,7 +132,7 @@ pub fn convert_company_to_csv_data(
     let source_refresh_datetime = param
         .source_refresh_datetime
         .or(ex.and_then(|e| e.source_refresh_datetime))
-        .map(|v| v.with_timezone(&chrono::Local).to_rfc3339())
+        .map(|v| v.to_rfc3339())
         .unwrap_or_default();
     let source_record_id = param.source_record_id.clone().unwrap_or_else(|| {
         ex.and_then(|e| e.source_record_id.clone())
@@ -140,7 +140,7 @@ pub fn convert_company_to_csv_data(
     });
     let create_datetime = ex
         .and_then(|e| e.create_datetime)
-        .map(|v| v.with_timezone(&chrono::Local).to_rfc3339())
+        .map(|v| v.to_rfc3339())
         .unwrap_or_default();
 
     let row = vec![

@@ -1,7 +1,7 @@
 use entity::job::{self, ActiveModel, Entity as Job};
 use sea_orm::{EntityTrait, PaginatorTrait, QueryOrder, Set};
 mod common;
-use chrono::{Duration, Local};
+use chrono::{Duration, Utc};
 use common::{setup_database, tear_down};
 
 #[tokio::test]
@@ -23,7 +23,7 @@ async fn test_find_by_id() {
 #[tokio::test]
 async fn test_page() {
     let (container, state) = setup_database().await;
-    let now = Local::now().fixed_offset();
+    let now = Utc::now().fixed_offset();
     for i in 1..101 {
         let dt = (now + Duration::seconds(i)).fixed_offset();
         Job::insert(ActiveModel {

@@ -7,7 +7,7 @@ use axum::extract::connect_info::MockConnectInfo;
 use chrono::DateTime;
 use chrono::Duration;
 use chrono::FixedOffset;
-use chrono::Local;
+use chrono::Utc;
 use common::datetime_to_str;
 use common::get_from_value;
 use common::get_json_paging_result_items;
@@ -42,7 +42,7 @@ const SEARCH_API_URL: &str = "/api/job/search";
 #[given("含有薪资的招聘职位表")]
 async fn job_list_with_salary(world: &mut JobWorld, step: &Step) {
     let conn: DatabaseConnection = world.state.clone().unwrap().conn.clone();
-    let now = Local::now().fixed_offset();
+    let now = Utc::now().fixed_offset();
     let mut index: i64 = 0;
     if let Some(table) = step.table.as_ref() {
         for row in table.rows.iter().skip(1) {
@@ -104,7 +104,7 @@ async fn get_job_list_by_salary(world: &mut JobWorld, step: &Step, _salary: f32)
 #[given("只有职位名的招聘职位表")]
 async fn job_list_only_name(world: &mut JobWorld, step: &Step) {
     let conn: DatabaseConnection = world.state.clone().unwrap().conn;
-    let now = Local::now().fixed_offset();
+    let now = Utc::now().fixed_offset();
     let mut index: i64 = 0;
     if let Some(table) = step.table.as_ref() {
         for row in table.rows.iter().skip(1) {
@@ -157,7 +157,7 @@ async fn get_job_list_by_name(world: &mut JobWorld, step: &Step, _name: String) 
 #[given("含有地址的招聘职位表")]
 async fn job_list_with_address(world: &mut JobWorld, step: &Step) {
     let conn: DatabaseConnection = world.state.clone().unwrap().conn;
-    let now = Local::now().fixed_offset();
+    let now = Utc::now().fixed_offset();
     let mut index: i64 = 0;
     if let Some(table) = step.table.as_ref() {
         for row in table.rows.iter().skip(1) {
@@ -212,7 +212,7 @@ async fn get_job_list_by_address(world: &mut JobWorld, step: &Step, _name: Strin
 #[given("含有发布时间的招聘职位表")]
 async fn job_list_with_publish_datetime(world: &mut JobWorld, step: &Step) {
     let conn: DatabaseConnection = world.state.clone().unwrap().conn;
-    let now = Local::now().fixed_offset();
+    let now = Utc::now().fixed_offset();
     let mut index: i64 = 0;
     if let Some(table) = step.table.as_ref() {
         for row in table.rows.iter().skip(1) {
@@ -281,7 +281,7 @@ async fn get_job_list_by_publish_datetime(world: &mut JobWorld, step: &Step) {
 #[given("含有职位发现时间的招聘职位表")]
 async fn job_list_with_create_datetime(world: &mut JobWorld, step: &Step) {
     let conn: DatabaseConnection = world.state.clone().unwrap().conn;
-    let now = Local::now().fixed_offset();
+    let now = Utc::now().fixed_offset();
     let mut index: i64 = 0;
     if let Some(table) = step.table.as_ref() {
         for row in table.rows.iter().skip(1) {
@@ -347,7 +347,7 @@ async fn get_job_list_by_create_datetime(world: &mut JobWorld, step: &Step) {
 #[given("含有公司名的招聘职位表")]
 async fn job_list_with_company_name(world: &mut JobWorld, step: &Step) {
     let conn: DatabaseConnection = world.state.clone().unwrap().conn;
-    let now = Local::now().fixed_offset();
+    let now = Utc::now().fixed_offset();
     let mut index: i64 = 0;
     if let Some(table) = step.table.as_ref() {
         for row in table.rows.iter().skip(1) {
@@ -401,7 +401,7 @@ async fn get_job_list_by_company_name(world: &mut JobWorld, step: &Step, _compan
 #[given("含有平台的招聘职位表")]
 async fn job_list_with_platform(world: &mut JobWorld, step: &Step) {
     let conn: DatabaseConnection = world.state.clone().unwrap().conn;
-    let now = Local::now().fixed_offset();
+    let now = Utc::now().fixed_offset();
     let mut index: i64 = 0;
     if let Some(table) = step.table.as_ref() {
         for row in table.rows.iter().skip(1) {
@@ -455,7 +455,7 @@ async fn get_job_list_by_platform(world: &mut JobWorld, step: &Step, _platform: 
 #[given("含有首次扫描时间的招聘职位表")]
 async fn job_list_with_first_scan_datetime(world: &mut JobWorld, step: &Step) {
     let conn: DatabaseConnection = world.state.clone().unwrap().conn;
-    let now = Local::now().fixed_offset();
+    let now = Utc::now().fixed_offset();
     let mut index: i64 = 0;
     if let Some(table) = step.table.as_ref() {
         for row in table.rows.iter().skip(1) {

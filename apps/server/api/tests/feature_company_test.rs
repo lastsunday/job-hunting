@@ -110,7 +110,7 @@ pub struct CompanyWorld {
 #[given("公司表")]
 async fn company_table(world: &mut CompanyWorld, step: &Step) {
     let conn: DatabaseConnection = world.state.clone().unwrap().conn.clone();
-    let now = chrono::Local::now().fixed_offset();
+    let now = chrono::Utc::now().fixed_offset();
     let mut index: i64 = 0;
     if let Some(table) = step.table.as_ref() {
         for row in table.rows.iter().skip(1) {
@@ -135,7 +135,7 @@ async fn company_table(world: &mut CompanyWorld, step: &Step) {
 #[given("已创建的公司表")]
 async fn created_company_table(world: &mut CompanyWorld, step: &Step) {
     let conn: DatabaseConnection = world.state.clone().unwrap().conn.clone();
-    let now = chrono::Local::now().fixed_offset();
+    let now = chrono::Utc::now().fixed_offset();
     let mut index: i64 = 0;
     let mut expected_data = std::collections::HashMap::new();
     let mut all_expected_data: Vec<ExpectedCompanyData> = Vec::new();

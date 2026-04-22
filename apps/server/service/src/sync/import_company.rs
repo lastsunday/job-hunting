@@ -125,7 +125,7 @@ impl CompanyImporter {
         let mapping = FileParser::parse_company_headers(headers, actual_version);
         let rows = data[1..].to_vec();
         let total = rows.len();
-        let now = Utc::now().with_timezone(&FixedOffset::west_opt(0).unwrap());
+        let now = Utc::now();
 
         // 使用闭包事务，自动处理提交/回滚
         let result = conn
@@ -258,8 +258,9 @@ impl CompanyImporter {
                         if let Some((source_model, _)) =
                             filter_company_id_and_source_map.get(&company_id)
                         {
+                            let now_fixed = now.fixed_offset();
                             let company =
-                                Self::build_company(source_model, &now, &now).map_err(|e| {
+                                Self::build_company(source_model, &now_fixed, &now_fixed).map_err(|e| {
                                     DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
                                 })?;
                             insert_company.push(company);
@@ -285,7 +286,8 @@ impl CompanyImporter {
                                 ))
                             })?;
 
-                        let mut update_company = Self::build_company(source_model, &now, &now)
+                        let now_fixed = now.fixed_offset();
+                        let mut update_company = Self::build_company(source_model, &now_fixed, &now_fixed)
                             .map_err(|e| {
                                 DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
                             })?;
@@ -297,7 +299,7 @@ impl CompanyImporter {
                             && new_dt > existing_dt
                         {
                             // 从 company_source 重建
-                            update_company = Self::build_company(source_model, &now, &now)
+                            update_company = Self::build_company(source_model, &now_fixed, &now_fixed)
                                 .map_err(|e| {
                                     DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
                                 })?;
@@ -383,7 +385,7 @@ impl CompanyImporter {
         mapping: &CompanyHeaderMapping,
         headers: &[String],
         row: &[String],
-        now: &DateTime<FixedOffset>,
+        now: &DateTime<Utc>,
         uri: &str,
         row_index: usize,
     ) -> Result<CompanySourceActiveModel, Box<dyn std::error::Error>> {
@@ -454,7 +456,7 @@ impl CompanyImporter {
             desc: ActiveValue::set(get_string(mapping.description)),
             start_date: ActiveValue::set(Self::parse_datetime(
                 Self::get_field_value(&mapping.start_date, row).as_str(),
-            )?),
+            )?.map(|dt| dt.fixed_offset())),
             status: ActiveValue::set(get_string(mapping.status)),
             legal_person: ActiveValue::set(get_string(mapping.legal_person)),
             unified_code: ActiveValue::set(get_string(mapping.unified_code)),
@@ -486,9 +488,9 @@ impl CompanyImporter {
         // 解析 source_refresh_datetime
         if let Some(dt_str) = get_string(mapping.source_refresh_datetime) {
             if let Ok(dt) = DateTime::parse_from_rfc3339(&dt_str) {
-                model.source_refresh_datetime = ActiveValue::Set(Some(dt));
+                model.source_refresh_datetime = ActiveValue::Set(Some(dt.with_timezone(&Utc).fixed_offset()));
             } else {
-                model.source_refresh_datetime = ActiveValue::Set(Some(*now));
+                model.source_refresh_datetime = ActiveValue::Set(Some(now.fixed_offset()));
             }
         }
 
@@ -496,21 +498,15 @@ impl CompanyImporter {
         if let Some(dt_str) = get_string(mapping.create_datetime)
             && let Ok(dt) = DateTime::parse_from_rfc3339(&dt_str)
         {
-            model.create_datetime = ActiveValue::Set(Some(dt));
+            model.create_datetime = ActiveValue::Set(Some(dt.with_timezone(&Utc).fixed_offset()));
+            model.update_datetime = ActiveValue::Set(Some(dt.with_timezone(&Utc).fixed_offset()));
+            model.publish_datetime = ActiveValue::Set(Some(dt.with_timezone(&Utc).fixed_offset()));
+        } else {
+            model.publish_datetime = ActiveValue::Set(Some(now.fixed_offset()));
         }
 
-        // 解析 update_datetime
-        if let Some(dt_str) = get_string(mapping.update_datetime) {
-            if let Ok(dt) = DateTime::parse_from_rfc3339(&dt_str) {
-                model.update_datetime = ActiveValue::Set(Some(dt));
-                model.publish_datetime = ActiveValue::Set(Some(dt));
-            } else {
-                model.publish_datetime = ActiveValue::Set(Some(*now));
-            }
-        }
-
-        model.create_datetime = ActiveValue::Set(Some(*now));
-        model.update_datetime = ActiveValue::Set(Some(*now));
+        model.create_datetime = ActiveValue::Set(Some(now.fixed_offset()));
+        model.update_datetime = ActiveValue::Set(Some(now.fixed_offset()));
 
         Ok(model)
     }
@@ -566,10 +562,10 @@ impl CompanyImporter {
             return Ok(None);
         }
         if let Ok(dt) = DateTime::parse_from_rfc3339(s) {
-            return Ok(Some(dt));
+            return Ok(Some(dt.with_timezone(&Utc).fixed_offset()));
         }
         let naive = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")?;
-        let offset = FixedOffset::east_opt(0).unwrap();
-        Ok(Some(offset.from_utc_datetime(&naive)))
+        let offset = FixedOffset::east_opt(8 * 3600).unwrap();
+        Ok(Some(offset.from_utc_datetime(&naive).to_utc().fixed_offset()))
     }
 }
