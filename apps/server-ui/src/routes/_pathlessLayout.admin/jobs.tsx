@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
+import { LocalizedDateTimePicker } from '@/components/LocalizedDateTimePicker';
 import {
   Title,
   Text,
@@ -25,8 +26,6 @@ import {
   Input,
   Checkbox,
 } from '@mantine/core';
-import { DateTimePickerProps } from '@mantine/dates';
-import { LocalizedDateTimePicker } from '@/components/DateTimePicker';
 import {
   IconChevronUp,
   IconChevronDown,
