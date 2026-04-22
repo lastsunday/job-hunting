@@ -1,8 +1,8 @@
-import { DateTimePicker, DateTimePickerProps } from '@mantine/dates';
+import { DateInput, DateInputProps } from '@mantine/dates';
 import { useTranslation } from 'react-i18next';
 
 interface LocalizedDateTimePickerProps extends Omit<
-  DateTimePickerProps,
+  DateInputProps,
   'value' | 'onChange'
 > {
   value?: Date | null;
@@ -16,10 +16,12 @@ export function LocalizedDateTimePicker({
 }: LocalizedDateTimePickerProps) {
   const { i18n } = useTranslation();
 
-  const handleChange = (dateValue: Date | null) => {
+  const handleChange = (dateValue: Date | string | null) => {
     if (onChange) {
       if (dateValue === null) {
         onChange(undefined);
+      } else if (typeof dateValue === 'string') {
+        onChange(new Date(dateValue));
       } else {
         onChange(dateValue);
       }
@@ -27,16 +29,13 @@ export function LocalizedDateTimePicker({
   };
 
   return (
-    <DateTimePicker
+    <DateInput
       {...props}
-      value={value || null}
+      value={value}
       onChange={handleChange}
       locale={i18n.language === 'zh' ? 'zh-cn' : 'en'}
       valueFormat="YYYY-MM-DD HH:mm:ss"
-      timePickerProps={{
-        format: '24h',
-        ...props.timePickerProps,
-      }}
+      withTime
     />
   );
 }
