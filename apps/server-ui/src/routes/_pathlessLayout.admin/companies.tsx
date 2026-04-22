@@ -1313,11 +1313,27 @@ function RouteComponent() {
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  {t('company:unifiedCode')}
+                  {t('company:longitude')}
                 </Text>
-                <Text size="md">{viewingCompany.unified_code || '-'}</Text>
+                <Text size="md">{viewingCompany.longitude || '-'}</Text>
+              </div>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('company:latitude')}
+                </Text>
+                <Text size="md">{viewingCompany.latitude || '-'}</Text>
               </div>
             </Group>
+            {viewingCompany.longitude && viewingCompany.latitude && (
+              <LocationMap
+                mode="single"
+                longitude={viewingCompany.longitude}
+                latitude={viewingCompany.latitude}
+                name={viewingCompany.name}
+                address={viewingCompany.address}
+                height={250}
+              />
+            )}
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
@@ -1332,24 +1348,6 @@ function RouteComponent() {
                 </Text>
               </div>
             </Group>
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('company:officialWebsite')}
-              </Text>
-              {viewingCompany.web_site ? (
-                <Text size="md" c="blue">
-                  <a
-                    href={viewingCompany.web_site}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {viewingCompany.web_site}
-                  </a>
-                </Text>
-              ) : (
-                <Text size="md">-</Text>
-              )}
-            </div>
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
