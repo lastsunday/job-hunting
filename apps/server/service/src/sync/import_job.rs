@@ -144,7 +144,7 @@ impl JobImporter {
         let mapping = FileParser::parse_job_headers(headers, actual_version);
         let rows = data[1..].to_vec();
         let total = rows.len();
-        let now = Utc::now().with_timezone(&FixedOffset::west_opt(0).unwrap());
+        let now = Utc::now();
 
         // 使用闭包事务，自动处理提交/回滚
         let result = conn
@@ -264,7 +264,8 @@ impl JobImporter {
 
                     // 如果job不存在，则进行插入逻辑
                     for item in not_exists_job_source {
-                        let job = Self::build_job(item, &now, &now).map_err(|e| {
+                        let now_fixed = now.fixed_offset();
+                        let job = Self::build_job(item, &now_fixed, &now_fixed).map_err(|e| {
                             DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
                         })?;
                         insert_job.push(job);
@@ -301,9 +302,10 @@ impl JobImporter {
                                 "job_source publish_datetime is empty".to_string(),
                             ))
                         })? {
+                            let now_fixed = now.fixed_offset();
                             update_job = Self::build_job(
                                 job_source,
-                                &now,
+                                &now_fixed,
                                 &job.create_datetime.ok_or_else(|| {
                                     DbErr::Query(sea_orm::RuntimeErr::Internal(
                                         "job create_datetime is empty".to_string(),
@@ -406,7 +408,7 @@ impl JobImporter {
         mapping: &JobHeaderMapping,
         headers: &[String],
         row: &[String],
-        now: &DateTime<FixedOffset>,
+        now: &DateTime<Utc>,
         uri: &str,
         row_index: usize,
     ) -> Result<JobSourceActiveModel, Box<dyn std::error::Error>> {
@@ -540,8 +542,8 @@ impl JobImporter {
             publish_datetime: ActiveValue::set(Self::parse_datetime(
                 Self::get_field_value(&mapping.update_datetime, row).as_str(),
             )?),
-            create_datetime: ActiveValue::set(Some(*now)),
-            update_datetime: ActiveValue::set(Some(*now)),
+            create_datetime: ActiveValue::set(Some(now.fixed_offset())),
+            update_datetime: ActiveValue::set(Some(now.fixed_offset())),
         })
     }
 
@@ -601,10 +603,10 @@ impl JobImporter {
             return Ok(None);
         }
         if let Ok(dt) = DateTime::parse_from_rfc3339(s) {
-            return Ok(Some(dt));
+            return Ok(Some(dt.with_timezone(&Utc).fixed_offset()));
         }
         let naive = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")?;
-        let offset = FixedOffset::east_opt(0).unwrap();
-        Ok(Some(offset.from_utc_datetime(&naive)))
+        let offset = FixedOffset::east_opt(8 * 3600).unwrap();
+        Ok(Some(offset.from_utc_datetime(&naive).to_utc().fixed_offset()))
     }
 }
