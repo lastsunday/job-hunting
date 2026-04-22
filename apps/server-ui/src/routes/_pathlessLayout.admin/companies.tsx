@@ -940,44 +940,6 @@ function RouteComponent() {
             required
             disabled={editingCompany}
           />
-          <TextInput
-            label={t('company:industry')}
-            value={formData.industry}
-            onChange={(e) =>
-              setFormData({ ...formData, industry: e.currentTarget.value })
-            }
-          />
-          <TextInput
-            label={t('company:companyAddress')}
-            value={formData.address}
-            onChange={(e) =>
-              setFormData({ ...formData, address: e.currentTarget.value })
-            }
-          />
-          <Group grow>
-            <NumberInput
-              label={t('company:longitude')}
-              value={formData.longitude ?? ''}
-              onChange={(val) =>
-                setFormData({
-                  ...formData,
-                  longitude: val !== '' ? Number(val) : undefined,
-                })
-              }
-              decimalScale={6}
-            />
-            <NumberInput
-              label={t('company:latitude')}
-              value={formData.latitude ?? ''}
-              onChange={(val) =>
-                setFormData({
-                  ...formData,
-                  latitude: val !== '' ? Number(val) : undefined,
-                })
-              }
-              decimalScale={6}
-            />
-          </Group>
           <Textarea
             label={t('company:companyDescription')}
             value={formData.desc}
@@ -985,13 +947,23 @@ function RouteComponent() {
               setFormData({ ...formData, desc: e.currentTarget.value })
             }
           />
-          <TextInput
-            label={t('company:officialWebsite')}
-            value={formData.web_site}
-            onChange={(e) =>
-              setFormData({ ...formData, web_site: e.currentTarget.value })
-            }
-          />
+          <Group grow>
+            <LocalizedDatePicker
+              label={t('company:establishmentDate')}
+              value={formData.start_date}
+              onChange={(val) =>
+                setFormData({ ...formData, start_date: val || undefined })
+              }
+              clearable
+            />
+            <TextInput
+              label={t('company:status')}
+              value={formData.status}
+              onChange={(e) =>
+                setFormData({ ...formData, status: e.currentTarget.value })
+              }
+            />
+          </Group>
           <Group grow>
             <TextInput
               label={t('company:legalPerson')}
@@ -1014,66 +986,13 @@ function RouteComponent() {
               }
             />
           </Group>
-          <Group grow>
-            <NumberInput
-              label={t('company:registeredCapital')}
-              value={formData.reg_capital_value}
-              onChange={(val) =>
-                setFormData({ ...formData, reg_capital_value: Number(val) })
-              }
-              min={0}
-            />
-            <TextInput
-              label={t('company:registeredCapitalCurrency')}
-              value={formData.reg_capital_currency}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  reg_capital_currency: e.currentTarget.value,
-                })
-              }
-            />
-          </Group>
-          <Group grow>
-            <NumberInput
-              label={t('company:paidinCapital')}
-              value={formData.paidin_capital_value}
-              onChange={(val) =>
-                setFormData({
-                  ...formData,
-                  paidin_capital_value: Number(val) || undefined,
-                })
-              }
-              min={0}
-            />
-            <TextInput
-              label={t('company:paidinCapitalCurrency')}
-              value={formData.paidin_capital_currency}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  paidin_capital_currency: e.currentTarget.value,
-                })
-              }
-            />
-          </Group>
-          <Group grow>
-            <LocalizedDatePicker
-              label={t('company:establishmentDate')}
-              value={formData.start_date}
-              onChange={(val) =>
-                setFormData({ ...formData, start_date: val || undefined })
-              }
-              clearable
-            />
-            <TextInput
-              label={t('company:status')}
-              value={formData.status}
-              onChange={(e) =>
-                setFormData({ ...formData, status: e.currentTarget.value })
-              }
-            />
-          </Group>
+          <TextInput
+            label={t('company:officialWebsite')}
+            value={formData.web_site}
+            onChange={(e) =>
+              setFormData({ ...formData, web_site: e.currentTarget.value })
+            }
+          />
           <Group grow>
             <NumberInput
               label={t('company:insuranceNum')}
@@ -1110,12 +1029,35 @@ function RouteComponent() {
             />
           </Group>
           <TextInput
+            label={t('company:companyAddress')}
+            value={formData.address}
+            onChange={(e) =>
+              setFormData({ ...formData, address: e.currentTarget.value })
+            }
+          />
+          <TextInput
             label={t('company:businessScope')}
             value={formData.scope}
             onChange={(e) =>
               setFormData({ ...formData, scope: e.currentTarget.value })
             }
           />
+          <Group grow>
+            <TextInput
+              label={t('company:taxNo')}
+              value={formData.tax_no}
+              onChange={(e) =>
+                setFormData({ ...formData, tax_no: e.currentTarget.value })
+              }
+            />
+            <TextInput
+              label={t('company:industry')}
+              value={formData.industry}
+              onChange={(e) =>
+                setFormData({ ...formData, industry: e.currentTarget.value })
+              }
+            />
+          </Group>
           <TextInput
             label={t('company:businessLicense')}
             value={formData.license_number}
@@ -1126,24 +1068,68 @@ function RouteComponent() {
               })
             }
           />
+          <Group grow>
+            <NumberInput
+              label={t('company:longitude')}
+              value={formData.longitude ?? ''}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  longitude: val !== '' ? Number(val) : undefined,
+                })
+              }
+              decimalScale={6}
+            />
+            <NumberInput
+              label={t('company:latitude')}
+              value={formData.latitude ?? ''}
+              onChange={(val) =>
+                setFormData({
+                  ...formData,
+                  latitude: val !== '' ? Number(val) : undefined,
+                })
+              }
+              decimalScale={6}
+            />
+          </Group>
+          <Group grow>
+            <NumberInput
+              label={t('company:registeredCapital')}
+              value={formData.reg_capital_value}
+              onChange={(val) =>
+                setFormData({ ...formData, reg_capital_value: Number(val) })
+              }
+              min={0}
+            />
+            <TextInput
+              label={t('company:registeredCapitalCurrency')}
+              value={formData.reg_capital_currency}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  reg_capital_currency: e.currentTarget.value,
+                })
+              }
+            />
+          </Group>
           <TextInput
-            label={t('company:taxNo')}
-            value={formData.tax_no}
+            label={t('company:companyLink')}
+            value={formData.source_url}
             onChange={(e) =>
-              setFormData({ ...formData, tax_no: e.currentTarget.value })
-            }
-          />
-          <TextInput
-            label={t('company:sourcePlatform')}
-            value={formData.source_platform}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                source_platform: e.currentTarget.value,
-              })
+              setFormData({ ...formData, source_url: e.currentTarget.value })
             }
           />
           <Group grow>
+            <TextInput
+              label={t('company:sourcePlatform')}
+              value={formData.source_platform}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  source_platform: e.currentTarget.value,
+                })
+              }
+            />
             <TextInput
               label={t('company:sourceRecordId')}
               value={formData.source_record_id}
@@ -1154,24 +1140,17 @@ function RouteComponent() {
                 })
               }
             />
-            <LocalizedDateTimePicker
-              label={t('company:sourceRefreshTime')}
-              value={formData.source_refresh_datetime}
-              onChange={(val) =>
-                setFormData({
-                  ...formData,
-                  source_refresh_datetime: val || undefined,
-                })
-              }
-              clearable
-            />
           </Group>
-          <TextInput
-            label={t('company:companyLink')}
-            value={formData.source_url}
-            onChange={(e) =>
-              setFormData({ ...formData, source_url: e.currentTarget.value })
+          <LocalizedDateTimePicker
+            label={t('company:sourceRefreshTime')}
+            value={formData.source_refresh_datetime}
+            onChange={(val) =>
+              setFormData({
+                ...formData,
+                source_refresh_datetime: val || undefined,
+              })
             }
+            clearable
           />
           <Button onClick={handleSubmit} loading={submitting}>
             {editingCompany ? t('common:update') : t('common:create')}
@@ -1214,89 +1193,12 @@ function RouteComponent() {
           <Stack gap="md">
             <div>
               <Text size="sm" c="dimmed">
-                {t('company:companyId')}
-              </Text>
-              <Group gap="xs">
-                <Text
-                  size="md"
-                  fw={500}
-                  title={viewingCompany.id}
-                  style={{ cursor: 'pointer' }}
-                  onClick={() =>
-                    navigator.clipboard.writeText(viewingCompany.id)
-                  }
-                >
-                  {viewingCompany.id.slice(0, 12)}...
-                </Text>
-                <ActionIcon
-                  size="xs"
-                  variant="subtle"
-                  onClick={() => {
-                    navigator.clipboard.writeText(viewingCompany.id);
-                    showNotification({
-                      color: 'green',
-                      message: t('company:copiedToClipboard'),
-                    });
-                  }}
-                >
-                  <div className="i-mdi:content-copy" />
-                </ActionIcon>
-              </Group>
-            </div>
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('company:sourceRecordId')}
-              </Text>
-              <Group gap="xs">
-                <Text
-                  size="md"
-                  title={viewingCompany.source_record_id}
-                  style={{ wordBreak: 'break-all' }}
-                >
-                  {viewingCompany.source_record_id || '-'}
-                </Text>
-                {viewingCompany.source_record_id && (
-                  <ActionIcon
-                    size="xs"
-                    variant="subtle"
-                    onClick={() => {
-                      navigator.clipboard.writeText(
-                        viewingCompany.source_record_id!,
-                      );
-                      showNotification({
-                        color: 'green',
-                        message: t('company:copiedToClipboard'),
-                      });
-                    }}
-                  >
-                    <div className="i-mdi:content-copy" />
-                  </ActionIcon>
-                )}
-              </Group>
-            </div>
-            <div>
-              <Text size="sm" c="dimmed">
                 {t('company:name')}
               </Text>
               <Text size="lg" fw={500}>
                 {viewingCompany.name || '-'}
               </Text>
             </div>
-            <Divider />
-            <Group grow>
-              <div>
-                <Text size="sm" c="dimmed">
-                  {t('company:platform')}
-                </Text>
-                <Text size="md">{viewingCompany.source_platform || '-'}</Text>
-              </div>
-              <div>
-                <Text size="sm" c="dimmed">
-                  {t('company:industry')}
-                </Text>
-                <Text size="md">{viewingCompany.industry || '-'}</Text>
-              </div>
-            </Group>
             <div>
               <Text size="sm" c="dimmed">
                 {t('company:companyDescription')}
@@ -1305,7 +1207,23 @@ function RouteComponent() {
                 {viewingCompany.desc || '-'}
               </Text>
             </div>
-            <Divider label={t('company:businessInfo')} labelPosition="left" />
+            <Group grow>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('company:establishmentDate')}
+                </Text>
+                <Text size="md">
+                  {formatLocalDate(viewingCompany.start_date)?.slice(0, 10) ||
+                    '-'}
+                </Text>
+              </div>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('company:status')}
+                </Text>
+                <Text size="md">{viewingCompany.status || '-'}</Text>
+              </div>
+            </Group>
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
@@ -1320,30 +1238,68 @@ function RouteComponent() {
                 <Text size="md">{viewingCompany.unified_code || '-'}</Text>
               </div>
             </Group>
+            <div>
+              <Text size="sm" c="dimmed">
+                {t('company:officialWebsite')}
+              </Text>
+              {viewingCompany.web_site ? (
+                <Text size="md" c="blue">
+                  <a
+                    href={viewingCompany.web_site}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {viewingCompany.web_site}
+                  </a>
+                </Text>
+              ) : (
+                <Text size="md">-</Text>
+              )}
+            </div>
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  {t('company:registeredCapital')}
+                  {t('company:insuranceNum')}
                 </Text>
-                <Text size="md">
-                  {viewingCompany.reg_capital_value
-                    ? `${viewingCompany.reg_capital_value} ${
-                        viewingCompany.reg_capital_currency || ''
-                      }`
-                    : '-'}
-                </Text>
+                <Text size="md">{viewingCompany.insurance_num || '-'}</Text>
               </div>
               <div>
                 <Text size="sm" c="dimmed">
-                  {t('company:paidinCapital')}
+                  {t('company:selfRisk')}
                 </Text>
-                <Text size="md">
-                  {viewingCompany.paidin_capital_value
-                    ? `${viewingCompany.paidin_capital_value} ${
-                        viewingCompany.paidin_capital_currency || ''
-                      }`
-                    : '-'}
+                <Text size="md">{viewingCompany.self_risk || '-'}</Text>
+              </div>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('company:unionRisk')}
                 </Text>
+                <Text size="md">{viewingCompany.union_risk || '-'}</Text>
+              </div>
+            </Group>
+            <div>
+              <Text size="sm" c="dimmed">
+                {t('company:companyAddress')}
+              </Text>
+              <Text size="md">{viewingCompany.address || '-'}</Text>
+            </div>
+            <div>
+              <Text size="sm" c="dimmed">
+                {t('company:businessScope')}
+              </Text>
+              <Text size="md">{viewingCompany.scope || '-'}</Text>
+            </div>
+            <Group grow>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('company:taxNo')}
+                </Text>
+                <Text size="md">{viewingCompany.tax_no || '-'}</Text>
+              </div>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('company:industry')}
+                </Text>
+                <Text size="md">{viewingCompany.industry || '-'}</Text>
               </div>
             </Group>
             <Group grow>
@@ -1354,40 +1310,6 @@ function RouteComponent() {
                 <Text size="md">{viewingCompany.license_number || '-'}</Text>
               </div>
             </Group>
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('company:taxNo')}
-              </Text>
-              <Text size="md">{viewingCompany.tax_no || '-'}</Text>
-            </div>
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('company:establishmentDate')}
-              </Text>
-              <Text size="md">
-                {formatLocalDate(viewingCompany.start_date)?.slice(0, 10) ||
-                  '-'}
-              </Text>
-            </div>
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('company:status')}
-              </Text>
-              <Text size="md">{viewingCompany.status || '-'}</Text>
-            </div>
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('company:businessScope')}
-              </Text>
-              <Text size="md">{viewingCompany.scope || '-'}</Text>
-            </div>
-            <Divider label={t('company:addressInfo')} labelPosition="left" />
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('company:companyAddress')}
-              </Text>
-              <Text size="md">{viewingCompany.address || '-'}</Text>
-            </div>
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
@@ -1412,65 +1334,54 @@ function RouteComponent() {
                 height={250}
               />
             )}
-            <Divider label={t('company:riskInfo')} labelPosition="left" />
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">
-                  {t('company:insuranceNum')}
+                  {t('company:registeredCapital')}
                 </Text>
-                <Text size="md">{viewingCompany.insurance_num || '-'}</Text>
-              </div>
-              <div>
-                <Text size="sm" c="dimmed">
-                  {t('company:selfRisk')}
+                <Text size="md">
+                  {viewingCompany.reg_capital_value
+                    ? `${viewingCompany.reg_capital_value} ${
+                        viewingCompany.reg_capital_currency || ''
+                      }`
+                    : '-'}
                 </Text>
-                <Text size="md">{viewingCompany.self_risk || '-'}</Text>
-              </div>
-              <div>
-                <Text size="sm" c="dimmed">
-                  {t('company:unionRisk')}
-                </Text>
-                <Text size="md">{viewingCompany.union_risk || '-'}</Text>
               </div>
             </Group>
-            <Divider label={t('company:contactInfo')} labelPosition="left" />
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('company:officialWebsite')}
-              </Text>
-              {viewingCompany.web_site ? (
-                <Text size="md" c="blue">
-                  <a
-                    href={viewingCompany.web_site}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {viewingCompany.web_site}
-                  </a>
+            <Group grow>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('company:companyLink')}
                 </Text>
-              ) : (
-                <Text size="md">-</Text>
-              )}
-            </div>
-            <div>
-              <Text size="sm" c="dimmed">
-                {t('company:companyLink')}
-              </Text>
-              {viewingCompany.source_url ? (
-                <Text size="md" c="blue" style={{ wordBreak: 'break-all' }}>
-                  <a
-                    href={viewingCompany.source_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {viewingCompany.source_url}
-                  </a>
+                {viewingCompany.source_url ? (
+                  <Text size="md" c="blue" style={{ wordBreak: 'break-all' }}>
+                    <a
+                      href={viewingCompany.source_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {viewingCompany.source_url}
+                    </a>
+                  </Text>
+                ) : (
+                  <Text size="md">-</Text>
+                )}
+              </div>
+            </Group>
+            <Group grow>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('company:sourcePlatform')}
                 </Text>
-              ) : (
-                <Text size="md">-</Text>
-              )}
-            </div>
-            <Divider label={t('company:timeInfo')} labelPosition="left" />
+                <Text size="md">{viewingCompany.source_platform || '-'}</Text>
+              </div>
+              <div>
+                <Text size="sm" c="dimmed">
+                  {t('company:sourceRecordId')}
+                </Text>
+                <Text size="md">{viewingCompany.source_record_id || '-'}</Text>
+              </div>
+            </Group>
             <Group grow>
               <div>
                 <Text size="sm" c="dimmed">

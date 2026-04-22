@@ -2,7 +2,7 @@
   "title": "公司数据",
   "name": "公司名称",
   "status": "公司状态",
-  "industry": "行业",
+  "industry": "所属行业",
   "insuranceNum": "社保人数",
   "selfRisk": "自身风险",
   "unionRisk": "关联风险",
