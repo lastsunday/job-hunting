@@ -37,9 +37,9 @@
   "unifiedCode": "Unified Credit Code",
   "paidinCapital": "Paid-in Capital",
   "paidinCapitalCurrency": "Paid-in Capital Currency",
-  "businessLicense": "Business License",
-  "sourceRecordId": "Source Record ID",
-  "taxNo": "Tax Registration No.",
+  "businessLicense": "Business Registration Number",
+  "sourceRecordId": "Data Source Record ID",
+  "taxNo": "Tax ID Number",
   "businessScope": "Business Scope",
   "addressInfo": "Address Info",
   "longitude": "Longitude",
@@ -63,5 +63,11 @@
   "updateSuccess": "Company updated successfully",
   "deleteSuccess": "Company deleted successfully",
   "operationFailed": "Operation failed",
-  "loadFailed": "Load failed"
+  "loadFailed": "Load failed",
+  "basicInfo": "Basic Info",
+  "registrationInfo": "Registration Info",
+  "addressCoords": "Address & Coords",
+  "contact": "Contact",
+  "dataSource": "Data Source",
+  "systemFields": "System Fields"
 }
