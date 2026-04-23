@@ -649,8 +649,9 @@ function RouteComponent() {
                       </Table.Td>
                       <Table.Td>
                         {job.salary_min && job.salary_max
-                          ? `${job.salary_min / 1000}k-${job.salary_max / 1000
-                          }k`
+                          ? `${job.salary_min / 1000}k-${
+                              job.salary_max / 1000
+                            }k`
                           : '-'}
                       </Table.Td>
                       <Table.Td>
@@ -737,8 +738,9 @@ function RouteComponent() {
                   jobs.map((job) => (
                     <div
                       key={job.id}
-                      className={`${classes.listItem} ${selectedItemId === job.id ? classes.selected : ''
-                        }`}
+                      className={`${classes.listItem} ${
+                        selectedItemId === job.id ? classes.selected : ''
+                      }`}
                       onClick={() => setSelectedItemId(job.id)}
                       onDoubleClick={() => handleView(job)}
                     >
@@ -908,22 +910,6 @@ function RouteComponent() {
               min={1}
             />
           </Group>
-          <Textarea
-            label={t('job:skillTag')}
-            value={formData.skill_tag}
-            onChange={(e) =>
-              setFormData({ ...formData, skill_tag: e.currentTarget.value })
-            }
-            placeholder={t('job:skillTagPlaceholder')}
-          />
-          <Textarea
-            label={t('job:welfareTag')}
-            value={formData.welfare_tag}
-            onChange={(e) =>
-              setFormData({ ...formData, welfare_tag: e.currentTarget.value })
-            }
-            placeholder={t('job:welfareTagPlaceholder')}
-          />
           <Group grow>
             <TextInput
               label={t('job:degree')}
@@ -961,6 +947,31 @@ function RouteComponent() {
             placeholder={t('job:firstPublishDatetimePlaceholder')}
             clearable
           />
+          <Textarea
+            label={t('job:description')}
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.currentTarget.value })
+            }
+          />
+          <Divider label={t('job:tagInfo')} />
+          <Textarea
+            label={t('job:skillTag')}
+            value={formData.skill_tag}
+            onChange={(e) =>
+              setFormData({ ...formData, skill_tag: e.currentTarget.value })
+            }
+            placeholder={t('job:skillTagPlaceholder')}
+          />
+          <Textarea
+            label={t('job:welfareTag')}
+            value={formData.welfare_tag}
+            onChange={(e) =>
+              setFormData({ ...formData, welfare_tag: e.currentTarget.value })
+            }
+            placeholder={t('job:welfareTagPlaceholder')}
+          />
+          <Divider label={t('job:companyName')} />
           <Group grow align="flex-end">
             <TextInput
               label={t('job:companyName')}
@@ -1022,6 +1033,7 @@ function RouteComponent() {
               decimalScale={6}
             />
           </Group>
+          <Divider label={t('job:bossInfo')} />
           <Group grow>
             <TextInput
               label={t('job:bossName')}
@@ -1041,35 +1053,31 @@ function RouteComponent() {
               }
             />
           </Group>
-          <TextInput
-            label={t('job:bossPosition')}
-            value={formData.boss_position}
-            onChange={(e) =>
-              setFormData({
-                ...formData,
-                boss_position: e.currentTarget.value,
-              })
-            }
-          />
-          <TextInput
-            label={t('job:platform')}
-            value={formData.platform}
-            onChange={(e) =>
-              setFormData({ ...formData, platform: e.currentTarget.value })
-            }
-          />
+          <Group grow>
+            <TextInput
+              label={t('job:bossPosition')}
+              value={formData.boss_position}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  boss_position: e.currentTarget.value,
+                })
+              }
+            />
+            <TextInput
+              label={t('job:platform')}
+              value={formData.platform}
+              onChange={(e) =>
+                setFormData({ ...formData, platform: e.currentTarget.value })
+              }
+            />
+          </Group>
+          <Divider label={t('job:jobUrl')} />
           <TextInput
             label={t('job:jobUrl')}
             value={formData.url}
             onChange={(e) =>
               setFormData({ ...formData, url: e.currentTarget.value })
-            }
-          />
-          <Textarea
-            label={t('job:jobDescription')}
-            value={formData.description}
-            onChange={(e) =>
-              setFormData({ ...formData, description: e.currentTarget.value })
             }
           />
           <Button onClick={handleSubmit} loading={submitting}>
@@ -1166,8 +1174,8 @@ function RouteComponent() {
                 <Text size="md">
                   {viewingJob.salary_total_month
                     ? `${viewingJob.salary_total_month}${t(
-                      'job:salaryMonthUnit',
-                    )}`
+                        'job:salaryMonthUnit',
+                      )}`
                     : '-'}
                 </Text>
               </div>
