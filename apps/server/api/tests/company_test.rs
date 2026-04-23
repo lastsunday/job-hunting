@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use api::company::{convert_company_to_csv_data, CreateCompanyRequest};
+    use api::company::{CreateCompanyRequest, convert_company_to_csv_data};
     use chrono::DateTime;
 
     // 基于 company-v2.xlsx 第2行数据
@@ -48,11 +48,10 @@ mod tests {
             source_url: Some("https://aiqicha.baidu.com/company_detail_53470251078081".to_string()),
             // 索引20
             source_platform: Some("AIQICHA".to_string()),
-            // 索引21
+            source_refresh_datetime: Some(DateTime::parse_from_rfc3339("2024-06-13T00:00:00+08:00").unwrap()), 
             source_record_id: Some("53470251078081".to_string()),
             // 其余字段
             id: Some("test_id".to_string()),
-            platform: Some("AIQICHA".to_string()),
             paidin_capital_value: None,
             paidin_capital_currency: None,
             uri: None,
@@ -146,7 +145,6 @@ mod tests {
         // 只更新name
         let param: CreateCompanyRequest = CreateCompanyRequest {
             id: None,
-            platform: None,
             name: Some("新公司".to_string()),
             desc: None,
             start_date: None,
@@ -169,6 +167,7 @@ mod tests {
             reg_capital_currency: None,
             source_url: None,
             source_record_id: None,
+            source_refresh_datetime: None,
             paidin_capital_value: None,
             paidin_capital_currency: None,
             uri: None,
