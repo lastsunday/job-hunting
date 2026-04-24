@@ -26,6 +26,7 @@ impl JobImporter {
     ) -> Result<ImportResult, ImportError> {
         let start_time = std::time::Instant::now();
 
+        // 空数据处理
         if data.is_empty() {
             return Ok(ImportResult {
                 success: true,
@@ -45,6 +46,7 @@ impl JobImporter {
 
         let headers = &data[0];
 
+        // 验证表头
         let (valid, version, actual_version, lack_columns, warnings) =
             FileParser::validate_job_headers(headers);
         if !valid {
@@ -76,6 +78,7 @@ impl JobImporter {
         let total = rows.len();
         let now = Utc::now();
 
+        // 使用闭包事务，自动处理提交/回滚
         let result = conn
             .transaction::<_, _, DbErr>(|txn| {
                 let mapping = mapping.clone();
@@ -85,6 +88,7 @@ impl JobImporter {
                     let mut job_ids_from_data: HashSet<String> = HashSet::new();
                     let mut job_source_map: HashMap<String, JobSourceActiveModel> = HashMap::new();
 
+                    // 根据文件的rows构建job source列表
                     let mut errors: Vec<ImportErrorType> = Vec::new();
                     for (row_index, row) in rows.iter().enumerate() {
                         let job_id = get_field_value(&mapping.job_id, row);
@@ -117,6 +121,7 @@ impl JobImporter {
                         }
                     }
 
+                    // 如果有解析错误，直接返回
                     if !errors.is_empty() {
                         return Ok(ImportResult {
                             success: false,
@@ -134,10 +139,12 @@ impl JobImporter {
                         });
                     }
 
+                    // 根据data job_source id获取已存在数据中的job_source记录
                     let exists_job_source =
                         Self::batch_query_job_sources(job_ids_from_data.into_iter().collect(), txn)
                             .await?;
 
+                    // 过滤数据库中的job_source记录
                     let exists_job_source_ids: Vec<String> = exists_job_source
                         .iter()
                         .map(|item| item.id.clone())
@@ -149,11 +156,13 @@ impl JobImporter {
                     let filter_job_source: Vec<entity::job_source::ActiveModel> =
                         job_source_map.into_values().collect();
 
+                    // 保存过滤后的job_source记录
                     Self::batch_insert_job_sources(filter_job_source.clone(), txn).await?;
 
                     let mut filter_job_id_and_job_source_map = HashMap::new();
                     let mut job_ids = Vec::new();
 
+                    // 根据过滤后的job source更新或插入对应的job记录
                     for item in filter_job_source {
                         let model = item.try_into_model().map_err(|e| {
                             DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
@@ -167,6 +176,7 @@ impl JobImporter {
                         job_ids.push(job_id);
                     }
 
+                    // 查询job记录（带锁）
                     let exists_job = Self::batch_query_jobs(job_ids, txn).await?;
 
                     let exists_job_id_model_map: HashMap<&str, &entity::job::Model> = exists_job
@@ -174,6 +184,7 @@ impl JobImporter {
                         .map(|item| (item.id.as_str(), item))
                         .collect();
 
+                    // 区分已存在和不存在job的记录
                     let mut exists_job_source = Vec::new();
                     let mut not_exists_job_source = Vec::new();
                     for (id, job_source) in &filter_job_id_and_job_source_map {
@@ -186,6 +197,7 @@ impl JobImporter {
 
                     let mut insert_job = Vec::new();
 
+                    // 如果job不存在，则进行插入逻辑
                     for item in not_exists_job_source {
                         let now_fixed = now.fixed_offset();
                         let job = Self::build_job(item, &now_fixed, &now_fixed).map_err(|e| {
@@ -196,6 +208,7 @@ impl JobImporter {
 
                     let mut update_job_list = Vec::new();
 
+                    // 如果job已存在，则进行更新处理逻辑
                     for item in exists_job_source {
                         let id = item.job_id.clone().ok_or_else(|| {
                             DbErr::Query(sea_orm::RuntimeErr::Internal(
@@ -213,6 +226,7 @@ impl JobImporter {
                                 DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
                             })?;
 
+                        // 规则1: 更新的数据发布时间，如果job source的发布时间更新，则重建job
                         if update_job.publish_datetime.ok_or_else(|| {
                             DbErr::Query(sea_orm::RuntimeErr::Internal(
                                 "job publish_datetime is empty".to_string(),
@@ -241,6 +255,7 @@ impl JobImporter {
                             })?;
                         }
 
+                        // 规则2: 获得公司全称，如果原job的公司名称不是全称，而job source的是全称，那么更新
                         if !job.is_full_company_name.ok_or_else(|| {
                             DbErr::Query(sea_orm::RuntimeErr::Internal(
                                 "job is_full_company_name is empty".to_string(),
@@ -254,6 +269,8 @@ impl JobImporter {
                             update_job.company_name = job_source.company_name.clone();
                         }
 
+                        // 规则3: 更早的首次扫描时间，如果原job source的首次扫描时间比job的更早，
+                        // 那么更新job source的首次扫描时间到job
                         if job_source.first_scan_datetime.ok_or_else(|| {
                             DbErr::Query(sea_orm::RuntimeErr::Internal(
                                 "job_source first_scan_datetime is empty".to_string(),
@@ -275,8 +292,10 @@ impl JobImporter {
                     let imported = insert_job.len();
                     let updated = update_job_list.len();
 
+                    // 批量插入新job
                     Self::batch_insert_jobs(insert_job, txn).await?;
 
+                    // 更新已有job
                     for item in update_job_list {
                         item.update(txn).await?;
                     }
@@ -306,6 +325,7 @@ impl JobImporter {
         Ok(result)
     }
 
+    // 根据job_source id批量查询
     async fn batch_query_job_sources<C>(
         ids: Vec<String>,
         conn: &C,
@@ -324,6 +344,7 @@ impl JobImporter {
         Ok(results)
     }
 
+    // 批量插入job_source记录
     async fn batch_insert_job_sources<C>(
         sources: Vec<entity::job_source::ActiveModel>,
         conn: &C,
@@ -339,6 +360,7 @@ impl JobImporter {
         Ok(())
     }
 
+    // 根据job id批量查询（带锁）
     async fn batch_query_jobs<C>(
         ids: Vec<String>,
         conn: &C,
@@ -358,6 +380,7 @@ impl JobImporter {
         Ok(results)
     }
 
+    // 批量插入job记录
     async fn batch_insert_jobs<C>(
         jobs: Vec<entity::job::ActiveModel>,
         conn: &C,
@@ -373,6 +396,7 @@ impl JobImporter {
         Ok(())
     }
 
+    // 根据CSV行构建job_source模型
     fn build_job_source(
         id: &str,
         job_id: &str,
@@ -439,6 +463,7 @@ impl JobImporter {
         })
     }
 
+    // 根据job_source构建job模型
     fn build_job(
         source: &JobSourceModel,
         update_datetime: &DateTime<FixedOffset>,
@@ -480,4 +505,3 @@ impl JobImporter {
         })
     }
 }
-

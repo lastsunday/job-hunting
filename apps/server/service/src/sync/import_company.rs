@@ -28,6 +28,7 @@ impl CompanyImporter {
     ) -> Result<ImportResult, ImportError> {
         let start_time = std::time::Instant::now();
 
+        // 空数据处理
         if data.is_empty() {
             return Ok(ImportResult {
                 success: true,
@@ -47,6 +48,7 @@ impl CompanyImporter {
 
         let headers = &data[0];
 
+        // 验证表头
         let (valid, version, actual_version, lack_columns, warnings) =
             FileParser::validate_company_headers(headers);
         if !valid {
@@ -78,6 +80,7 @@ impl CompanyImporter {
         let total = rows.len();
         let now = Utc::now();
 
+        // 使用闭包事务，自动处理提交/回滚
         let result = conn
             .transaction::<_, _, DbErr>(|txn| {
                 let mapping = mapping.clone();
@@ -88,6 +91,7 @@ impl CompanyImporter {
                     let mut company_source_map: HashMap<String, CompanySourceActiveModel> =
                         HashMap::new();
 
+                    // 根据文件的rows构建company source列表
                     let mut errors: Vec<ImportErrorType> = Vec::new();
                     for (row_index, row) in rows.iter().enumerate() {
                         let company_name = get_field_value(&mapping.name, row);
@@ -126,6 +130,7 @@ impl CompanyImporter {
                         }
                     }
 
+                    // 如果有解析错误，直接返回
                     if !errors.is_empty() {
                         return Ok(ImportResult {
                             success: false,
@@ -143,12 +148,14 @@ impl CompanyImporter {
                         });
                     }
 
+                    // 根据company_source id获取已存在的数据
                     let exists_company_source = Self::batch_query_company_sources(
                         company_ids_from_data.into_iter().collect(),
                         txn,
                     )
                     .await?;
 
+                    // 过滤数据库中已存在的company_source记录
                     let exists_company_source_ids: Vec<String> = exists_company_source
                         .iter()
                         .map(|item| item.id.clone())
@@ -160,8 +167,10 @@ impl CompanyImporter {
                     let filter_company_source: Vec<entity::company_source::ActiveModel> =
                         company_source_map.into_values().collect();
 
+                    // 保存过滤后的company_source记录
                     Self::batch_insert_company_sources(filter_company_source.clone(), txn).await?;
 
+                    // 构建 company_id 到 company_source 的映射
                     let mut filter_company_id_and_source_map = HashMap::new();
                     let mut company_ids = Vec::new();
                     for item in filter_company_source {
@@ -178,6 +187,7 @@ impl CompanyImporter {
                         company_ids.push(company_id);
                     }
 
+                    // 查询已存在的company记录
                     let exists_company = Self::batch_query_companies(company_ids, txn).await?;
 
                     let exists_company_map: HashMap<&str, &entity::company::Model> = exists_company
@@ -185,6 +195,7 @@ impl CompanyImporter {
                         .map(|item| (item.id.as_str(), item))
                         .collect();
 
+                    // 区分已存在和不存在company的记录
                     let mut exists_company_source = Vec::new();
                     let mut not_exists_company_source = Vec::new();
                     for (_, company_id) in filter_company_id_and_source_map.values() {
@@ -197,6 +208,7 @@ impl CompanyImporter {
 
                     let mut insert_company = Vec::new();
 
+                    // 如果company不存在，则进行插入逻辑
                     for company_id in not_exists_company_source {
                         if let Some((source_model, _)) =
                             filter_company_id_and_source_map.get(&company_id)
@@ -212,6 +224,7 @@ impl CompanyImporter {
 
                     let mut update_company_list = Vec::new();
 
+                    // 如果company已存在，则进行更新处理逻辑
                     for company_id in exists_company_source {
                         let (source_model, _) = filter_company_id_and_source_map
                             .get(&company_id)
@@ -234,6 +247,7 @@ impl CompanyImporter {
                                 |e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())),
                             )?;
 
+                        // 规则1: source_refresh_datetime更新时，从company_source重建company
                         let existing_refresh = existing_company.source_refresh_datetime;
                         let new_refresh = source_model.source_refresh_datetime;
                         if let (Some(existing_dt), Some(new_dt)) = (existing_refresh, new_refresh)
@@ -252,8 +266,10 @@ impl CompanyImporter {
                     let imported = insert_company.len();
                     let updated = update_company_list.len();
 
+                    // 批量插入新company
                     Self::batch_insert_companies(insert_company, txn).await?;
 
+                    // 更新已有company
                     for item in update_company_list {
                         item.update(txn).await?;
                     }
@@ -283,6 +299,7 @@ impl CompanyImporter {
         Ok(result)
     }
 
+    // 根据company_source id批量查询
     async fn batch_query_company_sources<C>(
         ids: Vec<String>,
         conn: &C,
@@ -301,6 +318,7 @@ impl CompanyImporter {
         Ok(results)
     }
 
+    // 批量插入company_source记录
     async fn batch_insert_company_sources<C>(
         sources: Vec<entity::company_source::ActiveModel>,
         conn: &C,
@@ -316,6 +334,7 @@ impl CompanyImporter {
         Ok(())
     }
 
+    // 根据company id批量查询
     async fn batch_query_companies<C>(
         ids: Vec<String>,
         conn: &C,
@@ -334,6 +353,7 @@ impl CompanyImporter {
         Ok(results)
     }
 
+    // 批量插入company记录
     async fn batch_insert_companies<C>(
         companies: Vec<entity::company::ActiveModel>,
         conn: &C,
@@ -349,6 +369,7 @@ impl CompanyImporter {
         Ok(())
     }
 
+    // 根据CSV行构建company_source模型
     fn build_company_source(
         id: &str,
         company_id: &str,
@@ -408,6 +429,7 @@ impl CompanyImporter {
             update_datetime: ActiveValue::set(None),
         };
 
+        // 解析 source_refresh_datetime
         if let Some(dt_str) = get_string(row, mapping.source_refresh_datetime) {
             if let Ok(dt) = DateTime::parse_from_rfc3339(&dt_str) {
                 model.source_refresh_datetime =
@@ -417,6 +439,7 @@ impl CompanyImporter {
             }
         }
 
+        // 解析 create_datetime
         if let Some(dt_str) = get_string(row, mapping.create_datetime)
             && let Ok(dt) = DateTime::parse_from_rfc3339(&dt_str)
         {
@@ -433,6 +456,7 @@ impl CompanyImporter {
         Ok(model)
     }
 
+    // 根据company_source构建company模型
     fn build_company(
         source: &CompanySourceModel,
         update_datetime: &DateTime<FixedOffset>,
@@ -477,4 +501,3 @@ impl CompanyImporter {
         })
     }
 }
-
