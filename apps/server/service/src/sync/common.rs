@@ -118,3 +118,11 @@ pub fn parse_datetime(
     let offset = FixedOffset::east_opt(8 * 3600).unwrap();
     Ok(Some(offset.from_utc_datetime(&naive).to_utc().fixed_offset()))
 }
+
+pub fn parse_bool(s: &str) -> Option<bool> {
+    match s.trim() {
+        "是" | "true" | "1" => Some(true),
+        "否" | "false" | "0" => Some(false),
+        _ => None,
+    }
+}

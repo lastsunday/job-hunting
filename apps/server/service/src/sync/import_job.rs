@@ -5,7 +5,7 @@ use entity::job::ActiveModel as JobActiveModel;
 use entity::job_source::{ActiveModel as JobSourceActiveModel, Model as JobSourceModel};
 
 use crate::sync::common::{
-    get_f32, get_f64, get_field_value, get_i32, parse_datetime, BATCH_SIZE,
+    get_f32, get_f64, get_field_value, get_i32, parse_bool, parse_datetime, BATCH_SIZE,
 };
 use crate::sync::error::ImportError;
 use crate::sync::file_parser::{FileParser, JobHeaderMapping};
@@ -417,7 +417,7 @@ impl JobImporter {
             boss_name: ActiveValue::set(Some(get_field_value(&mapping.boss_name, row))),
             boss_company_name: ActiveValue::set(Some(get_field_value(&mapping.boss_company_name, row))),
             boss_position: ActiveValue::set(Some(get_field_value(&mapping.boss_position, row))),
-            is_full_company_name: ActiveValue::set(Self::parse_bool(&get_field_value(&mapping.is_full_company_name, row))),
+            is_full_company_name: ActiveValue::set(parse_bool(&get_field_value(&mapping.is_full_company_name, row))),
             skill_tag: ActiveValue::set(Some(get_field_value(&mapping.skill_tag, row))),
             welfare_tag: ActiveValue::set(Some(get_field_value(&mapping.welfare_tag, row))),
             first_scan_datetime: ActiveValue::set(parse_datetime(get_field_value(&mapping.create_datetime, row).as_str())?),
@@ -467,13 +467,5 @@ impl JobImporter {
             uri: ActiveValue::set(source.uri.clone()),
             publish_datetime: ActiveValue::set(source.publish_datetime),
         })
-    }
-
-    fn parse_bool(s: &str) -> Option<bool> {
-        match s.trim() {
-            "是" | "true" | "1" => Some(true),
-            "否" | "false" | "0" => Some(false),
-            _ => None,
-        }
     }
 }
