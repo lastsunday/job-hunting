@@ -2,15 +2,17 @@ use std::collections::{HashMap, HashSet};
 
 use chrono::{DateTime, FixedOffset, Utc};
 use entity::company::{ActiveModel as CompanyActiveModel, Entity as Company};
-use entity::company_source::{ActiveModel as CompanySourceActiveModel, Model as CompanySourceModel};
+use entity::company_source::{
+    ActiveModel as CompanySourceActiveModel, Model as CompanySourceModel,
+};
 
 use crate::sync::common::{
-    get_f64, get_field_value, get_i32, get_string, parse_datetime, BATCH_SIZE,
+    BATCH_SIZE, get_f64, get_field_value, get_i32, get_string, parse_datetime,
 };
 use crate::sync::error::ImportError;
 use crate::sync::file_parser::{CompanyHeaderMapping, FileParser};
 use crate::sync::types::{ImportError as ImportErrorType, ImportResult};
-use crate::util::gen_sha256;
+use crate::util::{gen_company_id, gen_source_id};
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, DbErr,
     EntityTrait, IntoActiveModel, QueryFilter, TransactionTrait, TryIntoModel,
@@ -19,72 +21,6 @@ use sea_orm::{
 pub struct CompanyImporter;
 
 impl CompanyImporter {
-    async fn batch_query_company_sources<C>(
-        ids: Vec<String>,
-        conn: &C,
-    ) -> Result<Vec<CompanySourceModel>, DbErr>
-    where
-        C: ConnectionTrait,
-    {
-        let mut results = Vec::new();
-        for chunk in ids.chunks(BATCH_SIZE) {
-            let batch_results = entity::company_source::Entity::find()
-                .filter(entity::company_source::Column::Id.is_in(chunk.to_vec()))
-                .all(conn)
-                .await?;
-            results.extend(batch_results);
-        }
-        Ok(results)
-    }
-
-    async fn batch_insert_company_sources<C>(
-        sources: Vec<entity::company_source::ActiveModel>,
-        conn: &C,
-    ) -> Result<(), DbErr>
-    where
-        C: ConnectionTrait,
-    {
-        for chunk in sources.chunks(BATCH_SIZE) {
-            entity::company_source::Entity::insert_many(chunk.to_vec())
-                .exec(conn)
-                .await?;
-        }
-        Ok(())
-    }
-
-    async fn batch_query_companies<C>(
-        ids: Vec<String>,
-        conn: &C,
-    ) -> Result<Vec<entity::company::Model>, DbErr>
-    where
-        C: ConnectionTrait,
-    {
-        let mut results = Vec::new();
-        for chunk in ids.chunks(BATCH_SIZE) {
-            let batch_results = Company::find()
-                .filter(entity::company::Column::Id.is_in(chunk.to_vec()))
-                .all(conn)
-                .await?;
-            results.extend(batch_results);
-        }
-        Ok(results)
-    }
-
-    async fn batch_insert_companies<C>(
-        companies: Vec<entity::company::ActiveModel>,
-        conn: &C,
-    ) -> Result<(), DbErr>
-    where
-        C: ConnectionTrait,
-    {
-        for chunk in companies.chunks(BATCH_SIZE) {
-            entity::company::Entity::insert_many(chunk.to_vec())
-                .exec(conn)
-                .await?;
-        }
-        Ok(())
-    }
-
     pub async fn import(
         conn: &DatabaseConnection,
         data: Vec<Vec<String>>,
@@ -159,8 +95,8 @@ impl CompanyImporter {
                             continue;
                         }
 
-                        let company_id = Self::gen_company_id(&company_name);
-                        let company_source_id = Self::gen_company_source_id(&company_id, &uri);
+                        let company_id = gen_company_id(&company_name);
+                        let company_source_id = gen_source_id(&company_id, &uri);
 
                         match Self::build_company_source(
                             company_source_id.as_str(),
@@ -207,12 +143,11 @@ impl CompanyImporter {
                         });
                     }
 
-                    let exists_company_source =
-                        Self::batch_query_company_sources(
-                            company_ids_from_data.into_iter().collect(),
-                            txn,
-                        )
-                        .await?;
+                    let exists_company_source = Self::batch_query_company_sources(
+                        company_ids_from_data.into_iter().collect(),
+                        txn,
+                    )
+                    .await?;
 
                     let exists_company_source_ids: Vec<String> = exists_company_source
                         .iter()
@@ -267,8 +202,8 @@ impl CompanyImporter {
                             filter_company_id_and_source_map.get(&company_id)
                         {
                             let now_fixed = now.fixed_offset();
-                            let company =
-                                Self::build_company(source_model, &now_fixed, &now_fixed).map_err(|e| {
+                            let company = Self::build_company(source_model, &now_fixed, &now_fixed)
+                                .map_err(|e| {
                                     DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
                                 })?;
                             insert_company.push(company);
@@ -294,20 +229,20 @@ impl CompanyImporter {
                             })?;
 
                         let now_fixed = now.fixed_offset();
-                        let mut update_company = Self::build_company(source_model, &now_fixed, &now_fixed)
-                            .map_err(|e| {
-                                DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
-                            })?;
+                        let mut update_company =
+                            Self::build_company(source_model, &now_fixed, &now_fixed).map_err(
+                                |e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())),
+                            )?;
 
                         let existing_refresh = existing_company.source_refresh_datetime;
                         let new_refresh = source_model.source_refresh_datetime;
                         if let (Some(existing_dt), Some(new_dt)) = (existing_refresh, new_refresh)
                             && new_dt > existing_dt
                         {
-                            update_company = Self::build_company(source_model, &now_fixed, &now_fixed)
-                                .map_err(|e| {
-                                    DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
-                                })?;
+                            update_company =
+                                Self::build_company(source_model, &now_fixed, &now_fixed).map_err(
+                                    |e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())),
+                                )?;
                         }
 
                         let active_model = update_company.into_active_model().reset_all();
@@ -348,13 +283,70 @@ impl CompanyImporter {
         Ok(result)
     }
 
-    fn gen_company_id(company_name: &str) -> String {
-        let converted = company_name.replace('（', "(").replace('）', ")");
-        gen_sha256(converted.as_str())
+    async fn batch_query_company_sources<C>(
+        ids: Vec<String>,
+        conn: &C,
+    ) -> Result<Vec<CompanySourceModel>, DbErr>
+    where
+        C: ConnectionTrait,
+    {
+        let mut results = Vec::new();
+        for chunk in ids.chunks(BATCH_SIZE) {
+            let batch_results = entity::company_source::Entity::find()
+                .filter(entity::company_source::Column::Id.is_in(chunk.to_vec()))
+                .all(conn)
+                .await?;
+            results.extend(batch_results);
+        }
+        Ok(results)
     }
 
-    fn gen_company_source_id(company_id: &str, uri: &str) -> String {
-        gen_sha256(format!("{}_{}", company_id, uri).as_str())
+    async fn batch_insert_company_sources<C>(
+        sources: Vec<entity::company_source::ActiveModel>,
+        conn: &C,
+    ) -> Result<(), DbErr>
+    where
+        C: ConnectionTrait,
+    {
+        for chunk in sources.chunks(BATCH_SIZE) {
+            entity::company_source::Entity::insert_many(chunk.to_vec())
+                .exec(conn)
+                .await?;
+        }
+        Ok(())
+    }
+
+    async fn batch_query_companies<C>(
+        ids: Vec<String>,
+        conn: &C,
+    ) -> Result<Vec<entity::company::Model>, DbErr>
+    where
+        C: ConnectionTrait,
+    {
+        let mut results = Vec::new();
+        for chunk in ids.chunks(BATCH_SIZE) {
+            let batch_results = Company::find()
+                .filter(entity::company::Column::Id.is_in(chunk.to_vec()))
+                .all(conn)
+                .await?;
+            results.extend(batch_results);
+        }
+        Ok(results)
+    }
+
+    async fn batch_insert_companies<C>(
+        companies: Vec<entity::company::ActiveModel>,
+        conn: &C,
+    ) -> Result<(), DbErr>
+    where
+        C: ConnectionTrait,
+    {
+        for chunk in companies.chunks(BATCH_SIZE) {
+            entity::company::Entity::insert_many(chunk.to_vec())
+                .exec(conn)
+                .await?;
+        }
+        Ok(())
     }
 
     fn build_company_source(
@@ -374,14 +366,20 @@ impl CompanyImporter {
             company_id: ActiveValue::set(Some(company_id.to_string())),
             name: ActiveValue::set(get_string(row, mapping.name)),
             desc: ActiveValue::set(get_string(row, mapping.description)),
-            start_date: ActiveValue::set(parse_datetime(
-                get_field_value(&mapping.start_date, row).as_str(),
-            )?.map(|dt| dt.fixed_offset())),
+            start_date: ActiveValue::set(
+                parse_datetime(get_field_value(&mapping.start_date, row).as_str())?
+                    .map(|dt| dt.fixed_offset()),
+            ),
             status: ActiveValue::set(get_string(row, mapping.status)),
             legal_person: ActiveValue::set(get_string(row, mapping.legal_person)),
             unified_code: ActiveValue::set(get_string(row, mapping.unified_code)),
             web_site: ActiveValue::set(get_string(row, mapping.website)),
-            insurance_num: ActiveValue::set(Some(get_i32(row, headers, mapping.insurance_num, row_idx)?)),
+            insurance_num: ActiveValue::set(Some(get_i32(
+                row,
+                headers,
+                mapping.insurance_num,
+                row_idx,
+            )?)),
             self_risk: ActiveValue::set(Some(get_i32(row, headers, mapping.self_risk, row_idx)?)),
             union_risk: ActiveValue::set(Some(get_i32(row, headers, mapping.union_risk, row_idx)?)),
             address: ActiveValue::set(get_string(row, mapping.address)),
@@ -395,7 +393,12 @@ impl CompanyImporter {
             source_platform: ActiveValue::set(get_string(row, mapping.platform)),
             source_record_id: ActiveValue::set(get_string(row, mapping.source_record_id)),
             source_refresh_datetime: ActiveValue::Set(None),
-            reg_capital_value: ActiveValue::set(Some(get_f64(row, headers, mapping.reg_capital_value, row_idx)?)),
+            reg_capital_value: ActiveValue::set(Some(get_f64(
+                row,
+                headers,
+                mapping.reg_capital_value,
+                row_idx,
+            )?)),
             reg_capital_currency: ActiveValue::set(get_string(row, mapping.reg_capital_currency)),
             paidin_capital_value: ActiveValue::set(None),
             paidin_capital_currency: ActiveValue::set(None),
@@ -407,7 +410,8 @@ impl CompanyImporter {
 
         if let Some(dt_str) = get_string(row, mapping.source_refresh_datetime) {
             if let Ok(dt) = DateTime::parse_from_rfc3339(&dt_str) {
-                model.source_refresh_datetime = ActiveValue::Set(Some(dt.with_timezone(&Utc).fixed_offset()));
+                model.source_refresh_datetime =
+                    ActiveValue::Set(Some(dt.with_timezone(&Utc).fixed_offset()));
             } else {
                 model.source_refresh_datetime = ActiveValue::Set(Some(now.fixed_offset()));
             }
@@ -473,3 +477,4 @@ impl CompanyImporter {
         })
     }
 }
+

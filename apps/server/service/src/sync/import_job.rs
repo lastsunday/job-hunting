@@ -5,12 +5,12 @@ use entity::job::ActiveModel as JobActiveModel;
 use entity::job_source::{ActiveModel as JobSourceActiveModel, Model as JobSourceModel};
 
 use crate::sync::common::{
-    get_f32, get_f64, get_field_value, get_i32, parse_bool, parse_datetime, BATCH_SIZE,
+    BATCH_SIZE, get_f32, get_f64, get_field_value, get_i32, parse_bool, parse_datetime,
 };
 use crate::sync::error::ImportError;
 use crate::sync::file_parser::{FileParser, JobHeaderMapping};
 use crate::sync::types::{ImportError as ImportErrorType, ImportResult};
-use crate::util::gen_sha256;
+use crate::util::gen_source_id;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, DbErr,
     EntityTrait, IntoActiveModel, QueryFilter, QuerySelect, TransactionTrait, TryIntoModel,
@@ -19,73 +19,6 @@ use sea_orm::{
 pub struct JobImporter;
 
 impl JobImporter {
-    async fn batch_query_job_sources<C>(
-        ids: Vec<String>,
-        conn: &C,
-    ) -> Result<Vec<JobSourceModel>, DbErr>
-    where
-        C: ConnectionTrait,
-    {
-        let mut results = Vec::new();
-        for chunk in ids.chunks(BATCH_SIZE) {
-            let batch_results = entity::job_source::Entity::find()
-                .filter(entity::job_source::Column::Id.is_in(chunk.to_vec()))
-                .all(conn)
-                .await?;
-            results.extend(batch_results);
-        }
-        Ok(results)
-    }
-
-    async fn batch_insert_job_sources<C>(
-        sources: Vec<entity::job_source::ActiveModel>,
-        conn: &C,
-    ) -> Result<(), DbErr>
-    where
-        C: ConnectionTrait,
-    {
-        for chunk in sources.chunks(BATCH_SIZE) {
-            entity::job_source::Entity::insert_many(chunk.to_vec())
-                .exec(conn)
-                .await?;
-        }
-        Ok(())
-    }
-
-    async fn batch_query_jobs<C>(
-        ids: Vec<String>,
-        conn: &C,
-    ) -> Result<Vec<entity::job::Model>, DbErr>
-    where
-        C: ConnectionTrait,
-    {
-        let mut results = Vec::new();
-        for chunk in ids.chunks(BATCH_SIZE) {
-            let batch_results = entity::job::Entity::find()
-                .filter(entity::job::Column::Id.is_in(chunk.to_vec()))
-                .lock(migration::LockType::Update)
-                .all(conn)
-                .await?;
-            results.extend(batch_results);
-        }
-        Ok(results)
-    }
-
-    async fn batch_insert_jobs<C>(
-        jobs: Vec<entity::job::ActiveModel>,
-        conn: &C,
-    ) -> Result<(), DbErr>
-    where
-        C: ConnectionTrait,
-    {
-        for chunk in jobs.chunks(BATCH_SIZE) {
-            entity::job::Entity::insert_many(chunk.to_vec())
-                .exec(conn)
-                .await?;
-        }
-        Ok(())
-    }
-
     pub async fn import(
         conn: &DatabaseConnection,
         data: Vec<Vec<String>>,
@@ -155,7 +88,7 @@ impl JobImporter {
                     let mut errors: Vec<ImportErrorType> = Vec::new();
                     for (row_index, row) in rows.iter().enumerate() {
                         let job_id = get_field_value(&mapping.job_id, row);
-                        let job_source_id = Self::gen_job_source_id(job_id.as_str(), &uri);
+                        let job_source_id = gen_source_id(job_id.as_str(), &uri);
                         match Self::build_job_source(
                             job_source_id.as_str(),
                             job_id.as_str(),
@@ -373,8 +306,71 @@ impl JobImporter {
         Ok(result)
     }
 
-    fn gen_job_source_id(job_id: &str, uri: &str) -> String {
-        gen_sha256(format!("{}_{}", job_id, uri).as_str())
+    async fn batch_query_job_sources<C>(
+        ids: Vec<String>,
+        conn: &C,
+    ) -> Result<Vec<JobSourceModel>, DbErr>
+    where
+        C: ConnectionTrait,
+    {
+        let mut results = Vec::new();
+        for chunk in ids.chunks(BATCH_SIZE) {
+            let batch_results = entity::job_source::Entity::find()
+                .filter(entity::job_source::Column::Id.is_in(chunk.to_vec()))
+                .all(conn)
+                .await?;
+            results.extend(batch_results);
+        }
+        Ok(results)
+    }
+
+    async fn batch_insert_job_sources<C>(
+        sources: Vec<entity::job_source::ActiveModel>,
+        conn: &C,
+    ) -> Result<(), DbErr>
+    where
+        C: ConnectionTrait,
+    {
+        for chunk in sources.chunks(BATCH_SIZE) {
+            entity::job_source::Entity::insert_many(chunk.to_vec())
+                .exec(conn)
+                .await?;
+        }
+        Ok(())
+    }
+
+    async fn batch_query_jobs<C>(
+        ids: Vec<String>,
+        conn: &C,
+    ) -> Result<Vec<entity::job::Model>, DbErr>
+    where
+        C: ConnectionTrait,
+    {
+        let mut results = Vec::new();
+        for chunk in ids.chunks(BATCH_SIZE) {
+            let batch_results = entity::job::Entity::find()
+                .filter(entity::job::Column::Id.is_in(chunk.to_vec()))
+                .lock(migration::LockType::Update)
+                .all(conn)
+                .await?;
+            results.extend(batch_results);
+        }
+        Ok(results)
+    }
+
+    async fn batch_insert_jobs<C>(
+        jobs: Vec<entity::job::ActiveModel>,
+        conn: &C,
+    ) -> Result<(), DbErr>
+    where
+        C: ConnectionTrait,
+    {
+        for chunk in jobs.chunks(BATCH_SIZE) {
+            entity::job::Entity::insert_many(chunk.to_vec())
+                .exec(conn)
+                .await?;
+        }
+        Ok(())
     }
 
     fn build_job_source(
@@ -405,7 +401,12 @@ impl JobImporter {
             year: ActiveValue::set(Some(get_i32(row, headers, mapping.year, row_idx)?)),
             salary_min: ActiveValue::set(Some(get_f32(row, headers, mapping.salary_min, row_idx)?)),
             salary_max: ActiveValue::set(Some(get_f32(row, headers, mapping.salary_max, row_idx)?)),
-            salary_total_month: ActiveValue::set(Some(get_i32(row, headers, mapping.salary_total_month, row_idx)?)),
+            salary_total_month: ActiveValue::set(Some(get_i32(
+                row,
+                headers,
+                mapping.salary_total_month,
+                row_idx,
+            )?)),
             first_publish_datetime: {
                 let text = get_field_value(&mapping.first_publish_datetime, row);
                 if text.is_empty() {
@@ -415,14 +416,24 @@ impl JobImporter {
                 }
             },
             boss_name: ActiveValue::set(Some(get_field_value(&mapping.boss_name, row))),
-            boss_company_name: ActiveValue::set(Some(get_field_value(&mapping.boss_company_name, row))),
+            boss_company_name: ActiveValue::set(Some(get_field_value(
+                &mapping.boss_company_name,
+                row,
+            ))),
             boss_position: ActiveValue::set(Some(get_field_value(&mapping.boss_position, row))),
-            is_full_company_name: ActiveValue::set(parse_bool(&get_field_value(&mapping.is_full_company_name, row))),
+            is_full_company_name: ActiveValue::set(parse_bool(&get_field_value(
+                &mapping.is_full_company_name,
+                row,
+            ))),
             skill_tag: ActiveValue::set(Some(get_field_value(&mapping.skill_tag, row))),
             welfare_tag: ActiveValue::set(Some(get_field_value(&mapping.welfare_tag, row))),
-            first_scan_datetime: ActiveValue::set(parse_datetime(get_field_value(&mapping.create_datetime, row).as_str())?),
+            first_scan_datetime: ActiveValue::set(parse_datetime(
+                get_field_value(&mapping.create_datetime, row).as_str(),
+            )?),
             uri: ActiveValue::set(Some(uri.to_string())),
-            publish_datetime: ActiveValue::set(parse_datetime(get_field_value(&mapping.update_datetime, row).as_str())?),
+            publish_datetime: ActiveValue::set(parse_datetime(
+                get_field_value(&mapping.update_datetime, row).as_str(),
+            )?),
             create_datetime: ActiveValue::set(Some(now.fixed_offset())),
             update_datetime: ActiveValue::set(Some(now.fixed_offset())),
         })
@@ -469,3 +480,4 @@ impl JobImporter {
         })
     }
 }
+

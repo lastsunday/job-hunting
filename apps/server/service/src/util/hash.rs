@@ -15,6 +15,10 @@ pub fn gen_company_id(company_name: &str) -> String {
     gen_sha256(&converted)
 }
 
+pub fn gen_source_id(id: &str, uri: &str) -> String {
+    gen_sha256(&format!("{}_{}", id, uri))
+}
+
 pub fn gen_bytes_sha256(value: &Vec<u8>) -> String {
     let mut hasher = Sha256::new();
     hasher.update(value);
