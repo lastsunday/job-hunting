@@ -1,11 +1,12 @@
 use std::collections::{HashMap, HashSet};
 
-use chrono::{DateTime, FixedOffset, TimeZone, Utc};
-use entity::job::{ActiveModel as JobActiveModel, Entity as Job};
-use entity::job_source::{
-    ActiveModel as JobSourceActiveModel, Entity as JobSource, Model as JobSourceModel,
-};
+use chrono::{DateTime, FixedOffset, Utc};
+use entity::job::ActiveModel as JobActiveModel;
+use entity::job_source::{ActiveModel as JobSourceActiveModel, Model as JobSourceModel};
 
+use crate::sync::common::{
+    get_f32, get_f64, get_field_value, get_i32, parse_datetime, BATCH_SIZE,
+};
 use crate::sync::error::ImportError;
 use crate::sync::file_parser::{FileParser, JobHeaderMapping};
 use crate::sync::types::{ImportError as ImportErrorType, ImportResult};
@@ -18,8 +19,6 @@ use sea_orm::{
 pub struct JobImporter;
 
 impl JobImporter {
-    const BATCH_SIZE: usize = 900;
-
     async fn batch_query_job_sources<C>(
         ids: Vec<String>,
         conn: &C,
@@ -28,28 +27,9 @@ impl JobImporter {
         C: ConnectionTrait,
     {
         let mut results = Vec::new();
-        for chunk in ids.chunks(Self::BATCH_SIZE) {
-            let batch_results = JobSource::find()
+        for chunk in ids.chunks(BATCH_SIZE) {
+            let batch_results = entity::job_source::Entity::find()
                 .filter(entity::job_source::Column::Id.is_in(chunk.to_vec()))
-                .all(conn)
-                .await?;
-            results.extend(batch_results);
-        }
-        Ok(results)
-    }
-
-    async fn batch_query_jobs_locked<C>(
-        ids: Vec<String>,
-        conn: &C,
-    ) -> Result<Vec<entity::job::Model>, DbErr>
-    where
-        C: ConnectionTrait,
-    {
-        let mut results = Vec::new();
-        for chunk in ids.chunks(Self::BATCH_SIZE) {
-            let batch_results = Job::find()
-                .filter(entity::job::Column::Id.is_in(chunk.to_vec()))
-                .lock(migration::LockType::Update)
                 .all(conn)
                 .await?;
             results.extend(batch_results);
@@ -64,12 +44,31 @@ impl JobImporter {
     where
         C: ConnectionTrait,
     {
-        for chunk in sources.chunks(Self::BATCH_SIZE) {
+        for chunk in sources.chunks(BATCH_SIZE) {
             entity::job_source::Entity::insert_many(chunk.to_vec())
                 .exec(conn)
                 .await?;
         }
         Ok(())
+    }
+
+    async fn batch_query_jobs<C>(
+        ids: Vec<String>,
+        conn: &C,
+    ) -> Result<Vec<entity::job::Model>, DbErr>
+    where
+        C: ConnectionTrait,
+    {
+        let mut results = Vec::new();
+        for chunk in ids.chunks(BATCH_SIZE) {
+            let batch_results = entity::job::Entity::find()
+                .filter(entity::job::Column::Id.is_in(chunk.to_vec()))
+                .lock(migration::LockType::Update)
+                .all(conn)
+                .await?;
+            results.extend(batch_results);
+        }
+        Ok(results)
     }
 
     async fn batch_insert_jobs<C>(
@@ -79,7 +78,7 @@ impl JobImporter {
     where
         C: ConnectionTrait,
     {
-        for chunk in jobs.chunks(Self::BATCH_SIZE) {
+        for chunk in jobs.chunks(BATCH_SIZE) {
             entity::job::Entity::insert_many(chunk.to_vec())
                 .exec(conn)
                 .await?;
@@ -94,7 +93,6 @@ impl JobImporter {
     ) -> Result<ImportResult, ImportError> {
         let start_time = std::time::Instant::now();
 
-        // 空数据处理
         if data.is_empty() {
             return Ok(ImportResult {
                 success: true,
@@ -114,7 +112,6 @@ impl JobImporter {
 
         let headers = &data[0];
 
-        // 验证表头
         let (valid, version, actual_version, lack_columns, warnings) =
             FileParser::validate_job_headers(headers);
         if !valid {
@@ -146,7 +143,6 @@ impl JobImporter {
         let total = rows.len();
         let now = Utc::now();
 
-        // 使用闭包事务，自动处理提交/回滚
         let result = conn
             .transaction::<_, _, DbErr>(|txn| {
                 let mapping = mapping.clone();
@@ -156,10 +152,9 @@ impl JobImporter {
                     let mut job_ids_from_data: HashSet<String> = HashSet::new();
                     let mut job_source_map: HashMap<String, JobSourceActiveModel> = HashMap::new();
 
-                    // 根据文件的rows构建job source列表
                     let mut errors: Vec<ImportErrorType> = Vec::new();
                     for (row_index, row) in rows.iter().enumerate() {
-                        let job_id = Self::get_field_value(&mapping.job_id, row);
+                        let job_id = get_field_value(&mapping.job_id, row);
                         let job_source_id = Self::gen_job_source_id(job_id.as_str(), &uri);
                         match Self::build_job_source(
                             job_source_id.as_str(),
@@ -206,12 +201,10 @@ impl JobImporter {
                         });
                     }
 
-                    // 根据data job_source id获取已存在数据中的job_source记录
                     let exists_job_source =
                         Self::batch_query_job_sources(job_ids_from_data.into_iter().collect(), txn)
                             .await?;
 
-                    // 过滤数据库中的job_source记录
                     let exists_job_source_ids: Vec<String> = exists_job_source
                         .iter()
                         .map(|item| item.id.clone())
@@ -223,13 +216,11 @@ impl JobImporter {
                     let filter_job_source: Vec<entity::job_source::ActiveModel> =
                         job_source_map.into_values().collect();
 
-                    // 保存过滤后的job_source记录
                     Self::batch_insert_job_sources(filter_job_source.clone(), txn).await?;
 
                     let mut filter_job_id_and_job_source_map = HashMap::new();
                     let mut job_ids = Vec::new();
 
-                    // 根据过滤后的job source更新或插入对应的job记录
                     for item in filter_job_source {
                         let model = item.try_into_model().map_err(|e| {
                             DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
@@ -243,7 +234,7 @@ impl JobImporter {
                         job_ids.push(job_id);
                     }
 
-                    let exists_job = Self::batch_query_jobs_locked(job_ids, txn).await?;
+                    let exists_job = Self::batch_query_jobs(job_ids, txn).await?;
 
                     let exists_job_id_model_map: HashMap<&str, &entity::job::Model> = exists_job
                         .iter()
@@ -262,7 +253,6 @@ impl JobImporter {
 
                     let mut insert_job = Vec::new();
 
-                    // 如果job不存在，则进行插入逻辑
                     for item in not_exists_job_source {
                         let now_fixed = now.fixed_offset();
                         let job = Self::build_job(item, &now_fixed, &now_fixed).map_err(|e| {
@@ -273,7 +263,6 @@ impl JobImporter {
 
                     let mut update_job_list = Vec::new();
 
-                    // 如果job已存在，则进行更新处理逻辑
                     for item in exists_job_source {
                         let id = item.job_id.clone().ok_or_else(|| {
                             DbErr::Query(sea_orm::RuntimeErr::Internal(
@@ -291,8 +280,6 @@ impl JobImporter {
                                 DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
                             })?;
 
-                        // 规则1: 更新的数据发布时间，如果job source列表的记录的publish datetime更加新，
-                        // 那么job的所有字段（除公司名称，公司名是否为全称，首次扫描时间）需要更新
                         if update_job.publish_datetime.ok_or_else(|| {
                             DbErr::Query(sea_orm::RuntimeErr::Internal(
                                 "job publish_datetime is empty".to_string(),
@@ -321,7 +308,6 @@ impl JobImporter {
                             })?;
                         }
 
-                        // 规则2: 获得公司全称，如果原job的公司名称不是全称，而job source的是全称，那么更新
                         if !job.is_full_company_name.ok_or_else(|| {
                             DbErr::Query(sea_orm::RuntimeErr::Internal(
                                 "job is_full_company_name is empty".to_string(),
@@ -335,8 +321,6 @@ impl JobImporter {
                             update_job.company_name = job_source.company_name.clone();
                         }
 
-                        // 规则3: 更早的首次扫描时间，如果原job source的首次扫描时间比job的更早，
-                        // 那么更新job source的首次扫描时间到job
                         if job_source.first_scan_datetime.ok_or_else(|| {
                             DbErr::Query(sea_orm::RuntimeErr::Internal(
                                 "job_source first_scan_datetime is empty".to_string(),
@@ -358,10 +342,8 @@ impl JobImporter {
                     let imported = insert_job.len();
                     let updated = update_job_list.len();
 
-                    // 批量插入新job
                     Self::batch_insert_jobs(insert_job, txn).await?;
 
-                    // 更新已有job
                     for item in update_job_list {
                         item.update(txn).await?;
                     }
@@ -391,13 +373,6 @@ impl JobImporter {
         Ok(result)
     }
 
-    fn get_field_value(field_idx: &Option<usize>, row: &[String]) -> String {
-        match field_idx {
-            Some(idx) if *idx < row.len() => row[*idx].clone(),
-            _ => String::new(),
-        }
-    }
-
     fn gen_job_source_id(job_id: &str, uri: &str) -> String {
         gen_sha256(format!("{}_{}", job_id, uri).as_str())
     }
@@ -412,136 +387,42 @@ impl JobImporter {
         uri: &str,
         row_index: usize,
     ) -> Result<JobSourceActiveModel, Box<dyn std::error::Error>> {
-        let get_field_name = |idx: Option<usize>| -> String {
-            idx.and_then(|i| headers.get(i).map(|s| s.trim().to_string()))
-                .unwrap_or_default()
-        };
-
-        let get_f32 = |idx: Option<usize>| -> Result<f32, Box<dyn std::error::Error>> {
-            let field_name = get_field_name(idx);
-            match idx {
-                Some(i) if i < row.len() => {
-                    let s = &row[i];
-                    let trimmed = s.trim();
-                    if trimmed.is_empty() {
-                        Ok(0.0)
-                    } else {
-                        trimmed.parse::<f32>().map_err(|_| {
-                            {
-                                ImportErrorType::InvalidFloat {
-                                    row: row_index,
-                                    field: field_name,
-                                    value: trimmed.to_string(),
-                                }
-                            }
-                            .into()
-                        })
-                    }
-                }
-                _ => Ok(0.0),
-            }
-        };
-
-        let get_f64 = |idx: Option<usize>| -> Result<f64, Box<dyn std::error::Error>> {
-            let field_name = get_field_name(idx);
-            match idx {
-                Some(i) if i < row.len() => {
-                    let s = &row[i];
-                    let trimmed = s.trim();
-                    if trimmed.is_empty() {
-                        Ok(0.0)
-                    } else {
-                        trimmed.parse::<f64>().map_err(|_| {
-                            {
-                                ImportErrorType::InvalidFloat {
-                                    row: row_index,
-                                    field: field_name,
-                                    value: trimmed.to_string(),
-                                }
-                            }
-                            .into()
-                        })
-                    }
-                }
-                _ => Ok(0.0),
-            }
-        };
-
-        let get_i32 = |idx: Option<usize>| -> Result<i32, Box<dyn std::error::Error>> {
-            let field_name = get_field_name(idx);
-            match idx {
-                Some(i) if i < row.len() => {
-                    let s = &row[i];
-                    let trimmed = s.trim();
-                    if trimmed.is_empty() {
-                        Ok(0)
-                    } else {
-                        trimmed.parse::<i32>().map_err(|_| {
-                            {
-                                ImportErrorType::InvalidInteger {
-                                    row: row_index,
-                                    field: field_name,
-                                    value: trimmed.to_string(),
-                                }
-                            }
-                            .into()
-                        })
-                    }
-                }
-                _ => Ok(0),
-            }
-        };
+        let row_idx = row_index + 1;
 
         Ok(JobSourceActiveModel {
             id: ActiveValue::set(id.to_string()),
             job_id: ActiveValue::set(Some(job_id.to_string())),
-            platform: ActiveValue::set(Some(Self::get_field_value(&mapping.platform, row))),
-            url: ActiveValue::set(Some(Self::get_field_value(&mapping.url, row))),
-            name: ActiveValue::set(Some(Self::get_field_value(&mapping.name, row))),
-            company_name: ActiveValue::set(Some(Self::get_field_value(&mapping.company_name, row))),
-            location_name: ActiveValue::set(Some(Self::get_field_value(
-                &mapping.location_name,
-                row,
-            ))),
-            address: ActiveValue::set(Some(Self::get_field_value(&mapping.address, row))),
-            longitude: ActiveValue::set(Some(get_f64(mapping.longitude)?)),
-            latitude: ActiveValue::set(Some(get_f64(mapping.latitude)?)),
-            description: ActiveValue::set(Some(Self::get_field_value(&mapping.description, row))),
-            degree_name: ActiveValue::set(Some(Self::get_field_value(&mapping.degree_name, row))),
-            year: ActiveValue::set(Some(get_i32(mapping.year)?)),
-            salary_min: ActiveValue::set(Some(get_f32(mapping.salary_min)?)),
-            salary_max: ActiveValue::set(Some(get_f32(mapping.salary_max)?)),
-            salary_total_month: ActiveValue::set(Some(get_i32(mapping.salary_total_month)?)),
+            platform: ActiveValue::set(Some(get_field_value(&mapping.platform, row))),
+            url: ActiveValue::set(Some(get_field_value(&mapping.url, row))),
+            name: ActiveValue::set(Some(get_field_value(&mapping.name, row))),
+            company_name: ActiveValue::set(Some(get_field_value(&mapping.company_name, row))),
+            location_name: ActiveValue::set(Some(get_field_value(&mapping.location_name, row))),
+            address: ActiveValue::set(Some(get_field_value(&mapping.address, row))),
+            longitude: ActiveValue::set(Some(get_f64(row, headers, mapping.longitude, row_idx)?)),
+            latitude: ActiveValue::set(Some(get_f64(row, headers, mapping.latitude, row_idx)?)),
+            description: ActiveValue::set(Some(get_field_value(&mapping.description, row))),
+            degree_name: ActiveValue::set(Some(get_field_value(&mapping.degree_name, row))),
+            year: ActiveValue::set(Some(get_i32(row, headers, mapping.year, row_idx)?)),
+            salary_min: ActiveValue::set(Some(get_f32(row, headers, mapping.salary_min, row_idx)?)),
+            salary_max: ActiveValue::set(Some(get_f32(row, headers, mapping.salary_max, row_idx)?)),
+            salary_total_month: ActiveValue::set(Some(get_i32(row, headers, mapping.salary_total_month, row_idx)?)),
             first_publish_datetime: {
-                let text = Self::get_field_value(&mapping.first_publish_datetime, row);
+                let text = get_field_value(&mapping.first_publish_datetime, row);
                 if text.is_empty() {
                     ActiveValue::set(None)
                 } else {
-                    ActiveValue::set(Self::parse_datetime(text.as_str())?)
+                    ActiveValue::set(parse_datetime(text.as_str())?)
                 }
             },
-            boss_name: ActiveValue::set(Some(Self::get_field_value(&mapping.boss_name, row))),
-            boss_company_name: ActiveValue::set(Some(Self::get_field_value(
-                &mapping.boss_company_name,
-                row,
-            ))),
-            boss_position: ActiveValue::set(Some(Self::get_field_value(
-                &mapping.boss_position,
-                row,
-            ))),
-            is_full_company_name: ActiveValue::set(Self::parse_bool(&Self::get_field_value(
-                &mapping.is_full_company_name,
-                row,
-            ))),
-            skill_tag: ActiveValue::set(Some(Self::get_field_value(&mapping.skill_tag, row))),
-            welfare_tag: ActiveValue::set(Some(Self::get_field_value(&mapping.welfare_tag, row))),
-            first_scan_datetime: ActiveValue::set(Self::parse_datetime(
-                Self::get_field_value(&mapping.create_datetime, row).as_str(),
-            )?),
+            boss_name: ActiveValue::set(Some(get_field_value(&mapping.boss_name, row))),
+            boss_company_name: ActiveValue::set(Some(get_field_value(&mapping.boss_company_name, row))),
+            boss_position: ActiveValue::set(Some(get_field_value(&mapping.boss_position, row))),
+            is_full_company_name: ActiveValue::set(Self::parse_bool(&get_field_value(&mapping.is_full_company_name, row))),
+            skill_tag: ActiveValue::set(Some(get_field_value(&mapping.skill_tag, row))),
+            welfare_tag: ActiveValue::set(Some(get_field_value(&mapping.welfare_tag, row))),
+            first_scan_datetime: ActiveValue::set(parse_datetime(get_field_value(&mapping.create_datetime, row).as_str())?),
             uri: ActiveValue::set(Some(uri.to_string())),
-            publish_datetime: ActiveValue::set(Self::parse_datetime(
-                Self::get_field_value(&mapping.update_datetime, row).as_str(),
-            )?),
+            publish_datetime: ActiveValue::set(parse_datetime(get_field_value(&mapping.update_datetime, row).as_str())?),
             create_datetime: ActiveValue::set(Some(now.fixed_offset())),
             update_datetime: ActiveValue::set(Some(now.fixed_offset())),
         })
@@ -594,19 +475,5 @@ impl JobImporter {
             "否" | "false" | "0" => Some(false),
             _ => None,
         }
-    }
-
-    fn parse_datetime(
-        s: &str,
-    ) -> Result<Option<DateTime<FixedOffset>>, Box<dyn std::error::Error>> {
-        if s.trim().is_empty() {
-            return Ok(None);
-        }
-        if let Ok(dt) = DateTime::parse_from_rfc3339(s) {
-            return Ok(Some(dt.with_timezone(&Utc).fixed_offset()));
-        }
-        let naive = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")?;
-        let offset = FixedOffset::east_opt(8 * 3600).unwrap();
-        Ok(Some(offset.from_utc_datetime(&naive).to_utc().fixed_offset()))
     }
 }

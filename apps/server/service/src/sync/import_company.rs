@@ -1,11 +1,12 @@
 use std::collections::{HashMap, HashSet};
 
-use chrono::{DateTime, FixedOffset, TimeZone, Utc};
+use chrono::{DateTime, FixedOffset, Utc};
 use entity::company::{ActiveModel as CompanyActiveModel, Entity as Company};
-use entity::company_source::{
-    ActiveModel as CompanySourceActiveModel, Entity as CompanySource, Model as CompanySourceModel,
-};
+use entity::company_source::{ActiveModel as CompanySourceActiveModel, Model as CompanySourceModel};
 
+use crate::sync::common::{
+    get_f64, get_field_value, get_i32, get_string, parse_datetime, BATCH_SIZE,
+};
 use crate::sync::error::ImportError;
 use crate::sync::file_parser::{CompanyHeaderMapping, FileParser};
 use crate::sync::types::{ImportError as ImportErrorType, ImportResult};
@@ -18,8 +19,6 @@ use sea_orm::{
 pub struct CompanyImporter;
 
 impl CompanyImporter {
-    const BATCH_SIZE: usize = 900;
-
     async fn batch_query_company_sources<C>(
         ids: Vec<String>,
         conn: &C,
@@ -28,8 +27,8 @@ impl CompanyImporter {
         C: ConnectionTrait,
     {
         let mut results = Vec::new();
-        for chunk in ids.chunks(Self::BATCH_SIZE) {
-            let batch_results = CompanySource::find()
+        for chunk in ids.chunks(BATCH_SIZE) {
+            let batch_results = entity::company_source::Entity::find()
                 .filter(entity::company_source::Column::Id.is_in(chunk.to_vec()))
                 .all(conn)
                 .await?;
@@ -45,7 +44,7 @@ impl CompanyImporter {
     where
         C: ConnectionTrait,
     {
-        for chunk in sources.chunks(Self::BATCH_SIZE) {
+        for chunk in sources.chunks(BATCH_SIZE) {
             entity::company_source::Entity::insert_many(chunk.to_vec())
                 .exec(conn)
                 .await?;
@@ -53,14 +52,32 @@ impl CompanyImporter {
         Ok(())
     }
 
-    async fn batch_insert_companys<C>(
-        companys: Vec<entity::company::ActiveModel>,
+    async fn batch_query_companies<C>(
+        ids: Vec<String>,
+        conn: &C,
+    ) -> Result<Vec<entity::company::Model>, DbErr>
+    where
+        C: ConnectionTrait,
+    {
+        let mut results = Vec::new();
+        for chunk in ids.chunks(BATCH_SIZE) {
+            let batch_results = Company::find()
+                .filter(entity::company::Column::Id.is_in(chunk.to_vec()))
+                .all(conn)
+                .await?;
+            results.extend(batch_results);
+        }
+        Ok(results)
+    }
+
+    async fn batch_insert_companies<C>(
+        companies: Vec<entity::company::ActiveModel>,
         conn: &C,
     ) -> Result<(), DbErr>
     where
         C: ConnectionTrait,
     {
-        for chunk in companys.chunks(Self::BATCH_SIZE) {
+        for chunk in companies.chunks(BATCH_SIZE) {
             entity::company::Entity::insert_many(chunk.to_vec())
                 .exec(conn)
                 .await?;
@@ -75,7 +92,6 @@ impl CompanyImporter {
     ) -> Result<ImportResult, ImportError> {
         let start_time = std::time::Instant::now();
 
-        // 空数据处理
         if data.is_empty() {
             return Ok(ImportResult {
                 success: true,
@@ -95,7 +111,6 @@ impl CompanyImporter {
 
         let headers = &data[0];
 
-        // 验证表头
         let (valid, version, actual_version, lack_columns, warnings) =
             FileParser::validate_company_headers(headers);
         if !valid {
@@ -127,7 +142,6 @@ impl CompanyImporter {
         let total = rows.len();
         let now = Utc::now();
 
-        // 使用闭包事务，自动处理提交/回滚
         let result = conn
             .transaction::<_, _, DbErr>(|txn| {
                 let mapping = mapping.clone();
@@ -138,10 +152,9 @@ impl CompanyImporter {
                     let mut company_source_map: HashMap<String, CompanySourceActiveModel> =
                         HashMap::new();
 
-                    // 根据文件的rows构建company source列表
                     let mut errors: Vec<ImportErrorType> = Vec::new();
                     for (row_index, row) in rows.iter().enumerate() {
-                        let company_name = Self::get_field_value(&mapping.name, row);
+                        let company_name = get_field_value(&mapping.name, row);
                         if company_name.is_empty() {
                             continue;
                         }
@@ -194,14 +207,13 @@ impl CompanyImporter {
                         });
                     }
 
-                    // 根据company_source id获取已存在的数据
-                    let exists_company_source = Self::batch_query_company_sources(
-                        company_ids_from_data.into_iter().collect(),
-                        txn,
-                    )
-                    .await?;
+                    let exists_company_source =
+                        Self::batch_query_company_sources(
+                            company_ids_from_data.into_iter().collect(),
+                            txn,
+                        )
+                        .await?;
 
-                    // 过滤数据库中已存在的company_source记录
                     let exists_company_source_ids: Vec<String> = exists_company_source
                         .iter()
                         .map(|item| item.id.clone())
@@ -213,10 +225,8 @@ impl CompanyImporter {
                     let filter_company_source: Vec<entity::company_source::ActiveModel> =
                         company_source_map.into_values().collect();
 
-                    // 保存过滤后的company_source记录
                     Self::batch_insert_company_sources(filter_company_source.clone(), txn).await?;
 
-                    // 构建 company_id 到 company_source 的映射
                     let mut filter_company_id_and_source_map = HashMap::new();
                     let mut company_ids = Vec::new();
                     for item in filter_company_source {
@@ -233,8 +243,7 @@ impl CompanyImporter {
                         company_ids.push(company_id);
                     }
 
-                    // 查询已存在的company记录
-                    let exists_company = Self::batch_query_companys(company_ids, txn).await?;
+                    let exists_company = Self::batch_query_companies(company_ids, txn).await?;
 
                     let exists_company_map: HashMap<&str, &entity::company::Model> = exists_company
                         .iter()
@@ -253,7 +262,6 @@ impl CompanyImporter {
 
                     let mut insert_company = Vec::new();
 
-                    // 如果company不存在，则进行插入逻辑
                     for company_id in not_exists_company_source {
                         if let Some((source_model, _)) =
                             filter_company_id_and_source_map.get(&company_id)
@@ -269,7 +277,6 @@ impl CompanyImporter {
 
                     let mut update_company_list = Vec::new();
 
-                    // 如果company已存在，则进行更新处理逻辑
                     for company_id in exists_company_source {
                         let (source_model, _) = filter_company_id_and_source_map
                             .get(&company_id)
@@ -292,13 +299,11 @@ impl CompanyImporter {
                                 DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
                             })?;
 
-                        // 规则1: source_refresh_datetime更新时，从company_source重建company
                         let existing_refresh = existing_company.source_refresh_datetime;
                         let new_refresh = source_model.source_refresh_datetime;
                         if let (Some(existing_dt), Some(new_dt)) = (existing_refresh, new_refresh)
                             && new_dt > existing_dt
                         {
-                            // 从 company_source 重建
                             update_company = Self::build_company(source_model, &now_fixed, &now_fixed)
                                 .map_err(|e| {
                                     DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
@@ -312,10 +317,8 @@ impl CompanyImporter {
                     let imported = insert_company.len();
                     let updated = update_company_list.len();
 
-                    // 批量插入新company
-                    Self::batch_insert_companys(insert_company, txn).await?;
+                    Self::batch_insert_companies(insert_company, txn).await?;
 
-                    // 更新已有company
                     for item in update_company_list {
                         item.update(txn).await?;
                     }
@@ -345,31 +348,6 @@ impl CompanyImporter {
         Ok(result)
     }
 
-    async fn batch_query_companys<C>(
-        ids: Vec<String>,
-        conn: &C,
-    ) -> Result<Vec<entity::company::Model>, DbErr>
-    where
-        C: ConnectionTrait,
-    {
-        let mut results = Vec::new();
-        for chunk in ids.chunks(Self::BATCH_SIZE) {
-            let batch_results = Company::find()
-                .filter(entity::company::Column::Id.is_in(chunk.to_vec()))
-                .all(conn)
-                .await?;
-            results.extend(batch_results);
-        }
-        Ok(results)
-    }
-
-    fn get_field_value(field_idx: &Option<usize>, row: &[String]) -> String {
-        match field_idx {
-            Some(idx) if *idx < row.len() => row[*idx].clone(),
-            _ => String::new(),
-        }
-    }
-
     fn gen_company_id(company_name: &str) -> String {
         let converted = company_name.replace('（', "(").replace('）', ")");
         gen_sha256(converted.as_str())
@@ -389,94 +367,36 @@ impl CompanyImporter {
         uri: &str,
         row_index: usize,
     ) -> Result<CompanySourceActiveModel, Box<dyn std::error::Error>> {
-        let get_string = |idx: Option<usize>| -> Option<String> {
-            idx.and_then(|i| row.get(i).map(|s| s.trim().to_string()))
-                .filter(|s| !s.is_empty())
-        };
-
-        let get_field_name = |idx: Option<usize>| -> String {
-            idx.and_then(|i| headers.get(i).map(|s| s.trim().to_string()))
-                .unwrap_or_default()
-        };
-
-        let get_f64 = |idx: Option<usize>| -> Result<f64, Box<dyn std::error::Error>> {
-            let field_name = get_field_name(idx);
-            match idx {
-                Some(i) if i < row.len() => {
-                    let s = &row[i];
-                    let trimmed = s.trim();
-                    if trimmed.is_empty() {
-                        Ok(0.0)
-                    } else {
-                        trimmed.parse::<f64>().map_err(|_| {
-                            {
-                                ImportErrorType::InvalidFloat {
-                                    row: row_index + 1,
-                                    field: field_name,
-                                    value: trimmed.to_string(),
-                                }
-                            }
-                            .into()
-                        })
-                    }
-                }
-                _ => Ok(0.0),
-            }
-        };
-
-        let get_i32 = |idx: Option<usize>| -> Result<i32, Box<dyn std::error::Error>> {
-            let field_name = get_field_name(idx);
-            match idx {
-                Some(i) if i < row.len() => {
-                    let s = &row[i];
-                    let trimmed = s.trim();
-                    if trimmed.is_empty() {
-                        Ok(0)
-                    } else {
-                        trimmed.parse::<i32>().map_err(|_| {
-                            {
-                                ImportErrorType::InvalidInteger {
-                                    row: row_index + 1,
-                                    field: field_name,
-                                    value: trimmed.to_string(),
-                                }
-                            }
-                            .into()
-                        })
-                    }
-                }
-                _ => Ok(0),
-            }
-        };
+        let row_idx = row_index + 1;
 
         let mut model = CompanySourceActiveModel {
             id: ActiveValue::set(id.to_string()),
             company_id: ActiveValue::set(Some(company_id.to_string())),
-            name: ActiveValue::set(get_string(mapping.name)),
-            desc: ActiveValue::set(get_string(mapping.description)),
-            start_date: ActiveValue::set(Self::parse_datetime(
-                Self::get_field_value(&mapping.start_date, row).as_str(),
+            name: ActiveValue::set(get_string(row, mapping.name)),
+            desc: ActiveValue::set(get_string(row, mapping.description)),
+            start_date: ActiveValue::set(parse_datetime(
+                get_field_value(&mapping.start_date, row).as_str(),
             )?.map(|dt| dt.fixed_offset())),
-            status: ActiveValue::set(get_string(mapping.status)),
-            legal_person: ActiveValue::set(get_string(mapping.legal_person)),
-            unified_code: ActiveValue::set(get_string(mapping.unified_code)),
-            web_site: ActiveValue::set(get_string(mapping.website)),
-            insurance_num: ActiveValue::set(Some(get_i32(mapping.insurance_num)?)),
-            self_risk: ActiveValue::set(Some(get_i32(mapping.self_risk)?)),
-            union_risk: ActiveValue::set(Some(get_i32(mapping.union_risk)?)),
-            address: ActiveValue::set(get_string(mapping.address)),
-            scope: ActiveValue::set(get_string(mapping.scope)),
-            tax_no: ActiveValue::set(get_string(mapping.tax_no)),
-            industry: ActiveValue::set(get_string(mapping.industry)),
-            license_number: ActiveValue::set(get_string(mapping.license_number)),
-            longitude: ActiveValue::set(Some(get_f64(mapping.longitude)?)),
-            latitude: ActiveValue::set(Some(get_f64(mapping.latitude)?)),
-            source_url: ActiveValue::set(get_string(mapping.source_url)),
-            source_platform: ActiveValue::set(get_string(mapping.platform)),
-            source_record_id: ActiveValue::set(get_string(mapping.source_record_id)),
+            status: ActiveValue::set(get_string(row, mapping.status)),
+            legal_person: ActiveValue::set(get_string(row, mapping.legal_person)),
+            unified_code: ActiveValue::set(get_string(row, mapping.unified_code)),
+            web_site: ActiveValue::set(get_string(row, mapping.website)),
+            insurance_num: ActiveValue::set(Some(get_i32(row, headers, mapping.insurance_num, row_idx)?)),
+            self_risk: ActiveValue::set(Some(get_i32(row, headers, mapping.self_risk, row_idx)?)),
+            union_risk: ActiveValue::set(Some(get_i32(row, headers, mapping.union_risk, row_idx)?)),
+            address: ActiveValue::set(get_string(row, mapping.address)),
+            scope: ActiveValue::set(get_string(row, mapping.scope)),
+            tax_no: ActiveValue::set(get_string(row, mapping.tax_no)),
+            industry: ActiveValue::set(get_string(row, mapping.industry)),
+            license_number: ActiveValue::set(get_string(row, mapping.license_number)),
+            longitude: ActiveValue::set(Some(get_f64(row, headers, mapping.longitude, row_idx)?)),
+            latitude: ActiveValue::set(Some(get_f64(row, headers, mapping.latitude, row_idx)?)),
+            source_url: ActiveValue::set(get_string(row, mapping.source_url)),
+            source_platform: ActiveValue::set(get_string(row, mapping.platform)),
+            source_record_id: ActiveValue::set(get_string(row, mapping.source_record_id)),
             source_refresh_datetime: ActiveValue::Set(None),
-            reg_capital_value: ActiveValue::set(Some(get_f64(mapping.reg_capital_value)?)),
-            reg_capital_currency: ActiveValue::set(get_string(mapping.reg_capital_currency)),
+            reg_capital_value: ActiveValue::set(Some(get_f64(row, headers, mapping.reg_capital_value, row_idx)?)),
+            reg_capital_currency: ActiveValue::set(get_string(row, mapping.reg_capital_currency)),
             paidin_capital_value: ActiveValue::set(None),
             paidin_capital_currency: ActiveValue::set(None),
             uri: ActiveValue::set(Some(uri.to_string())),
@@ -485,8 +405,7 @@ impl CompanyImporter {
             update_datetime: ActiveValue::set(None),
         };
 
-        // 解析 source_refresh_datetime
-        if let Some(dt_str) = get_string(mapping.source_refresh_datetime) {
+        if let Some(dt_str) = get_string(row, mapping.source_refresh_datetime) {
             if let Ok(dt) = DateTime::parse_from_rfc3339(&dt_str) {
                 model.source_refresh_datetime = ActiveValue::Set(Some(dt.with_timezone(&Utc).fixed_offset()));
             } else {
@@ -494,8 +413,7 @@ impl CompanyImporter {
             }
         }
 
-        // 解析 create_datetime
-        if let Some(dt_str) = get_string(mapping.create_datetime)
+        if let Some(dt_str) = get_string(row, mapping.create_datetime)
             && let Ok(dt) = DateTime::parse_from_rfc3339(&dt_str)
         {
             model.create_datetime = ActiveValue::Set(Some(dt.with_timezone(&Utc).fixed_offset()));
@@ -553,19 +471,5 @@ impl CompanyImporter {
             create_datetime: ActiveValue::set(Some(*create_datetime)),
             update_datetime: ActiveValue::set(Some(*update_datetime)),
         })
-    }
-
-    fn parse_datetime(
-        s: &str,
-    ) -> Result<Option<DateTime<FixedOffset>>, Box<dyn std::error::Error>> {
-        if s.trim().is_empty() {
-            return Ok(None);
-        }
-        if let Ok(dt) = DateTime::parse_from_rfc3339(s) {
-            return Ok(Some(dt.with_timezone(&Utc).fixed_offset()));
-        }
-        let naive = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")?;
-        let offset = FixedOffset::east_opt(8 * 3600).unwrap();
-        Ok(Some(offset.from_utc_datetime(&naive).to_utc().fixed_offset()))
     }
 }
