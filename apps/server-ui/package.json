@@ -11,7 +11,7 @@
     "@tanstack/react-query-devtools": "^5.91.3",
     "@tanstack/react-router": "^1.166.2",
     "@tanstack/react-router-devtools": "^1.166.2",
-    "axios": "^1.13.6",
+    "axios": "^1.15.2",
     "zod": "^3.25.76"
   },
   "devDependencies": {
