@@ -10,7 +10,7 @@ use utoipa::ToSchema;
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    pub r#type: Option<i32>,
+    pub r#type: Option<Type>,
     pub enable: Option<bool>,
     #[sea_orm(column_type = "Json", nullable)]
     pub config: Option<String>,
@@ -23,5 +23,12 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {}
+
+#[derive(EnumIter, DeriveActiveEnum, Clone, Debug, PartialEq, Serialize, Deserialize, ToSchema)]
+#[sea_orm(rs_type = "i32", db_type = "Integer")]
+pub enum Type {
+    DataDownload = 0,
+    MetadataDownload = 1,
+}
 
 impl ActiveModelBehavior for ActiveModel {}

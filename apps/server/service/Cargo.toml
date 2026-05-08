@@ -26,16 +26,17 @@ uuid = { workspace = true, features = ["v4"] }
 tokio = { workspace = true, features = ["full"] }
 num_cpus = { workspace = true }
 openssl = { workspace = true, features = ["vendored"] }
-calamine = "0.26"
-reqwest = { version = "0.12", features = ["json"] }
-tempfile = "3"
 xid = { workspace = true }
-sha2 = "0.10"
-hex = "0.4"
+sha2 = { workspace = true }
+hex = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 utoipa = { workspace = true }
 validator = { workspace = true, features = ["derive"] }
+strum = { workspace = true }
+strum_macros = { workspace = true }
+cron = { workspace = true }
+calamine = { workspace = true }
 migration = { path = "../migration" }
 entity = { path = "../entity" }
 framework = { path = "../framework" }
