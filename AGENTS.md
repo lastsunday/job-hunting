@@ -3,7 +3,7 @@
 ## 1. 技术栈
 
 ### Rust (apps/server)
-- **Edition 2024** - 使用 `use<'a>` 生命周期边界、RPIT 生命周期捕获规则等新语法
+- **Edition 2024** - 使用 RPIT 生命周期捕获规则等新语法，workspace 层级配置 `edition = "2024"` 和 `resolver = "2"`
 - **Web**: Axum 0.8 + tower-http + utoipa-axum (Scalar OpenAPI)
 - **ORM**: Sea-ORM {features = ["sqlx-postgres", "runtime-tokio-rustls", "macros", "with-chrono", "debug-print", "sqlx-sqlite", "with-rust_decimal"]}
 - **Auth**: jsonwebtoken (HS256, access + refresh token) + bcrypt
@@ -16,7 +16,7 @@
 
 **框架约定:**
 - `framework::prelude::*` → `err!`, `ApiResult`, `ApiError`, `AppErrorCode`, `#[error]` 宏, `IntoStaticStr`
-- 错误码导入: 框架级用 `use framework::error::xxx::XxxErrorCode`，模块级在 `api/src/*.rs` 中直接定义 `pub enum XxxErrorCode`
+- 错误码导入: 框架级用 `use framework::error::xxx::XxxErrorCode`，模块级用 `#[error]` 宏定义在 `api/src/*.rs` 中
 - 每个业务子 crate 实现 `pub fn create_routes(state: AppState) -> OpenApiRouter`（`index` 模块除外，其不需要 state）
 - 所有路由嵌套在 `/api` 下，通过 `api_setup` 函数组装（在 `api/src/lib.rs` 中调用）
 - handler 使用 `#[debug_handler]` attribute 辅助编译期错误提示
@@ -41,6 +41,9 @@
 **浏览器扩展 (apps/extension):**
 - WXT framework (Chrome MV3)
 - React 19 + Ant Design v5 + @ant-design/icons
+- react-router 7 (页面路由)
+- zustand (状态管理)
+- fetch (API 调用)
 - @electric-sql/pglite (嵌入式 WASM PostgreSQL)
 - @mlc-ai/web-llm (浏览器内 LLM 推理)
 - UnoCSS
@@ -60,7 +63,7 @@
 - **不要**手动编辑 `routeTree.gen.ts` (TanStack Router 自动生成和覆盖)
 - **不要**修改 Nx workspace 结构 (`nx.json`, `pnpm-workspace.yaml`, `project.json`)
 - **不要**引入新依赖前未检查现有依赖是否已满足需求
-- **不要**使用和引用旧的 Rust edition 语法
+- **不要**使用非 Edition 2024 的 Rust 语法（如 `'_` 生命周期 elision 规则、`impl<T>` 旧式 trait bound 等）
 
 ### 代码规范禁忌:
 - Rust: 必须使用 `#[error]` 宏定义错误码（6 位数字），不要手动实现 Error trait
@@ -68,8 +71,9 @@
 - Rust: 不要遗漏 `use framework::prelude::*`
 - Rust: 路由必须在 `create_routes` 中通过 `OpenApiRouter` 组织
 - Rust: 提交前运行 `cargo fmt && cargo clippy` 保持代码风格
-- TS: 扩展 API 必须用 `fillBridgeApi()` 注册，不要直接跨 context 调用函数
-- TS: 不要修改 TanStack Router 路由配置之外的自动生成文件
+- server-ui: 不要手动编辑 `routeTree.gen.ts` (TanStack Router 自动生成和覆盖)
+- server-ui: 不要修改 TanStack Router 路由配置之外的自动生成文件
+- extension: 扩展 API 必须用 `fillBridgeApi()` 注册，不要直接跨 context 调用函数
 
 ## 3. 目录结构
 
@@ -85,18 +89,20 @@
 │   │   ├── entity/src/        Sea-ORM Entity (自动生成 + 手动补充)
 │   │   ├── migration/src/     数据库迁移
 │   │   ├── web/src/           Web 层 (静态文件服务)
-│   │   └── framework/src/     框架层
-│   │       ├── error/         错误码定义 (auth_code, base_code 等)
-│   │       ├── auth.rs        JWT 认证
-│   │       ├── config/        配置
-│   │       ├── data/          JSON/Query/Path 提取器
-│   │       ├── middleware.rs  认证中间件
-│   │       ├── database.rs    数据库连接
-│   │       ├── id.rs          ID 生成
-│   │       ├── logger.rs      日志
-│   │       ├── password.rs    密码哈希
-│   │       ├── prelude.rs     全局预导入
-│   │       └── trace.rs       链路追踪
+│   │   ├── framework/
+│   │   │   ├── src/           框架层
+│   │   │   │   ├── error/     错误码定义 (auth_code, base_code 等)
+│   │   │   │   ├── auth.rs    JWT 认证
+│   │   │   │   ├── config/    配置
+│   │   │   │   ├── data/      JSON/Query/Path 提取器
+│   │   │   │   ├── middleware.rs  认证中间件
+│   │   │   │   ├── database.rs    数据库连接
+│   │   │   │   ├── id.rs      ID 生成
+│   │   │   │   ├── logger.rs  日志
+│   │   │   │   ├── password.rs    密码哈希
+│   │   │   │   ├── prelude.rs     全局预导入
+│   │   │   │   └── trace.rs       链路追踪
+│   │   │   └── macros/        proc-macro 宏 (framework-macros)
 │   ├── server-ui/src/         React 管理后台
 │   │   ├── components/        UI 组件
 │   │   ├── hooks/             自定义 Hooks
@@ -140,7 +146,7 @@
 | TS 组件/类 | PascalCase | `RouteComponent`, `JobFormData` |
 | TS 文件 | kebab-case + .tsx/.ts | `jobs.tsx`, `http.ts` |
 | DB 表/字段 | snake_case | `company_tag`, `first_scan_datetime` |
-| URI | `data://user@host/path` | 参考 RFC 3986 |
+| URI | snake_case | `/api/job/search`、`/api/auth/access_token` |
 | 扩展 API 方法 | className + methodName | `dataSourceMetadataSearch` |
 
 ## 5. 开发工作流 (Workflow)
@@ -157,8 +163,9 @@
 1. `routes/`: 按 TanStack Router 文件路由约定新建 `.tsx` 文件
 2. `api/`: 添加对应的 API 调用函数
 3. `components/` + `.module.css`: 组件与样式文件
-4. 翻译文本添加到 `public/locales/{namespace}/translation.json`
+4. 翻译文本添加到 `public/locales/{lang}/{namespace}.json`（如 `public/locales/en/common.json`）
 5. 运行 `nx typecheck server-ui` 验证类型
+6. 开发调试: `cd apps/server-ui && pnpm run dev`
 
 ### 新增扩展功能时 (extension)
 1. `common/data/domain/` 或 `common/data/dto/`: 数据模型
