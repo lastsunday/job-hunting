@@ -1,11 +1,11 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use cron::Schedule;
 use entity::task_data_plan::ActiveModel as TaskDataPlanActiveModel;
 use entity::task_plan::ActiveModel as TaskPlanActiveModel;
 use framework::id::gen_id;
-use sea_orm::{ActiveValue, DatabaseConnection, DbErr, EntityTrait, TransactionTrait};
+use sea_orm::{ActiveValue, DbErr, EntityTrait, TransactionTrait};
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
 
@@ -39,6 +39,7 @@ pub struct TaskPlanConfigDataDownloadConfig {
     pub url: Option<String>,
     pub user_name: Option<String>,
     pub repo_name: Option<String>,
+    pub key: Option<String>,
 }
 
 pub enum Type {
@@ -69,14 +70,15 @@ fn validate_cron(expr: &str) -> bool {
     Schedule::from_str(expr).is_ok()
 }
 
-pub async fn create_plan(
-    conn: &DatabaseConnection,
+pub async fn create_plan<C: TransactionTrait>(
+    conn: &C,
     user_name: &str,
     repo_name: &str,
     repo_type: RepoType,
     task_type: Type,
     task_enable: bool,
     cron: &str,
+    key: Option<String>,
 ) -> Result<(String, String), Error> {
     if !validate_cron(cron) {
         return Err(Error::Cron(cron.to_string()));
@@ -96,6 +98,7 @@ pub async fn create_plan(
                                 url: Some(gen_url_by_repo_type(&repo_type, user_name, repo_name)),
                                 user_name: Some(user_name.to_string()),
                                 repo_name: Some(repo_name.to_string()),
+                                key,
                             })?
                         }
                     },
@@ -143,4 +146,38 @@ pub async fn create_plan(
         })
         .await?;
     Ok(result)
+}
+
+pub fn get_file_name_by_task_type(task_type: TaskType) -> String {
+    match task_type {
+        TaskType::JobDataDownload => "job".to_string(),
+        TaskType::CompanyDataDownload => "company".to_string(),
+    }
+}
+
+pub async fn query_repo_file_date_and_max_seq_map(
+    file_name: &str,
+    url: &str,
+    key: Option<String>,
+    now: DateTime<Utc>,
+    retention_day: i32,
+) -> Result<HashMap<String, i32>, anyhow::Error> {
+    todo!();
+}
+
+pub fn filter_sort_fetch_date_info(
+    repo_file_name_and_max_seq_map: HashMap<String, i32>,
+) -> (DateTime<Utc>, DateTime<Utc>, Vec<DateTime<Utc>>) {
+    todo!();
+}
+
+pub async fn query_date_list<C: TransactionTrait>(
+    conn: &C,
+    user_name: &str,
+    repo_name: &str,
+    task_type: TaskType,
+    start_date: DateTime<Utc>,
+    end_date: DateTime<Utc>,
+) -> Result<Vec<DateTime<Utc>>, anyhow::Error> {
+    todo!();
 }
