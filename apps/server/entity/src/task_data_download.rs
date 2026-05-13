@@ -10,7 +10,7 @@ use utoipa::ToSchema;
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    pub r#type: Option<String>,
+    pub r#type: Option<Type>,
     pub username: Option<String>,
     pub repo_name: Option<String>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
@@ -23,6 +23,15 @@ pub struct Model {
     pub create_datetime: Option<DateTimeWithTimeZone>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub update_datetime: Option<DateTimeWithTimeZone>,
+}
+
+#[derive(EnumIter, DeriveActiveEnum, Debug, ToSchema, PartialEq, Clone, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum Type {
+    #[sea_orm(string_value = "JOB_DATA_DOWNLOAD")]
+    JobDataDownload,
+    #[sea_orm(string_value = "COMPANY_DATA_DOWNLOAD")]
+    CompanyDataDownload,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

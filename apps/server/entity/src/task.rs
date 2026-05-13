@@ -11,9 +11,9 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
     pub plan_id: Option<String>,
-    pub r#type: Option<String>,
+    pub r#type: Option<Type>,
     pub data_id: Option<String>,
-    pub status: Option<String>,
+    pub status: Option<Status>,
     pub error_reason: Option<String>,
     pub cost_time: Option<i32>,
     pub retry_count: Option<i32>,
@@ -21,6 +21,32 @@ pub struct Model {
     pub create_datetime: Option<DateTimeWithTimeZone>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub update_datetime: Option<DateTimeWithTimeZone>,
+}
+
+#[derive(EnumIter, DeriveActiveEnum, Debug, ToSchema, PartialEq, Clone, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum Type {
+    #[sea_orm(string_value = "JOB_DATA_DOWNLOAD")]
+    JobDataDownload,
+    #[sea_orm(string_value = "COMPANY_DATA_DOWNLOAD")]
+    CompanyDataDownload,
+}
+
+#[derive(EnumIter, DeriveActiveEnum, Debug, ToSchema, PartialEq, Clone, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum Status {
+    #[sea_orm(string_value = "READY")]
+    Ready,
+    #[sea_orm(string_value = "RUNNING")]
+    Running,
+    #[sea_orm(string_value = "CANCEL")]
+    Cancel,
+    #[sea_orm(string_value = "FINISHED")]
+    Finished,
+    #[sea_orm(string_value = "FINISHED_BUT_ERROR")]
+    FinishedButError,
+    #[sea_orm(string_value = "ERROR")]
+    Error,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
