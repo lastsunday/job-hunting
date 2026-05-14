@@ -1,9 +1,12 @@
 use chrono::{DateTime, Utc};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
-use service::task::{
-    RepoType, TaskPlanConfigDataDownloadConfig, TaskType, Type, calculate_lack_date_max_seq_list,
-    create_plan, filter_sort_fetch_date_info, get_file_name_by_task_type, query_date_list,
-    query_repo_file_date_and_max_seq_map, save_data_download_task,
+use service::{
+    repo::{GitRepo, Repo},
+    task::{
+        RepoType, TaskPlanConfigDataDownloadConfig, TaskType, Type,
+        calculate_lack_date_max_seq_list, create_plan, filter_sort_fetch_date_info,
+        get_file_name_by_task_type, query_date_list, save_data_download_task,
+    },
 };
 
 use crate::common::{setup_database, tear_down};
@@ -81,18 +84,22 @@ async fn test_task_create_and_gen() {
     let TaskPlanConfigDataDownloadConfig { url, key, .. } = config.clone();
     let retention_day = 365 * 10; //10 years
     let task_type = TaskType::JobDataDownload;
+
+    let repo = GitRepo::new();
+
     // 根据task_type,datetime,seq,url,user_name,repo_name,生成data download task
     // 1. 根据文件名,url,获得仓库所有文件的路径和maxSeq
     // TODO: 根据保留日期进行过滤，避免过多文件路径查询和返回
-    let repo_file_date_and_max_seq_map = query_repo_file_date_and_max_seq_map(
-        file_name.as_str(),
-        url.as_ref().unwrap().as_str(),
-        &key,
-        &now,
-        retention_day,
-    )
-    .await
-    .unwrap();
+    let repo_file_date_and_max_seq_map = repo
+        .query_repo_file_date_and_max_seq_map(
+            file_name.as_str(),
+            url.as_ref().unwrap().as_str(),
+            &key,
+            &now,
+            retention_day,
+        )
+        .await
+        .unwrap();
     let (start_date, end_date, repo_asc_date_list) =
         filter_sort_fetch_date_info(&repo_file_date_and_max_seq_map).unwrap();
     // 2. 根据数据库查询，获得数据库区间时间范围的记录

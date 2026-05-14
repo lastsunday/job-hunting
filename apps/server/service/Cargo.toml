@@ -41,6 +41,9 @@ migration = { path = "../migration" }
 entity = { path = "../entity" }
 framework = { path = "../framework" }
 
+[dev-dependencies]
+mockall = { workspace = true }
+
 [features]
 default = []
 vendored-openssl = ["git2/vendored-openssl"]

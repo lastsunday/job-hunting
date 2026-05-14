@@ -57,6 +57,7 @@ quote = "1.0.45"
 syn = "2.0.117"
 tower = "0.5.3"
 cucumber = "0.23.0"
+mockall = "0.14.0"
 
 [profile.dev]
 opt-level = 1

@@ -164,20 +164,6 @@ pub fn get_file_name_by_task_type(task_type: TaskType) -> String {
     }
 }
 
-// TODO: need delete
-pub async fn query_repo_file_date_and_max_seq_map(
-    file_name: &str,
-    url: &str,
-    key: &Option<String>,
-    now: &DateTime<Utc>,
-    retention_day: i32,
-) -> Result<HashMap<DateTime<Utc>, i32>, anyhow::Error> {
-    let mut result = HashMap::new();
-    result.insert("2024-01-02T00:00:00Z".parse::<DateTime<Utc>>()?, 1);
-    result.insert("2024-01-01T00:00:00Z".parse::<DateTime<Utc>>()?, 1);
-    Ok(result)
-}
-
 pub type DateForStartEndAndList = (DateTime<Utc>, DateTime<Utc>, Vec<DateTime<Utc>>);
 
 pub fn filter_sort_fetch_date_info(
@@ -305,7 +291,7 @@ pub async fn save_data_download_task<C: TransactionTrait>(
                             datetime: ActiveValue::Set(Some(date.fixed_offset())),
                             config: ActiveValue::set(Some(config.clone())),
                             data_id: ActiveValue::NotSet,
-                            seq: ActiveValue::Set(Some(seq + 1)),
+                            seq: ActiveValue::Set(Some(seq)),
                             create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
                             update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
                         };
