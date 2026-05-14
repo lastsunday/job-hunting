@@ -15,6 +15,8 @@ use strum_macros::{Display, EnumString};
 
 use thiserror::Error;
 
+use crate::repo::{GitRepo, QueryFileDateAndMaxSeqParam, Repo};
+
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("Database error: {0}")]
@@ -23,6 +25,8 @@ pub enum Error {
     Json(serde_json::Error),
     #[error("invalid cron expr: {0}")]
     Cron(String),
+    #[error("biz error: {0}")]
+    Biz(anyhow::Error),
 }
 
 impl From<sea_orm::TransactionError<sea_orm::DbErr>> for Error {
@@ -34,6 +38,12 @@ impl From<sea_orm::TransactionError<sea_orm::DbErr>> for Error {
 impl From<serde_json::Error> for Error {
     fn from(value: serde_json::Error) -> Self {
         Error::Json(value)
+    }
+}
+
+impl From<anyhow::Error> for Error {
+    fn from(value: anyhow::Error) -> Self {
+        Error::Biz(value)
     }
 }
 
@@ -174,9 +184,89 @@ pub fn get_file_name_by_task_type(task_type: TaskType) -> String {
     }
 }
 
+pub struct CalculateAndCreateDownloadTaskParam {
+    pub plan_id: String,
+    pub user_name: String,
+    pub repo_name: String,
+    pub task_type: TaskType,
+    pub now: DateTime<Utc>,
+    pub file_name: String,
+    pub url: String,
+    pub key: Option<String>,
+    pub retention_day: i32,
+}
+
+pub type TaskAndDataId = (String, String);
+
+pub async fn calculate_and_create_download_task<C: TransactionTrait + ConnectionTrait>(
+    conn: &C,
+    param: CalculateAndCreateDownloadTaskParam,
+) -> Result<Vec<TaskAndDataId>, Error> {
+    let CalculateAndCreateDownloadTaskParam {
+        plan_id,
+        user_name,
+        repo_name,
+        task_type,
+        now,
+        file_name,
+        url,
+        key,
+        retention_day,
+    } = param;
+
+    let repo = GitRepo::new();
+
+    // 根据task_type,datetime,seq,url,user_name,repo_name,生成data download task
+    // 1. 根据文件名,url,获得仓库所有文件的路径和maxSeq
+    // TODO: 根据保留日期进行过滤，避免过多文件路径查询和返回
+    let repo_file_date_and_max_seq_map = repo
+        .query_file_date_and_max_seq(QueryFileDateAndMaxSeqParam {
+            file_name,
+            url: url.to_string(),
+            key,
+            now,
+            retention_day,
+        })
+        .await?;
+    let (start_date, end_date, repo_asc_date_list) =
+        filter_sort_fetch_date_info(&repo_file_date_and_max_seq_map)?;
+    // 2. 根据数据库查询，获得数据库区间时间范围的记录
+    let db_date_list = query_date_list(
+        conn,
+        QueryDateListParam {
+            user_name: user_name.to_string(),
+            repo_name: repo_name.to_string(),
+            task_type: task_type.clone(),
+            start_date,
+            end_date,
+        },
+    )
+    .await?;
+    // 3. 根据仓库记录日期和数据库记录日期，计算缺失的日期
+    let lack_date_max_seq_list = calculate_lack_date_max_seq_list(
+        &repo_asc_date_list,
+        &db_date_list,
+        &repo_file_date_and_max_seq_map,
+    )?;
+    // 4. 根据缺失日期及对应maxSeq，user_name,repo_name,task_type,生成 data download task
+    let task_ids = save_data_download_task(
+        conn,
+        SaveDataDownloadTaskParam {
+            plan_id,
+            task_type,
+            lack_date_max_seq_list,
+            url,
+            user_name,
+            repo_name,
+        },
+    )
+    .await?;
+    Ok(task_ids)
+}
+
 pub type DateForStartEndAndList = (DateTime<Utc>, DateTime<Utc>, Vec<DateTime<Utc>>);
 
-pub fn filter_sort_fetch_date_info(
+fn filter_sort_fetch_date_info(
     repo_file_date_and_max_seq_map: &HashMap<DateTime<Utc>, i32>,
 ) -> Result<DateForStartEndAndList, anyhow::Error> {
     let mut date_list = repo_file_date_and_max_seq_map
@@ -193,14 +283,25 @@ pub fn filter_sort_fetch_date_info(
     Ok((start, end, date_list))
 }
 
-pub async fn query_date_list<C: ConnectionTrait>(
+pub struct QueryDateListParam {
+    pub user_name: String,
+    pub repo_name: String,
+    pub task_type: TaskType,
+    pub start_date: DateTime<Utc>,
+    pub end_date: DateTime<Utc>,
+}
+
+async fn query_date_list<C: ConnectionTrait>(
     conn: &C,
-    user_name: &str,
-    repo_name: &str,
-    task_type: &TaskType,
-    start_date: &DateTime<Utc>,
-    end_date: &DateTime<Utc>,
+    param: QueryDateListParam,
 ) -> Result<Vec<DateTime<Utc>>, anyhow::Error> {
+    let QueryDateListParam {
+        user_name,
+        repo_name,
+        task_type,
+        start_date,
+        end_date,
+    } = param;
     let task_type_param = match task_type {
         TaskType::JobDataDownload => entity::task_data_download::Type::JobDataDownload,
         TaskType::CompanyDataDownload => entity::task_data_download::Type::CompanyDataDownload,
@@ -223,7 +324,7 @@ pub async fn query_date_list<C: ConnectionTrait>(
 
 pub type DateAndMaxSeq = (DateTime<Utc>, i32);
 
-pub fn calculate_lack_date_max_seq_list(
+fn calculate_lack_date_max_seq_list(
     repo_asc_date_list: &[DateTime<Utc>],
     db_date_list: &[DateTime<Utc>],
     repo_file_date_and_max_seq_map: &HashMap<DateTime<Utc>, i32>,
@@ -244,21 +345,27 @@ pub fn calculate_lack_date_max_seq_list(
     Ok(result)
 }
 
-pub type TaskAndDataId = (String, String);
+pub struct SaveDataDownloadTaskParam {
+    pub plan_id: String,
+    pub task_type: TaskType,
+    pub lack_date_max_seq_list: Vec<DateAndMaxSeq>,
+    pub url: String,
+    pub user_name: String,
+    pub repo_name: String,
+}
 
-pub async fn save_data_download_task<C: TransactionTrait>(
+async fn save_data_download_task<C: TransactionTrait>(
     conn: &C,
-    plan_id: &str,
-    task_type: &TaskType,
-    lack_date_max_seq_list: &[DateAndMaxSeq],
-    url: &str,
-    user_name: &str,
-    repo_name: &str,
+    param: SaveDataDownloadTaskParam,
 ) -> Result<Vec<TaskAndDataId>, anyhow::Error> {
-    let plan_id = plan_id.to_string();
-    let lack_date_max_seq_list = lack_date_max_seq_list.to_vec();
-    let user_name = user_name.to_string();
-    let repo_name = repo_name.to_string();
+    let SaveDataDownloadTaskParam {
+        plan_id,
+        task_type,
+        lack_date_max_seq_list,
+        url,
+        user_name,
+        repo_name,
+    } = param;
     let (task_model_type, task_download_model_type) = match task_type {
         TaskType::JobDataDownload => (
             entity::task::Type::JobDataDownload,

@@ -1,12 +1,9 @@
 use chrono::{DateTime, Utc};
 use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
-use service::{
-    repo::{GitRepo, Repo},
-    task::{
-        CreatePlanParam, RepoType, TaskPlanConfigDataDownloadConfig, TaskType, Type,
-        calculate_lack_date_max_seq_list, create_plan, filter_sort_fetch_date_info,
-        get_file_name_by_task_type, query_date_list, save_data_download_task,
-    },
+use service::task::{
+    CalculateAndCreateDownloadTaskParam, CreatePlanParam, RepoType,
+    TaskPlanConfigDataDownloadConfig, TaskType, Type, calculate_and_create_download_task,
+    create_plan, get_file_name_by_task_type,
 };
 
 use crate::common::{setup_database, tear_down};
@@ -87,53 +84,23 @@ async fn test_task_create_and_gen() {
     let retention_day = 365 * 10; //10 years
     let task_type = TaskType::JobDataDownload;
 
-    let repo = GitRepo::new();
-
-    // 根据task_type,datetime,seq,url,user_name,repo_name,生成data download task
-    // 1. 根据文件名,url,获得仓库所有文件的路径和maxSeq
-    // TODO: 根据保留日期进行过滤，避免过多文件路径查询和返回
-    let repo_file_date_and_max_seq_map = repo
-        .query_repo_file_date_and_max_seq_map(
-            file_name.as_str(),
-            url.as_ref().unwrap().as_str(),
-            &key,
-            &now,
+    let task_ids = calculate_and_create_download_task(
+        &state.conn,
+        CalculateAndCreateDownloadTaskParam {
+            plan_id: plan_id.to_string(),
+            user_name: user_name.to_string(),
+            repo_name: repo_name.to_string(),
+            task_type,
+            now,
+            file_name,
+            url: url.unwrap().to_string(),
+            key,
             retention_day,
-        )
-        .await
-        .unwrap();
-    let (start_date, end_date, repo_asc_date_list) =
-        filter_sort_fetch_date_info(&repo_file_date_and_max_seq_map).unwrap();
-    // 2. 根据数据库查询，获得数据库区间时间范围的记录
-    let db_date_list = query_date_list(
-        &state.conn,
-        user_name,
-        repo_name,
-        &task_type,
-        &start_date,
-        &end_date,
+        },
     )
     .await
     .unwrap();
-    // 3. 根据仓库记录日期和数据库记录日期，计算缺失的日期
-    let lack_date_max_seq_list = calculate_lack_date_max_seq_list(
-        &repo_asc_date_list,
-        &db_date_list,
-        &repo_file_date_and_max_seq_map,
-    )
-    .unwrap();
-    // 4. 根据缺失日期及对应maxSeq，user_name,repo_name,task_type,生成 data download task
-    let task_ids = save_data_download_task(
-        &state.conn,
-        plan_id,
-        &task_type,
-        &lack_date_max_seq_list,
-        url.unwrap().as_str(),
-        user_name,
-        repo_name,
-    )
-    .await
-    .unwrap();
+
     assert_eq!(2, task_ids.len(), "save task ids not correct");
 
     let task_ids = task_ids

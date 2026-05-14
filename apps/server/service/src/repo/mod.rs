@@ -2,15 +2,19 @@ use std::collections::HashMap;
 
 use chrono::{DateTime, Utc};
 
+pub struct QueryFileDateAndMaxSeqParam {
+    pub file_name: String,
+    pub url: String,
+    pub key: Option<String>,
+    pub now: DateTime<Utc>,
+    pub retention_day: i32,
+}
+
 pub trait Repo {
-    async fn query_repo_file_date_and_max_seq_map(
+    fn query_file_date_and_max_seq(
         &self,
-        file_name: &str,
-        url: &str,
-        key: &Option<String>,
-        now: &DateTime<Utc>,
-        retention_day: i32,
-    ) -> Result<HashMap<DateTime<Utc>, i32>, anyhow::Error>;
+        param: QueryFileDateAndMaxSeqParam,
+    ) -> impl Future<Output = Result<HashMap<DateTime<Utc>, i32>, anyhow::Error>>;
 }
 
 pub struct GitRepo {}
@@ -28,13 +32,9 @@ impl Default for GitRepo {
 }
 
 impl Repo for GitRepo {
-    async fn query_repo_file_date_and_max_seq_map(
+    async fn query_file_date_and_max_seq(
         &self,
-        file_name: &str,
-        url: &str,
-        key: &Option<String>,
-        now: &DateTime<Utc>,
-        retention_day: i32,
+        param: QueryFileDateAndMaxSeqParam,
     ) -> Result<HashMap<DateTime<Utc>, i32>, anyhow::Error> {
         let mut result = HashMap::new();
         result.insert("2024-01-02T00:00:00Z".parse::<DateTime<Utc>>()?, 1);
