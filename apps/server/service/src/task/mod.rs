@@ -79,17 +79,30 @@ fn validate_cron(expr: &str) -> bool {
     Schedule::from_str(expr).is_ok()
 }
 
+pub struct CreatePlanParam {
+    pub user_name: String,
+    pub repo_name: String,
+    pub repo_type: RepoType,
+    pub task_type: Type,
+    pub task_enable: bool,
+    pub cron: String,
+    pub key: Option<String>,
+}
+
 pub async fn create_plan<C: TransactionTrait>(
     conn: &C,
-    user_name: &str,
-    repo_name: &str,
-    repo_type: RepoType,
-    task_type: Type,
-    task_enable: bool,
-    cron: &str,
-    key: Option<String>,
+    param: CreatePlanParam,
 ) -> Result<(String, String), Error> {
-    if !validate_cron(cron) {
+    let CreatePlanParam {
+        user_name,
+        repo_name,
+        repo_type,
+        task_type,
+        task_enable,
+        cron,
+        key,
+    } = param;
+    if !validate_cron(&cron) {
         return Err(Error::Cron(cron.to_string()));
     }
     let (r#type, config) = {
@@ -104,7 +117,7 @@ pub async fn create_plan<C: TransactionTrait>(
                                 task_type_list: task_plan_config_data_download_config
                                     .task_type_list
                                     .clone(),
-                                url: Some(gen_url_by_repo_type(&repo_type, user_name, repo_name)),
+                                url: Some(gen_url_by_repo_type(&repo_type, &user_name, &repo_name)),
                                 user_name: Some(user_name.to_string()),
                                 repo_name: Some(repo_name.to_string()),
                                 key,
@@ -116,9 +129,6 @@ pub async fn create_plan<C: TransactionTrait>(
         }
     };
     let now = Utc::now();
-    let user_name = user_name.to_string();
-    let repo_name = repo_name.to_string();
-    let cron = cron.to_string();
     let result = conn
         .transaction::<_, _, DbErr>(|txn| {
             Box::pin(async move {

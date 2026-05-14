@@ -3,7 +3,7 @@ use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
 use service::{
     repo::{GitRepo, Repo},
     task::{
-        RepoType, TaskPlanConfigDataDownloadConfig, TaskType, Type,
+        CreatePlanParam, RepoType, TaskPlanConfigDataDownloadConfig, TaskType, Type,
         calculate_lack_date_max_seq_list, create_plan, filter_sort_fetch_date_info,
         get_file_name_by_task_type, query_date_list, save_data_download_task,
     },
@@ -34,13 +34,15 @@ async fn test_task_create_and_gen() {
 
     let (task_data_plan_id, task_plan_id) = create_plan(
         &state.conn,
-        user_name,
-        repo_name,
-        repo_type,
-        task_type,
-        task_enable,
-        cron,
-        key,
+        CreatePlanParam {
+            user_name: user_name.to_string(),
+            repo_name: repo_name.to_string(),
+            repo_type,
+            task_type,
+            task_enable,
+            cron: cron.to_string(),
+            key,
+        },
     )
     .await
     .unwrap();
@@ -145,13 +147,10 @@ async fn test_task_create_and_gen() {
         .await
         .unwrap();
     assert_eq!(2, task_list.len(), "database task list len not correct");
-    let task_data_download_ids = task_list
+    let task_data_download_ids: Vec<&String> = task_list
         .iter()
-        .map(|t| &t.data_id)
-        .collect::<Vec<_>>()
-        .iter()
-        .filter_map(|x| x.as_ref())
-        .collect::<Vec<_>>();
+        .filter_map(|t| t.data_id.as_ref())
+        .collect();
     let task_data_download_list = entity::task_data_download::Entity::find()
         .filter(entity::task_data_download::Column::Id.is_in(task_data_download_ids))
         .all(&state.conn)
