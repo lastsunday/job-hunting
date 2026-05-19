@@ -477,18 +477,16 @@ function handleZhilianData(list) {
       name,
       companyName,
       workCity,
-      streetName,
-      jobSummary,
       education,
       workingExp,
       salaryReal,
-      firstPublishTime,
+      publishTime,
       salaryCount,
-      latitude,
-      longitude,
       skillLabel,
-      welfareTagList,
+      welfareLabel,
     } = item;
+    const { workAddress, latitude, longitude } = item.jobDetailData.position.workLocation;
+    const { description } = item.jobDetailData.position.desc;
     const { staffName, hrJob } = item.staffCard;
     job.jobId = genId(jobId, PLATFORM_ZHILIAN);
     job.jobPlatform = PLATFORM_ZHILIAN;
@@ -499,7 +497,7 @@ function handleZhilianData(list) {
     job.jobName = name;
     job.jobCompanyName = companyName;
     job.jobLocationName = workCity;
-    job.jobAddress = streetName;
+    job.jobAddress = workAddress;
     job.jobLongitude = longitude;
     job.jobLatitude = latitude;
     if (job.jobLongitude && job.jobLatitude) {
@@ -507,7 +505,7 @@ function handleZhilianData(list) {
       job.jobLongitude = wgs84[0];
       job.jobLatitude = wgs84[1];
     }
-    job.jobDescription = jobSummary;
+    job.jobDescription = description;
     job.jobDegreeName = education;
     //handle job year
     const jobYearGroups = workingExp.match(JOB_YEAR_MATCH)?.groups;
@@ -528,14 +526,14 @@ function handleZhilianData(list) {
     const groupsSalaryCount = salaryCount.match(/(?<count>\d*)/)?.groups;
     job.jobSalaryTotalMonth = groupsSalaryCount.count;
     job.jobFirstPublishDatetime = convertDateStringToDateObject(
-      firstPublishTime
+      publishTime
     );
     job.bossName = staffName;
     job.bossCompanyName = companyName;
     job.bossPosition = hrJob;
     job.isFullCompanyName = true;
     job.skillTag = skillLabel.length > 0 ? skillLabel.map(item => item.value).join(",") : null;
-    job.welfareTag = welfareTagList.length > 0 ? welfareTagList.join(",") : null;
+    job.welfareTag = welfareLabel.length > 0 ? welfareLabel.join(",") : null;
     jobs.push(job);
   }
   return jobs;

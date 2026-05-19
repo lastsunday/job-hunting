@@ -53,19 +53,14 @@ function mutationContainer() {
 
 // 解析数据，插入时间标签
 export async function parseZhilianData(list, getListItem) {
-  const apiUrlList = [];
   list.forEach((item, index) => {
     const dom = getListItem(index);
-    const { companyName, positionUrl } = item;
+    const { companyName } = item;
     const loadingLastModifyTimeTag = createLoadingDOM(
       companyName,
       "__zhilian_time_tag"
     );
     dom.appendChild(loadingLastModifyTimeTag);
-    apiUrlList.push(positionUrl.replace(
-      "http:",
-      "https:"
-    ));
   });
   await saveBrowseJob(list, PLATFORM_ZHILIAN);
   const jobDTOList = await JobApi.getJobBrowseInfoByIds(
