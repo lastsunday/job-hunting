@@ -1,3 +1,14 @@
+## 4.0.1 (2026-05-19)
+
+### 🩹 Fixes
+
+- 修复智联招聘数据获取和渲染异常的问题
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+- stellata @stellata
+
 ## 4.0.0 (2026-03-07)
 
 ### ⚠️ Noteworthy
