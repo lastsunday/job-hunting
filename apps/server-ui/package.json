@@ -11,7 +11,7 @@
     "@tanstack/react-query-devtools": "^5.91.3",
     "@tanstack/react-router": "^1.166.2",
     "@tanstack/react-router-devtools": "^1.166.2",
-    "axios": "^1.13.6",
+    "axios": "^1.15.2",
     "zod": "^3.25.76"
   },
   "devDependencies": {
@@ -20,7 +20,7 @@
     "@unocss/preset-icons": "66.1.0-beta.10",
     "@unocss/preset-uno": "^65.5.0",
     "@vitejs/plugin-react-oxc": "^0.2.3",
-    "postcss": "^8.5.8",
+    "postcss": "^8.5.10",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
     "unocss": "^66.6.5",

@@ -60,7 +60,7 @@
     "jiti": "2.4.2",
     "jsdom": "^22.1.0",
     "nx": "22.3.3",
-    "postcss": "^8.5.8",
+    "postcss": "^8.5.10",
     "prettier": "^2.8.8",
     "storybook": "10.2.10",
     "tailwindcss": "^3.4.19",
@@ -75,7 +75,7 @@
     "vitest": "4.0.9"
   },
   "dependencies": {
-    "next": "16.1.7",
+    "next": "16.2.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "6.29.0"
