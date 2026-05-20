@@ -8,7 +8,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   RobotOutlined,
-  SettingOutlined
+  SettingOutlined,
 } from '@ant-design/icons';
 import { Breadcrumb, Button, Flex, Layout, Menu, theme } from 'antd';
 import React, { useState } from 'react';
@@ -44,13 +44,15 @@ const RootLayout: React.FC = () => {
     return [
       {
         key: 'list',
-        icon: <div className="i-material-symbols-light:view-list-outline-sharp" />,
-        label: '列表'
+        icon: (
+          <div className="i-material-symbols-light:view-list-outline-sharp" />
+        ),
+        label: '列表',
       },
       {
         key: 'metadata',
         icon: <div className="i-uil:list-ul" />,
-        label: '元数据'
+        label: '元数据',
       },
     ];
   };
@@ -60,21 +62,33 @@ const RootLayout: React.FC = () => {
       {
         key: 'taskStatistic',
         icon: <div className="i-wpf:statistics" />,
-        label: '统计'
+        label: '统计',
       },
       {
         key: 'taskDetail',
         icon: <div className="i-bx:detail" />,
-        label: '详情'
+        label: '详情',
       },
     ];
   };
 
   const genAnalysisMenu = () => {
     if (analysisConfig.enable) {
-      return [{ icon: <div className="i-mdi:think-outline" />, key: 'analysisSetting', label: '职位分析' }];
+      return [
+        {
+          icon: <div className="i-mdi:think-outline" />,
+          key: 'analysisSetting',
+          label: '职位分析',
+        },
+      ];
     } else {
-      return [{ icon: <div className="i-mdi:think-outline" />, key: 'analysisWelcome', label: '职位分析' }];
+      return [
+        {
+          icon: <div className="i-mdi:think-outline" />,
+          key: 'analysisWelcome',
+          label: '职位分析',
+        },
+      ];
     }
   };
 
@@ -97,26 +111,25 @@ const RootLayout: React.FC = () => {
           {
             key: 'favoriteJob',
             icon: <div className="i-f7:square-favorites-alt"></div>,
-            label: '职位偏好'
+            label: '职位偏好',
           },
           {
             key: 'historyJob',
             icon: <div className="i-material-symbols:history"></div>,
-            label: '浏览历史'
-          },
-          {
-            key: 'automate',
-            icon: <div className="i-meteor-icons:robot"></div>,
-            label: '自动化'
+            label: '浏览历史',
           },
           ...genAnalysisMenu(),
           jobSnapshotConfig.enable
-            ? { key: 'jobSnapshot', icon: <HistoryOutlined />, label: '职位快照' }
+            ? {
+                key: 'jobSnapshot',
+                icon: <HistoryOutlined />,
+                label: '职位快照',
+              }
             : {
-              key: 'jobSnapshotSetting',
-              icon: <HistoryOutlined />,
-              label: '职位快照',
-            },
+                key: 'jobSnapshotSetting',
+                icon: <HistoryOutlined />,
+                label: '职位快照',
+              },
         ],
       },
       {
@@ -132,50 +145,45 @@ const RootLayout: React.FC = () => {
           {
             key: 'job',
             icon: <div className="i-hugeicons:job-search"></div>,
-            label: '职位'
+            label: '职位',
           },
           jobSnapshotConfig.enable
             ? {
-              key: 'jobSnapshot',
-              icon: <div className="i-qlementine-icons:snapshot-16"></div>,
-              label: '职位快照'
-            }
+                key: 'jobSnapshot',
+                icon: <div className="i-qlementine-icons:snapshot-16"></div>,
+                label: '职位快照',
+              }
             : null,
           {
             key: 'company',
             icon: <div className="i-mdi:company"></div>,
-            label: '公司'
+            label: '公司',
           },
           {
             key: 'tag',
             icon: <div className="i-mingcute:tag-line"></div>,
-            label: '标签'
+            label: '标签',
           },
           {
             key: 'companyTag',
             icon: <div className="i-mingcute:tag-line"></div>,
-            label: '公司标签'
+            label: '公司标签',
           },
           {
             key: 'jobTag',
             icon: <div className="i-mingcute:tag-line"></div>,
-            label: '职位标签'
-          },
-          {
-            key: 'jobPublic',
-            icon: <div className="i-material-symbols:public"></div>,
-            label: '职位公开数据'
+            label: '职位标签',
           },
           {
             key: 'companyComment',
             icon: <div className="i-mingcute:comment-line"></div>,
-            label: '公司评论'
+            label: '公司评论',
           },
         ],
       },
       {
         key: 'dataSource',
-        icon: <div className='i-material-symbols:dataset'></div>,
+        icon: <div className="i-material-symbols:dataset"></div>,
         label: '数据源',
         children: [...genDataSharePlanMenu()],
       },
@@ -197,7 +205,9 @@ const RootLayout: React.FC = () => {
           },
           {
             key: 'dataManagement',
-            icon: <div className='i-fluent-mdl2:data-management-settings'></div>,
+            icon: (
+              <div className="i-fluent-mdl2:data-management-settings"></div>
+            ),
             label: '数据管理',
           },
           {
@@ -267,11 +277,10 @@ const RootLayout: React.FC = () => {
   };
 
   const getKeysFromPath = (path) => {
-    const splitPathArray = path.split("/");
+    const splitPathArray = path.split('/');
     //skip index 0 path
     return splitPathArray.slice(1, splitPathArray.length);
-  }
-
+  };
 
   return (
     <Layout className="root" hasSider>

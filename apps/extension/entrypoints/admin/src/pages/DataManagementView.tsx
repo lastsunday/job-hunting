@@ -3,16 +3,11 @@ import {
   COMPANY_MAX_EXPORT_SIZE,
   COMPANY_TAG_MAX_EXPORT_SIZE,
   JOB_MAX_EXPORT_SIZE,
-  JOB_PUBLIC_MAX_EXPORT_SIZE,
   JOB_SNAPSHOT_MAX_EXPORT_SIZE,
   JOB_TAG_MAX_EXPORT_SIZE,
   COMPANY_COMMENT_MAX_EXPORT_SIZE,
 } from '@/common/config';
-import {
-  Card,
-  Flex,
-  message
-} from 'antd';
+import { Card, Flex, message } from 'antd';
 import React from 'react';
 import { useData } from '../hooks/data';
 import DataBackupRestore from './setting/DataBackupRestore';
@@ -23,9 +18,6 @@ const DataManagementView: React.FC = () => {
     getJobDataToExcelJsonArray,
     getJobDataTotal,
     saveJobData,
-    getJobPublicDataToExcelJsonArray,
-    getJobPublicDataTotal,
-    saveJobPublicData,
     getCompanyDataToExcelJsonArray,
     getCompanyDataTotal,
     saveCompanyData,
@@ -36,7 +28,6 @@ const DataManagementView: React.FC = () => {
     saveJobTagData,
     getJobTagDataTotal,
     JOB_FILE_HEADER,
-    JOB_PUBLIC_FILE_HEADER,
     COMPANY_FILE_HEADER,
     COMPANY_TAG_FILE_HEADER,
     JOB_TAG_FILE_HEADER,
@@ -44,7 +35,9 @@ const DataManagementView: React.FC = () => {
     saveJobSnapshotData,
     getJobSnapshotDataTotal,
     getJobSnapshotDataToJsonArray,
-    getCompanyCommentDataToExcelJsonArray, getCompanyCommentDataTotal, saveCompanyCommentData,
+    getCompanyCommentDataToExcelJsonArray,
+    getCompanyCommentDataTotal,
+    saveCompanyCommentData,
     COMPANY_COMMENT_FILE_HEADER,
   } = useData();
   const [messageApi, contextHolder] = message.useMessage();
@@ -55,7 +48,7 @@ const DataManagementView: React.FC = () => {
         <Card title="数据管理" variant="borderless" size="small">
           <Flex vertical gap={5}>
             <DatabaseBackupRestore />
-            <Card title="私有数据" variant='outlined' size='small'>
+            <Card title="私有数据" variant="outlined" size="small">
               <DataBackupRestore
                 title="职位"
                 getExcelJsonArrayFunction={getJobDataToExcelJsonArray}
@@ -110,20 +103,12 @@ const DataManagementView: React.FC = () => {
                 accept=".tar.xz"
               />
             </Card>
-            <Card title="公开数据" variant='outlined' size='small'>
-              <DataBackupRestore
-                title="职位公开数据"
-                getExcelJsonArrayFunction={getJobPublicDataToExcelJsonArray}
-                fileHeader={JOB_PUBLIC_FILE_HEADER}
-                saveDataFunction={saveJobPublicData}
-                getDataTotalFunction={getJobPublicDataTotal}
-                getMaxExportCount={async () => {
-                  return JOB_PUBLIC_MAX_EXPORT_SIZE;
-                }}
-              />
+            <Card title="其他数据" variant="outlined" size="small">
               <DataBackupRestore
                 title="公司评论"
-                getExcelJsonArrayFunction={getCompanyCommentDataToExcelJsonArray}
+                getExcelJsonArrayFunction={
+                  getCompanyCommentDataToExcelJsonArray
+                }
                 fileHeader={COMPANY_COMMENT_FILE_HEADER}
                 saveDataFunction={saveCompanyCommentData}
                 getDataTotalFunction={getCompanyCommentDataTotal}
@@ -134,7 +119,7 @@ const DataManagementView: React.FC = () => {
             </Card>
           </Flex>
         </Card>
-      </Flex >
+      </Flex>
     </>
   );
 };

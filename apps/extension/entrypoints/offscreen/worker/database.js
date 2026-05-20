@@ -13,6 +13,7 @@ import { ChangeLogV12 } from './changeLog/changeLogV12';
 import { ChangeLogV13 } from './changeLog/changeLogV13';
 import { ChangeLogV14 } from './changeLog/changeLogV14';
 import { ChangeLogV15 } from './changeLog/changeLogV15';
+import { ChangeLogV16 } from './changeLog/changeLogV16';
 import { ChangeLogV2 } from './changeLog/changeLogV2';
 import { ChangeLogV3 } from './changeLog/changeLogV3';
 import { ChangeLogV4 } from './changeLog/changeLogV4';
@@ -489,6 +490,7 @@ export const Database = {
           changelogList.push(new ChangeLogV13());
           changelogList.push(new ChangeLogV14());
           changelogList.push(new ChangeLogV15());
+          changelogList.push(new ChangeLogV16());
           initChangeLog(changelogList);
           await initDb({ dataDir });
           debugLog('Done initializing. Running app...');
