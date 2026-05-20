@@ -1,6 +1,4 @@
-import {
-  APP_ID
-} from '@/common/config';
+import { APP_ID } from '@/common/config';
 import { CheckCard } from '@ant-design/pro-components';
 import {
   Button,
@@ -25,7 +23,7 @@ import useDataSharePlanStore from '../store/DataSharePlanStore';
 import useJobSnapshotStore from '../store/JobSnapshotStore';
 import useSystemStore from '../store/SystemStore';
 import { Source } from '../hooks/analysis';
-import { LlmApi } from "@/common/api";
+import { LlmApi } from '@/common/api';
 const { Text, Link } = Typography;
 
 const version = __APP_VERSION__;
@@ -36,10 +34,6 @@ const SettingView: React.FC = () => {
     change,
     privateDataSyncEnableConfig,
     updatePrivateDataSyncEnableConfig,
-    enablePublic,
-    changePublic,
-    publicDataSyncEnableConfig,
-    updatePublicDataSyncEnableConfig,
   ] = useDataSharePlanStore(
     useShallow((state) => [
       state.enable,
@@ -47,18 +41,14 @@ const SettingView: React.FC = () => {
       state.privateDataSyncEnableConfig,
       state.updatePrivateDataSyncEnableConfig,
       state.enablePublic,
-      state.changePublic,
       state.publicDataSyncEnableConfig,
-      state.updatePublicDataSyncEnableConfig,
     ])
   );
   const [
     updateDataSyncEnableConfigLoading,
     setUpdateDataSyncEnableConfigLoading,
   ] = useState(false);
-  const [updateAnalysisLoading,
-    setUpdateAnalysisLoading,
-  ] = useState(false);
+  const [updateAnalysisLoading, setUpdateAnalysisLoading] = useState(false);
   const [analysisConfig, updateAnalysis] = useAnalysisStore(
     useShallow((state) => [state.config, state.update])
   );
@@ -66,7 +56,6 @@ const SettingView: React.FC = () => {
     useShallow((state) => [state.installAndLogin])
   );
   const [dataSharePlanEnable, setDataSharePlanEnable] = useState(false);
-  const [dataPublicEnable, setDataPublicEnable] = useState(false);
   const [analysisEnable, setAnalysisEnable] = useState(false);
   const [jobSnapshotEnable, setJobSnapshotEnable] = useState(false);
   const [jobSnapshotConfig, updateJobSnapshotConfig] = useJobSnapshotStore(
@@ -74,7 +63,6 @@ const SettingView: React.FC = () => {
   );
   const {
     JOB_FILE_HEADER,
-    JOB_PUBLIC_FILE_HEADER,
     COMPANY_FILE_HEADER,
     COMPANY_TAG_FILE_HEADER,
     JOB_TAG_FILE_HEADER,
@@ -135,16 +123,8 @@ const SettingView: React.FC = () => {
 
   const [privateDataSettingForm] = Form.useForm();
 
-  const public_data_setting = [
-    { label: '职位公开数据', name: 'jobPublic', value: false, header: JOB_PUBLIC_FILE_HEADER },
-  ];
-
-  const [publicDataSettingForm] = Form.useForm();
-
-
   useEffect(() => {
     setDataSharePlanEnable(enable);
-    setDataPublicEnable(enablePublic);
     setAnalysisEnable(analysisConfig.enable);
     setJobSnapshotEnable(jobSnapshotConfig.enable);
   }, []);
@@ -298,7 +278,7 @@ const SettingView: React.FC = () => {
         <Card title="GitHub App" variant="borderless" size="small">
           <Flex vertical gap={5}>
             <Flex>
-              <Tooltip title="安装GitHubApp获得评论、数据云备份和分享的能力">
+              <Tooltip title="安装GitHubApp获得评论、数据云备份的能力">
                 <Button
                   onClick={() => {
                     installAndLogin();
@@ -367,7 +347,11 @@ const SettingView: React.FC = () => {
               value={analysisEnable}
             >
               <CheckCard title="开启" description="开启职位分析" value={true} />
-              <CheckCard title="关闭" description="关闭职位分析" value={false} />
+              <CheckCard
+                title="关闭"
+                description="关闭职位分析"
+                value={false}
+              />
             </CheckCard.Group>
           </Card>
         </Spin>
@@ -392,7 +376,7 @@ const SettingView: React.FC = () => {
         </Card>
         <Card
           title=<Flex align="center" gap={5}>
-            <Text>数据云备份和分享</Text>
+            <Text>数据备份</Text>
           </Flex>
           variant="borderless"
           size="small"
@@ -464,83 +448,6 @@ const SettingView: React.FC = () => {
                             setUpdateDataSyncEnableConfigLoading(true);
                             await updatePrivateDataSyncEnableConfig(
                               privateDataSettingForm.getFieldsValue()
-                            );
-                          } finally {
-                            setUpdateDataSyncEnableConfigLoading(false);
-                          }
-                        }}
-                      ></Switch>
-                    </Form.Item>
-                  );
-                })}
-              </Form>
-            </Card>
-            <Card
-              title=<Flex align="center" gap={5}>
-                <Text>公开数据</Text>
-                <Switch
-                  checkedChildren="公开数据共享开启"
-                  unCheckedChildren="公开数据共享关闭"
-                  size="small"
-                  checked={dataPublicEnable}
-                  onChange={async (checked) => {
-                    try {
-                      setUpdateDataSyncEnableConfigLoading(true);
-                      if (checked) {
-                        await changePublic(true);
-                        setDataPublicEnable(true);
-                      } else {
-                        await changePublic(false);
-                        setDataPublicEnable(false);
-                      }
-                    } finally {
-                      setUpdateDataSyncEnableConfigLoading(false);
-                    }
-                  }}
-                ></Switch>
-              </Flex>
-              variant="borderless"
-              size="small"
-            >
-              <Form
-                form={publicDataSettingForm}
-                labelCol={{ span: 4 }}
-                wrapperCol={{ span: 14 }}
-                layout="horizontal"
-                disabled={!dataPublicEnable}
-                initialValues={publicDataSyncEnableConfig}
-              >
-                {public_data_setting.map((item) => {
-                  return (
-                    <Form.Item
-                      key={item.name}
-                      label={item.label}
-                      name={item.name}
-                      tooltip={{
-                        color: 'white',
-                        placement: 'right',
-                        title: (
-                          <Flex wrap gap={3}>
-                            {item.header[item.header.length - 1].map((name) => {
-                              return (
-                                <Tag
-                                  key={`${item.name}${name}`}
-                                  color="magenta"
-                                >
-                                  {name}
-                                </Tag>
-                              );
-                            })}
-                          </Flex>
-                        ),
-                      }}
-                    >
-                      <Switch
-                        onChange={async () => {
-                          try {
-                            setUpdateDataSyncEnableConfigLoading(true);
-                            await updatePublicDataSyncEnableConfig(
-                              publicDataSettingForm.getFieldsValue()
                             );
                           } finally {
                             setUpdateDataSyncEnableConfigLoading(false);
