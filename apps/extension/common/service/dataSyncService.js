@@ -1,12 +1,28 @@
-import dayjs from "dayjs";
-import { genIdFromText } from "../../common/utils";
-import { parse } from "@/common/utils/date";
-export async function getMergeDataList(items, idColumn, getByIdsCallback, customAddRecordLogic) {
-  return getMergeDataListByOption(items, idColumn, getByIdsCallback, customAddRecordLogic);
+import dayjs from 'dayjs';
+import { genIdFromText } from '../../common/utils';
+import { parse } from '@/common/utils/date';
+export async function getMergeDataList(
+  items,
+  idColumn,
+  getByIdsCallback,
+  customAddRecordLogic
+) {
+  return getMergeDataListByOption(
+    items,
+    idColumn,
+    getByIdsCallback,
+    customAddRecordLogic
+  );
 }
 
-export async function getMergeDataListByOption(items, idColumn, getByIdsCallback, customAddRecordLogic, { onlyUpdate = false } = {}) {
-  const ids = items.flatMap(item => item[idColumn]);
+export async function getMergeDataListByOption(
+  items,
+  idColumn,
+  getByIdsCallback,
+  customAddRecordLogic,
+  { onlyUpdate = false } = {}
+) {
+  const ids = items.flatMap((item) => item[idColumn]);
   const existsRecordList = await getByIdsCallback(ids);
   const existsRecordIdAndObjectMap = new Map();
   for (let i = 0; i < existsRecordList.length; i++) {
@@ -24,7 +40,11 @@ export async function getMergeDataListByOption(items, idColumn, getByIdsCallback
           targetList.push(addItem);
         }
       } else {
-        if (dayjs(newRecord.createDatetime).isAfter(dayjs(existsRecord.createDatetime))) {
+        if (
+          dayjs(newRecord.createDatetime).isAfter(
+            dayjs(existsRecord.createDatetime)
+          )
+        ) {
           targetList.push(newRecord);
         } else {
           //skip
@@ -39,30 +59,62 @@ export async function getMergeDataListByOption(items, idColumn, getByIdsCallback
   return targetList;
 }
 
-export async function getMergeDataListForCompany(items, idColumn, getByIdsCallback) {
-  return await getMergeDataList(items, idColumn, getByIdsCallback, (existsRecord, newRecord) => {
-    if (dayjs(newRecord.sourceRefreshDatetime).isAfter(dayjs(existsRecord.sourceRefreshDatetime))) {
-      return newRecord;
-    } else {
-      //skip
+export async function getMergeDataListForCompany(
+  items,
+  idColumn,
+  getByIdsCallback
+) {
+  return await getMergeDataList(
+    items,
+    idColumn,
+    getByIdsCallback,
+    (existsRecord, newRecord) => {
+      if (
+        dayjs(newRecord.sourceRefreshDatetime).isAfter(
+          dayjs(existsRecord.sourceRefreshDatetime)
+        )
+      ) {
+        return newRecord;
+      } else {
+        //skip
+      }
     }
-  });
+  );
 }
 
-export async function getMergeDataListForCompanyComment(items, idColumn, getByIdsCallback) {
+export async function getMergeDataListForCompanyComment(
+  items,
+  idColumn,
+  getByIdsCallback
+) {
   return await getMergeDataList(items, idColumn, getByIdsCallback);
 }
 
-export async function getMergeDataListForJob(items, idColumn, getByIdsCallback) {
-  return await getMergeDataList(items, idColumn, getByIdsCallback, getValidJobData);
+export async function getMergeDataListForJob(
+  items,
+  idColumn,
+  getByIdsCallback
+) {
+  return await getMergeDataList(
+    items,
+    idColumn,
+    getByIdsCallback,
+    getValidJobData
+  );
 }
 
 export const getValidJobData = (existsRecord, newRecord) => {
   let resultRecord = {};
-  if (dayjs(newRecord.updateDatetime).isAfter(dayjs(existsRecord.updateDatetime))) {
+  if (
+    dayjs(newRecord.updateDatetime).isAfter(dayjs(existsRecord.updateDatetime))
+  ) {
     resultRecord = Object.assign(resultRecord, newRecord);
     if (dayjs(newRecord.createDatetime).isAfter(existsRecord.createDatetime)) {
       resultRecord.createDatetime = existsRecord.createDatetime;
+    }
+    //新纪录没有描述，则获取旧纪录的描述
+    if (!newRecord.jobDescription) {
+      resultRecord.jobDescription = existsRecord.jobDescription;
     }
     //新纪录没有公司全称，则获取旧纪录的公司全称
     if (!newRecord.isFullCompanyName && existsRecord.isFullCompanyName) {
@@ -78,6 +130,11 @@ export const getValidJobData = (existsRecord, newRecord) => {
       resultRecord.createDatetime = newRecord.createDatetime;
       modify = true;
     }
+    //当前纪录没有描述，则获取新记录的描述
+    if (!existsRecord.jobDescription && newRecord.jobDescription) {
+      resultRecord.jobDescription = newRecord.jobDescription;
+      modify = true;
+    }
     //当前纪录没有公司全称，则获取进来的纪录的公司全称
     if (!existsRecord.isFullCompanyName && newRecord.isFullCompanyName) {
       resultRecord.jobCompanyName = newRecord.jobCompanyName;
@@ -90,31 +147,51 @@ export const getValidJobData = (existsRecord, newRecord) => {
       return null;
     }
   }
-}
+};
 
-export async function getMergeDataListForJobPublic(items, idColumn, getJobByIdsCallback, getJobPublicByIdsCallback) {
-  const jobPublicList = await getMergeDataListByOption(items, idColumn, getJobPublicByIdsCallback, (existsRecord, newRecord) => {
-    if (parse(existsRecord.createDatetime).isAfter(newRecord.createDatetime)) {
-      return newRecord;
-    } else {
-      return;
+export async function getMergeDataListForJobPublic(
+  items,
+  idColumn,
+  getJobByIdsCallback,
+  getJobPublicByIdsCallback
+) {
+  const jobPublicList = await getMergeDataListByOption(
+    items,
+    idColumn,
+    getJobPublicByIdsCallback,
+    (existsRecord, newRecord) => {
+      if (
+        parse(existsRecord.createDatetime).isAfter(newRecord.createDatetime)
+      ) {
+        return newRecord;
+      } else {
+        return;
+      }
     }
-  });
-  const jobList = await getMergeDataListByOption(items, idColumn, getJobByIdsCallback, (existsRecord, newRecord) => {
-    if (parse(existsRecord.createDatetime).isAfter(newRecord.createDatetime)) {
-      //返回修改首次扫描时间后原纪录
-      const cloneObject = Object.assign({}, existsRecord);
-      cloneObject.createDatetime = newRecord.createDatetime;
-      return cloneObject;
-    } else {
-      return null;
-    }
-  }, { onlyUpdate: true });
+  );
+  const jobList = await getMergeDataListByOption(
+    items,
+    idColumn,
+    getJobByIdsCallback,
+    (existsRecord, newRecord) => {
+      if (
+        parse(existsRecord.createDatetime).isAfter(newRecord.createDatetime)
+      ) {
+        //返回修改首次扫描时间后原纪录
+        const cloneObject = Object.assign({}, existsRecord);
+        cloneObject.createDatetime = newRecord.createDatetime;
+        return cloneObject;
+      } else {
+        return null;
+      }
+    },
+    { onlyUpdate: true }
+  );
   return { jobPublicList, jobList };
 }
 
 export async function getMergeDataListForCompanyTag(items, getByIdsCallback) {
-  const ids = items.flatMap(item => genIdFromText(item.companyName));
+  const ids = items.flatMap((item) => genIdFromText(item.companyName));
   const targetList = [];
   const existsRecordList = await getByIdsCallback(ids);
   const companyAndTagArrayMap = new Map();
@@ -127,7 +204,7 @@ export async function getMergeDataListForCompanyTag(items, getByIdsCallback) {
     companyAndTagArrayMap.get(name).push(existsRecord.tagName);
   }
   for (let i = 0; i < items.length; i++) {
-    const item = items[i]
+    const item = items[i];
     const companyName = item.companyName;
     if (companyAndTagArrayMap.has(companyName)) {
       const tags = item.tags;
@@ -151,22 +228,48 @@ export async function getMergeDataListForCompanyTag(items, getByIdsCallback) {
   return targetList;
 }
 
-export async function getMergeDataListForTag(items, idColumn, getByIdsCallback) {
-  return await getMergeDataList(items, idColumn, getByIdsCallback, (existsRecord, newRecord) => {
-    if (dayjs(newRecord.updateDatetime).isAfter(dayjs(existsRecord.updateDatetime))) {
-      return newRecord;
-    } else {
-      //skip
+export async function getMergeDataListForTag(
+  items,
+  idColumn,
+  getByIdsCallback
+) {
+  return await getMergeDataList(
+    items,
+    idColumn,
+    getByIdsCallback,
+    (existsRecord, newRecord) => {
+      if (
+        dayjs(newRecord.updateDatetime).isAfter(
+          dayjs(existsRecord.updateDatetime)
+        )
+      ) {
+        return newRecord;
+      } else {
+        //skip
+      }
     }
-  });
+  );
 }
 
-export async function getMergeDataListForJobSnapshot(items, idColumn, getByIdsCallback) {
-  return await getMergeDataList(items, idColumn, getByIdsCallback, (existsRecord, newRecord) => {
-    if (dayjs(newRecord.updateDatetime).isAfter(dayjs(existsRecord.updateDatetime))) {
-      return newRecord;
-    } else {
-      //skip
+export async function getMergeDataListForJobSnapshot(
+  items,
+  idColumn,
+  getByIdsCallback
+) {
+  return await getMergeDataList(
+    items,
+    idColumn,
+    getByIdsCallback,
+    (existsRecord, newRecord) => {
+      if (
+        dayjs(newRecord.updateDatetime).isAfter(
+          dayjs(existsRecord.updateDatetime)
+        )
+      ) {
+        return newRecord;
+      } else {
+        //skip
+      }
     }
-  });
+  );
 }

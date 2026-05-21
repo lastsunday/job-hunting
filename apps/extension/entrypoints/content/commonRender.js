@@ -4,9 +4,6 @@ import {
   PLATFORM_BOSS,
   PLATFORM_JOBSDB,
   PLATFORM_LIEPIN,
-  TAG_CREDIT_BJ_BLACK_LIST,
-  TAG_IT_BLACK_LIST,
-  TAG_IT_BLACK_LIST_2,
   TAG_RUOBILIN_BLACK_LIST,
   TAG_SOURCE_TYPE_CUSTOM,
 } from '../../common';
@@ -73,7 +70,7 @@ const { isAgeLimitFromDescription, isAgeLimitFromDescriptionBy35 } = useJob();
 export function renderTimeTag(
   divElement,
   jobDTO,
-  { jobStatusDesc, platform, analysisConfig } = {}
+  { jobStatusDesc, platform, analysisConfig, getFullJobInfoCallback } = {}
 ) {
   if (jobDTO == null || jobDTO == undefined) {
     throw new Error('jobDTO is required');
@@ -104,9 +101,9 @@ export function renderTimeTag(
   createDatetimeTagWrapper.classList.add('__time_tag_create_datetime');
 
   const createDatetimeTag = document.createElement('div');
-  createDatetimeTag.textContent = `<初见 ${convertTimeOffsetToHumanReadable(
+  createDatetimeTag.textContent = `<${convertTimeOffsetToHumanReadable(
     jobDTO.createDatetime
-  )}>`;
+  )}见过>`;
   createDatetimeTag.classList.add('__time_tag_base_text_font');
   createDatetimeTag.classList.add('__time_tag_create_datetime_text_font');
 
@@ -195,39 +192,75 @@ export function renderTimeTag(
     );
     divElement.style = getRenderTimeStyle(minDatetime ?? null, jobStatusDesc);
   }
-  if (analysisConfig && analysisConfig.enable) {
-    const source = analysisConfig.source;
-    const url = analysisConfig.url;
-    const model = analysisConfig.model;
-    const token = analysisConfig.token;
-    const auto = analysisConfig.autoAnalysisPages
-      ? analysisConfig.autoAnalysisPages.includes(CONTENT_SEARCH)
-      : false;
-    const demand = `${jobDTO.jobName}\n${jobDTO.jobDescription}`;
-    const resume = analysisConfig.resume;
-    const element = document.createElement('job-analysis-element');
-    element.classList.add('__job_analysis');
-    element.url = url;
-    element.model = model;
-    element.token = token;
-    element.demand = demand;
-    element.resume = resume;
-    element.source = source;
-    element.auto = auto;
-    if (source === 'EXTENSION') {
-      element.getResponse = async (_url, body) => {
-        return {
-          json: async () => {
-            return await LlmApi.llmCompletion(body);
-          },
+
+  const renderAnalysis = ({ forceAuto } = {}) => {
+    if (analysisConfig && analysisConfig.enable) {
+      const source = analysisConfig.source;
+      const url = analysisConfig.url;
+      const model = analysisConfig.model;
+      const token = analysisConfig.token;
+      const auto = analysisConfig.autoAnalysisPages
+        ? analysisConfig.autoAnalysisPages.includes(CONTENT_SEARCH)
+        : false;
+      const demand = `${jobDTO.jobName}\n${jobDTO.jobDescription}`;
+      const resume = analysisConfig.resume;
+      const element = document.createElement('job-analysis-element');
+      element.classList.add('__job_analysis');
+      element.url = url;
+      element.model = model;
+      element.token = token;
+      element.demand = demand;
+      element.resume = resume;
+      element.source = source;
+      element.auto = forceAuto ? forceAuto : auto;
+      if (source === 'EXTENSION') {
+        element.getResponse = async (_url, body) => {
+          return {
+            json: async () => {
+              return await LlmApi.llmCompletion(body);
+            },
+          };
         };
-      };
+      }
+      element.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+      });
+      divElement.appendChild(element);
     }
-    element.addEventListener('click', (e) => {
+  };
+
+  if (
+    getFullJobInfoCallback &&
+    (jobDTO.jobDescription == null || jobDTO.jobDescription == undefined)
+  ) {
+    const getFullJobInfoButton = document.createElement('div');
+    getFullJobInfoButton.className = '__get_full_job_info_button';
+    if (analysisConfig && analysisConfig.enable) {
+      getFullJobInfoButton.textContent = '💭点击职位分析';
+    } else {
+      getFullJobInfoButton.textContent = '🖱️点击获取完整职位信息';
+    }
+    getFullJobInfoButton.addEventListener('click', async (e) => {
       e.stopPropagation();
       e.preventDefault();
+      let queryDTO = null;
+      let jobDTOList = await JobApi.getJobBrowseInfoByIds([jobDTO.jobId]);
+      queryDTO = jobDTOList[0];
+      if (
+        queryDTO.jobDescription == null ||
+        queryDTO.jobDescription == undefined
+      ) {
+        getFullJobInfoButton.textContent = '⌛︎正获取完整职位信息';
+        queryDTO = await getFullJobInfoCallback();
+      }
+      divElement.parentElement.title = queryDTO.jobDescription;
+      renderAnalysis({ forceAuto: true });
+      getFullJobInfoButton.parentElement.removeChild(getFullJobInfoButton);
     });
-    divElement.appendChild(element);
+    divElement.append(getFullJobInfoButton);
+  } else {
+    renderAnalysis();
   }
 
   divElement.classList.add('__time_tag_base_text_font');
@@ -1261,11 +1294,13 @@ function createCompanyInfo(
       fixValidHummanButton.textContent =
         '一直查询失败？点击该按钮去尝试解除人机验证吧！';
       if (!item.isFullCompanyName && getCompanyInfoFunction) {
-        let targetCompanyName = await getCompanyInfoFunction(
+        let targetCompanyName = null;
+        const { companyName, jobDescription } = await getCompanyInfoFunction(
           item.jobCompanyApiUrl,
           { item }
         );
-        jobCardItemDom.title = item.jobDescription;
+        targetCompanyName = companyName;
+        jobCardItemDom.title = jobDescription;
         if (targetCompanyName) {
           targetCompanyName = companyNameConvert(targetCompanyName);
           if (companyName == targetCompanyName) {
