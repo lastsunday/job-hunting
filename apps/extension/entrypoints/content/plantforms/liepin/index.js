@@ -39,30 +39,30 @@ function getListByNode(node) {
 // 监听节点，判断职位列表是否被挂载
 function mutationContainer() {
   return new Promise((resolve, reject) => {
-    const dom = document.querySelector('.content-left-section');
-    let targetDeom = null;
+    const dom = document.querySelector('.common-page-container');
     const observer = new MutationObserver(function (childList, obs) {
-      const isAdd = (childList || []).some((item) => {
+      (childList || []).some((item) => {
         const nodes = item?.addedNodes;
-        if (nodes) {
-          for (let i = 0; i < nodes.length; i++) {
-            const nodeItem = nodes[i];
+        for (let i = 0; i < nodes.length; i++) {
+          const nodeItem = nodes[i];
+          const item = nodeItem.querySelector('.job-list-box');
+          if (item) {
+            resolve(item);
+            return true;
+          } else {
             if (nodeItem.className == 'job-list-box') {
-              targetDeom = nodeItem;
-              return nodeItem;
+              resolve(nodeItem);
+              return true;
             }
           }
-          return false;
-        } else {
-          return false;
         }
       });
-      return isAdd ? resolve(targetDeom) : reject('未找到职位列表');
+      return false;
     });
 
     observer.observe(dom, {
       childList: true,
-      subtree: false,
+      subtree: true,
     });
   });
 }
