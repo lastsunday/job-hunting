@@ -706,3 +706,16 @@ div[data-search-sol-meta] {
   white-space: normal;
   padding-top: 3px;
 }
+
+.__get_full_job_info_button {
+  background-color: mediumblue;
+  color: white !important;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-radius: 5px;
+  font-size: 12px !important;
+  cursor: pointer;
+  display: inline-block;
+  margin: 0px;
+  text-wrap: nowrap;
+}
