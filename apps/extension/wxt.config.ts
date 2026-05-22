@@ -54,20 +54,19 @@ export default defineConfig({
   },
   hooks: {
     'build:done'(wxt, output) {
-      const srcDir = wxt.config.srcDir;
+      const extRoot = wxt.config.root;
+      const workspaceRoot = resolve(extRoot, "../..");
       const outDir = wxt.config.outDir;
-      const changelogName = "CHANGELOG.md";
-      const packageName = "package.json";
-      const licenseName = "LICENSE";
-      copyFileSync(resolve(srcDir, changelogName), resolve(outDir, changelogName));
-      copyFileSync(resolve(srcDir, packageName), resolve(outDir, packageName));
-      copyFileSync(resolve(srcDir, licenseName), resolve(outDir, licenseName));
+      copyFileSync(resolve(extRoot, "CHANGELOG.md"), resolve(outDir, "CHANGELOG.md"));
+      copyFileSync(resolve(extRoot, "package.json"), resolve(outDir, "package.json"));
+      copyFileSync(resolve(extRoot, "LICENSE"), resolve(outDir, "LICENSE"));
       if (wxt.config.mode == 'production') {
-        copyFileSync(resolve(srcDir, "node_modules", "@electric-sql", "pglite", "dist", "pglite.wasm"), resolve(outDir, "assets", "pglite.wasm"));
-        copyFileSync(resolve(srcDir, "node_modules", "@electric-sql", "pglite", "dist", "pglite.data"), resolve(outDir, "assets", "pglite.data"));
-        copyFileSync(resolve(srcDir, "node_modules", "@electric-sql", "pglite-tools", "dist", "pg_dump.wasm"), resolve(outDir, "assets", "pg_dump.wasm"));
-        copyFileSync(resolve(srcDir, "node_modules", "libarchive.js", "dist", "worker-bundle.js"), resolve(outDir, "worker-bundle.js"));
-        copyFileSync(resolve(srcDir, "node_modules", "libarchive.js", "dist", "libarchive.wasm"), resolve(outDir, "libarchive.wasm"));
+        const nm = resolve(workspaceRoot, "node_modules");
+        copyFileSync(resolve(nm, "@electric-sql", "pglite", "dist", "pglite.wasm"), resolve(outDir, "assets", "pglite.wasm"));
+        copyFileSync(resolve(nm, "@electric-sql", "pglite", "dist", "pglite.data"), resolve(outDir, "assets", "pglite.data"));
+        copyFileSync(resolve(nm, "@electric-sql", "pglite-tools", "dist", "pg_dump.wasm"), resolve(outDir, "assets", "pg_dump.wasm"));
+        copyFileSync(resolve(nm, "libarchive.js", "dist", "worker-bundle.js"), resolve(outDir, "worker-bundle.js"));
+        copyFileSync(resolve(nm, "libarchive.js", "dist", "libarchive.wasm"), resolve(outDir, "libarchive.wasm"));
       }
     },
   },

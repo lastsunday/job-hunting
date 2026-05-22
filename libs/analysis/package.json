@@ -20,22 +20,5 @@
   "nx": {
     "sourceRoot": "libs/analysis/src",
     "projectType": "library"
-  },
-  "devDependencies": {
-    "@types/node": "^22.19.7",
-    "@types/react": "^19.2.9",
-    "@types/react-dom": "^19.2.3",
-    "@types/web": "^0.0.206",
-    "@vitest/browser": "^3.2.4",
-    "jsonc-eslint-parser": "^2.4.2",
-    "playwright": "^1.57.0",
-    "react": "^19.2.3",
-    "react-dom": "^19.2.3",
-    "vite": "^7.3.2",
-    "vitest": "^3.2.4"
-  },
-  "dependencies": {
-    "@lit/react": "^1.0.8",
-    "lit": "^3.3.2"
   }
 }
