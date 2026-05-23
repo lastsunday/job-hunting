@@ -2,7 +2,6 @@ import { TAG_SOURCE_TYPE_CUSTOM } from '@/common';
 import { cleanHTMLTag, dateToStr } from '@/common/utils';
 import { QuestionCircleOutlined } from '@ant-design/icons';
 import { Descriptions, DescriptionsProps, Flex, Tag, Typography } from 'antd';
-import Link from 'antd/es/typography/Link';
 import Markdown from 'marked-react';
 import { CompanyData } from '../data/CompanyData';
 import { JobData } from '../data/JobData';
@@ -10,7 +9,7 @@ import { useJob } from '../hooks/job';
 import CustomTag from './CustomTag';
 import styles from './JobItemTable.module.css';
 const { platformFormat } = useJob();
-const { Text } = Typography;
+const { Text, Link } = Typography;
 
 import { useTag } from '../hooks/tag';
 const { convertToTagData } = useTag();

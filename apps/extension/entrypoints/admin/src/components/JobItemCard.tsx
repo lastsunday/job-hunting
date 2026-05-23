@@ -1,16 +1,12 @@
-import { Button, Badge, Dropdown, Flex, Space, Tag, Typography, Modal } from 'antd';
-const { Text } = Typography;
+import { Button, Badge, Card, Dropdown, Flex, Modal, Space, Tag, Typography } from 'antd';
+const { Text, Link, Paragraph } = Typography;
 
 import {
   cleanHTMLTag,
   convertTimeOffsetToHumanReadable,
   isToday,
 } from '@/common/utils';
-import Link from 'antd/es/typography/Link';
 import styles from './JobItemCard.module.css';
-
-import Card from 'antd/es/card/Card';
-import Paragraph from 'antd/es/typography/Paragraph';
 import dayjs from 'dayjs';
 import { useJob } from '../hooks/job';
 import { useTag } from '../hooks/tag';

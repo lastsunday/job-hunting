@@ -1,7 +1,6 @@
 import { Card, Col, Flex, Popover, Row, Typography } from 'antd';
-const { Text } = Typography;
+const { Text, Link } = Typography;
 import { logo } from '../assets';
-import Link from 'antd/lib/typography/Link';
 import './NavigatorView.css';
 
 const functionList = [

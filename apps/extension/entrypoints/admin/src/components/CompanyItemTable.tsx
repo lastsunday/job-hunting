@@ -1,8 +1,7 @@
 import { Descriptions, DescriptionsProps, Tag, Typography } from 'antd';
 import { CompanyData } from '../data/CompanyData';
-import Link from 'antd/es/typography/Link';
 import { QuestionCircleOutlined } from '@ant-design/icons';
-const { Text } = Typography;
+const { Text, Link } = Typography;
 import { dateToStr, convertNumberToHumanReadable } from '@/common/utils';
 import Markdown from 'marked-react';
 

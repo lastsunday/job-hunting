@@ -21,7 +21,6 @@ import TagView from './pages/data/TagView';
 import DataSourceView from './pages/dataSharePlan/DataSourceView';
 import TaskStatisticView from './pages/dataSharePlan/StatisticView';
 import TaskDetailView from './pages/dataSharePlan/TaskDetailView';
-import DataSharePlanWelcomeView from './pages/dataSharePlan/WelcomeView';
 import AnalysisWelcomeView from './pages/analysis/WelcomeView';
 import AnalysisSettingView from './pages/analysis/SettingView';
 import useApiStore from './store/ApiStore';
@@ -39,14 +38,14 @@ const App: React.FC = () => {
 
   const [authStoreInit] = useAuthStore(useShallow((state) => [state.init]));
   const [dataSharePlanStoreInit] = useDataSharePlanStore(
-    useShallow((state) => [state.init])
+    useShallow((state) => [state.init]),
   );
   const [analysisStoreInit] = useAnalysisStore(
-    useShallow((state) => [state.init])
+    useShallow((state) => [state.init]),
   );
   const [updateApiInfo] = useApiStore(useShallow((state) => [state.update]));
   const [jobSnapshotStoreInit] = useJobSnapshotStore(
-    useShallow((state) => [state.init])
+    useShallow((state) => [state.init]),
   );
   useEffect(() => {
     const initStore = async () => {
@@ -101,10 +100,6 @@ const App: React.FC = () => {
           <Route path="data/jobTag" element={<JobTagView />} />
           <Route path="data/companyTag" element={<CompanyTagView />} />
           <Route path="data/companyComment" element={<CompanyCommentView />} />
-          <Route
-            path="dataSharePlan/dataSharePlanWelcome"
-            element={<DataSharePlanWelcomeView />}
-          />
           <Route path="task/taskStatistic" element={<TaskStatisticView />} />
           <Route path="task/taskDetail" element={<TaskDetailView />} />
           <Route path="dataSource/list" element={<DataSourceView />} />
