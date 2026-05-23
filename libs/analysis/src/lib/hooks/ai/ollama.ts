@@ -1,4 +1,4 @@
-import { createBody, defaultHrDesc, MatchResult } from "./index.js";
+import { createBody, MatchResult } from './index.js';
 
 export interface Message {
   content: string;
@@ -20,21 +20,37 @@ export interface ChatResult {
 }
 
 export function useOllama() {
-
-  const analyze = async ({ url = "http://localhost:11434", model = "deepseek-r1:7b", hr = defaultHrDesc, demand = '', resume = '', getResponse = (url: string, body: string | object): Promise<{ json: () => object }> => {
-    return fetch(`${url}/api/chat`, {
-      method: "POST", body: body.constructor === Object ? JSON.stringify(body) : body as string
-    });
-  } } = {}): Promise<MatchResult> => {
+  const analyze = async ({
+    url = 'http://localhost:11434',
+    model = 'deepseek-r1:7b',
+    hr = '',
+    demand = '',
+    resume = '',
+    getResponse = (
+      url: string,
+      body: string | object,
+    ): Promise<{ json: () => any }> => {
+      return fetch(`${url}/api/chat`, {
+        method: 'POST',
+        body:
+          body.constructor === Object ? JSON.stringify(body) : (body as string),
+      });
+    },
+  } = {}): Promise<MatchResult> => {
     const chat = async () => {
-      const response = await getResponse(url, JSON.stringify(createBody({ model, hr, demand, resume })));
-      const chatResult = await response.json() as ChatResult
-      const jsonText = (chatResult.message.content.match(/```json(?<json>[\s\S]*)```/)?.groups?.json) as string;
+      const response = await getResponse(
+        url,
+        JSON.stringify(createBody({ model, hr, demand, resume })),
+      );
+      const chatResult = (await response.json()) as ChatResult;
+      const jsonText = chatResult.message.content.match(
+        /```json(?<json>[\s\S]*)```/,
+      )?.groups?.json as string;
       const matchResult = JSON.parse(jsonText);
       return matchResult;
-    }
+    };
     return await chat();
-  }
+  };
 
-  return { analyze }
+  return { analyze };
 }
