@@ -1,6 +1,5 @@
 import { initBridge } from '@/common/api/common';
 import { errorLog } from '@/common/log';
-import '@ant-design/v5-patch-for-react-19';
 import { ConfigProvider } from 'antd';
 import zhCN from 'antd/es/locale/zh_CN';
 import 'dayjs/locale/zh-cn';
@@ -34,7 +33,7 @@ async function init() {
             <App />
           </React.Suspense>
         </ConfigProvider>
-      )
+      ),
     );
   } else {
     errorLog('Failed to find the root element.');

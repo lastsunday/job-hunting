@@ -167,5 +167,6 @@
         "linter": "eslint"
       }
     }
-  }
+  },
+  "analytics": false
 }

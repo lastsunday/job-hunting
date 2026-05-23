@@ -2,10 +2,9 @@ import { ShareAltOutlined, UserOutlined } from '@ant-design/icons';
 import { Avatar, Flex, message, Modal, Popconfirm, Progress, Tag, Tooltip, Typography } from 'antd';
 import React from 'react';
 import styles from "./HeaderRight.module.css";
-const { Text } = Typography;
+const { Text, Link } = Typography;
 
 import { convertToAbbreviation, dateToStr } from "@/common/utils";
-import Link from 'antd/es/typography/Link';
 import Markdown from 'marked-react';
 import { useShallow } from 'zustand/shallow';
 import useApiStore from "../store/ApiStore";
