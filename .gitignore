@@ -60,3 +60,7 @@ application.yaml
 # book
 docs/book/
 
+
+.claude/worktrees
+.nx/polygraph
+.nx/self-healing

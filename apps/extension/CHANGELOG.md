@@ -1,3 +1,52 @@
+## 4.2.0 (2026-05-23)
+
+### 🚀 Features
+
+- 新增职位分析成功详情(匹配规则)，错误详情和调试信息
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
+## 4.1.0 (2026-05-21)
+
+### 🗑️ Removed
+
+- 移除自动化浏览网页的特性
+- 移除公开数据共享功能
+
+### 🩹 Fixes
+
+- 修复猎聘首次加载没有渲染的问题
+- 修复猎聘职位描述获取逻辑
+- 优化职位查看次数和职位展示次数相关排版
+- 清理无效的风评检测
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
+## 4.0.2 (2026-05-19)
+
+### 🩹 Fixes
+
+- 修复数据库调试和数据源编辑的输入框异常导致的白屏问题
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+
+## 4.0.1 (2026-05-19)
+
+### 🩹 Fixes
+
+- 修复智联招聘数据获取和渲染异常的问题
+
+### ❤️ Thank You
+
+- lastsunday @lastsunday
+- stellata @stellata
+
 ## 4.0.0 (2026-03-07)
 
 ### ⚠️ Noteworthy

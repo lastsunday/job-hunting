@@ -100,9 +100,7 @@ export default defineContentScript({
 
           // liepin
           if (
-            responseURL.indexOf(
-              '/api/com.liepin.searchfront4c.pc-search-job'
-            ) !== -1
+            responseURL.endsWith('/api/com.liepin.searchfront4c.pc-search-job')
           ) {
             getLiepinData(data?.response);
           }
@@ -135,7 +133,13 @@ export default defineContentScript({
       const script = document.createElement('script');
       script.setAttribute('type', 'text/javascript');
       script.setAttribute('src', chrome.runtime.getURL('proxyAjax.js'));
-      document.documentElement.appendChild(script);
+      const insertScript = () => {
+        const target = document.head || document.documentElement;
+        if (target) {
+          target.insertBefore(script, target.firstChild);
+        }
+      };
+      insertScript();
     })();
   },
 });

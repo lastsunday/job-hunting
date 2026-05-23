@@ -1,8 +1,6 @@
 export class DataSharePlanConfigDTO {
   enable = false;
   privateDataSyncEnableConfig = new PrivateDataSyncEnableConfig();
-  enablePublic = false;
-  publicDataSyncEnableConfig = new PublicDataSyncEnableConfig();
 }
 
 export class PrivateDataSyncEnableConfig {

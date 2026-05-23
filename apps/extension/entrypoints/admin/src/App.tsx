@@ -11,7 +11,6 @@ import DashboardView from './pages/DashboardView';
 import FileView from './pages/FileView';
 import SettingView from './pages/SettingView';
 import DatabaseView from './pages/DatabaseView';
-import AutomateView from './pages/assistant/AutomateView';
 import FavoriteJobView from './pages/assistant/FavoriteJobView';
 import HistoryJobView from './pages/assistant/HistoryJobView';
 import CompanyTagView from './pages/data/CompanyTagView';
@@ -22,7 +21,6 @@ import TagView from './pages/data/TagView';
 import DataSourceView from './pages/dataSharePlan/DataSourceView';
 import TaskStatisticView from './pages/dataSharePlan/StatisticView';
 import TaskDetailView from './pages/dataSharePlan/TaskDetailView';
-import DataSharePlanWelcomeView from './pages/dataSharePlan/WelcomeView';
 import AnalysisWelcomeView from './pages/analysis/WelcomeView';
 import AnalysisSettingView from './pages/analysis/SettingView';
 import useApiStore from './store/ApiStore';
@@ -32,7 +30,6 @@ import useAnalysisStore from './store/AnalysisStore';
 import JobSnapshotView from './pages/data/JobSnapshotView';
 import JobSnapshotWelcomeView from './pages/jobSnapshot/WelcomeView';
 import useJobSnapshotStore from './store/JobSnapshotStore';
-import JobPublicView from './pages/data/JobPublicView';
 import DataManagementView from './pages/DataManagementView';
 import CompanyCommentView from './pages/data/CompanyCommentView';
 import DataSourceMetadataView from './pages/dataSharePlan/DataSourceMetadataView';
@@ -41,14 +38,14 @@ const App: React.FC = () => {
 
   const [authStoreInit] = useAuthStore(useShallow((state) => [state.init]));
   const [dataSharePlanStoreInit] = useDataSharePlanStore(
-    useShallow((state) => [state.init])
+    useShallow((state) => [state.init]),
   );
   const [analysisStoreInit] = useAnalysisStore(
-    useShallow((state) => [state.init])
+    useShallow((state) => [state.init]),
   );
   const [updateApiInfo] = useApiStore(useShallow((state) => [state.update]));
   const [jobSnapshotStoreInit] = useJobSnapshotStore(
-    useShallow((state) => [state.init])
+    useShallow((state) => [state.init]),
   );
   useEffect(() => {
     const initStore = async () => {
@@ -82,9 +79,14 @@ const App: React.FC = () => {
           <Route index element={<DashboardView />} />
           <Route path="assistant/favoriteJob" element={<FavoriteJobView />} />
           <Route path="assistant/historyJob" element={<HistoryJobView />} />
-          <Route path="assistant/automate" element={<AutomateView />} />
-          <Route path="assistant/analysisWelcome" element={<AnalysisWelcomeView />} />
-          <Route path="assistant/analysisSetting" element={<AnalysisSettingView />} />
+          <Route
+            path="assistant/analysisWelcome"
+            element={<AnalysisWelcomeView />}
+          />
+          <Route
+            path="assistant/analysisSetting"
+            element={<AnalysisSettingView />}
+          />
           <Route
             path="assistant/jobSnapshotSetting"
             element={<JobSnapshotWelcomeView />}
@@ -97,23 +99,21 @@ const App: React.FC = () => {
           <Route path="data/tag" element={<TagView />} />
           <Route path="data/jobTag" element={<JobTagView />} />
           <Route path="data/companyTag" element={<CompanyTagView />} />
-          <Route path="data/jobPublic" element={<JobPublicView />} />
           <Route path="data/companyComment" element={<CompanyCommentView />} />
-          <Route
-            path="dataSharePlan/dataSharePlanWelcome"
-            element={<DataSharePlanWelcomeView />}
-          />
-          <Route
-            path="task/taskStatistic"
-            element={<TaskStatisticView />}
-          />
+          <Route path="task/taskStatistic" element={<TaskStatisticView />} />
           <Route path="task/taskDetail" element={<TaskDetailView />} />
           <Route path="dataSource/list" element={<DataSourceView />} />
-          <Route path="dataSource/metadata" element={<DataSourceMetadataView />} />
+          <Route
+            path="dataSource/metadata"
+            element={<DataSourceMetadataView />}
+          />
           <Route path="system/file" element={<FileView />} />
           <Route path="system/database" element={<DatabaseView />} />
           <Route path="system/setting" element={<SettingView />} />
-          <Route path="system/dataManagement" element={<DataManagementView />} />
+          <Route
+            path="system/dataManagement"
+            element={<DataManagementView />}
+          />
           <Route path="*" element={<DashboardView />} />
         </Route>
       </Routes>

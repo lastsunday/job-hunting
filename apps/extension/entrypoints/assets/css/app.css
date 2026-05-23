@@ -8,8 +8,8 @@
   align-items: stretch;
 }
 
-.tagify[disabled]:not(.tagify--mix):not(.tagify--select)>.tagify__input,
-.tagify[readonly]:not(.tagify--mix):not(.tagify--select)>.tagify__input {
+.tagify[disabled]:not(.tagify--mix):not(.tagify--select) > .tagify__input,
+.tagify[readonly]:not(.tagify--mix):not(.tagify--select) > .tagify__input {
   min-width: 0px;
 }
 
@@ -185,7 +185,8 @@ div[data-search-sol-meta] {
   max-width: 1366px;
 }
 
-.__is_outsourcing_or_training {}
+.__is_outsourcing_or_training {
+}
 
 .__rencent_update {
   color: red;
@@ -262,7 +263,7 @@ div[data-search-sol-meta] {
   display: flex;
 }
 
-.__company_info_quick_search_item>div {
+.__company_info_quick_search_item > div {
   display: flex;
   align-items: inherit;
   margin-right: 8px;
@@ -312,7 +313,8 @@ div[data-search-sol-meta] {
   flex: 1;
 }
 
-.__company_info_other_channel {}
+.__company_info_other_channel {
+}
 
 .__company_reputation_content {
   display: flex;
@@ -349,7 +351,8 @@ div[data-search-sol-meta] {
   position: relative;
 }
 
-.__LIEPIN_function_panel {}
+.__LIEPIN_function_panel {
+}
 
 .__AIQICHA_function_panel {
   position: relative;
@@ -401,9 +404,11 @@ div[data-search-sol-meta] {
   padding-bottom: 10px;
 }
 
-.__51JOB_comment_wrapper {}
+.__51JOB_comment_wrapper {
+}
 
-.__ZHILIAN_comment_wrapper {}
+.__ZHILIAN_comment_wrapper {
+}
 
 .__LAGOU_comment_wrapper {
   padding-right: 10px;
@@ -663,7 +668,7 @@ div[data-search-sol-meta] {
   padding-left: 10px;
 }
 
-.__browse_chart_wrapper {
+.__browse_wrapper {
   display: flex;
   flex: 1;
   margin-right: 10px;
@@ -700,4 +705,17 @@ div[data-search-sol-meta] {
 .__company_comment_row_content {
   white-space: normal;
   padding-top: 3px;
+}
+
+.__get_full_job_info_button {
+  background-color: mediumblue;
+  color: white !important;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-radius: 5px;
+  font-size: 12px !important;
+  cursor: pointer;
+  display: inline-block;
+  margin: 0px;
+  text-wrap: nowrap;
 }

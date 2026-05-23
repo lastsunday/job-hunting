@@ -71,8 +71,8 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  margin: 20px;
-  padding-bottom: 100px;
+  background-color: black;
+  padding: 50px;
 }
 
 .title {

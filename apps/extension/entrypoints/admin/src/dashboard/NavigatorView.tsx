@@ -1,8 +1,7 @@
 import { Card, Col, Flex, Popover, Row, Typography } from 'antd';
-const { Text } = Typography;
+const { Text, Link } = Typography;
 import { logo } from '../assets';
-import Link from 'antd/lib/typography/Link';
-import "./NavigatorView.css";
+import './NavigatorView.css';
 
 const functionList = [
   {
@@ -39,10 +38,9 @@ const functionList = [
     url: 'dataSource/list',
     label: '数据源',
     icon: `i-material-symbols:dataset`,
-    desc: `数据源管理，可追加自定义数据源，如公司评论，公开数据，私有数据`,
+    desc: `数据源管理，可追加自定义数据源，如公司评论，私有数据`,
   },
 ];
-
 
 const publicJobWebsiteList = [
   {
@@ -130,12 +128,11 @@ const companyWebsiteList = [
   { url: 'https://xwqy.gsxt.gov.cn', label: '个体私营', desc: `` },
 ];
 
-import { useNavigate } from "react-router";
+import { useNavigate } from 'react-router';
 import useAnalysisStore from '../store/AnalysisStore';
 import useJobSnapshotStore from '../store/JobSnapshotStore';
 import { useShallow } from 'zustand/shallow';
 const NavigatorView: React.FC = () => {
-
   const [analysisConfig, updateAnalysis] = useAnalysisStore(
     useShallow((state) => [state.config, state.update])
   );
@@ -148,45 +145,41 @@ const NavigatorView: React.FC = () => {
   const [advancedFunctionList, setAdvancedFunctionList] = useState([]);
 
   useEffect(() => {
-    setAnalysisEnable((analysisConfig.enable));
+    setAnalysisEnable(analysisConfig.enable);
     setJobSnapshotEnable(jobSnapshotConfig.enable);
   }, []);
 
   useEffect(() => {
-    setAdvancedFunctionList(
-      [
-        {
-          url: analysisEnable ? "assistant/analysisSetting" : 'assistant/analysisWelcome',
-          label: '职位分析',
-          icon: `i-eos-icons:ai`,
-          desc: `使用大模型技术，根据预设的简历分析职位的匹配度`,
-        },
-        {
-          url: jobSnapshotEnable ? "assistant/jobSnapshotSetting" : 'data/jobSnapshot',
-          label: '职位快照',
-          icon: `i-qlementine-icons:snapshot-16`,
-          desc: `持久化职位详情页`,
-        },
-        {
-          url: 'assistant/automate',
-          label: '自动化',
-          icon: `i-meteor-icons:robot`,
-          desc: `可自动化浏览职位搜索页面`,
-        },
-        {
-          url: 'system/dataManagement',
-          label: '数据管理',
-          icon: `i-streamline:database-setting`,
-          desc: `可对数据进行导入，导出操作`,
-        },
-        {
-          url: 'system/setting',
-          label: '系统设置',
-          icon: `i-uil:setting`,
-          desc: `可开启数据云备份,分享和其他高级功能`,
-        },
-      ]
-    )
+    setAdvancedFunctionList([
+      {
+        url: analysisEnable
+          ? 'assistant/analysisSetting'
+          : 'assistant/analysisWelcome',
+        label: '职位分析',
+        icon: `i-eos-icons:ai`,
+        desc: `使用大模型技术，根据预设的简历分析职位的匹配度`,
+      },
+      {
+        url: jobSnapshotEnable
+          ? 'assistant/jobSnapshotSetting'
+          : 'data/jobSnapshot',
+        label: '职位快照',
+        icon: `i-qlementine-icons:snapshot-16`,
+        desc: `持久化职位详情页`,
+      },
+      {
+        url: 'system/dataManagement',
+        label: '数据管理',
+        icon: `i-streamline:database-setting`,
+        desc: `可对数据进行导入，导出操作`,
+      },
+      {
+        url: 'system/setting',
+        label: '系统设置',
+        icon: `i-uil:setting`,
+        desc: `可开启数据云备份和其他高级功能`,
+      },
+    ]);
   }, [analysisEnable]);
   return (
     <>
@@ -203,13 +196,13 @@ const NavigatorView: React.FC = () => {
                   lg={4}
                   className="cardItem flexCenter"
                 >
-                  <Popover
-                    content={<Text>{item.desc}</Text>}
-                    trigger="hover"
-                  >
-                    <Link onClick={() => {
-                      navigate(item.url);
-                    }} className="flexCenter">
+                  <Popover content={<Text>{item.desc}</Text>} trigger="hover">
+                    <Link
+                      onClick={() => {
+                        navigate(item.url);
+                      }}
+                      className="flexCenter"
+                    >
                       <Row>
                         <Col xs={24} className="flexCenter">
                           <div className={`${item.icon} functionIcon`}></div>
@@ -237,13 +230,13 @@ const NavigatorView: React.FC = () => {
                   lg={4}
                   className="cardItem flexCenter"
                 >
-                  <Popover
-                    content={<Text>{item.desc}</Text>}
-                    trigger="hover"
-                  >
-                    <Link onClick={() => {
-                      navigate(item.url);
-                    }} className="flexCenter">
+                  <Popover content={<Text>{item.desc}</Text>} trigger="hover">
+                    <Link
+                      onClick={() => {
+                        navigate(item.url);
+                      }}
+                      className="flexCenter"
+                    >
                       <Row>
                         <Col xs={24} className="flexCenter">
                           <div className={`${item.icon} functionIcon`}></div>

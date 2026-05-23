@@ -1,4 +1,3 @@
-
 import {
   PLATFORM_51JOB,
   PLATFORM_BOSS,
@@ -20,7 +19,7 @@ import {
 import { SearchJobBO } from '@/common/data/bo/searchJobBO';
 import { convertToAbbreviation } from '@/common/utils';
 import { Card, Col, Flex, Row, Select, Typography } from 'antd';
-import ReactEChartsCore from 'echarts-for-react/lib/core';
+import ReactEChartsCore from 'echarts-for-react';
 import { BarChart } from 'echarts/charts';
 import {
   GridComponent,
@@ -357,7 +356,7 @@ const StatisticView: React.FC = () => {
   const [todayStatisticData, setTodayStatisticData] = useState([]);
   const [chartData, setChartData] = useState([]);
   const [tagNameGroupData, setTagNameGroupData] = useState<BackgroundChartData>(
-    { items: [], total: 0 }
+    { items: [], total: 0 },
   );
   const [tagNameGroupDataLoading, setTagNameGroupDataLoading] = useState(true);
   const [
@@ -411,7 +410,7 @@ const StatisticView: React.FC = () => {
           title: '职位薪资分析',
           data: convertToChartData({
             queryResult: convertObjectToChartData(
-              statisticJobSearchGroupByAvgSalaryResult
+              statisticJobSearchGroupByAvgSalaryResult,
             ),
             defaultNameArray: JOB_SALARY_NAME_ARRAY,
           }),
@@ -421,7 +420,7 @@ const StatisticView: React.FC = () => {
           title: '职位发布时间分析(按月)',
           data: convertToChartData({
             queryResult: await JobApi.jobStatisticGroupByPublishDate(
-              new JobStatisticGroupByPublishDateBO(TYPE_ENUM_MONTH)
+              new JobStatisticGroupByPublishDateBO(TYPE_ENUM_MONTH),
             ),
             defaultNameArray: MONTH_NAME_ARRAY,
             convertNameFunction: convertMonthName,
@@ -431,7 +430,7 @@ const StatisticView: React.FC = () => {
           title: '职位发布时间分析(按周)',
           data: convertToChartData({
             queryResult: await JobApi.jobStatisticGroupByPublishDate(
-              new JobStatisticGroupByPublishDateBO(TYPE_ENUM_WEEK)
+              new JobStatisticGroupByPublishDateBO(TYPE_ENUM_WEEK),
             ),
             defaultNameArray: WEEK_NAME_ARRAY,
             convertNameFunction: convertWeekName,
@@ -441,7 +440,7 @@ const StatisticView: React.FC = () => {
           title: '职位发布时间分析(按日)',
           data: convertToChartData({
             queryResult: await JobApi.jobStatisticGroupByPublishDate(
-              new JobStatisticGroupByPublishDateBO(TYPE_ENUM_DAY)
+              new JobStatisticGroupByPublishDateBO(TYPE_ENUM_DAY),
             ),
             defaultNameArray: DAY_NAME_ARRAY,
           }),
@@ -450,7 +449,7 @@ const StatisticView: React.FC = () => {
           title: '职位发布时间分析(按小时)',
           data: convertToChartData({
             queryResult: await JobApi.jobStatisticGroupByPublishDate(
-              new JobStatisticGroupByPublishDateBO(TYPE_ENUM_HOUR)
+              new JobStatisticGroupByPublishDateBO(TYPE_ENUM_HOUR),
             ),
             defaultNameArray: HOUR_NAME_ARRAY,
           }),
@@ -494,11 +493,11 @@ const StatisticView: React.FC = () => {
         }
       };
       statistic();
-      return () => { };
+      return () => {};
     },
     [
       //这里的值改变时，会执行上面return的匿名函数
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -532,7 +531,7 @@ const StatisticView: React.FC = () => {
       PLATFORM_NAME_ARRAY.forEach((name) => {
         const obj: any = Object.assign(
           {},
-          jobStatisticJobCompanyTagGroupByPlatformResultMap.get(name)
+          jobStatisticJobCompanyTagGroupByPlatformResultMap.get(name),
         );
         obj.total =
           jobStatisticJobGroupByPlatformResultMap.get(name)?.count ?? 0;
@@ -568,7 +567,7 @@ const StatisticView: React.FC = () => {
           tagName: jobStatisticJobCompanyTagGroupByCompanyValue,
         });
       setJobStatisticJobCompanyTagGroupByCompany(
-        jobStatisticJobCompanyTagGroupByCompanyResult
+        jobStatisticJobCompanyTagGroupByCompanyResult,
       );
     } finally {
       setJobStatisticJobCompanyTagGroupByCompanyLoading(false);
