@@ -8,21 +8,24 @@ pub enum JobErrorCode {
     IdIsEmpty = 502004,
 }
 
-use crate::{AppState, sync::SyncErrorCode};
+use crate::AppState;
 use axum::{debug_handler, extract::Extension, extract::Path, extract::State};
 use entity::job::{self, Entity as Job};
 use framework::{
     auth::Principal,
     data::{ApiPageResult, ApiResponse, PageParam, empty_string_as_none, valid::ValidJson},
-    error::{ApiError, ApiResult},
+    error::ApiResult,
     middleware::get_auth_layer,
 };
 use sea_orm::{
     ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait,
 };
 use serde::{Deserialize, Serialize};
-use service::sync::{FileParser, ImportError, JobImporter};
 use service::util::hash::gen_add_or_update_uri;
+use service::{
+    common::FileParser,
+    sync::{ImportError, JobImporter},
+};
 use utoipa::ToSchema;
 use utoipa_axum::{
     router::{OpenApiRouter, UtoipaMethodRouterExt},
@@ -348,10 +351,10 @@ pub async fn create(
     JobImporter::import(&conn, csv_data, &uri)
         .await
         .map_err(|e: service::sync::ImportError| match e {
-            ImportError::Database(e) => ApiError::from(e),
-            _ => err!(SyncErrorCode::ImportFailed),
+            ImportError::Internal(error) => {
+                err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
+            }
         })?;
-
     let job = Job::find_by_id(&job_id)
         .one(&conn)
         .await?
@@ -380,10 +383,10 @@ pub async fn update(
     JobImporter::import(&conn, csv_data, &uri)
         .await
         .map_err(|e: service::sync::ImportError| match e {
-            ImportError::Database(e) => ApiError::from(e),
-            _ => err!(SyncErrorCode::ImportFailed),
+            ImportError::Internal(error) => {
+                err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
+            }
         })?;
-
     let job = Job::find_by_id(&id)
         .one(&conn)
         .await?

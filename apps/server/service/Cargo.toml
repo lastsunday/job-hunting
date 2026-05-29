@@ -29,6 +29,8 @@ openssl = { workspace = true, features = ["vendored"] }
 xid = { workspace = true }
 sha2 = { workspace = true }
 hex = { workspace = true }
+base64 = { workspace = true }
+zip = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 utoipa = { workspace = true }

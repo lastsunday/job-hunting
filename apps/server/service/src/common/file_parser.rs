@@ -1,8 +1,10 @@
-use std::io::Cursor;
+use std::io::{Cursor, Read};
 
+use anyhow::Context;
 use calamine::{Reader, Sheets, open_workbook_auto_from_rs};
+use zip::ZipArchive;
 
-use crate::sync::error::ImportError;
+use crate::common::FileError;
 use crate::sync::types::ImportWarning;
 use crate::util::gen_bytes_sha256;
 
@@ -15,19 +17,19 @@ impl FileParser {
         format!("{}{}", HEADER_VERSION_PREFIX, version)
     }
 
-    pub fn parse_excel(data: &[u8]) -> Result<Vec<Vec<String>>, ImportError> {
+    pub fn parse_excel(data: &[u8]) -> Result<Vec<Vec<String>>, FileError> {
         if data.is_empty() {
-            return Err(ImportError::FileEmpty);
+            return Err(FileError::FileEmpty);
         }
         let data: Cursor<Vec<u8>> = Cursor::new(data.to_vec());
         let mut sheets: Sheets<_> = open_workbook_auto_from_rs(data)
-            .map_err(|e| ImportError::ExcelParseFailed(e.to_string()))?;
+            .map_err(|e| FileError::ExcelParseFailed(e.to_string()))?;
         let sheet_names = sheets.sheet_names().to_vec();
-        let sheet = sheet_names.first().ok_or(ImportError::NoSheetsFound)?;
+        let sheet = sheet_names.first().ok_or(FileError::NoSheetsFound)?;
 
         let range = sheets
             .worksheet_range(sheet)
-            .map_err(|e| ImportError::ExcelParseFailed(e.to_string()))?;
+            .map_err(|e| FileError::ExcelParseFailed(e.to_string()))?;
 
         let mut result = Vec::new();
 
@@ -41,6 +43,18 @@ impl FileParser {
         }
 
         Ok(result)
+    }
+
+    pub fn unzip(data: &[u8], path: &str) -> Result<Vec<u8>, FileError> {
+        let reader = Cursor::new(data);
+        let mut archive = ZipArchive::new(reader).context("zip new failure")?;
+        let mut file = archive
+            .by_name(path)
+            .context(format!("find file in zip file failure by path = {}", path))?;
+        let mut buffer = Vec::with_capacity(file.size() as usize);
+        file.read_to_end(&mut buffer)
+            .context(format!("read zip file to buffer failure path = {}", path))?;
+        Ok(buffer)
     }
 
     pub fn gen_file_sha256(value: &Vec<u8>) -> String {

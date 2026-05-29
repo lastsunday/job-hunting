@@ -3,8 +3,7 @@ mod common;
 use entity::company::Entity as Company;
 use entity::company_source::Entity as CompanySource;
 use sea_orm::EntityTrait;
-use service::sync::file_parser::FileParser;
-use service::sync::import_company::CompanyImporter;
+use service::{common::FileParser, sync::import_company::CompanyImporter};
 
 use common::{setup_database, tear_down};
 
@@ -27,7 +26,7 @@ async fn test_import_company_empty_data() {
     assert_eq!(result.updated, 0, "更新数应为0");
     assert!(result.lack_columns.is_empty(), "空数据不应缺少字段");
 
-    let _ = state.conn.close().await.unwrap();
+    state.conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
@@ -45,7 +44,7 @@ async fn test_import_company_invalid_headers() {
     assert!(!result.valid_result, "应返回无效结果");
     assert!(!result.errors.is_empty(), "应有错误信息");
 
-    let _ = state.conn.close().await.unwrap();
+    state.conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
@@ -78,7 +77,7 @@ async fn test_import_company_success() {
     assert!(!first_company.id.is_empty(), "id should not be empty");
     assert!(first_company.name.is_some(), "name should exist");
 
-    let _ = state.conn.close().await.unwrap();
+    state.conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
@@ -103,7 +102,10 @@ async fn test_import_company_update() {
         .unwrap();
 
     assert!(result2.success, "更新导入应成功");
-    println!("第二次导入: imported={}, updated={}", result2.imported, result2.updated);
+    println!(
+        "第二次导入: imported={}, updated={}",
+        result2.imported, result2.updated
+    );
 
     // 由于使用不同的URI，会创建新的 company_source，可能触发更新
     let companys = Company::find().all(&state.conn).await.unwrap();
@@ -112,7 +114,7 @@ async fn test_import_company_update() {
     let company_sources = CompanySource::find().all(&state.conn).await.unwrap();
     println!("CompanySource 表记录数: {}", company_sources.len());
 
-    let _ = state.conn.close().await.unwrap();
+    state.conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
@@ -130,12 +132,15 @@ async fn test_import_company_missing_name() {
         .await
         .unwrap();
 
-    println!("Result: success={}, imported={}, total={}", result.success, result.imported, result.total);
+    println!(
+        "Result: success={}, imported={}, total={}",
+        result.success, result.imported, result.total
+    );
     assert!(result.success, "缺失公司名应跳过该行");
     assert_eq!(result.imported, 28, "应导入28条记录(跳过空公司名)");
     assert_eq!(result.total, 29, "总行数应为29");
 
-    let _ = state.conn.close().await.unwrap();
+    state.conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
@@ -160,7 +165,7 @@ async fn test_import_company_same_uri_duplicate() {
     let sources = CompanySource::find().all(&state.conn).await.unwrap();
     assert_eq!(sources.len(), 29, "CompanySource应为29条");
 
-    let _ = state.conn.close().await.unwrap();
+    state.conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
@@ -178,7 +183,7 @@ async fn test_import_company_partial_fields() {
     assert!(result.success, "完整字段导入应成功");
     assert_eq!(result.imported, 29, "应导入29条");
 
-    let _ = state.conn.close().await.unwrap();
+    state.conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
@@ -195,11 +200,14 @@ async fn test_import_company_invalid_number_format() {
         .await
         .unwrap();
 
-    println!("Result: success={}, errors={:?}", result.success, result.errors);
+    println!(
+        "Result: success={}, errors={:?}",
+        result.success, result.errors
+    );
     assert!(!result.success, "数字格式错误应返回失败");
     assert!(!result.errors.is_empty(), "应有错误信息");
 
-    let _ = state.conn.close().await.unwrap();
+    state.conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
@@ -219,6 +227,6 @@ async fn test_import_company_date_formats() {
     assert!(result.success, "日期格式解析应成功");
     assert_eq!(result.imported, 29, "应导入29条");
 
-    let _ = state.conn.close().await.unwrap();
+    state.conn.close().await.unwrap();
     tear_down(&container).await;
 }

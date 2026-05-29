@@ -1,7 +1,7 @@
+use service::common::FileParser;
+
 #[tokio::test]
 async fn test_parse_excel() {
-    use service::sync::file_parser::FileParser;
-
     let data = std::fs::read("tests/resources/data/job-v1.xlsx").unwrap();
     let result = FileParser::parse_excel(&data).unwrap();
 
@@ -18,8 +18,6 @@ async fn test_parse_excel() {
 
 #[tokio::test]
 async fn test_parse_version() {
-    use service::sync::file_parser::FileParser;
-
     let headers = vec!["职位自编号".to_string(), "发布平台".to_string()];
     assert_eq!(FileParser::parse_version(&headers), 0);
 
@@ -32,8 +30,6 @@ async fn test_parse_version() {
 
 #[tokio::test]
 async fn test_validate_job_headers() {
-    use service::sync::file_parser::FileParser;
-
     let v0_headers = vec![
         "职位自编号".to_string(),
         "发布平台".to_string(),
@@ -131,8 +127,6 @@ async fn test_validate_job_headers() {
 
 #[tokio::test]
 async fn test_validate_company_headers() {
-    use service::sync::file_parser::FileParser;
-
     let v0_headers = vec![
         "公司".to_string(),
         "公司描述".to_string(),

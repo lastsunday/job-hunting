@@ -32,6 +32,30 @@ pub async fn assets_handler(Path(path): Path<String>) -> impl IntoResponse {
     AssetsFile(path).into_response()
 }
 
+#[derive(Embed)]
+#[folder = "dist/locales"]
+struct Locales;
+
+struct LocalesFile<T>(T);
+
+impl<T: AsRef<str>> IntoResponse for LocalesFile<T> {
+    fn into_response(self) -> axum::response::Response {
+        let path = self.0.as_ref();
+        match Locales::get(path) {
+            Some(file) => {
+                let mime = file.metadata.mimetype();
+                let body = file.data;
+                ([(header::CONTENT_TYPE, mime)], body).into_response()
+            }
+            None => (StatusCode::NOT_FOUND, "Not found").into_response(),
+        }
+    }
+}
+
+pub async fn locales_handler(Path(path): Path<String>) -> impl IntoResponse {
+    LocalesFile(path).into_response()
+}
+
 pub async fn index_handler(method: Method) -> impl IntoResponse {
     if method == Method::GET {
         let file = IndexHtml::get("index.html").expect("index.html not found");

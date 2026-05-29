@@ -4,8 +4,7 @@ use chrono::{Duration, Utc};
 use entity::job::Entity as Job;
 use entity::job_source::Entity as JobSource;
 use sea_orm::EntityTrait;
-use service::sync::file_parser::FileParser;
-use service::sync::import_job::JobImporter;
+use service::{common::FileParser, sync::import_job::JobImporter};
 
 use common::{setup_database, tear_down};
 
@@ -607,7 +606,10 @@ async fn test_import_job_invalid_number_format() {
         .await
         .unwrap();
 
-    println!("Result: success={}, errors={:?}", result.success, result.errors);
+    println!(
+        "Result: success={}, errors={:?}",
+        result.success, result.errors
+    );
     assert!(!result.success, "数字格式错误应返回失败");
     assert!(!result.errors.is_empty(), "应有错误信息");
 

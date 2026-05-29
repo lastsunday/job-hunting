@@ -1,49 +1,43 @@
-use std::{collections::HashMap, str::FromStr};
+use std::{collections::HashMap, path::PathBuf, str::FromStr};
 
-use chrono::{DateTime, FixedOffset, Local, Utc};
+use anyhow::Context;
+use chrono::{DateTime, FixedOffset, Utc};
 use cron::Schedule;
-use entity::task::ActiveModel as TaskActiveModel;
 use entity::task_data_download::ActiveModel as TaskDataDownloadActiveModel;
+use entity::task_data_merge::ActiveModel as TaskDataMergeActiveModel;
 use entity::task_data_plan::ActiveModel as TaskDataPlanActiveModel;
 use entity::task_plan::ActiveModel as TaskPlanActiveModel;
+use entity::{task::ActiveModel as TaskActiveModel, task_data_download};
 use framework::id::gen_id;
 use sea_orm::{
-    ActiveValue, ColumnTrait, ConnectionTrait, DbErr, EntityTrait, QueryFilter, TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DbErr, EntityTrait,
+    IntoActiveModel, QueryFilter, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
 
 use thiserror::Error;
 
-use crate::repo::{GitRepo, QueryFileDateAndMaxSeqParam, Repo};
+use crate::{
+    common::{FileError, FileParser},
+    repo::{DownloadFileParam, FileInfo, GitRepo, QueryFileDateAndMaxSeqParam, Repo},
+};
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("Database error: {0}")]
-    Database(sea_orm::TransactionError<sea_orm::DbErr>),
-    #[error("json error: {0}")]
-    Json(serde_json::Error),
+    #[error(transparent)]
+    File(#[from] FileError),
+
     #[error("invalid cron expr: {0}")]
     Cron(String),
-    #[error("biz error: {0}")]
-    Biz(anyhow::Error),
+
+    #[error(transparent)]
+    Internal(#[from] anyhow::Error),
 }
 
-impl From<sea_orm::TransactionError<sea_orm::DbErr>> for Error {
-    fn from(err: sea_orm::TransactionError<sea_orm::DbErr>) -> Self {
-        Error::Database(err)
-    }
-}
-
-impl From<serde_json::Error> for Error {
-    fn from(value: serde_json::Error) -> Self {
-        Error::Json(value)
-    }
-}
-
-impl From<anyhow::Error> for Error {
-    fn from(value: anyhow::Error) -> Self {
-        Error::Biz(value)
+impl From<sea_orm::DbErr> for Error {
+    fn from(err: sea_orm::DbErr) -> Self {
+        Error::Internal(err.into())
     }
 }
 
@@ -77,6 +71,7 @@ pub enum TaskType {
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct TaskDataDownloadConfig {
     pub url: Option<String>,
+    pub file_name: Option<String>,
 }
 
 fn gen_url_by_repo_type(repo_type: &RepoType, user_name: &str, repo_name: &str) -> String {
@@ -97,6 +92,7 @@ pub struct CreatePlanParam {
     pub task_enable: bool,
     pub cron: String,
     pub key: Option<String>,
+    pub now: DateTime<Utc>,
 }
 
 pub async fn create_plan<C: TransactionTrait>(
@@ -111,6 +107,7 @@ pub async fn create_plan<C: TransactionTrait>(
         task_enable,
         cron,
         key,
+        now,
     } = param;
     if !validate_cron(&cron) {
         return Err(Error::Cron(cron.to_string()));
@@ -120,7 +117,8 @@ pub async fn create_plan<C: TransactionTrait>(
             Type::DataDownload(task_plan_config_data_download_config) => (
                 entity::task_plan::Type::DataDownload,
                 match task_plan_config_data_download_config.url {
-                    Some(_) => serde_json::to_string(task_plan_config_data_download_config)?,
+                    Some(_) => serde_json::to_string(task_plan_config_data_download_config)
+                        .context("task plan config data download config to json string failure")?,
                     None => match &repo_type {
                         RepoType::Github => {
                             serde_json::to_string(&TaskPlanConfigDataDownloadConfig {
@@ -131,14 +129,16 @@ pub async fn create_plan<C: TransactionTrait>(
                                 user_name: Some(user_name.to_string()),
                                 repo_name: Some(repo_name.to_string()),
                                 key,
-                            })?
+                            })
+                            .context(
+                                "task plan config data download config to json string failure",
+                            )?
                         }
                     },
                 },
             ),
         }
     };
-    let now = Utc::now();
     let result = conn
         .transaction::<_, _, DbErr>(|txn| {
             Box::pin(async move {
@@ -173,14 +173,48 @@ pub async fn create_plan<C: TransactionTrait>(
                 Ok((task_data_plan_id, task_plan_id))
             })
         })
-        .await?;
+        .await
+        .map_err(|e| match e {
+            sea_orm::TransactionError::Connection(db_err) => db_err,
+            sea_orm::TransactionError::Transaction(db_err) => db_err,
+        })?;
     Ok(result)
 }
 
-pub fn get_file_name_by_task_type(task_type: TaskType) -> String {
+pub fn get_file_name_by_task_type(task_type: &TaskType) -> String {
     match task_type {
-        TaskType::JobDataDownload => "job".to_string(),
-        TaskType::CompanyDataDownload => "company".to_string(),
+        TaskType::JobDataDownload => "job.zip".to_string(),
+        TaskType::CompanyDataDownload => "company.zip".to_string(),
+    }
+}
+
+pub fn get_file_name_by_task_data_download_type(
+    download_data_task_type: &entity::task_data_download::Type,
+) -> String {
+    match download_data_task_type {
+        entity::task_data_download::Type::JobDataDownload => "job.xlsx".to_string(),
+        entity::task_data_download::Type::CompanyDataDownload => "company.xlsx".to_string(),
+    }
+}
+
+pub fn get_file_name_by_seq(file_name: &str, seq: i32) -> Result<String, anyhow::Error> {
+    let path = PathBuf::from(file_name);
+    let name: String = path
+        .file_prefix()
+        .ok_or_else(|| anyhow::anyhow!("File name not exists"))?
+        .to_str()
+        .ok_or_else(|| anyhow::anyhow!("Invalid file name"))?
+        .to_string();
+    let ext: String = path
+        .extension()
+        .ok_or_else(|| anyhow::anyhow!("File extension not exists"))?
+        .to_str()
+        .ok_or_else(|| anyhow::anyhow!("Invalid file extension"))?
+        .to_string();
+    if seq > 0 {
+        Ok(format!("{}_{}.{}", name, seq, ext))
+    } else {
+        Ok(format!("{}.{}", name, ext))
     }
 }
 
@@ -218,7 +252,6 @@ pub async fn calculate_and_create_download_task<C: TransactionTrait + Connection
 
     // 根据task_type,datetime,seq,url,user_name,repo_name,生成data download task
     // 1. 根据文件名,url,获得仓库所有文件的路径和maxSeq
-    // TODO: 根据保留日期进行过滤，避免过多文件路径查询和返回
     let repo_file_date_and_max_seq_map = repo
         .query_file_date_and_max_seq(QueryFileDateAndMaxSeqParam {
             file_name,
@@ -258,6 +291,7 @@ pub async fn calculate_and_create_download_task<C: TransactionTrait + Connection
             url,
             user_name,
             repo_name,
+            now,
         },
     )
     .await?;
@@ -352,6 +386,7 @@ pub struct SaveDataDownloadTaskParam {
     pub url: String,
     pub user_name: String,
     pub repo_name: String,
+    pub now: DateTime<Utc>,
 }
 
 async fn save_data_download_task<C: TransactionTrait>(
@@ -365,6 +400,7 @@ async fn save_data_download_task<C: TransactionTrait>(
         url,
         user_name,
         repo_name,
+        now,
     } = param;
     let (task_model_type, task_download_model_type) = match task_type {
         TaskType::JobDataDownload => (
@@ -376,16 +412,18 @@ async fn save_data_download_task<C: TransactionTrait>(
             entity::task_data_download::Type::CompanyDataDownload,
         ),
     };
-    let config = serde_json::to_string(&TaskDataDownloadConfig {
-        url: Some(url.to_string()),
-    })?;
     let result = conn
-        .transaction::<_, _, DbErr>(|txn| {
+        .transaction::<_, _, anyhow::Error>(|txn| {
             Box::pin(async move {
                 let mut result = vec![];
-                let now = Local::now().to_utc();
+                let file_name = get_file_name_by_task_type(&task_type);
                 for (date, max_seq) in lack_date_max_seq_list {
                     for seq in 0..max_seq {
+                        let seq_file_name = get_file_name_by_seq(&file_name, seq)?;
+                        let config = serde_json::to_string(&TaskDataDownloadConfig {
+                            url: Some(url.to_string()),
+                            file_name: Some(seq_file_name),
+                        })?;
                         let task_id = gen_id();
                         let task_data_id = gen_id();
                         let task = TaskActiveModel {
@@ -406,7 +444,7 @@ async fn save_data_download_task<C: TransactionTrait>(
                             username: ActiveValue::Set(Some(user_name.clone())),
                             repo_name: ActiveValue::Set(Some(repo_name.clone())),
                             datetime: ActiveValue::Set(Some(date.fixed_offset())),
-                            config: ActiveValue::set(Some(config.clone())),
+                            config: ActiveValue::Set(Some(config)),
                             data_id: ActiveValue::NotSet,
                             seq: ActiveValue::Set(Some(seq)),
                             create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
@@ -424,4 +462,263 @@ async fn save_data_download_task<C: TransactionTrait>(
         })
         .await?;
     Ok(result)
+}
+
+fn get_file_max_record_count_by_task_type(task_type: &entity::task_data_download::Type) -> u32 {
+    match task_type {
+        entity::task_data_download::Type::JobDataDownload => 6000,
+        entity::task_data_download::Type::CompanyDataDownload => 6000,
+    }
+}
+
+pub struct ExecuteDownloadTaskAndCreateMergeTaskParam {
+    pub download_task_id: String,
+    pub now: DateTime<Utc>,
+}
+
+pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + ConnectionTrait>(
+    conn: &C,
+    param: ExecuteDownloadTaskAndCreateMergeTaskParam,
+) -> Result<Vec<TaskAndDataId>, Error> {
+    let ExecuteDownloadTaskAndCreateMergeTaskParam {
+        download_task_id,
+        now,
+    } = param;
+    let entity::task::Model {
+        data_id, r#type, ..
+    } = entity::task::Entity::find_by_id(download_task_id.to_string())
+        .one(conn)
+        .await?
+        .ok_or_else(|| anyhow::anyhow!("Download task not found id = {}", download_task_id))?;
+    let data_id = data_id.ok_or_else(|| anyhow::anyhow!("Download task has no data_id"))?;
+    let task_data_download = entity::task_data_download::Entity::find_by_id(data_id.to_string())
+        .one(conn)
+        .await?
+        .ok_or_else(|| anyhow::anyhow!("Task data download not found data_id = {}", data_id))?;
+
+    let entity::task_data_download::Model {
+        config,
+        datetime,
+        r#type: download_type,
+        ..
+    } = task_data_download.clone();
+
+    let config =
+        config.ok_or_else(|| anyhow::anyhow!("Task config not found for data_id = {}", data_id))?;
+    let TaskDataDownloadConfig { url, .. } = serde_json::from_str(&config)
+        .context(format!("parse config json failure,str = {}", config))?;
+    let task = entity::task::Entity::find_by_id(download_task_id.to_string())
+        .one(conn)
+        .await?
+        .ok_or_else(|| anyhow::anyhow!("Download task not found id = {}", download_task_id))?;
+    let mut task_active_model = task.into_active_model();
+    task_active_model.status = ActiveValue::Set(Some(entity::task::Status::Running));
+    task_active_model.update_datetime = ActiveValue::Set(Some(now.fixed_offset()));
+    task_active_model.update(conn).await?;
+
+    let url =
+        url.ok_or_else(|| anyhow::anyhow!("Task config url not found for data_id = {}", data_id))?;
+    let download_type = download_type.context("download type not exists")?;
+    let repo = GitRepo::new();
+    // execulate download task
+    let FileInfo {
+        content,
+        file_name,
+        size,
+    } = repo.download_file(DownloadFileParam { url }).await?;
+
+    let file_id = gen_id();
+
+    let excel_data = FileParser::parse_excel(&FileParser::unzip(
+        &content,
+        &get_file_name_by_task_data_download_type(&download_type),
+    )?)?;
+
+    // 空数据处理
+    if excel_data.is_empty() {
+        Err(anyhow::anyhow!("excel no data"))?
+    }
+
+    let headers = &excel_data[0];
+
+    match &download_type {
+        entity::task_data_download::Type::JobDataDownload => {
+            // 验证表头
+            let (valid, version, actual_version, lack_columns, _) =
+                FileParser::validate_job_headers(headers);
+            if !valid {
+                Err(anyhow::anyhow!(
+                    "invalid header version:{}/{},lack_columns len:{}",
+                    version,
+                    actual_version,
+                    lack_columns.len()
+                ))?
+            }
+        }
+        entity::task_data_download::Type::CompanyDataDownload => {
+            let (valid, version, actual_version, lack_columns, _) =
+                FileParser::validate_company_headers(headers);
+            if !valid {
+                Err(anyhow::anyhow!(
+                    "invalid header version:{}/{},lack_columns len:{}",
+                    version,
+                    actual_version,
+                    lack_columns.len()
+                ))?
+            }
+        }
+    }
+    // -1 remove header row
+    let total = (excel_data.len() - 1) as u32;
+    let page_size = get_file_max_record_count_by_task_type(&download_type);
+    let mut total_page = total.div_ceil(page_size);
+    if total_page <= 1 {
+        total_page = 1;
+    }
+    let merge_task_type = match &r#type {
+        Some(t) => match t {
+            entity::task::Type::JobDataDownload => entity::task::Type::JobDataMerge,
+            entity::task::Type::CompanyDataDownload => entity::task::Type::CompanyDataMerge,
+            _ => Err(anyhow::anyhow!(
+                "Task type invalid,must be download type for id = {}",
+                download_task_id
+            ))?,
+        },
+        None => Err(anyhow::anyhow!(
+            "Task type not exists for id = {}",
+            download_task_id
+        ))?,
+    };
+    let merge_data_task_type = match &r#type {
+        Some(t) => match t {
+            entity::task::Type::JobDataDownload => entity::task_data_merge::Type::JobDataMerge,
+            entity::task::Type::CompanyDataDownload => {
+                entity::task_data_merge::Type::CompanyDataMerge
+            }
+            _ => Err(anyhow::anyhow!(
+                "Task type invalid,must be download type for id = {}",
+                download_task_id
+            ))?,
+        },
+        None => Err(anyhow::anyhow!(
+            "Task type not exists for id = {}",
+            download_task_id
+        ))?,
+    };
+
+    let result = conn
+        .transaction::<_, _, anyhow::Error>(|txn| {
+            Box::pin(async move {
+                // update download task
+                let mut task_data_download_model = task_data_download.into_active_model();
+                task_data_download_model.data_id = ActiveValue::Set(Some(file_id.clone()));
+                task_data_download_model.update(txn).await?;
+                // insert file
+                let file = entity::file::ActiveModel {
+                    id: ActiveValue::Set(file_id.to_string()),
+                    name: ActiveValue::Set(file_name),
+                    sha: ActiveValue::NotSet,
+                    content: ActiveValue::Set(Some(content)),
+                    size: ActiveValue::Set(Some(size)),
+                    is_delete: ActiveValue::Set(Some(false)),
+                    create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+                    update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+                };
+                file.insert(txn).await?;
+                // update task
+                let task = entity::task::Entity::find_by_id(download_task_id.to_string())
+                    .one(txn)
+                    .await?
+                    .ok_or_else(|| {
+                        anyhow::anyhow!("Download task not found id = {}", download_task_id)
+                    })?;
+                let task_data_id = &task
+                    .data_id
+                    .clone()
+                    .ok_or_else(|| anyhow::anyhow!("Download task has no data_id"))?;
+                let plan_id = &task
+                    .plan_id
+                    .clone()
+                    .ok_or_else(|| anyhow::anyhow!("Download task has no plan_id"))?;
+
+                let mut task_active_model = task.into_active_model();
+                task_active_model.status = ActiveValue::Set(Some(entity::task::Status::Finished));
+                task_active_model.update_datetime = ActiveValue::Set(Some(now.fixed_offset()));
+                task_active_model.update(txn).await?;
+                // update task_data_download
+                let task_data_download =
+                    &entity::task_data_download::Entity::find_by_id(task_data_id.to_string())
+                        .one(txn)
+                        .await?
+                        .ok_or_else(|| {
+                            anyhow::anyhow!("Download data task not found id = {}", task_data_id)
+                        })?;
+                let username = &task_data_download.username;
+                let repo_name = &task_data_download.repo_name;
+                let mut task_data_download_active_model =
+                    task_data_download.clone().into_active_model();
+                task_data_download_active_model.data_id =
+                    ActiveValue::Set(Some(file_id.to_string()));
+                task_data_download_active_model.update_datetime =
+                    ActiveValue::Set(Some(now.fixed_offset()));
+                task_data_download_active_model.update(txn).await?;
+                let mut result = vec![];
+                for page_num in 1..=total_page {
+                    // create_merge_task
+                    let task_id = gen_id();
+                    let task_data_id = gen_id();
+                    let task = TaskActiveModel {
+                        id: ActiveValue::Set(task_id.clone()),
+                        plan_id: ActiveValue::Set(Some(plan_id.clone())),
+                        r#type: ActiveValue::Set(Some(merge_task_type.clone())),
+                        data_id: ActiveValue::Set(Some(task_data_id.clone())),
+                        status: ActiveValue::Set(Some(entity::task::Status::Ready)),
+                        error_reason: ActiveValue::Set(None),
+                        cost_time: ActiveValue::Set(Some(0)),
+                        retry_count: ActiveValue::Set(Some(0)),
+                        create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+                        update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+                    };
+                    let task_data_merge = TaskDataMergeActiveModel {
+                        id: ActiveValue::Set(task_data_id.clone()),
+                        r#type: ActiveValue::Set(Some(merge_data_task_type.clone())),
+                        username: ActiveValue::Set(username.clone()),
+                        repo_name: ActiveValue::Set(repo_name.clone()),
+                        datetime: ActiveValue::Set(datetime),
+                        data_id: ActiveValue::Set(Some(file_id.to_string())),
+                        data_count: ActiveValue::Set(Some(total as i32)),
+                        config: ActiveValue::Set(Some(config.to_string())),
+                        data_page_num: ActiveValue::Set(Some(page_num as i32)),
+                        data_page_size: ActiveValue::Set(Some(page_size as i32)),
+                        create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+                        update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+                    };
+                    entity::task::Entity::insert(task).exec(txn).await?;
+                    entity::task_data_merge::Entity::insert(task_data_merge)
+                        .exec(txn)
+                        .await?;
+                    result.push((task_id, task_data_id));
+                }
+                Ok(result)
+            })
+        })
+        .await
+        .map_err(|e| match e {
+            sea_orm::TransactionError::Connection(db_err) => db_err.into(),
+            sea_orm::TransactionError::Transaction(db_err) => db_err,
+        })?;
+    Ok(result)
+}
+
+pub struct ExecuteMergeTaskParam {
+    pub merge_task_id: String,
+}
+
+pub type DataCount = i32;
+
+pub async fn execute_merge_task<C: TransactionTrait + ConnectionTrait>(
+    conn: &C,
+    param: ExecuteMergeTaskParam,
+) -> Result<DataCount, Error> {
+    todo!()
 }

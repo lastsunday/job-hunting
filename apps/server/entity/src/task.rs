@@ -28,8 +28,12 @@ pub struct Model {
 pub enum Type {
     #[sea_orm(string_value = "JOB_DATA_DOWNLOAD")]
     JobDataDownload,
+    #[sea_orm(string_value = "JOB_DATA_MERGE")]
+    JobDataMerge,
     #[sea_orm(string_value = "COMPANY_DATA_DOWNLOAD")]
     CompanyDataDownload,
+    #[sea_orm(string_value = "COMPANY_DATA_MERGE")]
+    CompanyDataMerge,
 }
 
 #[derive(EnumIter, DeriveActiveEnum, Debug, ToSchema, PartialEq, Clone, Serialize, Deserialize)]

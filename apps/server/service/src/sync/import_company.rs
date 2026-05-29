@@ -6,11 +6,11 @@ use entity::company_source::{
     ActiveModel as CompanySourceActiveModel, Model as CompanySourceModel,
 };
 
+use crate::common::file_parser::{CompanyHeaderMapping, FileParser};
 use crate::sync::common::{
     BATCH_SIZE, get_f64, get_field_value, get_i32, get_string, parse_datetime,
 };
 use crate::sync::error::ImportError;
-use crate::sync::file_parser::{CompanyHeaderMapping, FileParser};
 use crate::sync::types::{ImportError as ImportErrorType, ImportResult};
 use crate::util::{gen_company_id, gen_source_id};
 use sea_orm::{
@@ -82,7 +82,7 @@ impl CompanyImporter {
 
         // 使用闭包事务，自动处理提交/回滚
         let result = conn
-            .transaction::<_, _, DbErr>(|txn| {
+            .transaction::<_, _, anyhow::Error>(|txn| {
                 let mapping = mapping.clone();
                 let headers = headers.clone();
                 let uri = uri.to_string();
@@ -292,7 +292,7 @@ impl CompanyImporter {
             })
             .await
             .map_err(|e| match e {
-                sea_orm::TransactionError::Connection(db_err) => db_err,
+                sea_orm::TransactionError::Connection(db_err) => db_err.into(),
                 sea_orm::TransactionError::Transaction(db_err) => db_err,
             })?;
 
@@ -501,3 +501,4 @@ impl CompanyImporter {
         })
     }
 }
+

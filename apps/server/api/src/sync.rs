@@ -1,3 +1,4 @@
+use framework::error::critical_code::CriticalErrorCode;
 use framework::prelude::*;
 
 #[error]
@@ -27,24 +28,10 @@ use utoipa_axum::{
     routes,
 };
 
-use service::sync::{
-    CompanyImporter, FileParser, ImportError, JobImporter, SyncStatus, types::ImportResult,
-};
+use service::common::FileParser;
+use service::sync::{CompanyImporter, ImportError, JobImporter, SyncStatus, types::ImportResult};
 
 const TAG: &str = "sync";
-
-impl From<ImportError> for SyncErrorCode {
-    fn from(err: ImportError) -> Self {
-        match err {
-            ImportError::FileEmpty => SyncErrorCode::FileInvalid,
-            ImportError::ExcelParseFailed(_) => SyncErrorCode::ExcelParseFailed,
-            ImportError::ExcelHeadersInvalid { .. } => SyncErrorCode::ExcelParseFailed,
-            ImportError::NoSheetsFound => SyncErrorCode::ExcelParseFailed,
-            ImportError::DataTypeInvalid(_) => SyncErrorCode::DataTypeInvalid,
-            ImportError::Database(_) => SyncErrorCode::ImportFailed,
-        }
-    }
-}
 
 pub fn create_routes(state: AppState) -> OpenApiRouter {
     let sync_state = SyncState::new(state);
@@ -91,24 +78,29 @@ pub(crate) async fn import_file(
         .map_err(|_| err!(SyncErrorCode::FileInvalid))?;
     let hash = FileParser::gen_file_sha256(&data);
     let uri = format!("data://{}@system/{}", principal.name, hash);
-    let result = match param.data_type.as_str() {
-        "job" => {
-            let rows = FileParser::parse_excel(&data).map_err(SyncErrorCode::from)?;
-            JobImporter::import(conn(&state), rows, uri.as_str()).await
+    let rows = FileParser::parse_excel(&data).map_err(|e| match e {
+        service::common::FileError::FileEmpty => err!(SyncErrorCode::FileInvalid),
+        service::common::FileError::ExcelParseFailed(_) => {
+            err!(SyncErrorCode::ExcelParseFailed)
         }
-        "company" => {
-            let rows = FileParser::parse_excel(&data).map_err(SyncErrorCode::from)?;
-            CompanyImporter::import(conn(&state), rows, uri.as_str()).await
+        service::common::FileError::NoSheetsFound => err!(SyncErrorCode::ExcelParseFailed),
+        service::common::FileError::DataTypeInvalid(_) => {
+            err!(SyncErrorCode::DataTypeInvalid)
         }
-        _ => {
-            return Err(err!(SyncErrorCode::DataTypeInvalid));
+        service::common::FileError::Internal(error) => {
+            err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
         }
-    }
-    .map_err(|e: service::sync::ImportError| match e {
-        ImportError::Database(e) => ApiError::from(e),
-        _ => err!(SyncErrorCode::ImportFailed),
     })?;
-
+    let result = match param.data_type.as_str() {
+        "job" => JobImporter::import(conn(&state), rows, uri.as_str()).await,
+        "company" => CompanyImporter::import(conn(&state), rows, uri.as_str()).await,
+        _ => Err(ImportError::Internal(anyhow::anyhow!("invalid data type"))),
+    }
+    .map_err(|e| match e {
+        ImportError::Internal(error) => {
+            err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
+        }
+    })?;
     Ok(ApiResponse::success(Some(result)))
 }
 

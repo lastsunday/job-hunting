@@ -6,20 +6,23 @@ pub enum CompanyErrorCode {
     NameImmutable = 504002,
 }
 
-use crate::{AppState, sync::SyncErrorCode};
+use crate::AppState;
 use axum::{debug_handler, extract::Extension, extract::Path, extract::State};
 use entity::company::{self, Entity as Company};
 use framework::{
     auth::Principal,
     data::{ApiPageResult, ApiResponse, PageParam, empty_string_as_none, valid::ValidJson},
-    error::{ApiError, ApiResult},
+    error::ApiResult,
     middleware::get_auth_layer,
 };
 use sea_orm::{
     ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait,
 };
-use service::sync::{CompanyImporter, FileParser, ImportError};
 use service::util::hash::{gen_add_or_update_uri, gen_company_id};
+use service::{
+    common::FileParser,
+    sync::{CompanyImporter, ImportError},
+};
 use utoipa::ToSchema;
 use utoipa_axum::{
     router::{OpenApiRouter, UtoipaMethodRouterExt},
@@ -368,8 +371,9 @@ pub async fn create(
     CompanyImporter::import(&conn, csv_data, &uri)
         .await
         .map_err(|e: service::sync::ImportError| match e {
-            ImportError::Database(e) => ApiError::from(e),
-            _ => err!(SyncErrorCode::ImportFailed),
+            ImportError::Internal(error) => {
+                err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
+            }
         })?;
 
     let company = Company::find_by_id(&company_id)
@@ -462,8 +466,9 @@ pub async fn update(
     CompanyImporter::import(&conn, csv_data, &uri)
         .await
         .map_err(|e: service::sync::ImportError| match e {
-            ImportError::Database(e) => ApiError::from(e),
-            _ => err!(SyncErrorCode::ImportFailed),
+            ImportError::Internal(error) => {
+                err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
+            }
         })?;
 
     let company = Company::find_by_id(&id)

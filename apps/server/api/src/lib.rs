@@ -168,12 +168,19 @@ fn setup_api_fallback(router: Router) -> Router {
 }
 
 pub fn setup_web(router: Router) -> Router {
-    router.nest(
-        "/assets",
-        Router::new()
-            .route("/{*file}", get(web::assets_handler))
-            .route_layer(CompressionLayer::new()),
-    )
+    router
+        .nest(
+            "/assets",
+            Router::new()
+                .route("/{*file}", get(web::assets_handler))
+                .route_layer(CompressionLayer::new()),
+        )
+        .nest(
+            "/locales",
+            Router::new()
+                .route("/{*file}", get(web::locales_handler))
+                .route_layer(CompressionLayer::new()),
+        )
 }
 
 pub fn main() {
