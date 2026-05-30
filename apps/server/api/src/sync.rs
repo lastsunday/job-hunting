@@ -20,7 +20,7 @@ use framework::{
     error::ApiResult,
     middleware::get_auth_layer,
 };
-use sea_orm::{EntityTrait, Order, PaginatorTrait, QueryOrder};
+use sea_orm::{EntityTrait, Order, PaginatorTrait, QueryOrder, TransactionTrait};
 use serde::Deserialize;
 use utoipa::ToSchema;
 use utoipa_axum::{
@@ -92,8 +92,16 @@ pub(crate) async fn import_file(
         }
     })?;
     let result = match param.data_type.as_str() {
-        "job" => JobImporter::import(conn(&state), rows, uri.as_str()).await,
-        "company" => CompanyImporter::import(conn(&state), rows, uri.as_str()).await,
+        "job" => Ok(conn(&state)
+            .transaction::<_, _, anyhow::Error>(|txn| {
+                Box::pin(async move { Ok(JobImporter::import(txn, rows, uri.as_str()).await?) })
+            })
+            .await),
+        "company" => Ok(conn(&state)
+            .transaction::<_, _, anyhow::Error>(|txn| {
+                Box::pin(async move { Ok(CompanyImporter::import(txn, rows, uri.as_str()).await?) })
+            })
+            .await),
         _ => Err(ImportError::Internal(anyhow::anyhow!("invalid data type"))),
     }
     .map_err(|e| match e {
@@ -101,7 +109,17 @@ pub(crate) async fn import_file(
             err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
         }
     })?;
-    Ok(ApiResponse::success(Some(result)))
+    match result {
+        Ok(result) => Ok(ApiResponse::success(Some(result))),
+        Err(e) => match e {
+            sea_orm::TransactionError::Connection(db_err) => {
+                Err(err!(CriticalErrorCode::InternalError).with_extra(db_err.to_string()))
+            }
+            sea_orm::TransactionError::Transaction(error) => {
+                Err(err!(CriticalErrorCode::InternalError).with_extra(error.to_string()))
+            }
+        },
+    }
 }
 
 #[debug_handler]

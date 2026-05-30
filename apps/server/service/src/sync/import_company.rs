@@ -14,15 +14,15 @@ use crate::sync::error::ImportError;
 use crate::sync::types::{ImportError as ImportErrorType, ImportResult};
 use crate::util::{gen_company_id, gen_source_id};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, DbErr,
-    EntityTrait, IntoActiveModel, QueryFilter, TransactionTrait, TryIntoModel,
+    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DbErr, EntityTrait,
+    IntoActiveModel, QueryFilter, TryIntoModel,
 };
 
 pub struct CompanyImporter;
 
 impl CompanyImporter {
-    pub async fn import(
-        conn: &DatabaseConnection,
+    pub async fn import<C: ConnectionTrait>(
+        conn: &C,
         data: Vec<Vec<String>>,
         uri: &str,
     ) -> Result<ImportResult, ImportError> {
@@ -79,224 +79,199 @@ impl CompanyImporter {
         let rows = data[1..].to_vec();
         let total = rows.len();
         let now = Utc::now();
+        let mapping = mapping.clone();
+        let headers = headers.clone();
+        let uri = uri.to_string();
+        let mut company_ids_from_data: HashSet<String> = HashSet::new();
+        let mut company_source_map: HashMap<String, CompanySourceActiveModel> = HashMap::new();
 
-        // 使用闭包事务，自动处理提交/回滚
-        let result = conn
-            .transaction::<_, _, anyhow::Error>(|txn| {
-                let mapping = mapping.clone();
-                let headers = headers.clone();
-                let uri = uri.to_string();
-                Box::pin(async move {
-                    let mut company_ids_from_data: HashSet<String> = HashSet::new();
-                    let mut company_source_map: HashMap<String, CompanySourceActiveModel> =
-                        HashMap::new();
+        // 根据文件的rows构建company source列表
+        let mut errors: Vec<ImportErrorType> = Vec::new();
+        for (row_index, row) in rows.iter().enumerate() {
+            let company_name = get_field_value(&mapping.name, row);
+            if company_name.is_empty() {
+                continue;
+            }
 
-                    // 根据文件的rows构建company source列表
-                    let mut errors: Vec<ImportErrorType> = Vec::new();
-                    for (row_index, row) in rows.iter().enumerate() {
-                        let company_name = get_field_value(&mapping.name, row);
-                        if company_name.is_empty() {
-                            continue;
-                        }
+            let company_id = gen_company_id(&company_name);
+            let company_source_id = gen_source_id(&company_id, &uri);
 
-                        let company_id = gen_company_id(&company_name);
-                        let company_source_id = gen_source_id(&company_id, &uri);
-
-                        match Self::build_company_source(
-                            company_source_id.as_str(),
-                            company_id.as_str(),
-                            &mapping,
-                            &headers,
-                            row,
-                            &now,
-                            &uri,
-                            row_index + 1,
-                        ) {
-                            Ok(model) => {
-                                company_ids_from_data.insert(company_source_id.clone());
-                                company_source_map.insert(company_source_id.clone(), model);
-                            }
-                            Err(e) => {
-                                if let Some(import_err) = e.downcast_ref::<ImportErrorType>() {
-                                    errors.push(import_err.clone());
-                                } else {
-                                    errors.push(ImportErrorType::InvalidInteger {
-                                        row: row_index + 1,
-                                        field: "unknown".to_string(),
-                                        value: e.to_string(),
-                                    });
-                                }
-                            }
-                        }
-                    }
-
-                    // 如果有解析错误，直接返回
-                    if !errors.is_empty() {
-                        return Ok(ImportResult {
-                            success: false,
-                            valid_result: true,
-                            data_version: version,
-                            actual_version,
-                            lack_columns: vec![],
-                            valid_columns: FileParser::get_company_valid_columns(actual_version),
-                            total,
-                            imported: 0,
-                            updated: 0,
-                            cost_time: start_time.elapsed().as_millis() as i64,
-                            errors,
-                            warnings: vec![],
+            match Self::build_company_source(
+                company_source_id.as_str(),
+                company_id.as_str(),
+                &mapping,
+                &headers,
+                row,
+                &now,
+                &uri,
+                row_index + 1,
+            ) {
+                Ok(model) => {
+                    company_ids_from_data.insert(company_source_id.clone());
+                    company_source_map.insert(company_source_id.clone(), model);
+                }
+                Err(e) => {
+                    if let Some(import_err) = e.downcast_ref::<ImportErrorType>() {
+                        errors.push(import_err.clone());
+                    } else {
+                        errors.push(ImportErrorType::InvalidInteger {
+                            row: row_index + 1,
+                            field: "unknown".to_string(),
+                            value: e.to_string(),
                         });
                     }
+                }
+            }
+        }
 
-                    // 根据company_source id获取已存在的数据
-                    let exists_company_source = Self::batch_query_company_sources(
-                        company_ids_from_data.into_iter().collect(),
-                        txn,
-                    )
-                    .await?;
+        // 如果有解析错误，直接返回
+        if !errors.is_empty() {
+            return Ok(ImportResult {
+                success: false,
+                valid_result: true,
+                data_version: version,
+                actual_version,
+                lack_columns: vec![],
+                valid_columns: FileParser::get_company_valid_columns(actual_version),
+                total,
+                imported: 0,
+                updated: 0,
+                cost_time: start_time.elapsed().as_millis() as i64,
+                errors,
+                warnings: vec![],
+            });
+        }
 
-                    // 过滤数据库中已存在的company_source记录
-                    let exists_company_source_ids: Vec<String> = exists_company_source
-                        .iter()
-                        .map(|item| item.id.clone())
-                        .collect();
-                    for id in exists_company_source_ids {
-                        company_source_map.remove(&id);
-                    }
+        // 根据company_source id获取已存在的数据
+        let exists_company_source =
+            Self::batch_query_company_sources(company_ids_from_data.into_iter().collect(), conn)
+                .await?;
 
-                    let filter_company_source: Vec<entity::company_source::ActiveModel> =
-                        company_source_map.into_values().collect();
+        // 过滤数据库中已存在的company_source记录
+        let exists_company_source_ids: Vec<String> = exists_company_source
+            .iter()
+            .map(|item| item.id.clone())
+            .collect();
+        for id in exists_company_source_ids {
+            company_source_map.remove(&id);
+        }
 
-                    // 保存过滤后的company_source记录
-                    Self::batch_insert_company_sources(filter_company_source.clone(), txn).await?;
+        let filter_company_source: Vec<entity::company_source::ActiveModel> =
+            company_source_map.into_values().collect();
 
-                    // 构建 company_id 到 company_source 的映射
-                    let mut filter_company_id_and_source_map = HashMap::new();
-                    let mut company_ids = Vec::new();
-                    for item in filter_company_source {
-                        let model = item.try_into_model().map_err(|e| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
-                        })?;
-                        let company_id = model.company_id.clone().ok_or_else(|| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                "company_id is empty".to_string(),
-                            ))
-                        })?;
-                        filter_company_id_and_source_map
-                            .insert(company_id.clone(), (model, company_id.clone()));
-                        company_ids.push(company_id);
-                    }
+        // 保存过滤后的company_source记录
+        Self::batch_insert_company_sources(filter_company_source.clone(), conn).await?;
 
-                    // 查询已存在的company记录
-                    let exists_company = Self::batch_query_companies(company_ids, txn).await?;
-
-                    let exists_company_map: HashMap<&str, &entity::company::Model> = exists_company
-                        .iter()
-                        .map(|item| (item.id.as_str(), item))
-                        .collect();
-
-                    // 区分已存在和不存在company的记录
-                    let mut exists_company_source = Vec::new();
-                    let mut not_exists_company_source = Vec::new();
-                    for (_, company_id) in filter_company_id_and_source_map.values() {
-                        if exists_company_map.contains_key(company_id.as_str()) {
-                            exists_company_source.push(company_id.clone());
-                        } else {
-                            not_exists_company_source.push(company_id.clone());
-                        }
-                    }
-
-                    let mut insert_company = Vec::new();
-
-                    // 如果company不存在，则进行插入逻辑
-                    for company_id in not_exists_company_source {
-                        if let Some((source_model, _)) =
-                            filter_company_id_and_source_map.get(&company_id)
-                        {
-                            let now_fixed = now.fixed_offset();
-                            let company = Self::build_company(source_model, &now_fixed, &now_fixed)
-                                .map_err(|e| {
-                                    DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
-                                })?;
-                            insert_company.push(company);
-                        }
-                    }
-
-                    let mut update_company_list = Vec::new();
-
-                    // 如果company已存在，则进行更新处理逻辑
-                    for company_id in exists_company_source {
-                        let (source_model, _) = filter_company_id_and_source_map
-                            .get(&company_id)
-                            .ok_or_else(|| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                "can't find company source".to_string(),
-                            ))
-                        })?;
-
-                        let existing_company =
-                            exists_company_map.get(company_id.as_str()).ok_or_else(|| {
-                                DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                    "can't find company".to_string(),
-                                ))
-                            })?;
-
-                        let now_fixed = now.fixed_offset();
-                        let mut update_company =
-                            Self::build_company(source_model, &now_fixed, &now_fixed).map_err(
-                                |e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())),
-                            )?;
-
-                        // 规则1: source_refresh_datetime更新时，从company_source重建company
-                        let existing_refresh = existing_company.source_refresh_datetime;
-                        let new_refresh = source_model.source_refresh_datetime;
-                        if let (Some(existing_dt), Some(new_dt)) = (existing_refresh, new_refresh)
-                            && new_dt > existing_dt
-                        {
-                            update_company =
-                                Self::build_company(source_model, &now_fixed, &now_fixed).map_err(
-                                    |e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())),
-                                )?;
-                        }
-
-                        let active_model = update_company.into_active_model().reset_all();
-                        update_company_list.push(active_model);
-                    }
-
-                    let imported = insert_company.len();
-                    let updated = update_company_list.len();
-
-                    // 批量插入新company
-                    Self::batch_insert_companies(insert_company, txn).await?;
-
-                    // 更新已有company
-                    for item in update_company_list {
-                        item.update(txn).await?;
-                    }
-
-                    Ok(ImportResult {
-                        success: true,
-                        valid_result: true,
-                        data_version: version,
-                        actual_version,
-                        lack_columns: vec![],
-                        valid_columns: FileParser::get_company_valid_columns(actual_version),
-                        total,
-                        imported,
-                        updated,
-                        cost_time: start_time.elapsed().as_millis() as i64,
-                        errors: vec![],
-                        warnings,
-                    })
-                })
-            })
-            .await
-            .map_err(|e| match e {
-                sea_orm::TransactionError::Connection(db_err) => db_err.into(),
-                sea_orm::TransactionError::Transaction(db_err) => db_err,
+        // 构建 company_id 到 company_source 的映射
+        let mut filter_company_id_and_source_map = HashMap::new();
+        let mut company_ids = Vec::new();
+        for item in filter_company_source {
+            let model = item
+                .try_into_model()
+                .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?;
+            let company_id = model.company_id.clone().ok_or_else(|| {
+                DbErr::Query(sea_orm::RuntimeErr::Internal(
+                    "company_id is empty".to_string(),
+                ))
             })?;
+            filter_company_id_and_source_map
+                .insert(company_id.clone(), (model, company_id.clone()));
+            company_ids.push(company_id);
+        }
 
-        Ok(result)
+        // 查询已存在的company记录
+        let exists_company = Self::batch_query_companies(company_ids, conn).await?;
+
+        let exists_company_map: HashMap<&str, &entity::company::Model> = exists_company
+            .iter()
+            .map(|item| (item.id.as_str(), item))
+            .collect();
+
+        // 区分已存在和不存在company的记录
+        let mut exists_company_source = Vec::new();
+        let mut not_exists_company_source = Vec::new();
+        for (_, company_id) in filter_company_id_and_source_map.values() {
+            if exists_company_map.contains_key(company_id.as_str()) {
+                exists_company_source.push(company_id.clone());
+            } else {
+                not_exists_company_source.push(company_id.clone());
+            }
+        }
+
+        let mut insert_company = Vec::new();
+
+        // 如果company不存在，则进行插入逻辑
+        for company_id in not_exists_company_source {
+            if let Some((source_model, _)) = filter_company_id_and_source_map.get(&company_id) {
+                let now_fixed = now.fixed_offset();
+                let company = Self::build_company(source_model, &now_fixed, &now_fixed)
+                    .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?;
+                insert_company.push(company);
+            }
+        }
+
+        let mut update_company_list = Vec::new();
+
+        // 如果company已存在，则进行更新处理逻辑
+        for company_id in exists_company_source {
+            let (source_model, _) = filter_company_id_and_source_map
+                .get(&company_id)
+                .ok_or_else(|| {
+                    DbErr::Query(sea_orm::RuntimeErr::Internal(
+                        "can't find company source".to_string(),
+                    ))
+                })?;
+
+            let existing_company =
+                exists_company_map.get(company_id.as_str()).ok_or_else(|| {
+                    DbErr::Query(sea_orm::RuntimeErr::Internal(
+                        "can't find company".to_string(),
+                    ))
+                })?;
+
+            let now_fixed = now.fixed_offset();
+            let mut update_company = Self::build_company(source_model, &now_fixed, &now_fixed)
+                .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?;
+
+            // 规则1: source_refresh_datetime更新时，从company_source重建company
+            let existing_refresh = existing_company.source_refresh_datetime;
+            let new_refresh = source_model.source_refresh_datetime;
+            if let (Some(existing_dt), Some(new_dt)) = (existing_refresh, new_refresh)
+                && new_dt > existing_dt
+            {
+                update_company = Self::build_company(source_model, &now_fixed, &now_fixed)
+                    .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?;
+            }
+
+            let active_model = update_company.into_active_model().reset_all();
+            update_company_list.push(active_model);
+        }
+
+        let imported = insert_company.len();
+        let updated = update_company_list.len();
+
+        // 批量插入新company
+        Self::batch_insert_companies(insert_company, conn).await?;
+
+        // 更新已有company
+        for item in update_company_list {
+            item.update(conn).await?;
+        }
+
+        Ok(ImportResult {
+            success: true,
+            valid_result: true,
+            data_version: version,
+            actual_version,
+            lack_columns: vec![],
+            valid_columns: FileParser::get_company_valid_columns(actual_version),
+            total,
+            imported,
+            updated,
+            cost_time: start_time.elapsed().as_millis() as i64,
+            errors: vec![],
+            warnings,
+        })
     }
 
     // 根据company_source id批量查询
@@ -501,4 +476,3 @@ impl CompanyImporter {
         })
     }
 }
-

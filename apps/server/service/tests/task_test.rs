@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use sea_orm::{ColumnTrait, EntityTrait, QueryFilter};
+use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 use service::task::{
     CalculateAndCreateDownloadTaskParam, CreatePlanParam,
     ExecuteDownloadTaskAndCreateMergeTaskParam, ExecuteMergeTaskParam, RepoType,
@@ -192,10 +192,12 @@ async fn test_full_flow() {
     assert_eq!(download_file_id, merge_file_id);
 
     // 执行data merge task
+    let now: DateTime<Utc> = "2024-01-03T00:00:00Z".parse::<DateTime<Utc>>().unwrap();
     let data_count = execute_merge_task(
         &state.conn,
         ExecuteMergeTaskParam {
             merge_task_id: merge_task_id.to_string(),
+            now,
         },
     )
     .await
@@ -221,6 +223,15 @@ async fn test_full_flow() {
         .unwrap()
         .unwrap();
     assert_eq!(data_count, merge_task_data_count.unwrap());
+
+    // checking job record
+    let count = entity::job::Entity::find()
+        .count(&state.conn)
+        .await
+        .unwrap();
+    assert!(count > 0);
+
+    // TODO: checking uri
 
     state.conn.close().await.unwrap();
     tear_down(&container).await;

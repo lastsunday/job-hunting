@@ -11,15 +11,15 @@ use crate::sync::error::ImportError;
 use crate::sync::types::{ImportError as ImportErrorType, ImportResult};
 use crate::util::gen_source_id;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, DbErr,
-    EntityTrait, IntoActiveModel, QueryFilter, QuerySelect, TransactionTrait, TryIntoModel,
+    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DbErr, EntityTrait,
+    IntoActiveModel, QueryFilter, QuerySelect, TryIntoModel,
 };
 
 pub struct JobImporter;
 
 impl JobImporter {
-    pub async fn import(
-        conn: &DatabaseConnection,
+    pub async fn import<C: ConnectionTrait>(
+        conn: &C,
         data: Vec<Vec<String>>,
         uri: &str,
     ) -> Result<ImportResult, ImportError> {
@@ -76,252 +76,231 @@ impl JobImporter {
         let rows = data[1..].to_vec();
         let total = rows.len();
         let now = Utc::now();
+        let mapping = mapping.clone();
+        let headers = headers.clone();
+        let uri = uri.to_string();
+        let mut job_ids_from_data: HashSet<String> = HashSet::new();
+        let mut job_source_map: HashMap<String, JobSourceActiveModel> = HashMap::new();
 
-        // 使用闭包事务，自动处理提交/回滚
-        let result = conn
-            .transaction::<_, _, anyhow::Error>(|txn| {
-                let mapping = mapping.clone();
-                let headers = headers.clone();
-                let uri = uri.to_string();
-                Box::pin(async move {
-                    let mut job_ids_from_data: HashSet<String> = HashSet::new();
-                    let mut job_source_map: HashMap<String, JobSourceActiveModel> = HashMap::new();
-
-                    // 根据文件的rows构建job source列表
-                    let mut errors: Vec<ImportErrorType> = Vec::new();
-                    for (row_index, row) in rows.iter().enumerate() {
-                        let job_id = get_field_value(&mapping.job_id, row);
-                        let job_source_id = gen_source_id(job_id.as_str(), &uri);
-                        match Self::build_job_source(
-                            job_source_id.as_str(),
-                            job_id.as_str(),
-                            &mapping,
-                            &headers,
-                            row,
-                            &now,
-                            &uri,
-                            row_index + 1,
-                        ) {
-                            Ok(model) => {
-                                job_ids_from_data.insert(job_source_id.clone());
-                                job_source_map.insert(job_source_id.clone(), model);
-                            }
-                            Err(e) => {
-                                if let Some(import_err) = e.downcast_ref::<ImportErrorType>() {
-                                    errors.push(import_err.clone());
-                                } else {
-                                    errors.push(ImportErrorType::InvalidInteger {
-                                        row: row_index + 1,
-                                        field: "unknown".to_string(),
-                                        value: e.to_string(),
-                                    });
-                                }
-                            }
-                        }
-                    }
-
-                    // 如果有解析错误，直接返回
-                    if !errors.is_empty() {
-                        return Ok(ImportResult {
-                            success: false,
-                            valid_result: true,
-                            data_version: version,
-                            actual_version,
-                            lack_columns: vec![],
-                            valid_columns: FileParser::get_job_valid_columns(actual_version),
-                            total,
-                            imported: 0,
-                            updated: 0,
-                            cost_time: start_time.elapsed().as_millis() as i64,
-                            errors,
-                            warnings: vec![],
+        // 根据文件的rows构建job source列表
+        let mut errors: Vec<ImportErrorType> = Vec::new();
+        for (row_index, row) in rows.iter().enumerate() {
+            let job_id = get_field_value(&mapping.job_id, row);
+            let job_source_id = gen_source_id(job_id.as_str(), &uri);
+            match Self::build_job_source(
+                job_source_id.as_str(),
+                job_id.as_str(),
+                &mapping,
+                &headers,
+                row,
+                &now,
+                &uri,
+                row_index + 1,
+            ) {
+                Ok(model) => {
+                    job_ids_from_data.insert(job_source_id.clone());
+                    job_source_map.insert(job_source_id.clone(), model);
+                }
+                Err(e) => {
+                    if let Some(import_err) = e.downcast_ref::<ImportErrorType>() {
+                        errors.push(import_err.clone());
+                    } else {
+                        errors.push(ImportErrorType::InvalidInteger {
+                            row: row_index + 1,
+                            field: "unknown".to_string(),
+                            value: e.to_string(),
                         });
                     }
+                }
+            }
+        }
 
-                    // 根据data job_source id获取已存在数据中的job_source记录
-                    let exists_job_source =
-                        Self::batch_query_job_sources(job_ids_from_data.into_iter().collect(), txn)
-                            .await?;
+        // 如果有解析错误，直接返回
+        if !errors.is_empty() {
+            return Ok(ImportResult {
+                success: false,
+                valid_result: true,
+                data_version: version,
+                actual_version,
+                lack_columns: vec![],
+                valid_columns: FileParser::get_job_valid_columns(actual_version),
+                total,
+                imported: 0,
+                updated: 0,
+                cost_time: start_time.elapsed().as_millis() as i64,
+                errors,
+                warnings: vec![],
+            });
+        }
 
-                    // 过滤数据库中的job_source记录
-                    let exists_job_source_ids: Vec<String> = exists_job_source
-                        .iter()
-                        .map(|item| item.id.clone())
-                        .collect();
-                    for id in exists_job_source_ids {
-                        job_source_map.remove(&id);
-                    }
+        // 根据data job_source id获取已存在数据中的job_source记录
+        let exists_job_source =
+            Self::batch_query_job_sources(job_ids_from_data.into_iter().collect(), conn).await?;
 
-                    let filter_job_source: Vec<entity::job_source::ActiveModel> =
-                        job_source_map.into_values().collect();
+        // 过滤数据库中的job_source记录
+        let exists_job_source_ids: Vec<String> = exists_job_source
+            .iter()
+            .map(|item| item.id.clone())
+            .collect();
+        for id in exists_job_source_ids {
+            job_source_map.remove(&id);
+        }
 
-                    // 保存过滤后的job_source记录
-                    Self::batch_insert_job_sources(filter_job_source.clone(), txn).await?;
+        let filter_job_source: Vec<entity::job_source::ActiveModel> =
+            job_source_map.into_values().collect();
 
-                    let mut filter_job_id_and_job_source_map = HashMap::new();
-                    let mut job_ids = Vec::new();
+        // 保存过滤后的job_source记录
+        Self::batch_insert_job_sources(filter_job_source.clone(), conn).await?;
 
-                    // 根据过滤后的job source更新或插入对应的job记录
-                    for item in filter_job_source {
-                        let model = item.try_into_model().map_err(|e| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
-                        })?;
-                        let job_id = model.job_id.clone().ok_or_else(|| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                "job_id is empty".to_string(),
-                            ))
-                        })?;
-                        filter_job_id_and_job_source_map.insert(job_id.clone(), model);
-                        job_ids.push(job_id);
-                    }
+        let mut filter_job_id_and_job_source_map = HashMap::new();
+        let mut job_ids = Vec::new();
 
-                    // 查询job记录（带锁）
-                    let exists_job = Self::batch_query_jobs(job_ids, txn).await?;
-
-                    let exists_job_id_model_map: HashMap<&str, &entity::job::Model> = exists_job
-                        .iter()
-                        .map(|item| (item.id.as_str(), item))
-                        .collect();
-
-                    // 区分已存在和不存在job的记录
-                    let mut exists_job_source = Vec::new();
-                    let mut not_exists_job_source = Vec::new();
-                    for (id, job_source) in &filter_job_id_and_job_source_map {
-                        if exists_job_id_model_map.contains_key(id.as_str()) {
-                            exists_job_source.push(job_source);
-                        } else {
-                            not_exists_job_source.push(job_source);
-                        }
-                    }
-
-                    let mut insert_job = Vec::new();
-
-                    // 如果job不存在，则进行插入逻辑
-                    for item in not_exists_job_source {
-                        let now_fixed = now.fixed_offset();
-                        let job = Self::build_job(item, &now_fixed, &now_fixed).map_err(|e| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
-                        })?;
-                        insert_job.push(job);
-                    }
-
-                    let mut update_job_list = Vec::new();
-
-                    // 如果job已存在，则进行更新处理逻辑
-                    for item in exists_job_source {
-                        let id = item.job_id.clone().ok_or_else(|| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                "job_source job_id is empty".to_string(),
-                            ))
-                        })?;
-                        let job_source = item;
-                        let job = exists_job_id_model_map.get(id.as_str()).ok_or_else(|| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                "cant' get job model by id".to_string(),
-                            ))
-                        })?;
-                        let mut update_job =
-                            job.to_owned().clone().try_into_model().map_err(|e| {
-                                DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
-                            })?;
-
-                        // 规则1: 更新的数据发布时间，如果job source的发布时间更新，则重建job
-                        if update_job.publish_datetime.ok_or_else(|| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                "job publish_datetime is empty".to_string(),
-                            ))
-                        })? < job_source.publish_datetime.ok_or_else(|| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                "job_source publish_datetime is empty".to_string(),
-                            ))
-                        })? {
-                            let now_fixed = now.fixed_offset();
-                            update_job = Self::build_job(
-                                job_source,
-                                &now_fixed,
-                                &job.create_datetime.ok_or_else(|| {
-                                    DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                        "job create_datetime is empty".to_string(),
-                                    ))
-                                })?,
-                            )
-                            .map_err(|e| {
-                                DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
-                            })?
-                            .try_into_model()
-                            .map_err(|e| {
-                                DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string()))
-                            })?;
-                        }
-
-                        // 规则2: 获得公司全称，如果原job的公司名称不是全称，而job source的是全称，那么更新
-                        if !job.is_full_company_name.ok_or_else(|| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                "job is_full_company_name is empty".to_string(),
-                            ))
-                        })? && job_source.is_full_company_name.ok_or_else(|| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                "job_source is_full_company_name is empty".to_string(),
-                            ))
-                        })? {
-                            update_job.is_full_company_name = Some(true);
-                            update_job.company_name = job_source.company_name.clone();
-                        }
-
-                        // 规则3: 更早的首次扫描时间，如果原job source的首次扫描时间比job的更早，
-                        // 那么更新job source的首次扫描时间到job
-                        if job_source.first_scan_datetime.ok_or_else(|| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                "job_source first_scan_datetime is empty".to_string(),
-                            ))
-                        })? < job.first_scan_datetime.ok_or_else(|| {
-                            DbErr::Query(sea_orm::RuntimeErr::Internal(
-                                "job first_scan_datetime is empty".to_string(),
-                            ))
-                        })? {
-                            update_job.first_scan_datetime = job_source.first_scan_datetime;
-                        } else {
-                            update_job.first_scan_datetime = job.first_scan_datetime;
-                        }
-
-                        let active_model = update_job.into_active_model().reset_all();
-                        update_job_list.push(active_model);
-                    }
-
-                    let imported = insert_job.len();
-                    let updated = update_job_list.len();
-
-                    // 批量插入新job
-                    Self::batch_insert_jobs(insert_job, txn).await?;
-
-                    // 更新已有job
-                    for item in update_job_list {
-                        item.update(txn).await?;
-                    }
-
-                    Ok(ImportResult {
-                        success: true,
-                        valid_result: true,
-                        data_version: version,
-                        actual_version,
-                        lack_columns: vec![],
-                        valid_columns: FileParser::get_job_valid_columns(actual_version),
-                        total,
-                        imported,
-                        updated,
-                        cost_time: start_time.elapsed().as_millis() as i64,
-                        errors: vec![],
-                        warnings,
-                    })
-                })
-            })
-            .await
-            .map_err(|e| match e {
-                sea_orm::TransactionError::Connection(db_err) => db_err.into(),
-                sea_orm::TransactionError::Transaction(db_err) => db_err,
+        // 根据过滤后的job source更新或插入对应的job记录
+        for item in filter_job_source {
+            let model = item
+                .try_into_model()
+                .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?;
+            let job_id = model.job_id.clone().ok_or_else(|| {
+                DbErr::Query(sea_orm::RuntimeErr::Internal("job_id is empty".to_string()))
             })?;
+            filter_job_id_and_job_source_map.insert(job_id.clone(), model);
+            job_ids.push(job_id);
+        }
 
-        Ok(result)
+        // 查询job记录（带锁）
+        let exists_job = Self::batch_query_jobs(job_ids, conn).await?;
+
+        let exists_job_id_model_map: HashMap<&str, &entity::job::Model> = exists_job
+            .iter()
+            .map(|item| (item.id.as_str(), item))
+            .collect();
+
+        // 区分已存在和不存在job的记录
+        let mut exists_job_source = Vec::new();
+        let mut not_exists_job_source = Vec::new();
+        for (id, job_source) in &filter_job_id_and_job_source_map {
+            if exists_job_id_model_map.contains_key(id.as_str()) {
+                exists_job_source.push(job_source);
+            } else {
+                not_exists_job_source.push(job_source);
+            }
+        }
+
+        let mut insert_job = Vec::new();
+
+        // 如果job不存在，则进行插入逻辑
+        for item in not_exists_job_source {
+            let now_fixed = now.fixed_offset();
+            let job = Self::build_job(item, &now_fixed, &now_fixed)
+                .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?;
+            insert_job.push(job);
+        }
+
+        let mut update_job_list = Vec::new();
+
+        // 如果job已存在，则进行更新处理逻辑
+        for item in exists_job_source {
+            let id = item.job_id.clone().ok_or_else(|| {
+                DbErr::Query(sea_orm::RuntimeErr::Internal(
+                    "job_source job_id is empty".to_string(),
+                ))
+            })?;
+            let job_source = item;
+            let job = exists_job_id_model_map.get(id.as_str()).ok_or_else(|| {
+                DbErr::Query(sea_orm::RuntimeErr::Internal(
+                    "cant' get job model by id".to_string(),
+                ))
+            })?;
+            let mut update_job = job
+                .to_owned()
+                .clone()
+                .try_into_model()
+                .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?;
+
+            // 规则1: 更新的数据发布时间，如果job source的发布时间更新，则重建job
+            if update_job.publish_datetime.ok_or_else(|| {
+                DbErr::Query(sea_orm::RuntimeErr::Internal(
+                    "job publish_datetime is empty".to_string(),
+                ))
+            })? < job_source.publish_datetime.ok_or_else(|| {
+                DbErr::Query(sea_orm::RuntimeErr::Internal(
+                    "job_source publish_datetime is empty".to_string(),
+                ))
+            })? {
+                let now_fixed = now.fixed_offset();
+                update_job = Self::build_job(
+                    job_source,
+                    &now_fixed,
+                    &job.create_datetime.ok_or_else(|| {
+                        DbErr::Query(sea_orm::RuntimeErr::Internal(
+                            "job create_datetime is empty".to_string(),
+                        ))
+                    })?,
+                )
+                .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?
+                .try_into_model()
+                .map_err(|e| DbErr::Query(sea_orm::RuntimeErr::Internal(e.to_string())))?;
+            }
+
+            // 规则2: 获得公司全称，如果原job的公司名称不是全称，而job source的是全称，那么更新
+            if !job.is_full_company_name.ok_or_else(|| {
+                DbErr::Query(sea_orm::RuntimeErr::Internal(
+                    "job is_full_company_name is empty".to_string(),
+                ))
+            })? && job_source.is_full_company_name.ok_or_else(|| {
+                DbErr::Query(sea_orm::RuntimeErr::Internal(
+                    "job_source is_full_company_name is empty".to_string(),
+                ))
+            })? {
+                update_job.is_full_company_name = Some(true);
+                update_job.company_name = job_source.company_name.clone();
+            }
+
+            // 规则3: 更早的首次扫描时间，如果原job source的首次扫描时间比job的更早，
+            // 那么更新job source的首次扫描时间到job
+            if job_source.first_scan_datetime.ok_or_else(|| {
+                DbErr::Query(sea_orm::RuntimeErr::Internal(
+                    "job_source first_scan_datetime is empty".to_string(),
+                ))
+            })? < job.first_scan_datetime.ok_or_else(|| {
+                DbErr::Query(sea_orm::RuntimeErr::Internal(
+                    "job first_scan_datetime is empty".to_string(),
+                ))
+            })? {
+                update_job.first_scan_datetime = job_source.first_scan_datetime;
+            } else {
+                update_job.first_scan_datetime = job.first_scan_datetime;
+            }
+
+            let active_model = update_job.into_active_model().reset_all();
+            update_job_list.push(active_model);
+        }
+
+        let imported = insert_job.len();
+        let updated = update_job_list.len();
+
+        // 批量插入新job
+        Self::batch_insert_jobs(insert_job, conn).await?;
+
+        // 更新已有job
+        for item in update_job_list {
+            item.update(conn).await?;
+        }
+
+        Ok(ImportResult {
+            success: true,
+            valid_result: true,
+            data_version: version,
+            actual_version,
+            lack_columns: vec![],
+            valid_columns: FileParser::get_job_valid_columns(actual_version),
+            total,
+            imported,
+            updated,
+            cost_time: start_time.elapsed().as_millis() as i64,
+            errors: vec![],
+            warnings,
+        })
     }
 
     // 根据job_source id批量查询

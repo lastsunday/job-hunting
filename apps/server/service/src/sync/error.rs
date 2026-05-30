@@ -1,7 +1,5 @@
 use thiserror::Error;
 
-use crate::common::FileError;
-
 #[derive(Debug, Error)]
 pub enum ImportError {
     #[error(transparent)]

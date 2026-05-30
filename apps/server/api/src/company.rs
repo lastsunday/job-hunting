@@ -17,12 +17,10 @@ use framework::{
 };
 use sea_orm::{
     ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait,
+    TransactionTrait,
 };
 use service::util::hash::{gen_add_or_update_uri, gen_company_id};
-use service::{
-    common::FileParser,
-    sync::{CompanyImporter, ImportError},
-};
+use service::{common::FileParser, sync::CompanyImporter};
 use utoipa::ToSchema;
 use utoipa_axum::{
     router::{OpenApiRouter, UtoipaMethodRouterExt},
@@ -368,13 +366,18 @@ pub async fn create(
     let csv_data = convert_company_to_csv_data(&param, None);
     let uri = gen_add_or_update_uri(&principal.name, COMPANY_CSV_VERSION, &csv_data);
 
-    CompanyImporter::import(&conn, csv_data, &uri)
-        .await
-        .map_err(|e: service::sync::ImportError| match e {
-            ImportError::Internal(error) => {
-                err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
-            }
-        })?;
+    conn.transaction::<_, _, anyhow::Error>(|txn| {
+        Box::pin(async move { Ok(CompanyImporter::import(txn, csv_data, &uri).await?) })
+    })
+    .await
+    .map_err(|e| match e {
+        sea_orm::TransactionError::Connection(db_err) => {
+            err!(CriticalErrorCode::InternalError).with_extra(db_err.to_string())
+        }
+        sea_orm::TransactionError::Transaction(error) => {
+            err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
+        }
+    })?;
 
     let company = Company::find_by_id(&company_id)
         .one(&conn)
@@ -463,13 +466,18 @@ pub async fn update(
     let csv_data = convert_company_to_csv_data(&param, Some(&existing));
     let uri = gen_add_or_update_uri(&principal.name, COMPANY_CSV_VERSION, &csv_data);
 
-    CompanyImporter::import(&conn, csv_data, &uri)
-        .await
-        .map_err(|e: service::sync::ImportError| match e {
-            ImportError::Internal(error) => {
-                err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
-            }
-        })?;
+    conn.transaction::<_, _, anyhow::Error>(|txn| {
+        Box::pin(async move { Ok(CompanyImporter::import(txn, csv_data, &uri).await?) })
+    })
+    .await
+    .map_err(|e| match e {
+        sea_orm::TransactionError::Connection(db_err) => {
+            err!(CriticalErrorCode::InternalError).with_extra(db_err.to_string())
+        }
+        sea_orm::TransactionError::Transaction(error) => {
+            err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
+        }
+    })?;
 
     let company = Company::find_by_id(&id)
         .one(&conn)

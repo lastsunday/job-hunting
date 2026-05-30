@@ -19,13 +19,11 @@ use framework::{
 };
 use sea_orm::{
     ColumnTrait, EntityTrait, IntoActiveModel, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait,
+    TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
 use service::util::hash::gen_add_or_update_uri;
-use service::{
-    common::FileParser,
-    sync::{ImportError, JobImporter},
-};
+use service::{common::FileParser, sync::JobImporter};
 use utoipa::ToSchema;
 use utoipa_axum::{
     router::{OpenApiRouter, UtoipaMethodRouterExt},
@@ -348,13 +346,19 @@ pub async fn create(
     let csv_data = convert_job_to_csv_data(&job_id, &param);
     let uri = gen_add_or_update_uri(&principal.name, JOB_CSV_VERSION, &csv_data);
 
-    JobImporter::import(&conn, csv_data, &uri)
-        .await
-        .map_err(|e: service::sync::ImportError| match e {
-            ImportError::Internal(error) => {
-                err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
-            }
-        })?;
+    conn.transaction::<_, _, anyhow::Error>(|txn| {
+        Box::pin(async move { Ok(JobImporter::import(txn, csv_data, &uri).await?) })
+    })
+    .await
+    .map_err(|e| match e {
+        sea_orm::TransactionError::Connection(db_err) => {
+            err!(CriticalErrorCode::InternalError).with_extra(db_err.to_string())
+        }
+        sea_orm::TransactionError::Transaction(error) => {
+            err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
+        }
+    })?;
+
     let job = Job::find_by_id(&job_id)
         .one(&conn)
         .await?
@@ -380,13 +384,19 @@ pub async fn update(
     let csv_data = convert_update_job_to_csv_data(&id, &param, &existing);
     let uri = gen_add_or_update_uri(&principal.name, JOB_CSV_VERSION, &csv_data);
 
-    JobImporter::import(&conn, csv_data, &uri)
-        .await
-        .map_err(|e: service::sync::ImportError| match e {
-            ImportError::Internal(error) => {
-                err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
-            }
-        })?;
+    conn.transaction::<_, _, anyhow::Error>(|txn| {
+        Box::pin(async move { Ok(JobImporter::import(txn, csv_data, &uri).await?) })
+    })
+    .await
+    .map_err(|e| match e {
+        sea_orm::TransactionError::Connection(db_err) => {
+            err!(CriticalErrorCode::InternalError).with_extra(db_err.to_string())
+        }
+        sea_orm::TransactionError::Transaction(error) => {
+            err!(CriticalErrorCode::InternalError).with_extra(error.to_string())
+        }
+    })?;
+
     let job = Job::find_by_id(&id)
         .one(&conn)
         .await?
