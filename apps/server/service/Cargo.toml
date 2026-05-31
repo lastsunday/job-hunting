@@ -19,6 +19,10 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 git2 = { workspace = true }
 gix-packetline = { workspace = true, features = ["blocking-io"] }
+gix-hash = { workspace = true }
+gix-object = { workspace = true }
+gix-pack = { workspace = true }
+gix-features = { workspace = true }
 ssh-key = { workspace = true, features = ["getrandom", "ed25519"] }
 chrono = { workspace = true }
 testcontainers = { workspace = true }

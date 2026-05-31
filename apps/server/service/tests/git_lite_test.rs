@@ -7,8 +7,9 @@ use testcontainers_modules::gitea::{self, Gitea, GiteaRepo};
 use uuid::Uuid;
 mod common;
 use common::{ADMIN_PASSWORD, ADMIN_USERNAME, DATA_REPO};
+use gix_hash::ObjectId;
 use service::util::git::{gen_openssh_key, git_clone_by_http};
-use service::util::git_lite::ls_refs;
+use service::util::git_lite::{fetch_without_blobs, ls_refs};
 
 #[tokio::test]
 async fn test_ls_refs_public_repo() {
@@ -19,6 +20,66 @@ async fn test_ls_refs_public_repo() {
         "Expected refs/heads/main, got: {:?}",
         refs
     );
+    gitea.stop().await.unwrap();
+}
+
+#[tokio::test]
+async fn test_fetch_without_blobs_public_repo() {
+    let (gitea, repo_url) = setup().await;
+
+    let refs = ls_refs(&repo_url, "refs/heads/").await.unwrap();
+    let commit_hash = refs
+        .get("refs/heads/main")
+        .expect("should have refs/heads/main")
+        .clone();
+
+    let objects = fetch_without_blobs(&repo_url, &commit_hash).await.unwrap();
+
+    assert!(
+        objects.len() >= 2,
+        "expected at least commit + tree objects, got {}",
+        objects.len()
+    );
+
+    let commit_oid = ObjectId::from_hex(commit_hash.as_bytes()).unwrap();
+    let commit_data = objects
+        .get(&commit_oid)
+        .expect("commit object should be present");
+
+    let commit_str = std::str::from_utf8(commit_data).unwrap();
+    let tree_line = commit_str.lines().next().unwrap();
+    assert!(
+        tree_line.starts_with("tree "),
+        "commit first line should be 'tree <hash>'"
+    );
+    let tree_hash = &tree_line[5..];
+    let tree_oid = ObjectId::from_hex(tree_hash.as_bytes()).unwrap();
+    assert!(
+        objects.contains_key(&tree_oid),
+        "tree object should be present"
+    );
+
+    let tree_data = &objects[&tree_oid];
+    let mut pos = 0;
+    while pos < tree_data.len() {
+        let null_pos = tree_data[pos..]
+            .iter()
+            .position(|&b| b == 0)
+            .expect("null byte in tree entry");
+        let entry_str = std::str::from_utf8(&tree_data[pos..pos + null_pos]).unwrap();
+        let (mode, _name) = entry_str.split_once(' ').unwrap();
+        pos += null_pos + 1;
+        let entry_oid = ObjectId::try_from(&tree_data[pos..pos + 20]).unwrap();
+        pos += 20;
+        if mode.starts_with("100") || mode == "120000" {
+            assert!(
+                !objects.contains_key(&entry_oid),
+                "blob object {} should be filtered out by blob:none",
+                entry_oid
+            );
+        }
+    }
+
     gitea.stop().await.unwrap();
 }
 
