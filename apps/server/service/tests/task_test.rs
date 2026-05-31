@@ -17,8 +17,8 @@ async fn test_full_flow() {
     // 测试策略：通过 Trait 抽象模拟 Git 网络拉取以快速测试逻辑，并配合 Testcontainers 启动真实容器验证数据库同步的可靠性。
     let (container, state) = setup_database().await;
 
+    // NOTE: 1. 创建任务计划
     let now: DateTime<Utc> = "2024-01-03T00:00:00Z".parse::<DateTime<Utc>>().unwrap();
-    // 创建task_plan
     let user_name = "lastsunday";
     let repo_name = "job-hunting-data";
     let repo_type = RepoType::Github;
@@ -80,9 +80,10 @@ async fn test_full_flow() {
         )
     );
 
+    // NOTE: 2. 计算和创建下载任务
     let plan_id = "dummy_plan_id";
     let file_name = get_file_name_by_task_type(&TaskType::JobDataDownload);
-    // TODO: key not static,need to query other table
+    // TODO: key for git auth not static,need to query other table
     let TaskPlanConfigDataDownloadConfig { url, key, .. } = config.clone();
     let retention_day = 365 * 10; //10 years
     let task_type = TaskType::JobDataDownload;
@@ -132,11 +133,10 @@ async fn test_full_flow() {
         "database task data download list len not correct"
     );
 
+    // NOTE: 3. 执行下载任务和创建合并任务
     let download_task_id = task_ids.first().unwrap().to_string();
-
     // 执行data download task并生成data merge task
     let now: DateTime<Utc> = "2024-01-03T00:00:00Z".parse::<DateTime<Utc>>().unwrap();
-
     let merge_task_ids = execute_download_task_and_create_merge_task(
         &state.conn,
         ExecuteDownloadTaskAndCreateMergeTaskParam {
@@ -191,7 +191,7 @@ async fn test_full_flow() {
         .unwrap();
     assert_eq!(download_file_id, merge_file_id);
 
-    // 执行data merge task
+    // NOTE: 4. 执行合并任务
     let now: DateTime<Utc> = "2024-01-03T00:00:00Z".parse::<DateTime<Utc>>().unwrap();
     let data_count = execute_merge_task(
         &state.conn,

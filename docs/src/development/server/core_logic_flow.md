@@ -48,9 +48,9 @@ sequenceDiagram
 
 > 参考：[RFC 3986](https://www.rfc-editor.org/rfc/rfc3986.html)
 
-第三方数据来源格式：`data://[username[@]]host/path`
-本地文件导入数据来源格式：`data://[username[@]]system/[file_hash]`
-界面新增或编辑数据来源格式：`data://[username[@]]system-ui/[version]/[file_hash]/[rfc3339]`
+- 第三方数据来源格式：`data://[username[@]]host/path`
+- 本地文件导入数据来源格式：`data://[username[@]]system/[file_hash]`
+- 界面新增或编辑数据来源格式：`data://[username[@]]system-ui/[version]/[file_hash]/[rfc3339]`
 
 字段说明：
 
