@@ -40,6 +40,7 @@ testcontainers-modules = "0.15.0"
 strum = "0.28.0"
 strum_macros = "0.28.0"
 futures = "0.3.32"
+gix-packetline = "0.21.4"
 openssl = "0.10.80"
 uuid = "1.23.1"
 async-std = "1.13.2"
@@ -59,6 +60,7 @@ syn = "2.0.117"
 tower = "0.5.3"
 cucumber = "0.23.0"
 mockall = "0.14.0"
+reqwest = "0.13.4"
 
 [profile.dev]
 opt-level = 1

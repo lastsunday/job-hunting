@@ -116,7 +116,9 @@ pub fn parse_datetime(
     }
     let naive = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S")?;
     let offset = FixedOffset::east_opt(8 * 3600).unwrap();
-    Ok(Some(offset.from_utc_datetime(&naive).to_utc().fixed_offset()))
+    Ok(Some(
+        offset.from_utc_datetime(&naive).to_utc().fixed_offset(),
+    ))
 }
 
 pub fn parse_bool(s: &str) -> Option<bool> {

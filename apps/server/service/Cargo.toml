@@ -18,6 +18,7 @@ anyhow = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
 git2 = { workspace = true }
+gix-packetline = { workspace = true, features = ["blocking-io"] }
 ssh-key = { workspace = true, features = ["getrandom", "ed25519"] }
 chrono = { workspace = true }
 testcontainers = { workspace = true }
@@ -39,6 +40,7 @@ strum = { workspace = true }
 strum_macros = { workspace = true }
 cron = { workspace = true }
 calamine = { workspace = true }
+reqwest = { workspace = true }
 migration = { path = "../migration" }
 entity = { path = "../entity" }
 framework = { path = "../framework" }
