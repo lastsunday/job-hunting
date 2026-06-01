@@ -119,5 +119,5 @@ impl Repo for GitRepo {
 }
 
 fn get_path_by_datetime_file_name(datetime: &DateTime<Utc>, file_name: &str) -> String {
-    format!("{}/{}", datetime.format("%Y/%m-%d").to_string(), file_name)
+    format!("{}/{}", datetime.format("%Y/%m-%d"), file_name)
 }

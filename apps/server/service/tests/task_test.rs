@@ -241,8 +241,14 @@ async fn test_full_flow() {
         .await
         .unwrap();
     assert!(count > 0);
+    let job = entity::job::Entity::find()
+        .one(&state.conn)
+        .await
+        .unwrap()
+        .unwrap();
 
-    // TODO: checking uri
+    let expect_uri = format!("data://{user_name}@localhost/2024/01-01/job.zip");
+    assert_eq!(job.uri, Some(expect_uri));
 
     state.conn.close().await.unwrap();
     tear_down(&container).await;
