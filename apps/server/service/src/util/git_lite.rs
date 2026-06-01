@@ -1,5 +1,6 @@
 use gix_hash::ObjectId;
 use gix_object::compute_hash;
+use gix_object::{CommitRef, TreeRef};
 use gix_pack::data;
 use gix_packetline::{
     PacketLineRef,
@@ -9,7 +10,67 @@ use std::collections::HashMap;
 use std::io::Write;
 use std::path::PathBuf;
 
-pub async fn ls_tree() {}
+/// Maps repo-relative file path to its hex object ID.
+pub type PathToOidMap = HashMap<String, String>;
+
+pub async fn ls_tree(
+    url: &str,
+    ref_name: &str,
+    token: Option<&str>,
+) -> anyhow::Result<PathToOidMap> {
+    let refs = ls_refs(url, ref_name, token).await?;
+    let commit_hash = refs
+        .get(ref_name)
+        .ok_or_else(|| anyhow::anyhow!("ref not found: {}", ref_name))?;
+    let objects = fetch_without_blobs(url, commit_hash, token).await?;
+    resolve_paths(&objects, commit_hash)
+}
+
+pub fn resolve_paths(
+    objects: &HashMap<ObjectId, Vec<u8>>,
+    commit_hash: &str,
+) -> anyhow::Result<PathToOidMap> {
+    let commit_oid = ObjectId::from_hex(commit_hash.as_bytes())?;
+    let commit_data = objects
+        .get(&commit_oid)
+        .ok_or_else(|| anyhow::anyhow!("commit object not found: {}", commit_hash))?;
+    let commit = CommitRef::from_bytes(commit_data, gix_hash::Kind::Sha1)?;
+    let root_tree_oid = commit.tree();
+
+    let mut path_map = HashMap::new();
+    walk_tree(objects, &root_tree_oid, String::new(), &mut path_map)?;
+    Ok(path_map)
+}
+
+fn walk_tree(
+    objects: &HashMap<ObjectId, Vec<u8>>,
+    tree_oid: &gix_hash::oid,
+    prefix: String,
+    path_map: &mut PathToOidMap,
+) -> anyhow::Result<()> {
+    let tree_data = objects
+        .get(tree_oid)
+        .ok_or_else(|| anyhow::anyhow!("tree object not found: {}", tree_oid.to_hex()))?;
+    let tree = TreeRef::from_bytes(tree_data, gix_hash::Kind::Sha1)?;
+
+    for entry in &tree.entries {
+        let name = std::str::from_utf8(entry.filename)
+            .map_err(|e| anyhow::anyhow!("invalid utf-8 in filename: {}", e))?;
+        let path = if prefix.is_empty() {
+            name.to_string()
+        } else {
+            format!("{}/{}", prefix, name)
+        };
+
+        if entry.mode.is_tree() {
+            walk_tree(objects, entry.oid, path, path_map)?;
+        } else {
+            path_map.insert(path, entry.oid.to_hex().to_string());
+        }
+    }
+
+    Ok(())
+}
 
 pub async fn ls_refs(
     url: &str,
@@ -152,5 +213,3 @@ pub async fn fetch_without_blobs(
 
     Ok(objects)
 }
-
-pub async fn resolve_paths() {}

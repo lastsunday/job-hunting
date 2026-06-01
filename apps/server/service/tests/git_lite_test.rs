@@ -10,7 +10,7 @@ mod common;
 use common::{ADMIN_PASSWORD, ADMIN_USERNAME, DATA_REPO};
 use gix_hash::ObjectId;
 use service::util::git::git_clone_by_http;
-use service::util::git_lite::{fetch_without_blobs, ls_refs};
+use service::util::git_lite::{fetch_without_blobs, ls_refs, ls_tree, resolve_paths};
 
 use crate::common::{setup_git_server, tear_down_git_server};
 use base64::Engine;
@@ -80,6 +80,73 @@ async fn test_fetch_without_blobs() {
                 entry.oid
             );
         }
+    }
+
+    gitea.stop().await.unwrap();
+}
+
+/// Verify that `resolve_paths` walks tree objects and produces a correct
+/// path → OID map from fetched commit+tree objects.
+#[tokio::test]
+async fn test_resolve_paths() {
+    let (gitea, repo_url, token) = setup().await;
+
+    let refs = ls_refs(&repo_url, "refs/heads/", Some(&token))
+        .await
+        .unwrap();
+    let commit_hash = refs
+        .get("refs/heads/main")
+        .expect("should have refs/heads/main")
+        .clone();
+    let objects = fetch_without_blobs(&repo_url, &commit_hash, Some(&token))
+        .await
+        .unwrap();
+
+    let path_map = resolve_paths(&objects, &commit_hash).unwrap();
+
+    let expected_paths = [
+        "README.md",
+        "2024/10-10/job.zip",
+        "2024/10-10/company.zip",
+        "2024/12-31/job.zip",
+        "2024/12-31/company.zip",
+    ];
+    for path in &expected_paths {
+        assert!(
+            path_map.contains_key(*path),
+            "expected path '{}' in resolve_paths result, keys: {:?}",
+            path,
+            path_map.keys()
+        );
+    }
+
+    gitea.stop().await.unwrap();
+}
+
+/// Verify that `ls_tree` fetches commit+tree objects and resolves paths
+/// to a flat map of path → blob OID, excluding blob content.
+#[tokio::test]
+async fn test_ls_tree() {
+    let (gitea, repo_url, token) = setup().await;
+
+    let path_map = ls_tree(&repo_url, "refs/heads/main", Some(&token))
+        .await
+        .unwrap();
+
+    let expected_paths = [
+        "README.md",
+        "2024/10-10/job.zip",
+        "2024/10-10/company.zip",
+        "2024/12-31/job.zip",
+        "2024/12-31/company.zip",
+    ];
+    for path in &expected_paths {
+        assert!(
+            path_map.contains_key(*path),
+            "expected path '{}' in ls_tree result, keys: {:?}",
+            path,
+            path_map.keys()
+        );
     }
 
     gitea.stop().await.unwrap();
