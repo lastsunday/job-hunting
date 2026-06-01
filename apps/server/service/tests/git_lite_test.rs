@@ -10,7 +10,9 @@ mod common;
 use common::{ADMIN_PASSWORD, ADMIN_USERNAME, DATA_REPO};
 use gix_hash::ObjectId;
 use service::util::git::git_clone_by_http;
-use service::util::git_lite::{fetch_without_blobs, ls_refs, ls_tree, resolve_paths};
+use service::util::git_lite::{
+    fetch_objects, fetch_without_blobs, ls_refs, ls_tree, resolve_paths, sparse_checkout,
+};
 
 use crate::common::{setup_git_server, tear_down_git_server};
 use base64::Engine;
@@ -150,6 +152,156 @@ async fn test_ls_tree() {
     }
 
     gitea.stop().await.unwrap();
+}
+
+/// Verify that `fetch_objects` can fetch a single blob by its OID.
+#[tokio::test]
+async fn test_fetch_objects_single_blob() {
+    let (gitea, repo_url, token) = setup().await;
+
+    let path_map = ls_tree(&repo_url, "refs/heads/main", Some(&token))
+        .await
+        .unwrap();
+    let oid = path_map.get("2024/10-10/job.zip").expect("path exists");
+
+    let objects = fetch_objects(&repo_url, &[oid], Some(&token))
+        .await
+        .unwrap();
+
+    assert_eq!(objects.len(), 1);
+    let oid_obj = ObjectId::from_hex(oid.as_bytes()).unwrap();
+    let content = objects.get(&oid_obj).expect("blob should be present");
+    let expected = get_expected_content("2024/10-10/job.zip");
+    assert_eq!(content, &expected);
+
+    gitea.stop().await.unwrap();
+}
+
+/// Verify that `fetch_objects` can fetch multiple blobs in a single request.
+#[tokio::test]
+async fn test_fetch_objects_multiple_blobs() {
+    let (gitea, repo_url, token) = setup().await;
+
+    let path_map = ls_tree(&repo_url, "refs/heads/main", Some(&token))
+        .await
+        .unwrap();
+    let paths = ["2024/10-10/job.zip", "2024/10-10/company.zip"];
+    let oids: Vec<&str> = paths
+        .iter()
+        .map(|p| path_map.get(*p).expect("path exists").as_str())
+        .collect();
+
+    let objects = fetch_objects(&repo_url, &oids, Some(&token))
+        .await
+        .unwrap();
+
+    assert_eq!(objects.len(), 2);
+    for path in &paths {
+        let oid = path_map.get(*path).unwrap();
+        let oid_obj = ObjectId::from_hex(oid.as_bytes()).unwrap();
+        let content = objects.get(&oid_obj).expect("blob should be present");
+        let expected = get_expected_content(path);
+        assert_eq!(content, &expected, "content mismatch for {}", path);
+    }
+
+    gitea.stop().await.unwrap();
+}
+
+/// Verify that `sparse_checkout` fetches a single file's content correctly.
+#[tokio::test]
+async fn test_sparse_checkout_single_file() {
+    let (gitea, repo_url, token) = setup().await;
+
+    let result = sparse_checkout(
+        &repo_url,
+        "refs/heads/main",
+        &["2024/10-10/job.zip"],
+        Some(&token),
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(result.len(), 1);
+    let expected = get_expected_content("2024/10-10/job.zip");
+    assert_eq!(
+        result.get("2024/10-10/job.zip").unwrap(),
+        &expected,
+        "content mismatch"
+    );
+
+    gitea.stop().await.unwrap();
+}
+
+/// Verify that `sparse_checkout` returns multiple files correctly.
+#[tokio::test]
+async fn test_sparse_checkout_multiple_files() {
+    let (gitea, repo_url, token) = setup().await;
+
+    let paths = ["2024/10-10/job.zip", "2024/12-31/company.zip"];
+    let result = sparse_checkout(&repo_url, "refs/heads/main", &paths, Some(&token))
+        .await
+        .unwrap();
+
+    assert_eq!(result.len(), 2);
+    for path in &paths {
+        let expected = get_expected_content(*path);
+        assert_eq!(
+            result.get(*path).unwrap(),
+            &expected,
+            "content mismatch for {}",
+            path
+        );
+    }
+
+    gitea.stop().await.unwrap();
+}
+
+/// Verify that `sparse_checkout` returns an empty map for non-existent paths.
+#[tokio::test]
+async fn test_sparse_checkout_non_existent_path() {
+    let (gitea, repo_url, token) = setup().await;
+
+    let result = sparse_checkout(
+        &repo_url,
+        "refs/heads/main",
+        &["nonexistent/path.txt"],
+        Some(&token),
+    )
+    .await
+    .unwrap();
+
+    assert!(result.is_empty());
+
+    gitea.stop().await.unwrap();
+}
+
+/// Verify that `sparse_checkout` only returns results for existing paths
+/// when given a mix of existing and non-existent paths.
+#[tokio::test]
+async fn test_sparse_checkout_mixed_paths() {
+    let (gitea, repo_url, token) = setup().await;
+
+    let result = sparse_checkout(
+        &repo_url,
+        "refs/heads/main",
+        &["2024/10-10/job.zip", "nope/bad.txt", "README.md"],
+        Some(&token),
+    )
+    .await
+    .unwrap();
+
+    assert_eq!(result.len(), 2, "expected only existing paths");
+    assert!(result.contains_key("2024/10-10/job.zip"));
+    assert!(result.contains_key("README.md"));
+
+    gitea.stop().await.unwrap();
+}
+
+fn get_expected_content(repo_path: &str) -> Vec<u8> {
+    let resources_data_path = Path::new("tests").join("resources").join("data");
+    let file_map = create_test_file_map();
+    let local_file = file_map.get(repo_path).unwrap_or_else(|| panic!("unknown repo path: {}", repo_path));
+    fs::read(resources_data_path.join(local_file)).unwrap()
 }
 
 async fn setup() -> (ContainerAsync<Gitea>, String, String) {
