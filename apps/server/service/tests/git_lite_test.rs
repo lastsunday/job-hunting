@@ -15,9 +15,11 @@ use service::util::git_lite::{fetch_without_blobs, ls_refs};
 use crate::common::{setup_git_server, tear_down_git_server};
 use base64::Engine;
 
+/// Verify that `ls_refs` can list remote refs via Git protocol v2.
 #[tokio::test]
 async fn test_ls_refs() {
     let (gitea, repo_url, token) = setup().await;
+
     let refs = ls_refs(&repo_url, "refs/heads/", Some(&token))
         .await
         .unwrap();
@@ -29,6 +31,8 @@ async fn test_ls_refs() {
     gitea.stop().await.unwrap();
 }
 
+/// Verify that `fetch_without_blobs` with `blob:none` filter fetches commit
+/// and tree objects but excludes all blob objects from the packfile.
 #[tokio::test]
 async fn test_fetch_without_blobs() {
     let (gitea, repo_url, token) = setup().await;
@@ -56,36 +60,24 @@ async fn test_fetch_without_blobs() {
         .get(&commit_oid)
         .expect("commit object should be present");
 
-    let commit_str = std::str::from_utf8(commit_data).unwrap();
-    let tree_line = commit_str.lines().next().unwrap();
-    assert!(
-        tree_line.starts_with("tree "),
-        "commit first line should be 'tree <hash>'"
-    );
-    let tree_hash = &tree_line[5..];
-    let tree_oid = ObjectId::from_hex(tree_hash.as_bytes()).unwrap();
+    let commit = gix_object::CommitRef::from_bytes(commit_data, gix_hash::Kind::Sha1)
+        .expect("valid commit object");
+    let tree_oid = commit.tree();
     assert!(
         objects.contains_key(&tree_oid),
         "tree object should be present"
     );
 
     let tree_data = &objects[&tree_oid];
-    let mut pos = 0;
-    while pos < tree_data.len() {
-        let null_pos = tree_data[pos..]
-            .iter()
-            .position(|&b| b == 0)
-            .expect("null byte in tree entry");
-        let entry_str = std::str::from_utf8(&tree_data[pos..pos + null_pos]).unwrap();
-        let (mode, _name) = entry_str.split_once(' ').unwrap();
-        pos += null_pos + 1;
-        let entry_oid = ObjectId::try_from(&tree_data[pos..pos + 20]).unwrap();
-        pos += 20;
-        if is_blob_mode(mode) {
+    let tree = gix_object::TreeRef::from_bytes(tree_data, gix_hash::Kind::Sha1)
+        .expect("valid tree object");
+
+    for entry in &tree.entries {
+        if entry.mode.is_blob_or_symlink() {
             assert!(
-                !objects.contains_key(&entry_oid),
+                !objects.contains_key(entry.oid),
                 "blob object {} should be filtered out by blob:none",
-                entry_oid
+                entry.oid
             );
         }
     }
@@ -93,19 +85,12 @@ async fn test_fetch_without_blobs() {
     gitea.stop().await.unwrap();
 }
 
-/// Returns true if the tree entry mode represents a blob object
-/// (regular file or symlink), which should be excluded by `blob:none`.
-fn is_blob_mode(mode: &str) -> bool {
-    // 100644: regular file, 100755: executable, 120000: symlink
-    mode.starts_with("100") || mode == "120000"
-}
-
 async fn setup() -> (ContainerAsync<Gitea>, String, String) {
-    // setup gitea and clone repo
+    // start gitea container
     let (gitea, _, http_port, _, _) = setup_git_server().await;
     let repo_url: &str = &format!("http://localhost:{http_port}/{ADMIN_USERNAME}/{DATA_REPO}.git");
 
-    // create access token via Gitea API
+    // create API access token
     let creds = base64::engine::general_purpose::STANDARD
         .encode(format!("{ADMIN_USERNAME}:{ADMIN_PASSWORD}"));
     let client = reqwest::Client::new();
@@ -131,6 +116,7 @@ async fn setup() -> (ContainerAsync<Gitea>, String, String) {
         .unwrap_or_else(|| panic!("token response missing 'sha1': {token_body}"))
         .to_string();
 
+    // clone the repo locally via HTTP
     let path_string = gen_unique_random_path();
     let local_path = Path::new(&path_string);
     let repo = match git_clone_by_http(repo_url, local_path, ADMIN_USERNAME, ADMIN_PASSWORD) {
@@ -141,6 +127,8 @@ async fn setup() -> (ContainerAsync<Gitea>, String, String) {
             panic!("failed to clone: {}", e)
         }
     };
+
+    // add test data files as blobs into the repo tree
     let resources_data_path = Path::new("tests").join("resources").join("data");
     let test_data_file_map = create_test_file_map();
     let head = repo.head().unwrap();
@@ -157,6 +145,8 @@ async fn setup() -> (ContainerAsync<Gitea>, String, String) {
     }
     let update_tree_id = tree_update_builder.create_updated(&repo, &tree).unwrap();
     let update_tree = repo.find_tree(update_tree_id).unwrap();
+
+    // commit and push to remote
     let now = Utc::now();
     let sig = Signature::new(
         ADMIN_USERNAME,
@@ -187,6 +177,8 @@ async fn setup() -> (ContainerAsync<Gitea>, String, String) {
             Some(&mut po),
         )
         .unwrap();
+
+    // cleanup local clone
     fs::remove_dir_all(local_path).unwrap();
     (gitea, repo_url.to_string(), token)
 }
