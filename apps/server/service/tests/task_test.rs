@@ -246,7 +246,8 @@ async fn test_full_flow() {
         .unwrap()
         .unwrap();
 
-    let expect_uri = format!("data://{user_name}@localhost/2024/01-01/job.zip");
+    let expect_uri =
+        format!("data://{user_name}@localhost/{user_name}/{repo_name}/2024/01-01/job.zip");
     assert_eq!(job.uri, Some(expect_uri));
 
     state.conn.close().await.unwrap();
