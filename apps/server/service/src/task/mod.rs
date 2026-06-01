@@ -362,7 +362,6 @@ async fn query_date_list<C: ConnectionTrait>(
         .filter(entity::task_data_download::Column::Username.eq(Some(user_name.to_string())))
         .filter(entity::task_data_download::Column::RepoName.eq(Some(repo_name.to_string())))
         .filter(entity::task_data_download::Column::Type.eq(Some(task_type_param)))
-        // TODO: 需要注意日期边界范围测试
         .filter(entity::task_data_download::Column::Datetime.gte(start_date.fixed_offset()))
         .filter(entity::task_data_download::Column::Datetime.lte(end_date.fixed_offset()))
         .all(conn)

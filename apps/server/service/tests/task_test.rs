@@ -95,7 +95,6 @@ async fn test_full_flow() {
     // NOTE: 2. 计算和创建下载任务
     let plan_id = task_plan_id.clone();
     let file_name = get_file_name_by_task_type(&TaskType::JobDataDownload);
-    // TODO: key for git auth not static,need to query other table
     let TaskPlanConfigDataDownloadConfig { url, token, .. } = config.clone();
     let retention_day = 365 * 10; //10 years
     let task_type = TaskType::JobDataDownload;
