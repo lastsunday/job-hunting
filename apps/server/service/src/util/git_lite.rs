@@ -14,6 +14,7 @@ pub async fn ls_tree() {}
 pub async fn ls_refs(
     url: &str,
     ref_prefix: &str,
+    token: Option<&str>,
 ) -> Result<HashMap<String, String>, anyhow::Error> {
     let mut writer = Writer::new(Vec::new());
     writer.enable_text_mode();
@@ -26,15 +27,16 @@ pub async fn ls_refs(
     encode::flush_to_write(writer.inner_mut())?;
     let body = writer.into_inner();
 
-    let client = reqwest::Client::new();
-    let response = client
+    let mut req = reqwest::Client::new()
         .post(format!("{}/git-upload-pack", url))
         .header("Accept", "application/x-git-upload-pack-advertisement")
         .header("Content-Type", "application/x-git-upload-pack-request")
         .header("Git-Protocol", "version=2")
-        .body(body)
-        .send()
-        .await?;
+        .body(body);
+    if let Some(t) = token {
+        req = req.header("Authorization", format!("Bearer {}", t));
+    }
+    let response = req.send().await?;
 
     let status = response.status();
     if !status.is_success() {
@@ -60,6 +62,7 @@ pub async fn ls_refs(
 pub async fn fetch_without_blobs(
     url: &str,
     commit_hash: &str,
+    token: Option<&str>,
 ) -> anyhow::Result<HashMap<ObjectId, Vec<u8>>> {
     let mut writer = Writer::new(Vec::new());
     writer.enable_text_mode();
@@ -75,15 +78,16 @@ pub async fn fetch_without_blobs(
     encode::flush_to_write(writer.inner_mut())?;
     let body = writer.into_inner();
 
-    let client = reqwest::Client::new();
-    let response = client
+    let mut req = reqwest::Client::new()
         .post(format!("{}/git-upload-pack", url))
         .header("Accept", "application/x-git-upload-pack-result")
         .header("Content-Type", "application/x-git-upload-pack-request")
         .header("Git-Protocol", "version=2")
-        .body(body)
-        .send()
-        .await?;
+        .body(body);
+    if let Some(t) = token {
+        req = req.header("Authorization", format!("Bearer {}", t));
+    }
+    let response = req.send().await?;
     let status = response.status();
     if !status.is_success() {
         let body = response.text().await.unwrap_or_default();
