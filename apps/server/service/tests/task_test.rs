@@ -3,7 +3,7 @@ use std::{fs, path::Path};
 
 use base64::Engine;
 use chrono::{DateTime, Utc};
-use git2::{build::TreeUpdateBuilder, Cred, FileMode, RemoteCallbacks, Signature, Time};
+use git2::{Cred, FileMode, RemoteCallbacks, Signature, Time, build::TreeUpdateBuilder};
 use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 use service::task::{
     CalculateAndCreateDownloadTaskParam, CreatePlanParam,
@@ -17,8 +17,8 @@ use testcontainers_modules::gitea::Gitea;
 use uuid::Uuid;
 
 use crate::common::{
-    setup_database, setup_git_server, tear_down, tear_down_git_server, ADMIN_USERNAME,
-    ADMIN_PASSWORD, DATA_REPO,
+    ADMIN_PASSWORD, ADMIN_USERNAME, DATA_REPO, setup_database, setup_git_server, tear_down,
+    tear_down_git_server,
 };
 
 mod common;
@@ -39,8 +39,7 @@ async fn test_full_flow() {
         url: Some(repo_url.clone()),
         user_name: Some(user_name.to_string()),
         repo_name: Some(repo_name.to_string()),
-        key: Some(token.clone()),
-        ..Default::default()
+        token: Some(token.clone()),
     });
     let task_enable = true;
     let cron = "0 */30 * * * * *";
@@ -54,7 +53,7 @@ async fn test_full_flow() {
             task_type,
             task_enable,
             cron: cron.to_string(),
-            key: Some(token.clone()),
+            token: Some(token.clone()),
             now,
         },
     )
@@ -80,7 +79,7 @@ async fn test_full_flow() {
         .unwrap();
     assert!(matches!(task_plan.clone(),
         Some(entity::task_plan::Model { id,r#type,enable,cron : cron_actual, .. })
-        if id == task_plan_id && r#type == Some(entity::task_plan::Type::DataDownload)
+        if id == task_plan_id.clone() && r#type == Some(entity::task_plan::Type::DataDownload)
         && enable == Some(true)&& cron_actual == Some(cron.to_string())
     ));
     let entity::task_plan::Model { config, .. } = task_plan.unwrap();
@@ -94,10 +93,10 @@ async fn test_full_flow() {
     );
 
     // NOTE: 2. 计算和创建下载任务
-    let plan_id = "dummy_plan_id";
+    let plan_id = task_plan_id.clone();
     let file_name = get_file_name_by_task_type(&TaskType::JobDataDownload);
     // TODO: key for git auth not static,need to query other table
-    let TaskPlanConfigDataDownloadConfig { url, key, .. } = config.clone();
+    let TaskPlanConfigDataDownloadConfig { url, token, .. } = config.clone();
     let retention_day = 365 * 10; //10 years
     let task_type = TaskType::JobDataDownload;
 
@@ -111,7 +110,7 @@ async fn test_full_flow() {
             now,
             file_name,
             url: url.unwrap().to_string(),
-            key,
+            token,
             retention_day,
         },
     )
@@ -254,8 +253,8 @@ async fn setup_gitea_with_test_data() -> (ContainerAsync<Gitea>, String, String)
     let (gitea, _, http_port, _, _) = setup_git_server().await;
     let repo_url = format!("http://localhost:{http_port}/{ADMIN_USERNAME}/{DATA_REPO}.git");
 
-    let creds =
-        base64::engine::general_purpose::STANDARD.encode(format!("{ADMIN_USERNAME}:{ADMIN_PASSWORD}"));
+    let creds = base64::engine::general_purpose::STANDARD
+        .encode(format!("{ADMIN_USERNAME}:{ADMIN_PASSWORD}"));
     let client = reqwest::Client::new();
     let token_resp = client
         .post(format!(

@@ -9,7 +9,6 @@ use entity::task_data_download::ActiveModel as TaskDataDownloadActiveModel;
 use entity::task_data_merge::ActiveModel as TaskDataMergeActiveModel;
 use entity::task_data_plan::ActiveModel as TaskDataPlanActiveModel;
 use entity::task_plan::ActiveModel as TaskPlanActiveModel;
-use framework::data::serder;
 use framework::id::gen_id;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DbErr, EntityTrait,
@@ -50,7 +49,7 @@ pub struct TaskPlanConfigDataDownloadConfig {
     pub url: Option<String>,
     pub user_name: Option<String>,
     pub repo_name: Option<String>,
-    pub key: Option<String>,
+    pub token: Option<String>,
 }
 
 pub enum Type {
@@ -100,7 +99,7 @@ pub struct CreatePlanParam {
     pub task_type: Type,
     pub task_enable: bool,
     pub cron: String,
-    pub key: Option<String>,
+    pub token: Option<String>,
     pub now: DateTime<Utc>,
 }
 
@@ -115,7 +114,7 @@ pub async fn create_plan<C: TransactionTrait>(
         task_type,
         task_enable,
         cron,
-        key,
+        token,
         now,
     } = param;
     if !validate_cron(&cron) {
@@ -137,7 +136,7 @@ pub async fn create_plan<C: TransactionTrait>(
                                 url: Some(gen_url_by_repo_type(&repo_type, &user_name, &repo_name)),
                                 user_name: Some(user_name.to_string()),
                                 repo_name: Some(repo_name.to_string()),
-                                key,
+                                token,
                             })
                             .context(
                                 "task plan config data download config to json string failure",
@@ -244,7 +243,7 @@ pub struct CalculateAndCreateDownloadTaskParam {
     pub now: DateTime<Utc>,
     pub file_name: String,
     pub url: String,
-    pub key: Option<String>,
+    pub token: Option<String>,
     pub retention_day: i32,
 }
 
@@ -262,7 +261,7 @@ pub async fn calculate_and_create_download_task<C: TransactionTrait + Connection
         now,
         file_name,
         url,
-        key,
+        token,
         retention_day,
     } = param;
 
@@ -274,7 +273,7 @@ pub async fn calculate_and_create_download_task<C: TransactionTrait + Connection
         .query_file_date_and_max_seq(QueryFileDateAndMaxSeqParam {
             file_name,
             url: url.to_string(),
-            key,
+            token,
             now,
             retention_day,
         })
@@ -503,11 +502,26 @@ pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + C
         now,
     } = param;
     let entity::task::Model {
-        data_id, r#type, ..
+        data_id,
+        r#type,
+        plan_id,
+        ..
     } = entity::task::Entity::find_by_id(download_task_id.to_string())
         .one(conn)
         .await?
         .ok_or_else(|| anyhow::anyhow!("Download task not found id = {}", download_task_id))?;
+
+    let plan_id = plan_id.context("plan id not found")?;
+    let entity::task_plan::Model { config, .. } =
+        entity::task_plan::Entity::find_by_id(plan_id.to_string())
+            .one(conn)
+            .await?
+            .ok_or_else(|| anyhow::anyhow!("task plan not found id = {}", plan_id))?;
+
+    let TaskPlanConfigDataDownloadConfig { token, .. } =
+        serde_json::from_str(&config.context("task plan config not found")?)
+            .context("parse task plan config failure")?;
+
     let data_id = data_id.ok_or_else(|| anyhow::anyhow!("Download task has no data_id"))?;
     let task_data_download = entity::task_data_download::Entity::find_by_id(data_id.to_string())
         .one(conn)
@@ -544,12 +558,21 @@ pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + C
         url.ok_or_else(|| anyhow::anyhow!("Task config url not found for data_id = {}", data_id))?;
     let download_type = download_type.context("download type not exists")?;
     let repo = GitRepo::new();
+    let datetime = datetime.context("download data task datetime not found")?;
+    let file_name = file_name.context("file name not found")?;
     // execulate download task
     let FileInfo {
         content,
         file_name,
         size,
-    } = repo.download_file(DownloadFileParam { url }).await?;
+    } = repo
+        .download_file(DownloadFileParam {
+            url,
+            datetime: datetime.to_utc(),
+            file_name,
+            token,
+        })
+        .await?;
 
     let file_id = gen_id();
 
@@ -708,7 +731,7 @@ pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + C
                         r#type: ActiveValue::Set(Some(merge_data_task_type.clone())),
                         username: ActiveValue::Set(username.clone()),
                         repo_name: ActiveValue::Set(repo_name.clone()),
-                        datetime: ActiveValue::Set(datetime),
+                        datetime: ActiveValue::Set(Some(datetime)),
                         data_id: ActiveValue::Set(Some(file_id.to_string())),
                         data_count: ActiveValue::Set(Some(total as i32)),
                         config: ActiveValue::Set(Some(merge_config.to_string())),
