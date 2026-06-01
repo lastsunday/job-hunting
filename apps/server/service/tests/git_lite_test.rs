@@ -191,9 +191,7 @@ async fn test_fetch_objects_multiple_blobs() {
         .map(|p| path_map.get(*p).expect("path exists").as_str())
         .collect();
 
-    let objects = fetch_objects(&repo_url, &oids, Some(&token))
-        .await
-        .unwrap();
+    let objects = fetch_objects(&repo_url, &oids, Some(&token)).await.unwrap();
 
     assert_eq!(objects.len(), 2);
     for path in &paths {
@@ -244,7 +242,7 @@ async fn test_sparse_checkout_multiple_files() {
 
     assert_eq!(result.len(), 2);
     for path in &paths {
-        let expected = get_expected_content(*path);
+        let expected = get_expected_content(path);
         assert_eq!(
             result.get(*path).unwrap(),
             &expected,
@@ -300,7 +298,9 @@ async fn test_sparse_checkout_mixed_paths() {
 fn get_expected_content(repo_path: &str) -> Vec<u8> {
     let resources_data_path = Path::new("tests").join("resources").join("data");
     let file_map = create_test_file_map();
-    let local_file = file_map.get(repo_path).unwrap_or_else(|| panic!("unknown repo path: {}", repo_path));
+    let local_file = file_map
+        .get(repo_path)
+        .unwrap_or_else(|| panic!("unknown repo path: {}", repo_path));
     fs::read(resources_data_path.join(local_file)).unwrap()
 }
 

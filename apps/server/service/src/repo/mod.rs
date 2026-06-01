@@ -4,7 +4,6 @@ use std::path::Path;
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use regex::Regex;
-use tracing::warn;
 
 use crate::util;
 
@@ -81,15 +80,9 @@ impl Repo for GitRepo {
         for path in path_map.keys() {
             if let Some(caps) = re.captures(path.as_str()) {
                 let date_str = format!("{}-{}-{}T00:00:00Z", &caps[1], &caps[2], &caps[3]);
-                match date_str.parse::<DateTime<Utc>>() {
-                    Ok(date) => {
-                        if date >= cutoff {
-                            *result.entry(date).or_insert(0) += 1;
-                        }
-                    }
-                    Err(e) => {
-                        warn!("Failed to parse date from path '{}': {}", path, e);
-                    }
+                let date = date_str.parse::<DateTime<Utc>>()?;
+                if date >= cutoff {
+                    *result.entry(date).or_insert(0) += 1;
                 }
             }
         }
