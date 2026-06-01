@@ -17,7 +17,7 @@ thiserror = { workspace = true }
 anyhow = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
-git2 = { workspace = true }
+git2 = { workspace = true, features = ["ssh"] }
 gix-packetline = { workspace = true, features = ["blocking-io"] }
 gix-hash = { workspace = true }
 gix-object = { workspace = true }

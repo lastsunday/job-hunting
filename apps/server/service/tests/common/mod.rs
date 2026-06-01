@@ -74,7 +74,7 @@ pub async fn setup_git_server() -> (ContainerAsync<Gitea>, u16, u16, String, Str
 
 #[allow(dead_code)]
 pub async fn tear_down_git_server(container: Option<ContainerAsync<Gitea>>) {
-    if container.is_some() {
-        container.as_ref().unwrap().stop().await.unwrap();
+    if let Some(container) = container {
+        container.stop().await.unwrap();
     }
 }
