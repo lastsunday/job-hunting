@@ -6146,6 +6146,7 @@ dependencies = [
  "mockall",
  "num_cpus",
  "openssl",
+ "regex",
  "reqwest",
  "sea-orm",
  "serde",

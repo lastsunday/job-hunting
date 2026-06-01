@@ -1,6 +1,11 @@
 use std::collections::HashMap;
+use std::path::Path;
 
 use chrono::{DateTime, Utc};
+use regex::Regex;
+use tracing::warn;
+
+use crate::util;
 
 pub struct QueryFileDateAndMaxSeqParam {
     pub file_name: String,
@@ -51,11 +56,40 @@ impl Repo for GitRepo {
         &self,
         param: QueryFileDateAndMaxSeqParam,
     ) -> Result<HashMap<DateTime<Utc>, i32>, anyhow::Error> {
-        // TODO: 根据保留日期进行过滤，避免过多文件路径查询和返回
-        // TODO: need impl
-        let mut result = HashMap::new();
-        result.insert("2024-01-02T00:00:00Z".parse::<DateTime<Utc>>()?, 1);
-        result.insert("2024-01-01T00:00:00Z".parse::<DateTime<Utc>>()?, 1);
+        // 根据保留日期进行过滤，避免过多文件路径查询和返回
+        let path_map = util::git_lite::ls_tree(&param.url, "HEAD", param.key.as_deref()).await?;
+
+        let stem = Path::new(&param.file_name)
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .ok_or_else(|| anyhow::anyhow!("Invalid file name: {}", param.file_name))?;
+
+        let pattern = format!(
+            r"([0-9]{{4}})/([0-1][0-9])-([0-3][0-9])/{}(_[1-9][0-9]*)?\..*",
+            regex::escape(stem)
+        );
+        let re = Regex::new(&pattern)?;
+
+        let cutoff = param.now - chrono::Duration::days(param.retention_day as i64);
+
+        let mut result: HashMap<DateTime<Utc>, i32> = HashMap::new();
+
+        for path in path_map.keys() {
+            if let Some(caps) = re.captures(path.as_str()) {
+                let date_str = format!("{}-{}-{}T00:00:00Z", &caps[1], &caps[2], &caps[3]);
+                match date_str.parse::<DateTime<Utc>>() {
+                    Ok(date) => {
+                        if date >= cutoff {
+                            *result.entry(date).or_insert(0) += 1;
+                        }
+                    }
+                    Err(e) => {
+                        warn!("Failed to parse date from path '{}': {}", path, e);
+                    }
+                }
+            }
+        }
+
         Ok(result)
     }
 

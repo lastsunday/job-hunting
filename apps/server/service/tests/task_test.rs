@@ -1,4 +1,9 @@
+use std::collections::HashMap;
+use std::{fs, path::Path};
+
+use base64::Engine;
 use chrono::{DateTime, Utc};
+use git2::{build::TreeUpdateBuilder, Cred, FileMode, RemoteCallbacks, Signature, Time};
 use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
 use service::task::{
     CalculateAndCreateDownloadTaskParam, CreatePlanParam,
@@ -7,30 +12,38 @@ use service::task::{
     create_plan, execute_download_task_and_create_merge_task, execute_merge_task,
     get_file_name_by_task_type,
 };
+use testcontainers::ContainerAsync;
+use testcontainers_modules::gitea::Gitea;
+use uuid::Uuid;
 
-use crate::common::{setup_database, tear_down};
+use crate::common::{
+    setup_database, setup_git_server, tear_down, tear_down_git_server, ADMIN_USERNAME,
+    ADMIN_PASSWORD, DATA_REPO,
+};
 
 mod common;
 
 #[tokio::test]
 async fn test_full_flow() {
-    // 测试策略：通过 Trait 抽象模拟 Git 网络拉取以快速测试逻辑，并配合 Testcontainers 启动真实容器验证数据库同步的可靠性。
+    let (gitea, repo_url, token) = setup_gitea_with_test_data().await;
     let (container, state) = setup_database().await;
 
-    // NOTE: 1. 创建任务计划
     let now: DateTime<Utc> = "2024-01-03T00:00:00Z".parse::<DateTime<Utc>>().unwrap();
-    let user_name = "lastsunday";
-    let repo_name = "job-hunting-data";
+    let user_name = ADMIN_USERNAME;
+    let repo_name = DATA_REPO;
     let repo_type = RepoType::Github;
 
     let task_type_list: Vec<TaskType> = vec![TaskType::JobDataDownload];
     let task_type = Type::DataDownload(TaskPlanConfigDataDownloadConfig {
         task_type_list,
+        url: Some(repo_url.clone()),
+        user_name: Some(user_name.to_string()),
+        repo_name: Some(repo_name.to_string()),
+        key: Some(token.clone()),
         ..Default::default()
     });
     let task_enable = true;
     let cron = "0 */30 * * * * *";
-    let key: Option<String> = None;
 
     let (task_data_plan_id, task_plan_id) = create_plan(
         &state.conn,
@@ -41,7 +54,7 @@ async fn test_full_flow() {
             task_type,
             task_enable,
             cron: cron.to_string(),
-            key,
+            key: Some(token.clone()),
             now,
         },
     )
@@ -75,7 +88,7 @@ async fn test_full_flow() {
         serde_json::from_str(config.unwrap().as_str()).unwrap();
     assert!(
         matches!(config.clone(), TaskPlanConfigDataDownloadConfig { task_type_list:task_type_list_actual, url, user_name:user_name_actual, repo_name:repo_name_actual,.. }
-        if task_type_list_actual.len() == 1 && url == Some(String::from("https://github.com/lastsunday/job-hunting-data"))
+        if task_type_list_actual.len() == 1 && url == Some(repo_url.clone())
         && user_name_actual == Some(user_name.to_string()) && repo_name_actual == Some(repo_name.to_string())
         )
     );
@@ -135,7 +148,6 @@ async fn test_full_flow() {
 
     // NOTE: 3. 执行下载任务和创建合并任务
     let download_task_id = task_ids.first().unwrap().to_string();
-    // 执行data download task并生成data merge task
     let now: DateTime<Utc> = "2024-01-03T00:00:00Z".parse::<DateTime<Utc>>().unwrap();
     let merge_task_ids = execute_download_task_and_create_merge_task(
         &state.conn,
@@ -235,4 +247,111 @@ async fn test_full_flow() {
 
     state.conn.close().await.unwrap();
     tear_down(&container).await;
+    tear_down_git_server(Some(gitea)).await;
+}
+
+async fn setup_gitea_with_test_data() -> (ContainerAsync<Gitea>, String, String) {
+    let (gitea, _, http_port, _, _) = setup_git_server().await;
+    let repo_url = format!("http://localhost:{http_port}/{ADMIN_USERNAME}/{DATA_REPO}.git");
+
+    let creds =
+        base64::engine::general_purpose::STANDARD.encode(format!("{ADMIN_USERNAME}:{ADMIN_PASSWORD}"));
+    let client = reqwest::Client::new();
+    let token_resp = client
+        .post(format!(
+            "http://localhost:{http_port}/api/v1/users/{ADMIN_USERNAME}/tokens"
+        ))
+        .header("Authorization", format!("Basic {creds}"))
+        .header("Content-Type", "application/json")
+        .body(
+            serde_json::json!({"name": "test-token", "scopes": ["read:repository", "write:repository"]})
+                .to_string(),
+        )
+        .send()
+        .await
+        .unwrap_or_else(|e| panic!("failed to create token: {e}"));
+    let token_body: serde_json::Value = token_resp
+        .json()
+        .await
+        .unwrap_or_else(|e| panic!("failed to parse token response: {e}"));
+    let token = token_body["sha1"]
+        .as_str()
+        .unwrap_or_else(|| panic!("token response missing 'sha1': {token_body}"))
+        .to_string();
+
+    let path_string = gen_unique_random_path();
+    let local_path = Path::new(&path_string);
+    let repo = service::util::git::git_clone_by_http(
+        &repo_url,
+        local_path,
+        ADMIN_USERNAME,
+        ADMIN_PASSWORD,
+    )
+    .unwrap_or_else(|e| {
+        fs::remove_dir_all(local_path).unwrap();
+        panic!("failed to clone: {}", e)
+    });
+
+    let resources_data_path = Path::new("tests").join("resources").join("data");
+    let test_data_file_map = create_test_file_map();
+    let head = repo.head().unwrap();
+    let head_commit_id = repo.refname_to_id(head.name().unwrap()).unwrap();
+    let head_commit = repo.find_commit(head_commit_id).unwrap();
+    let tree_id = head_commit.tree_id();
+    let tree = repo.find_tree(tree_id).unwrap();
+    let mut tree_update_builder = TreeUpdateBuilder::new();
+    for key in test_data_file_map.keys() {
+        let test_file_path = resources_data_path.join(test_data_file_map.get(key).unwrap());
+        let test_file_data = fs::read(test_file_path.as_path()).unwrap();
+        let file_blob_id = repo.blob(&test_file_data).unwrap();
+        tree_update_builder.upsert(Path::new(key), file_blob_id, FileMode::Blob);
+    }
+    let update_tree_id = tree_update_builder.create_updated(&repo, &tree).unwrap();
+    let update_tree = repo.find_tree(update_tree_id).unwrap();
+
+    let now = Utc::now();
+    let sig = Signature::new(
+        ADMIN_USERNAME,
+        "example@example.com",
+        &Time::new(now.timestamp(), 0),
+    )
+    .unwrap();
+    let head_id = repo.refname_to_id("HEAD").unwrap();
+    let parent = repo.find_commit(head_id).unwrap();
+    repo.commit(
+        Some("HEAD"),
+        &sig,
+        &sig,
+        "add test file",
+        &update_tree,
+        &[&parent],
+    )
+    .unwrap();
+    let main_branch = repo.find_branch("main", git2::BranchType::Local).unwrap();
+    let mut remote = repo.find_remote("origin").unwrap();
+    let mut po = git2::PushOptions::new();
+    let mut callbacks = RemoteCallbacks::new();
+    callbacks.credentials(|_, _, _| Cred::userpass_plaintext(ADMIN_USERNAME, ADMIN_PASSWORD));
+    po.remote_callbacks(callbacks);
+    remote
+        .push::<&str>(
+            &[main_branch.into_reference().name().unwrap()],
+            Some(&mut po),
+        )
+        .unwrap();
+
+    fs::remove_dir_all(local_path).unwrap();
+    (gitea, repo_url, token)
+}
+
+fn create_test_file_map() -> HashMap<String, String> {
+    let mut map = HashMap::new();
+    map.insert("2024/01-01/job.zip".to_string(), "job-v0.zip".to_string());
+    map.insert("2024/01-02/job.zip".to_string(), "job-v1.zip".to_string());
+    map
+}
+
+fn gen_unique_random_path() -> String {
+    let random_dir_name = Uuid::new_v4();
+    format!(".{random_dir_name}")
 }

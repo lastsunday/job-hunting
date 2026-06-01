@@ -44,6 +44,7 @@ strum = { workspace = true }
 strum_macros = { workspace = true }
 cron = { workspace = true }
 calamine = { workspace = true }
+regex = { workspace = true }
 reqwest = { workspace = true }
 migration = { path = "../migration" }
 entity = { path = "../entity" }
