@@ -16,7 +16,7 @@ use crate::common::{setup_git_server, tear_down_git_server};
 use base64::Engine;
 
 #[tokio::test]
-async fn test_ls_refs_public_repo() {
+async fn test_ls_refs() {
     let (gitea, repo_url, token) = setup().await;
     let refs = ls_refs(&repo_url, "refs/heads/", Some(&token))
         .await
@@ -30,7 +30,7 @@ async fn test_ls_refs_public_repo() {
 }
 
 #[tokio::test]
-async fn test_fetch_without_blobs_public_repo() {
+async fn test_fetch_without_blobs() {
     let (gitea, repo_url, token) = setup().await;
 
     let refs = ls_refs(&repo_url, "refs/heads/", Some(&token))
@@ -81,7 +81,7 @@ async fn test_fetch_without_blobs_public_repo() {
         pos += null_pos + 1;
         let entry_oid = ObjectId::try_from(&tree_data[pos..pos + 20]).unwrap();
         pos += 20;
-        if mode.starts_with("100") || mode == "120000" {
+        if is_blob_mode(mode) {
             assert!(
                 !objects.contains_key(&entry_oid),
                 "blob object {} should be filtered out by blob:none",
@@ -91,6 +91,13 @@ async fn test_fetch_without_blobs_public_repo() {
     }
 
     gitea.stop().await.unwrap();
+}
+
+/// Returns true if the tree entry mode represents a blob object
+/// (regular file or symlink), which should be excluded by `blob:none`.
+fn is_blob_mode(mode: &str) -> bool {
+    // 100644: regular file, 100755: executable, 120000: symlink
+    mode.starts_with("100") || mode == "120000"
 }
 
 async fn setup() -> (ContainerAsync<Gitea>, String, String) {
