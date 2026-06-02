@@ -29,6 +29,7 @@ use utoipa_axum::{
 };
 
 use service::common::FileParser;
+use service::task::scheduler;
 use service::sync::{CompanyImporter, ImportError, JobImporter, SyncStatus, types::ImportResult};
 
 const TAG: &str = "sync";
@@ -158,7 +159,7 @@ pub(crate) async fn get_sync_status(
     Ok(ApiResponse::success(Some(SyncStatus {
         last_sync_job: last_job,
         last_sync_company: last_company,
-        scheduler_running: false,
+        scheduler_running: scheduler::is_scheduler_running(),
         total_jobs,
         total_companies,
     })))

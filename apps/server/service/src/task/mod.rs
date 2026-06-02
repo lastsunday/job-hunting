@@ -1,10 +1,11 @@
+pub mod scheduler;
+
 use std::{collections::HashMap, path::PathBuf, str::FromStr};
 
 use anyhow::Context;
 use chrono::{DateTime, FixedOffset, Utc};
 use cron::Schedule;
 use entity::task::ActiveModel as TaskActiveModel;
-use entity::task::Status;
 use entity::task_data_download::ActiveModel as TaskDataDownloadActiveModel;
 use entity::task_data_merge::ActiveModel as TaskDataMergeActiveModel;
 use entity::task_data_plan::ActiveModel as TaskDataPlanActiveModel;
@@ -13,7 +14,7 @@ use framework::id::gen_id;
 use reqwest::Url;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DbErr, EntityTrait,
-    IntoActiveModel, QueryFilter, TransactionTrait,
+    IntoActiveModel, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
@@ -33,6 +34,9 @@ pub enum Error {
 
     #[error("invalid cron expr: {0}")]
     Cron(String),
+
+    #[error("{0}")]
+    FinishedButError(String),
 
     #[error(transparent)]
     Internal(#[from] anyhow::Error),
@@ -545,15 +549,6 @@ pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + C
     };
     let merge_config =
         serde_json::to_string(&merge_config).context("merge config to json string failure")?;
-    let task = entity::task::Entity::find_by_id(download_task_id.to_string())
-        .one(conn)
-        .await?
-        .ok_or_else(|| anyhow::anyhow!("Download task not found id = {}", download_task_id))?;
-    let mut task_active_model = task.into_active_model();
-    task_active_model.status = ActiveValue::Set(Some(entity::task::Status::Running));
-    task_active_model.update_datetime = ActiveValue::Set(Some(now.fixed_offset()));
-    task_active_model.update(conn).await?;
-
     let url =
         url.ok_or_else(|| anyhow::anyhow!("Task config url not found for data_id = {}", data_id))?;
     let download_type = download_type.context("download type not exists")?;
@@ -583,7 +578,7 @@ pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + C
 
     // 空数据处理
     if excel_data.is_empty() {
-        Err(anyhow::anyhow!("excel no data"))?
+        return Err(Error::FinishedButError("excel no data".to_string()));
     }
 
     let headers = &excel_data[0];
@@ -594,24 +589,26 @@ pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + C
             let (valid, version, actual_version, lack_columns, _) =
                 FileParser::validate_job_headers(headers);
             if !valid {
-                Err(anyhow::anyhow!(
+                let msg = format!(
                     "invalid header version:{}/{},lack_columns len:{}",
                     version,
                     actual_version,
                     lack_columns.len()
-                ))?
+                );
+                return Err(Error::FinishedButError(msg));
             }
         }
         entity::task_data_download::Type::CompanyDataDownload => {
             let (valid, version, actual_version, lack_columns, _) =
                 FileParser::validate_company_headers(headers);
             if !valid {
-                Err(anyhow::anyhow!(
+                let msg = format!(
                     "invalid header version:{}/{},lack_columns len:{}",
                     version,
                     actual_version,
                     lack_columns.len()
-                ))?
+                );
+                return Err(Error::FinishedButError(msg));
             }
         }
     }
@@ -688,10 +685,6 @@ pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + C
                     .clone()
                     .ok_or_else(|| anyhow::anyhow!("Download task has no plan_id"))?;
 
-                let mut task_active_model = task.into_active_model();
-                task_active_model.status = ActiveValue::Set(Some(entity::task::Status::Finished));
-                task_active_model.update_datetime = ActiveValue::Set(Some(now.fixed_offset()));
-                task_active_model.update(txn).await?;
                 // update task_data_download
                 let task_data_download =
                     &entity::task_data_download::Entity::find_by_id(task_data_id.to_string())
@@ -821,14 +814,14 @@ pub async fn execute_merge_task<C: TransactionTrait + ConnectionTrait>(
     let row_start_index = ((page_num - 1) * page_size) as usize;
     let row_end_index = (page_num * page_size).min(total as i32) as usize;
     if row_start_index > total || row_end_index > total {
-        Err(anyhow::anyhow!(format!(
+        let msg = format!(
             "data read out of index,total={},start={},end={}",
             total, row_start_index, row_end_index
-        )))?
+        );
+        return Err(Error::FinishedButError(msg));
     }
     let excel_data = excel_data[row_start_index..row_end_index].to_vec();
     let mut merge_data_task_active_model = merge_data_task.into_active_model();
-    let mut task_active_model = task.into_active_model();
     let username = username.context("username not found")?;
     let repo_name = repo_name.context("repo name not found")?;
     let TaskDataMergeConfig { url, .. } =
@@ -877,10 +870,6 @@ pub async fn execute_merge_task<C: TransactionTrait + ConnectionTrait>(
                 merge_data_task_active_model.update_datetime =
                     ActiveValue::Set(Some(now.fixed_offset()));
                 merge_data_task_active_model.update(txn).await?;
-                // update task
-                task_active_model.status = ActiveValue::Set(Some(Status::Finished));
-                task_active_model.update_datetime = ActiveValue::Set(Some(now.fixed_offset()));
-                task_active_model.update(txn).await?;
                 Ok(total as i32)
             })
         })
@@ -891,4 +880,72 @@ pub async fn execute_merge_task<C: TransactionTrait + ConnectionTrait>(
         })?;
     // transaction end
     Ok(result)
+}
+
+const TASK_STATUS_ERROR_MAX_RETRY_COUNT: i32 = 2880;
+
+pub(crate) async fn query_plans_latest_datetime(
+    plan_ids: Vec<String>,
+    conn: &impl ConnectionTrait,
+) -> Result<HashMap<String, Option<DateTime<Utc>>>, anyhow::Error> {
+    let create_datetime_max = entity::task::Column::CreateDatetime.max();
+    let rows = entity::task::Entity::find()
+        .select_only()
+        .column(entity::task::Column::PlanId)
+        .column_as(create_datetime_max, "latest_datetime")
+        .filter(entity::task::Column::PlanId.is_in(plan_ids))
+        .group_by(entity::task::Column::PlanId)
+        .into_tuple::<(String, Option<DateTime<FixedOffset>>)>()
+        .all(conn)
+        .await?;
+    Ok(rows
+        .into_iter()
+        .map(|(pid, dt)| (pid, dt.map(|d| d.to_utc())))
+        .collect())
+}
+
+pub(crate) async fn query_pending_tasks(
+    conn: &impl ConnectionTrait,
+) -> Result<Vec<entity::task::Model>, anyhow::Error> {
+    let tasks = entity::task::Entity::find()
+        .filter(
+            entity::task::Column::Status.is_in(vec![
+                entity::task::Status::Ready,
+                entity::task::Status::Running,
+                entity::task::Status::Error,
+            ]),
+        )
+        .filter(
+            entity::task::Column::RetryCount
+                .lt(Some(TASK_STATUS_ERROR_MAX_RETRY_COUNT)),
+        )
+        .order_by(entity::task::Column::CreateDatetime, sea_orm::Order::Asc)
+        .limit(100)
+        .all(conn)
+        .await?;
+    Ok(tasks)
+}
+
+async fn apply_task_result<C: ConnectionTrait>(
+    mut active: entity::task::ActiveModel,
+    status: entity::task::Status,
+    error_reason: Option<String>,
+    cost_time: Option<i32>,
+    retry_count: Option<i32>,
+    now: DateTime<Utc>,
+    conn: &C,
+) -> Result<(), anyhow::Error> {
+    active.status = ActiveValue::Set(Some(status));
+    if let Some(reason) = error_reason {
+        active.error_reason = ActiveValue::Set(Some(reason));
+    }
+    if let Some(cost) = cost_time {
+        active.cost_time = ActiveValue::Set(Some(cost));
+    }
+    if let Some(retry) = retry_count {
+        active.retry_count = ActiveValue::Set(Some(retry));
+    }
+    active.update_datetime = ActiveValue::Set(Some(now.fixed_offset()));
+    active.update(conn).await.map_err(|e| anyhow::anyhow!("{:?}", e))?;
+    Ok(())
 }

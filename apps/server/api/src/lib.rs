@@ -56,7 +56,9 @@ async fn start() -> anyhow::Result<()> {
     // database schema init or upgrade
     migration::Migrator::up(&conn, None).await?;
     // state
-    let state = AppState { conn };
+    let state = AppState { conn: conn.clone() };
+    // background scheduler
+    service::task::scheduler::start_scheduler(conn);
     // router
     let app = create_router(state);
     // app start
