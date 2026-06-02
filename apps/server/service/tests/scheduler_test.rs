@@ -12,19 +12,19 @@ use crate::common::{
 
 #[tokio::test]
 async fn test_app_background_task_run_no_plans() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
 
-    scheduler::process_all_plans(&state.conn).await.unwrap();
-    scheduler::drain_tasks(&state.conn).await.unwrap();
-    scheduler::run_scheduled_tasks(&state.conn, -1).await.unwrap();
+    scheduler::process_all_plans(&conn).await.unwrap();
+    scheduler::drain_tasks(&conn).await.unwrap();
+    scheduler::run_scheduled_tasks(&conn, -1).await.unwrap();
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_app_background_task_run_with_plan() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
     let now = Utc::now();
 
     let config = TaskPlanConfigDataDownloadConfig::default();
@@ -41,7 +41,7 @@ async fn test_app_background_task_run_with_plan() {
         update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
     };
     entity::task_plan::Entity::insert(plan)
-        .exec(&state.conn)
+        .exec(&conn)
         .await
         .unwrap();
 
@@ -56,31 +56,31 @@ async fn test_app_background_task_run_with_plan() {
         update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
     };
     entity::task_data_plan::Entity::insert(data_plan)
-        .exec(&state.conn)
+        .exec(&conn)
         .await
         .unwrap();
 
-    scheduler::process_all_plans(&state.conn).await.unwrap();
-    scheduler::drain_tasks(&state.conn).await.unwrap();
-    scheduler::run_scheduled_tasks(&state.conn, -1).await.unwrap();
+    scheduler::process_all_plans(&conn).await.unwrap();
+    scheduler::drain_tasks(&conn).await.unwrap();
+    scheduler::run_scheduled_tasks(&conn, -1).await.unwrap();
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_run_tasks_no_tasks() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
 
-    scheduler::run_tasks(&state.conn).await.unwrap();
+    scheduler::run_tasks(&conn).await.unwrap();
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_run_tasks_download_task_missing_plan() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
     let now = Utc::now();
 
     let task = entity::task::ActiveModel {
@@ -96,13 +96,13 @@ async fn test_run_tasks_download_task_missing_plan() {
         update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
     };
     entity::task::Entity::insert(task)
-        .exec(&state.conn)
+        .exec(&conn)
         .await
         .unwrap();
 
-    scheduler::run_tasks(&state.conn).await.unwrap();
+    scheduler::run_tasks(&conn).await.unwrap();
 
-    let tasks = entity::task::Entity::find().all(&state.conn).await.unwrap();
+    let tasks = entity::task::Entity::find().all(&conn).await.unwrap();
     assert_eq!(tasks.len(), 1);
     assert_eq!(
         tasks[0].status,
@@ -118,13 +118,13 @@ async fn test_run_tasks_download_task_missing_plan() {
         "retry_count should be incremented"
     );
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_run_tasks_merge_task_missing_file() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
     let now = Utc::now();
 
     let task = entity::task::ActiveModel {
@@ -140,13 +140,13 @@ async fn test_run_tasks_merge_task_missing_file() {
         update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
     };
     entity::task::Entity::insert(task)
-        .exec(&state.conn)
+        .exec(&conn)
         .await
         .unwrap();
 
-    scheduler::run_tasks(&state.conn).await.unwrap();
+    scheduler::run_tasks(&conn).await.unwrap();
 
-    let tasks = entity::task::Entity::find().all(&state.conn).await.unwrap();
+    let tasks = entity::task::Entity::find().all(&conn).await.unwrap();
     assert_eq!(tasks.len(), 1);
     assert_eq!(
         tasks[0].status,
@@ -158,13 +158,13 @@ async fn test_run_tasks_merge_task_missing_file() {
         "retry_count should be incremented"
     );
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_run_tasks_exceeds_max_retry() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
     let now = Utc::now();
 
     let task = entity::task::ActiveModel {
@@ -180,13 +180,13 @@ async fn test_run_tasks_exceeds_max_retry() {
         update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
     };
     entity::task::Entity::insert(task)
-        .exec(&state.conn)
+        .exec(&conn)
         .await
         .unwrap();
 
-    scheduler::run_tasks(&state.conn).await.unwrap();
+    scheduler::run_tasks(&conn).await.unwrap();
 
-    let tasks = entity::task::Entity::find().all(&state.conn).await.unwrap();
+    let tasks = entity::task::Entity::find().all(&conn).await.unwrap();
     assert_eq!(tasks.len(), 1);
     assert_eq!(
         tasks[0].status,
@@ -199,7 +199,7 @@ async fn test_run_tasks_exceeds_max_retry() {
         "retry_count should remain unchanged"
     );
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
@@ -211,7 +211,7 @@ async fn test_is_scheduler_running_default() {
 #[tokio::test]
 async fn test_app_background_task_run_full_flow() {
     let (gitea, repo_url, token) = setup_gitea_with_test_data().await;
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
     let now = Utc::now();
 
     let config = TaskPlanConfigDataDownloadConfig {
@@ -234,7 +234,7 @@ async fn test_app_background_task_run_full_flow() {
         update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
     };
     entity::task_plan::Entity::insert(plan)
-        .exec(&state.conn)
+        .exec(&conn)
         .await
         .unwrap();
 
@@ -248,19 +248,19 @@ async fn test_app_background_task_run_full_flow() {
         update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
     };
     entity::task_data_plan::Entity::insert(data_plan)
-        .exec(&state.conn)
+        .exec(&conn)
         .await
         .unwrap();
 
     // first run: calculate download tasks + execute them
-    scheduler::process_all_plans(&state.conn).await.unwrap();
-    scheduler::drain_tasks(&state.conn).await.unwrap();
-    scheduler::run_scheduled_tasks(&state.conn, -1).await.unwrap();
+    scheduler::process_all_plans(&conn).await.unwrap();
+    scheduler::drain_tasks(&conn).await.unwrap();
+    scheduler::run_scheduled_tasks(&conn, -1).await.unwrap();
 
     // verify download tasks finished, merge tasks created
     let all_tasks = entity::task::Entity::find()
         .filter(entity::task::Column::PlanId.eq(Some(task_plan_id.clone())))
-        .all(&state.conn)
+        .all(&conn)
         .await
         .unwrap();
     assert!(!all_tasks.is_empty(), "should have created tasks");
@@ -315,22 +315,22 @@ async fn test_app_background_task_run_full_flow() {
 
     let job_count = entity::job::Entity::find()
         .filter(entity::job::Column::Uri.eq(Some(uri_1)))
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert!(job_count > 0, "should have imported 2024-01-01 jobs");
 
     let job_count_v2 = entity::job::Entity::find()
         .filter(entity::job::Column::Uri.eq(Some(uri_2)))
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert!(job_count_v2 > 0, "should have imported 2024-01-02 jobs");
 
     // second run: no pending tasks, should be a no-op
-    scheduler::process_all_plans(&state.conn).await.unwrap();
-    scheduler::drain_tasks(&state.conn).await.unwrap();
-    scheduler::run_scheduled_tasks(&state.conn, -1).await.unwrap();
+    scheduler::process_all_plans(&conn).await.unwrap();
+    scheduler::drain_tasks(&conn).await.unwrap();
+    scheduler::run_scheduled_tasks(&conn, -1).await.unwrap();
 
     // verify merge tasks still finished
     let merge_tasks_after = entity::task::Entity::find()
@@ -338,7 +338,7 @@ async fn test_app_background_task_run_full_flow() {
             entity::task::Type::JobDataMerge,
             entity::task::Type::CompanyDataMerge,
         ]))
-        .all(&state.conn)
+        .all(&conn)
         .await
         .unwrap();
     for t in &merge_tasks_after {
@@ -353,7 +353,7 @@ async fn test_app_background_task_run_full_flow() {
     // data unchanged
     let total = job_count + job_count_v2;
     let job_count_after = entity::job::Entity::find()
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert_eq!(
@@ -361,7 +361,7 @@ async fn test_app_background_task_run_full_flow() {
         "job count should remain same after no-op run"
     );
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
     tear_down_git_server(Some(gitea)).await;
 }

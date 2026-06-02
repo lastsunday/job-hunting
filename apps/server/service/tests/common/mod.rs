@@ -1,11 +1,12 @@
 use chrono::{DateTime, FixedOffset, Utc};
 use framework::database;
 use migration::MigratorTrait;
+use sea_orm::DatabaseConnection;
 use testcontainers::ContainerAsync;
 use testcontainers_modules::postgres::Postgres;
 
 #[allow(dead_code)]
-pub async fn setup_database() -> (Option<ContainerAsync<Postgres>>, AppState) {
+pub async fn setup_database() -> (Option<ContainerAsync<Postgres>>, DatabaseConnection) {
     // postgres
     // let container = postgres::Postgres::default().start().await.unwrap();
     // let host_port = container.get_host_port_ipv4(5432).await.unwrap();
@@ -14,11 +15,10 @@ pub async fn setup_database() -> (Option<ContainerAsync<Postgres>>, AppState) {
     // sqlite
     let container = None;
     let database_url = &"sqlite::memory:";
-    let conn: sea_orm::DatabaseConnection =
+    let conn: DatabaseConnection =
         database::establish_connection(database_url).await.unwrap();
     migration::Migrator::up(&conn, None).await.unwrap();
-    let state = AppState { conn };
-    (container, state)
+    (container, conn)
 }
 
 #[allow(dead_code)]
@@ -43,7 +43,7 @@ pub fn datetime_to_str(datetime: Option<DateTime<FixedOffset>>) -> String {
 
 use base64::Engine;
 use git2::{Cred, FileMode, RemoteCallbacks, Signature, Time, build::TreeUpdateBuilder};
-use service::{AppState, util::git::gen_openssh_key, util::git::git_clone_by_http};
+use service::{util::git::gen_openssh_key, util::git::git_clone_by_http};
 use std::collections::HashMap;
 use std::str;
 use std::{fs, path::Path};

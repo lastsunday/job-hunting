@@ -77,9 +77,9 @@ fn build_test_job_row(job_id: &str, date_str: &str) -> Vec<String> {
 
 #[tokio::test]
 async fn test_import_empty_data() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
 
-    let result = JobImporter::import(&state.conn, vec![], TEST_URI_V1)
+    let result = JobImporter::import(&conn, vec![], TEST_URI_V1)
         .await
         .unwrap();
 
@@ -91,17 +91,17 @@ async fn test_import_empty_data() {
     assert_eq!(result.updated, 0, "更新数应为0");
     assert!(result.lack_columns.is_empty(), "空数据不应缺少字段");
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_import_invalid_headers() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
 
     let invalid_data = vec![vec!["职位自编号".to_string()]];
 
-    let result = JobImporter::import(&state.conn, invalid_data, TEST_URI_V1)
+    let result = JobImporter::import(&conn, invalid_data, TEST_URI_V1)
         .await
         .unwrap();
 
@@ -110,13 +110,13 @@ async fn test_import_invalid_headers() {
     assert!(!result.errors.is_empty(), "应有错误信息");
     assert!(!result.lack_columns.is_empty(), "应列出缺少的字段");
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_import_success_new_jobs() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
 
     let data = std::fs::read("tests/resources/data/job-v1.xlsx").unwrap();
     let parsed_data = FileParser::parse_excel(&data).unwrap();
@@ -124,7 +124,7 @@ async fn test_import_success_new_jobs() {
     let row_count = parsed_data.len() - 1;
     assert_eq!(row_count, 180, "Excel 应有180条数据");
 
-    let result = JobImporter::import(&state.conn, parsed_data, TEST_URI_V1)
+    let result = JobImporter::import(&conn, parsed_data, TEST_URI_V1)
         .await
         .unwrap();
 
@@ -136,10 +136,10 @@ async fn test_import_success_new_jobs() {
     assert_eq!(result.imported, 180, "应导入180条");
     assert_eq!(result.updated, 0, "首次导入无更新");
 
-    let jobs = Job::find().all(&state.conn).await.unwrap();
+    let jobs = Job::find().all(&conn).await.unwrap();
     assert_eq!(jobs.len(), 180, "Job 表应有180条记录");
 
-    let job_sources = JobSource::find().all(&state.conn).await.unwrap();
+    let job_sources = JobSource::find().all(&conn).await.unwrap();
     assert_eq!(job_sources.len(), 180, "JobSource 表应有180条记录");
 
     let first_job = jobs.first().unwrap();
@@ -148,13 +148,13 @@ async fn test_import_success_new_jobs() {
     assert!(first_job.company_name.is_some());
     assert!(first_job.publish_datetime.is_some());
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_import_update_existing_jobs() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
 
     let now = Utc::now();
     let old_date_str = format_naive_date(now - Duration::days(10));
@@ -164,7 +164,7 @@ async fn test_import_update_existing_jobs() {
         build_job_headers_with_version(),
         build_test_job_row("job_update_001", &old_date_str),
     ];
-    let result1 = JobImporter::import(&state.conn, initial_data, TEST_URI_V1)
+    let result1 = JobImporter::import(&conn, initial_data, TEST_URI_V1)
         .await
         .unwrap();
     assert_eq!(result1.imported, 1, "首次导入应有1条插入");
@@ -201,7 +201,7 @@ async fn test_import_update_existing_jobs() {
         ],
     ];
 
-    let result2 = JobImporter::import(&state.conn, update_data, TEST_URI_V2)
+    let result2 = JobImporter::import(&conn, update_data, TEST_URI_V2)
         .await
         .unwrap();
 
@@ -210,7 +210,7 @@ async fn test_import_update_existing_jobs() {
     assert_eq!(result2.updated, 1, "应有1条更新");
 
     let job_after = Job::find_by_id("job_update_001")
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap()
         .unwrap();
@@ -218,13 +218,13 @@ async fn test_import_update_existing_jobs() {
     assert_eq!(job_after.name.unwrap(), "更新后职位", "职位名应更新");
     assert_eq!(job_after.company_name.unwrap(), "新公司名", "公司名应更新");
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_import_mixed_new_and_update() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
 
     let now = Utc::now();
     let old_date_str = format_naive_date(now - Duration::days(10));
@@ -234,7 +234,7 @@ async fn test_import_mixed_new_and_update() {
         build_job_headers_with_version(),
         build_test_job_row("job_mixed_001", &old_date_str),
     ];
-    let result1 = JobImporter::import(&state.conn, initial_data, TEST_URI_V1)
+    let result1 = JobImporter::import(&conn, initial_data, TEST_URI_V1)
         .await
         .unwrap();
     assert_eq!(result1.imported, 1);
@@ -297,7 +297,7 @@ async fn test_import_mixed_new_and_update() {
         ],
     ];
 
-    let result2 = JobImporter::import(&state.conn, mixed_data, TEST_URI_V2)
+    let result2 = JobImporter::import(&conn, mixed_data, TEST_URI_V2)
         .await
         .unwrap();
 
@@ -306,16 +306,16 @@ async fn test_import_mixed_new_and_update() {
     assert_eq!(result2.updated, 1, "应有1条更新");
     assert_eq!(result2.total, 2);
 
-    let jobs = Job::find().all(&state.conn).await.unwrap();
+    let jobs = Job::find().all(&conn).await.unwrap();
     assert_eq!(jobs.len(), 2, "应有2条job记录");
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_import_update_rule_publish_datetime() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
 
     let now = Utc::now();
     let old_date_str = format_naive_date(now - Duration::days(30));
@@ -325,7 +325,7 @@ async fn test_import_update_rule_publish_datetime() {
         build_job_headers_with_version(),
         build_test_job_row("rule_test_001", &old_date_str),
     ];
-    JobImporter::import(&state.conn, initial_data, TEST_URI_V1)
+    JobImporter::import(&conn, initial_data, TEST_URI_V1)
         .await
         .unwrap();
 
@@ -360,7 +360,7 @@ async fn test_import_update_rule_publish_datetime() {
         ],
     ];
 
-    let result = JobImporter::import(&state.conn, update_data, TEST_URI_V2)
+    let result = JobImporter::import(&conn, update_data, TEST_URI_V2)
         .await
         .unwrap();
 
@@ -368,7 +368,7 @@ async fn test_import_update_rule_publish_datetime() {
     assert_eq!(result.updated, 1, "规则1触发时应有1条更新");
 
     let updated_job = Job::find_by_id("rule_test_001")
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap()
         .unwrap();
@@ -376,13 +376,13 @@ async fn test_import_update_rule_publish_datetime() {
     assert_eq!(updated_job.name.unwrap(), "新职位名", "职位名应更新");
     assert_eq!(updated_job.description.unwrap(), "新描述", "描述应更新");
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_import_update_rule_company_full_name() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
 
     let now = Utc::now();
     let date_str = format_naive_date(now - Duration::days(10));
@@ -417,7 +417,7 @@ async fn test_import_update_rule_company_full_name() {
             "".to_string(),
         ],
     ];
-    JobImporter::import(&state.conn, initial_data, TEST_URI_V1)
+    JobImporter::import(&conn, initial_data, TEST_URI_V1)
         .await
         .unwrap();
 
@@ -452,14 +452,14 @@ async fn test_import_update_rule_company_full_name() {
         ],
     ];
 
-    let result = JobImporter::import(&state.conn, update_data, TEST_URI_V2)
+    let result = JobImporter::import(&conn, update_data, TEST_URI_V2)
         .await
         .unwrap();
 
     assert_eq!(result.updated, 1, "规则2触发时应有1条更新");
 
     let updated_job = Job::find_by_id("rule_test_002")
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap()
         .unwrap();
@@ -471,13 +471,13 @@ async fn test_import_update_rule_company_full_name() {
         "公司名应更新"
     );
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_import_update_rule_first_scan_datetime() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
 
     let now = Utc::now();
     let old_date_str = format_naive_date(now - Duration::days(20));
@@ -487,14 +487,14 @@ async fn test_import_update_rule_first_scan_datetime() {
         build_job_headers_with_version(),
         build_test_job_row("rule_test_003", &old_date_str),
     ];
-    let initial_result = JobImporter::import(&state.conn, initial_data, TEST_URI_V1)
+    let initial_result = JobImporter::import(&conn, initial_data, TEST_URI_V1)
         .await
         .unwrap();
     assert_eq!(initial_result.imported, 1);
     assert_eq!(initial_result.updated, 0);
 
     let initial_job = Job::find_by_id("rule_test_003")
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap()
         .unwrap();
@@ -531,7 +531,7 @@ async fn test_import_update_rule_first_scan_datetime() {
         ],
     ];
 
-    let result = JobImporter::import(&state.conn, update_data, TEST_URI_V2)
+    let result = JobImporter::import(&conn, update_data, TEST_URI_V2)
         .await
         .unwrap();
 
@@ -539,7 +539,7 @@ async fn test_import_update_rule_first_scan_datetime() {
     assert_eq!(result.updated, 1, "规则3触发时应有1条更新");
 
     let updated_job = Job::find_by_id("rule_test_003")
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap()
         .unwrap();
@@ -550,13 +550,13 @@ async fn test_import_update_rule_first_scan_datetime() {
         "首次扫描时间应取更早的值"
     );
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_import_job_same_uri_duplicate() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
 
     let now = Utc::now();
     let date_str = format_naive_date(now - Duration::days(10));
@@ -565,7 +565,7 @@ async fn test_import_job_same_uri_duplicate() {
         build_job_headers_with_version(),
         build_test_job_row("job_dup_001", &date_str),
     ];
-    let result1 = JobImporter::import(&state.conn, initial_data, TEST_URI_V1)
+    let result1 = JobImporter::import(&conn, initial_data, TEST_URI_V1)
         .await
         .unwrap();
     assert_eq!(result1.imported, 1, "首次导入应有1条插入");
@@ -574,23 +574,23 @@ async fn test_import_job_same_uri_duplicate() {
         build_job_headers_with_version(),
         build_test_job_row("job_dup_001", &date_str),
     ];
-    let result2 = JobImporter::import(&state.conn, duplicate_data, TEST_URI_V1)
+    let result2 = JobImporter::import(&conn, duplicate_data, TEST_URI_V1)
         .await
         .unwrap();
 
     assert_eq!(result2.imported, 0, "相同URI+相同job_id不应重复导入");
     assert_eq!(result2.updated, 0, "相同数据不应更新");
 
-    let sources = JobSource::find().all(&state.conn).await.unwrap();
+    let sources = JobSource::find().all(&conn).await.unwrap();
     assert_eq!(sources.len(), 1, "JobSource应为1条");
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }
 
 #[tokio::test]
 async fn test_import_job_invalid_number_format() {
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
 
     let now = Utc::now();
     let date_str = format_naive_date(now - Duration::days(10));
@@ -602,7 +602,7 @@ async fn test_import_job_invalid_number_format() {
 
     data[1][15] = "面议".to_string();
 
-    let result = JobImporter::import(&state.conn, data, TEST_URI_V1)
+    let result = JobImporter::import(&conn, data, TEST_URI_V1)
         .await
         .unwrap();
 
@@ -613,6 +613,6 @@ async fn test_import_job_invalid_number_format() {
     assert!(!result.success, "数字格式错误应返回失败");
     assert!(!result.errors.is_empty(), "应有错误信息");
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
 }

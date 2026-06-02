@@ -9,110 +9,110 @@ mod common;
 /// max_size < 0 时跳过清理，文件保留
 #[tokio::test]
 async fn test_clear_file_max_size_negative() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
-    insert_file(&state.conn, "f1", 100, 1).await;
-    insert_file(&state.conn, "f2", 200, 2).await;
+    insert_file(&conn, "f1", 100, 1).await;
+    insert_file(&conn, "f2", 200, 2).await;
 
-    scheduler::run_scheduled_tasks(&state.conn, -1)
+    scheduler::run_scheduled_tasks(&conn, -1)
         .await
         .unwrap();
 
     let count = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(false)))
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert_eq!(count, 2);
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 
 /// total < max_size 时跳过清理，文件保留
 #[tokio::test]
 async fn test_clear_file_under_limit() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
-    insert_file(&state.conn, "f1", 100, 1).await;
-    insert_file(&state.conn, "f2", 200, 2).await;
+    insert_file(&conn, "f1", 100, 1).await;
+    insert_file(&conn, "f2", 200, 2).await;
 
-    scheduler::run_scheduled_tasks(&state.conn, 1000)
+    scheduler::run_scheduled_tasks(&conn, 1000)
         .await
         .unwrap();
 
     let count = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(false)))
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert_eq!(count, 2);
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 
 /// 数据库无文件时跳过
 #[tokio::test]
 async fn test_clear_file_no_files() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
-    scheduler::run_scheduled_tasks(&state.conn, 100)
+    scheduler::run_scheduled_tasks(&conn, 100)
         .await
         .unwrap();
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 
 /// 所有文件都有未完成的 merge task，没有文件可删
 #[tokio::test]
 async fn test_clear_file_no_ready() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
-    insert_file(&state.conn, "f1", 100, 1).await;
-    insert_file(&state.conn, "f2", 200, 2).await;
-    insert_file(&state.conn, "f3", 300, 3).await;
+    insert_file(&conn, "f1", 100, 1).await;
+    insert_file(&conn, "f2", 200, 2).await;
+    insert_file(&conn, "f3", 300, 3).await;
 
-    insert_merge_with_task(&state.conn, "m1", "f1", entity::task::Status::Ready).await;
-    insert_merge_with_task(&state.conn, "m2", "f2", entity::task::Status::Running).await;
-    insert_merge_with_task(&state.conn, "m3", "f3", entity::task::Status::Error).await;
+    insert_merge_with_task(&conn, "m1", "f1", entity::task::Status::Ready).await;
+    insert_merge_with_task(&conn, "m2", "f2", entity::task::Status::Running).await;
+    insert_merge_with_task(&conn, "m3", "f3", entity::task::Status::Error).await;
 
-    scheduler::run_scheduled_tasks(&state.conn, 0)
+    scheduler::run_scheduled_tasks(&conn, 0)
         .await
         .unwrap();
 
     let count = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(false)))
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert_eq!(count, 3);
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 
 /// 部分文件 merge 完成、部分未完成：只删 ready 的文件
 #[tokio::test]
 async fn test_clear_file_partial_ready() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
-    insert_file(&state.conn, "f1", 100, 1).await;
-    insert_file(&state.conn, "f2", 200, 2).await;
-    insert_file(&state.conn, "f3", 300, 3).await;
+    insert_file(&conn, "f1", 100, 1).await;
+    insert_file(&conn, "f2", 200, 2).await;
+    insert_file(&conn, "f3", 300, 3).await;
 
-    insert_merge_with_task(&state.conn, "m1", "f1", entity::task::Status::Finished).await;
-    insert_merge_with_task(&state.conn, "m2", "f2", entity::task::Status::Finished).await;
-    insert_merge_with_task(&state.conn, "m3", "f3", entity::task::Status::Ready).await;
+    insert_merge_with_task(&conn, "m1", "f1", entity::task::Status::Finished).await;
+    insert_merge_with_task(&conn, "m2", "f2", entity::task::Status::Finished).await;
+    insert_merge_with_task(&conn, "m3", "f3", entity::task::Status::Ready).await;
 
-    scheduler::run_scheduled_tasks(&state.conn, 0)
+    scheduler::run_scheduled_tasks(&conn, 0)
         .await
         .unwrap();
 
     let deleted: Vec<String> = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(true)))
-        .all(&state.conn)
+        .all(&conn)
         .await
         .unwrap()
         .into_iter()
@@ -124,31 +124,31 @@ async fn test_clear_file_partial_ready() {
 
     let remaining = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(false)))
-        .all(&state.conn)
+        .all(&conn)
         .await
         .unwrap();
     assert_eq!(remaining.len(), 1);
     assert_eq!(remaining[0].id, "f3");
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 
 /// 文件没有关联 merge 记录时视为 ready，可直接删除
 #[tokio::test]
 async fn test_clear_file_no_merge_record() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
-    insert_file(&state.conn, "f1", 100, 1).await;
-    insert_file(&state.conn, "f2", 200, 2).await;
+    insert_file(&conn, "f1", 100, 1).await;
+    insert_file(&conn, "f2", 200, 2).await;
 
-    scheduler::run_scheduled_tasks(&state.conn, 0)
+    scheduler::run_scheduled_tasks(&conn, 0)
         .await
         .unwrap();
 
     let deleted: Vec<String> = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(true)))
-        .all(&state.conn)
+        .all(&conn)
         .await
         .unwrap()
         .into_iter()
@@ -156,34 +156,34 @@ async fn test_clear_file_no_merge_record() {
         .collect();
     assert_eq!(deleted.len(), 2);
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 
 /// FinishedButError 视为未完成，文件不可删
 #[tokio::test]
 async fn test_clear_file_finished_but_error_not_ready() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
-    insert_file(&state.conn, "f1", 100, 1).await;
-    insert_file(&state.conn, "f2", 200, 2).await;
+    insert_file(&conn, "f1", 100, 1).await;
+    insert_file(&conn, "f2", 200, 2).await;
 
     insert_merge_with_task(
-        &state.conn,
+        &conn,
         "m1",
         "f1",
         entity::task::Status::FinishedButError,
     )
     .await;
-    insert_merge_with_task(&state.conn, "m2", "f2", entity::task::Status::Finished).await;
+    insert_merge_with_task(&conn, "m2", "f2", entity::task::Status::Finished).await;
 
-    scheduler::run_scheduled_tasks(&state.conn, 0)
+    scheduler::run_scheduled_tasks(&conn, 0)
         .await
         .unwrap();
 
     let deleted: Vec<String> = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(true)))
-        .all(&state.conn)
+        .all(&conn)
         .await
         .unwrap()
         .into_iter()
@@ -192,154 +192,154 @@ async fn test_clear_file_finished_but_error_not_ready() {
     assert_eq!(deleted.len(), 1);
     assert_eq!(deleted[0], "f2");
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 
 /// 文件超过 batch size（64）时，每周期只删 64 个
 #[tokio::test]
 async fn test_clear_file_batch_limit() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
     for i in 0..70 {
         let file_id = format!("f{}", i);
-        insert_file(&state.conn, &file_id, 100, i as i64 + 1).await;
+        insert_file(&conn, &file_id, 100, i as i64 + 1).await;
     }
 
-    scheduler::run_scheduled_tasks(&state.conn, 0)
+    scheduler::run_scheduled_tasks(&conn, 0)
         .await
         .unwrap();
 
     let deleted_count = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(true)))
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert_eq!(deleted_count, 64);
 
     let remaining_count = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(false)))
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert_eq!(remaining_count, 6);
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 
 /// total == max_size 边界：total 不超过 limit，不触发清理
 #[tokio::test]
 async fn test_clear_file_total_equals_max_size() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
-    insert_file(&state.conn, "f1", 100, 1).await;
-    insert_file(&state.conn, "f2", 200, 2).await;
+    insert_file(&conn, "f1", 100, 1).await;
+    insert_file(&conn, "f2", 200, 2).await;
 
-    scheduler::run_scheduled_tasks(&state.conn, 300)
+    scheduler::run_scheduled_tasks(&conn, 300)
         .await
         .unwrap();
 
     let count = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(false)))
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert_eq!(count, 2);
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 
 /// 文件 size = None 时视为 0，不影响 total 计算
 #[tokio::test]
 async fn test_clear_file_size_none() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
-    insert_file(&state.conn, "f1", 100, 1).await;
-    insert_file_size_none(&state.conn, "f2", 2).await;
+    insert_file(&conn, "f1", 100, 1).await;
+    insert_file_size_none(&conn, "f2", 2).await;
 
-    scheduler::run_scheduled_tasks(&state.conn, 0)
+    scheduler::run_scheduled_tasks(&conn, 0)
         .await
         .unwrap();
 
     let deleted = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(true)))
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert_eq!(deleted, 2);
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 
 /// 一个文件关联多个 merge 记录，其中一条未完成时不可删
 #[tokio::test]
 async fn test_clear_file_multiple_merges_mixed() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
-    insert_file(&state.conn, "f1", 100, 1).await;
+    insert_file(&conn, "f1", 100, 1).await;
 
-    insert_merge_with_task(&state.conn, "m1", "f1", entity::task::Status::Finished).await;
-    insert_merge_with_task(&state.conn, "m2", "f1", entity::task::Status::Ready).await;
+    insert_merge_with_task(&conn, "m1", "f1", entity::task::Status::Finished).await;
+    insert_merge_with_task(&conn, "m2", "f1", entity::task::Status::Ready).await;
 
-    scheduler::run_scheduled_tasks(&state.conn, 0)
+    scheduler::run_scheduled_tasks(&conn, 0)
         .await
         .unwrap();
 
     let deleted = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(true)))
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert_eq!(deleted, 0);
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 
 /// 一个文件关联多个 merge 记录，全部 Finished 时可删
 #[tokio::test]
 async fn test_clear_file_multiple_merges_all_finished() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
-    insert_file(&state.conn, "f1", 100, 1).await;
+    insert_file(&conn, "f1", 100, 1).await;
 
-    insert_merge_with_task(&state.conn, "m1", "f1", entity::task::Status::Finished).await;
-    insert_merge_with_task(&state.conn, "m2", "f1", entity::task::Status::Finished).await;
+    insert_merge_with_task(&conn, "m1", "f1", entity::task::Status::Finished).await;
+    insert_merge_with_task(&conn, "m2", "f1", entity::task::Status::Finished).await;
 
-    scheduler::run_scheduled_tasks(&state.conn, 0)
+    scheduler::run_scheduled_tasks(&conn, 0)
         .await
         .unwrap();
 
     let deleted = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(true)))
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert_eq!(deleted, 1);
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 
 /// 已删除的文件不计入 total、不被 batch 查询选中
 #[tokio::test]
 async fn test_clear_file_mixed_deleted_and_not() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
-    insert_file(&state.conn, "f1", 100, 1).await;
-    insert_file(&state.conn, "f2", 200, 2).await;
-    insert_file_deleted(&state.conn, "f3", 300, 3).await;
+    insert_file(&conn, "f1", 100, 1).await;
+    insert_file(&conn, "f2", 200, 2).await;
+    insert_file_deleted(&conn, "f3", 300, 3).await;
 
-    scheduler::run_scheduled_tasks(&state.conn, 0)
+    scheduler::run_scheduled_tasks(&conn, 0)
         .await
         .unwrap();
 
     let deleted: Vec<String> = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(true)))
-        .all(&state.conn)
+        .all(&conn)
         .await
         .unwrap()
         .into_iter()
@@ -350,31 +350,31 @@ async fn test_clear_file_mixed_deleted_and_not() {
     assert!(deleted.contains(&"f2".to_string()));
     assert!(deleted.contains(&"f3".to_string()));
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 
 /// total > max_size 时触发清理，按 update_datetime 从旧到新删除文件
 #[tokio::test]
 async fn test_clear_file_exceeds_limit_oldest_first() {
-    let (container, state) = common::setup_database().await;
+    let (container, conn) = common::setup_database().await;
 
-    insert_file(&state.conn, "f1", 100, 30).await;
-    insert_file(&state.conn, "f2", 100, 20).await;
-    insert_file(&state.conn, "f3", 100, 10).await;
+    insert_file(&conn, "f1", 100, 30).await;
+    insert_file(&conn, "f2", 100, 20).await;
+    insert_file(&conn, "f3", 100, 10).await;
 
-    scheduler::run_scheduled_tasks(&state.conn, 150)
+    scheduler::run_scheduled_tasks(&conn, 150)
         .await
         .unwrap();
 
     let deleted = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(true)))
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert_eq!(deleted, 3);
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     common::tear_down(&container).await;
 }
 

@@ -33,7 +33,7 @@ async fn set_task_finished(conn: &DatabaseConnection, task_id: &str, now: DateTi
 #[tokio::test]
 async fn test_full_flow() {
     let (gitea, repo_url, token) = setup_gitea_with_test_data().await;
-    let (container, state) = setup_database().await;
+    let (container, conn) = setup_database().await;
 
     let now: DateTime<Utc> = "2024-01-03T00:00:00Z".parse::<DateTime<Utc>>().unwrap();
     let user_name = ADMIN_USERNAME;
@@ -52,7 +52,7 @@ async fn test_full_flow() {
     let cron = "0 */30 * * * * *";
 
     let (task_data_plan_id, task_plan_id) = create_plan(
-        &state.conn,
+        &conn,
         CreatePlanParam {
             user_name: user_name.to_string(),
             repo_name: repo_name.to_string(),
@@ -71,7 +71,7 @@ async fn test_full_flow() {
     assert!(!task_plan_id.is_empty());
 
     let task_data_plan = entity::task_data_plan::Entity::find_by_id(task_data_plan_id.clone())
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap();
     assert!(
@@ -81,7 +81,7 @@ async fn test_full_flow() {
     );
 
     let task_plan = entity::task_plan::Entity::find_by_id(task_plan_id.clone())
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap();
     assert!(matches!(task_plan.clone(),
@@ -107,7 +107,7 @@ async fn test_full_flow() {
     let task_type = TaskType::JobDataDownload;
 
     let task_ids = calculate_and_create_download_task(
-        &state.conn,
+        &conn,
         CalculateAndCreateDownloadTaskParam {
             plan_id: plan_id.to_string(),
             user_name: user_name.to_string(),
@@ -132,7 +132,7 @@ async fn test_full_flow() {
 
     let task_list = entity::task::Entity::find()
         .filter(entity::task::Column::Id.is_in(task_ids.clone()))
-        .all(&state.conn)
+        .all(&conn)
         .await
         .unwrap();
     assert_eq!(2, task_list.len(), "database task list len not correct");
@@ -142,7 +142,7 @@ async fn test_full_flow() {
         .collect();
     let task_data_download_list = entity::task_data_download::Entity::find()
         .filter(entity::task_data_download::Column::Id.is_in(task_data_download_ids))
-        .all(&state.conn)
+        .all(&conn)
         .await
         .unwrap();
     assert_eq!(
@@ -155,7 +155,7 @@ async fn test_full_flow() {
     let download_task_id = task_ids.first().unwrap().to_string();
     let now: DateTime<Utc> = "2024-01-03T00:00:00Z".parse::<DateTime<Utc>>().unwrap();
     let merge_task_ids = execute_download_task_and_create_merge_task(
-        &state.conn,
+        &conn,
         ExecuteDownloadTaskAndCreateMergeTaskParam {
             download_task_id: download_task_id.to_string(),
             now,
@@ -163,12 +163,12 @@ async fn test_full_flow() {
     )
     .await
     .unwrap();
-    set_task_finished(&state.conn, &download_task_id, now).await;
+    set_task_finished(&conn, &download_task_id, now).await;
     // checking
     let entity::task::Model {
         status, data_id, ..
     } = entity::task::Entity::find_by_id(download_task_id)
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap()
         .unwrap();
@@ -177,13 +177,13 @@ async fn test_full_flow() {
         data_id: download_file_id,
         ..
     } = entity::task_data_download::Entity::find_by_id(data_id.unwrap())
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap()
         .unwrap();
     let entity::file::Model { content, .. } =
         entity::file::Entity::find_by_id(download_file_id.clone().unwrap())
-            .one(&state.conn)
+            .one(&conn)
             .await
             .unwrap()
             .unwrap();
@@ -194,7 +194,7 @@ async fn test_full_flow() {
         data_id: merge_task_data_id,
         ..
     } = entity::task::Entity::find_by_id(merge_task_id.to_string())
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap()
         .unwrap();
@@ -203,7 +203,7 @@ async fn test_full_flow() {
         data_id: merge_file_id,
         ..
     } = entity::task_data_merge::Entity::find_by_id(merge_task_data_id.unwrap())
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap()
         .unwrap();
@@ -212,7 +212,7 @@ async fn test_full_flow() {
     // NOTE: 4. 执行合并任务
     let now: DateTime<Utc> = "2024-01-03T00:00:00Z".parse::<DateTime<Utc>>().unwrap();
     let data_count = execute_merge_task(
-        &state.conn,
+        &conn,
         ExecuteMergeTaskParam {
             merge_task_id: merge_task_id.to_string(),
             now,
@@ -222,13 +222,13 @@ async fn test_full_flow() {
     .unwrap();
     // checking
     assert!(data_count > 0);
-    set_task_finished(&state.conn, merge_task_id, now).await;
+    set_task_finished(&conn, merge_task_id, now).await;
     let entity::task::Model {
         status: merge_task_status,
         data_id: merge_task_data_id,
         ..
     } = entity::task::Entity::find_by_id(merge_task_id)
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap()
         .unwrap();
@@ -237,7 +237,7 @@ async fn test_full_flow() {
         data_count: merge_task_data_count,
         ..
     } = entity::task_data_merge::Entity::find_by_id(merge_task_data_id.unwrap())
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap()
         .unwrap();
@@ -245,12 +245,12 @@ async fn test_full_flow() {
 
     // checking job record
     let count = entity::job::Entity::find()
-        .count(&state.conn)
+        .count(&conn)
         .await
         .unwrap();
     assert!(count > 0);
     let job = entity::job::Entity::find()
-        .one(&state.conn)
+        .one(&conn)
         .await
         .unwrap()
         .unwrap();
@@ -259,7 +259,7 @@ async fn test_full_flow() {
         format!("data://{user_name}@localhost/{user_name}/{repo_name}/2024/01-01/job.zip");
     assert_eq!(job.uri, Some(expect_uri));
 
-    state.conn.close().await.unwrap();
+    conn.close().await.unwrap();
     tear_down(&container).await;
     tear_down_git_server(Some(gitea)).await;
 }
