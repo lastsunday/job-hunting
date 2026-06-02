@@ -36,6 +36,16 @@ pub enum Type {
     CompanyDataMerge,
 }
 
+impl Type {
+    pub fn is_download(&self) -> bool {
+        matches!(self, Type::JobDataDownload | Type::CompanyDataDownload)
+    }
+
+    pub fn is_merge(&self) -> bool {
+        matches!(self, Type::JobDataMerge | Type::CompanyDataMerge)
+    }
+}
+
 #[derive(EnumIter, DeriveActiveEnum, Debug, ToSchema, PartialEq, Clone, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum Status {

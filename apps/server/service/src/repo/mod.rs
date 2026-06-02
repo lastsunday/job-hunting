@@ -1,11 +1,21 @@
 use std::collections::HashMap;
 use std::path::Path;
 
-use anyhow::Context;
 use chrono::{DateTime, Utc};
 use regex::Regex;
+use thiserror::Error;
 
 use crate::util;
+
+#[derive(Debug, Error)]
+pub enum DownloadError {
+    #[error("download timed out")]
+    Timeout,
+    #[error("file not found: {0}")]
+    FileNotFound(String),
+    #[error(transparent)]
+    Internal(#[from] anyhow::Error),
+}
 
 pub struct QueryFileDateAndMaxSeqParam {
     pub file_name: String,
@@ -37,7 +47,7 @@ pub trait Repo {
     fn download_file(
         &self,
         param: DownloadFileParam,
-    ) -> impl Future<Output = Result<FileInfo, anyhow::Error>>;
+    ) -> impl Future<Output = Result<FileInfo, DownloadError>>;
 }
 
 pub struct GitRepo {}
@@ -90,7 +100,10 @@ impl Repo for GitRepo {
         Ok(result)
     }
 
-    async fn download_file(&self, param: DownloadFileParam) -> Result<FileInfo, anyhow::Error> {
+    async fn download_file(
+        &self,
+        param: DownloadFileParam,
+    ) -> Result<FileInfo, DownloadError> {
         let DownloadFileParam {
             url,
             datetime,
@@ -98,11 +111,15 @@ impl Repo for GitRepo {
             token,
         } = param;
         let path = get_path_by_datetime_file_name(&datetime, &file_name);
-        let files_map =
-            util::git_lite::sparse_checkout(&url, "HEAD", &[&path], token.as_deref()).await?;
+        let files_map = util::git_lite::sparse_checkout(&url, "HEAD", &[&path], token.as_deref())
+            .await
+            .map_err(|e| match e {
+                util::git_lite::SparseCheckoutError::Timeout => DownloadError::Timeout,
+                util::git_lite::SparseCheckoutError::Internal(err) => DownloadError::Internal(err),
+            })?;
         let content = files_map
             .get(&path)
-            .context(format!("file not found by path = {}", path))?;
+            .ok_or_else(|| DownloadError::FileNotFound(path.clone()))?;
         Ok(FileInfo {
             content: content.clone(),
             file_name: Some(file_name),

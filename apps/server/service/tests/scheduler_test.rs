@@ -14,9 +14,9 @@ use crate::common::{
 async fn test_app_background_task_run_no_plans() {
     let (container, state) = setup_database().await;
 
-    scheduler::app_background_task_run(&state.conn)
-        .await
-        .unwrap();
+    scheduler::process_all_plans(&state.conn).await.unwrap();
+    scheduler::drain_tasks(&state.conn).await.unwrap();
+    scheduler::run_scheduled_tasks(&state.conn).await.unwrap();
 
     state.conn.close().await.unwrap();
     tear_down(&container).await;
@@ -60,9 +60,9 @@ async fn test_app_background_task_run_with_plan() {
         .await
         .unwrap();
 
-    scheduler::app_background_task_run(&state.conn)
-        .await
-        .unwrap();
+    scheduler::process_all_plans(&state.conn).await.unwrap();
+    scheduler::drain_tasks(&state.conn).await.unwrap();
+    scheduler::run_scheduled_tasks(&state.conn).await.unwrap();
 
     state.conn.close().await.unwrap();
     tear_down(&container).await;
@@ -262,9 +262,9 @@ async fn test_app_background_task_run_full_flow() {
         .unwrap();
 
     // first run: calculate download tasks + execute them
-    scheduler::app_background_task_run(&state.conn)
-        .await
-        .unwrap();
+    scheduler::process_all_plans(&state.conn).await.unwrap();
+    scheduler::drain_tasks(&state.conn).await.unwrap();
+    scheduler::run_scheduled_tasks(&state.conn).await.unwrap();
 
     // verify download tasks finished, merge tasks created
     let all_tasks = entity::task::Entity::find()
@@ -308,45 +308,13 @@ async fn test_app_background_task_run_full_flow() {
     for t in &merge_tasks {
         assert_eq!(
             t.status,
-            Some(entity::task::Status::Ready),
-            "merge task {} should be ready after first run",
-            t.id
-        );
-    }
-
-    // no data imported yet
-    let job_count_before = entity::job::Entity::find()
-        .count(&state.conn)
-        .await
-        .unwrap();
-    assert_eq!(job_count_before, 0, "no jobs before merge");
-
-    // second run: execute merge tasks
-    scheduler::app_background_task_run(&state.conn)
-        .await
-        .unwrap();
-
-    // verify merge tasks finished
-    let merge_tasks_after = entity::task::Entity::find()
-        .filter(
-            entity::task::Column::Type.is_in(vec![
-                entity::task::Type::JobDataMerge,
-                entity::task::Type::CompanyDataMerge,
-            ]),
-        )
-        .all(&state.conn)
-        .await
-        .unwrap();
-    for t in &merge_tasks_after {
-        assert_eq!(
-            t.status,
             Some(entity::task::Status::Finished),
-            "merge task {} should be finished after second run",
+            "merge task {} should be finished after first run",
             t.id
         );
     }
 
-    // data imported
+    // data already imported (drain_tasks executes merge tasks in same run)
     let job_count = entity::job::Entity::find()
         .count(&state.conn)
         .await
@@ -363,6 +331,38 @@ async fn test_app_background_task_run_full_flow() {
         ADMIN_USERNAME, ADMIN_USERNAME, DATA_REPO
     );
     assert_eq!(job.uri, Some(expected_uri));
+
+    // second run: no pending tasks, should be a no-op
+    scheduler::process_all_plans(&state.conn).await.unwrap();
+    scheduler::drain_tasks(&state.conn).await.unwrap();
+    scheduler::run_scheduled_tasks(&state.conn).await.unwrap();
+
+    // verify merge tasks still finished
+    let merge_tasks_after = entity::task::Entity::find()
+        .filter(
+            entity::task::Column::Type.is_in(vec![
+                entity::task::Type::JobDataMerge,
+                entity::task::Type::CompanyDataMerge,
+            ]),
+        )
+        .all(&state.conn)
+        .await
+        .unwrap();
+    for t in &merge_tasks_after {
+        assert_eq!(
+            t.status,
+            Some(entity::task::Status::Finished),
+            "merge task {} should still be finished",
+            t.id
+        );
+    }
+
+    // data unchanged
+    let job_count_after = entity::job::Entity::find()
+        .count(&state.conn)
+        .await
+        .unwrap();
+    assert_eq!(job_count, job_count_after, "job count should remain same after no-op run");
 
     state.conn.close().await.unwrap();
     tear_down(&container).await;

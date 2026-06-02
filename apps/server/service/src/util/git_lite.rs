@@ -1,3 +1,4 @@
+use anyhow::Context;
 use gix_hash::ObjectId;
 use gix_object::compute_hash;
 use gix_object::{CommitRef, TreeRef};
@@ -9,6 +10,34 @@ use gix_packetline::{
 use std::collections::HashMap;
 use std::io::Write;
 use std::path::PathBuf;
+use std::time::Duration;
+use thiserror::Error;
+
+const DOWNLOAD_TIMEOUT: Duration = Duration::from_secs(120);
+
+#[derive(Debug, Error)]
+pub enum SparseCheckoutError {
+    #[error("git protocol timed out")]
+    Timeout,
+    #[error(transparent)]
+    Internal(#[from] anyhow::Error),
+}
+
+impl From<reqwest::Error> for SparseCheckoutError {
+    fn from(e: reqwest::Error) -> Self {
+        if e.is_timeout() {
+            SparseCheckoutError::Timeout
+        } else {
+            SparseCheckoutError::Internal(e.into())
+        }
+    }
+}
+
+impl From<std::io::Error> for SparseCheckoutError {
+    fn from(e: std::io::Error) -> Self {
+        SparseCheckoutError::Internal(e.into())
+    }
+}
 
 /// Maps repo-relative file path to its hex object ID.
 pub type PathToOidMap = HashMap<String, String>;
@@ -18,7 +47,7 @@ pub async fn sparse_checkout(
     reference: &str,
     paths: &[&str],
     token: Option<&str>,
-) -> anyhow::Result<HashMap<String, Vec<u8>>> {
+) -> Result<HashMap<String, Vec<u8>>, SparseCheckoutError> {
     let refs = ls_refs(url, reference, token).await?;
     let commit_hash = match refs.get(reference) {
         Some(hash) => hash.clone(),
@@ -28,13 +57,9 @@ pub async fn sparse_checkout(
     let objects = fetch_without_blobs(url, &commit_hash, token).await?;
     let path_map = resolve_paths(&objects, &commit_hash)?;
 
-    let existing_paths: Vec<(String, String)> = paths
+    let existing_paths: Vec<&str> = paths
         .iter()
-        .filter_map(|path| {
-            path_map
-                .get(*path)
-                .map(|oid| (path.to_string(), oid.clone()))
-        })
+        .filter_map(|path| path_map.contains_key(*path).then_some(*path))
         .collect();
 
     if existing_paths.is_empty() {
@@ -43,125 +68,88 @@ pub async fn sparse_checkout(
 
     let oids: Vec<&str> = existing_paths
         .iter()
-        .map(|(_, oid)| oid.as_str())
+        .map(|path| path_map[*path].as_str())
         .collect();
 
     let blob_objects = fetch_objects(url, &oids, token).await?;
 
     let mut result = HashMap::new();
-    for (path, oid) in existing_paths {
-        let oid_obj = ObjectId::from_hex(oid.as_bytes())?;
+    for path in existing_paths {
+        let oid = &path_map[path];
+        let oid_obj =
+            ObjectId::from_hex(oid.as_bytes()).context("invalid object hash from server")?;
         if let Some(content) = blob_objects.get(&oid_obj) {
-            result.insert(path, content.clone());
+            result.insert(path.to_string(), content.clone());
         }
     }
 
     Ok(result)
 }
 
-const SIDEBAND_PACKFILE: u8 = 1;
-const SIDEBAND_PROGRESS: u8 = 2;
-const SIDEBAND_ERROR: u8 = 3;
-
-async fn fetch_packfile(
+pub async fn ls_tree(
     url: &str,
-    body: Vec<u8>,
+    ref_name: &str,
     token: Option<&str>,
-) -> anyhow::Result<HashMap<ObjectId, Vec<u8>>> {
-    let mut req = reqwest::Client::new()
-        .post(format!("{}/git-upload-pack", url))
-        .header("Accept", "application/x-git-upload-pack-result")
-        .header("Content-Type", "application/x-git-upload-pack-request")
-        .header("Git-Protocol", "version=2")
-        .body(body);
-    if let Some(t) = token {
-        req = req.header("Authorization", format!("Bearer {}", t));
-    }
-    let response = req.send().await?;
+) -> Result<PathToOidMap, SparseCheckoutError> {
+    let refs = ls_refs(url, ref_name, token).await?;
+    let commit_hash = refs
+        .get(ref_name)
+        .ok_or_else(|| anyhow::anyhow!("ref not found: {}", ref_name))?;
+    let objects = fetch_without_blobs(url, commit_hash, token).await?;
+    Ok(resolve_paths(&objects, commit_hash)?)
+}
+
+pub async fn ls_refs(
+    url: &str,
+    ref_prefix: &str,
+    token: Option<&str>,
+) -> Result<HashMap<String, String>, SparseCheckoutError> {
+    let mut writer = Writer::new(Vec::new());
+    writer.enable_text_mode();
+    writer.write_all(b"command=ls-refs")?;
+    writer.write_all(b"agent=git/2.37.3")?;
+    writer.write_all(b"object-format=sha1")?;
+    encode::delim_to_write(writer.inner_mut())?;
+    writer.write_all(b"peel")?;
+    writer.write_all(format!("ref-prefix {}", ref_prefix).as_bytes())?;
+    encode::flush_to_write(writer.inner_mut())?;
+    let body = writer.into_inner();
+
+    let response = git_upload_pack(
+        url,
+        body,
+        "application/x-git-upload-pack-advertisement",
+        token,
+    )
+    .await?;
     let status = response.status();
     if !status.is_success() {
-        let body = response.text().await.unwrap_or_default();
-        anyhow::bail!("invalid response status {}: {}", status, body);
+        Err(anyhow::anyhow!("invalid response status {}", status))?;
     }
     let response_bytes = response.bytes().await?;
 
+    let mut result = HashMap::new();
     let mut reader =
         StreamingPeekableIter::new(&response_bytes[..], &[PacketLineRef::Flush], false);
-    let mut packfile = Vec::new();
-
     while let Some(line) = reader.read_line() {
-        let line = line??;
-        if let PacketLineRef::Data(data) = line {
-            if data.is_empty() {
-                continue;
-            }
-            // Git protocol v2 uses side-band multiplexing to interleave
-            // different types of data on a single response stream. The
-            // first byte of each data packet selects the channel:
-            //
-            // 1 → packfile binary data (the actual git objects)
-            // 2 → human-readable progress messages, safe to discard
-            // 3 → fatal error from server, abort immediately
-            // _ → fallback: check for "ERR" or "NAK" text in the raw
-            //     data (some servers send these instead of channel 3)
-            match data[0] {
-                SIDEBAND_PACKFILE => packfile.extend_from_slice(&data[1..]),
-                SIDEBAND_PROGRESS => {}
-                SIDEBAND_ERROR => anyhow::bail!("{}", String::from_utf8_lossy(&data[1..])),
-                _ => {
-                    if let Ok(text) = std::str::from_utf8(data) {
-                        if let Some(stripped) = text.strip_prefix("ERR ") {
-                            anyhow::bail!("server error: {}", stripped);
-                        }
-                        if text.starts_with("nak") {
-                            anyhow::bail!("server NAK: requested objects not available");
-                        }
-                    }
-                }
-            }
+        let line = line
+            .context("packet reader error")?
+            .context("packet line error")?;
+        if let PacketLineRef::Data(data) = line
+            && let Ok(text) = std::str::from_utf8(data)
+            && let Some((hash, name)) = text.trim_end().split_once(' ')
+        {
+            result.insert(name.to_string(), hash.to_string());
         }
     }
-
-    if packfile.is_empty() {
-        anyhow::bail!("empty packfile from server");
-    }
-
-    let pack = data::File::from_data(&packfile[..], PathBuf::new(), gix_hash::Kind::Sha1)?;
-    let mut objects = HashMap::new();
-    let mut inflate = gix_features::zlib::Inflate::default();
-    let mut out = Vec::new();
-
-    // Iterate over all entries in the packfile using offset-based
-    // traversal. The first 12 bytes are the pack header (signature
-    // "PACK" + version + object count), so we start at offset 12.
-    let num_objects = pack.num_objects();
-    let mut offset: u64 = 12;
-    for _ in 0..num_objects {
-        let entry = pack.entry(offset)?;
-        let decompressed_size = entry.decompressed_size as usize;
-        out.clear();
-        out.resize(decompressed_size, 0);
-        let consumed = pack.decompress_entry(&entry, &mut inflate, &mut out)?;
-
-        // Delta entries are skipped because reconstructing them
-        // requires resolving the full delta chain against bases.
-        if !entry.header.is_delta() {
-            let kind = entry.header.as_kind().expect("non-delta entry");
-            let oid = compute_hash(gix_hash::Kind::Sha1, kind, &out)?;
-            objects.insert(oid, out.clone());
-        }
-
-        offset = entry.data_offset + consumed as u64;
-    }
-
-    Ok(objects)
+    Ok(result)
 }
 
 pub async fn fetch_objects(
     url: &str,
     object_hashes: &[&str],
     token: Option<&str>,
-) -> anyhow::Result<HashMap<ObjectId, Vec<u8>>> {
+) -> Result<HashMap<ObjectId, Vec<u8>>, SparseCheckoutError> {
     let mut writer = Writer::new(Vec::new());
     writer.enable_text_mode();
     writer.write_all(b"command=fetch")?;
@@ -178,17 +166,26 @@ pub async fn fetch_objects(
     fetch_packfile(url, body, token).await
 }
 
-pub async fn ls_tree(
+pub async fn fetch_without_blobs(
     url: &str,
-    ref_name: &str,
+    commit_hash: &str,
     token: Option<&str>,
-) -> anyhow::Result<PathToOidMap> {
-    let refs = ls_refs(url, ref_name, token).await?;
-    let commit_hash = refs
-        .get(ref_name)
-        .ok_or_else(|| anyhow::anyhow!("ref not found: {}", ref_name))?;
-    let objects = fetch_without_blobs(url, commit_hash, token).await?;
-    resolve_paths(&objects, commit_hash)
+) -> Result<HashMap<ObjectId, Vec<u8>>, SparseCheckoutError> {
+    let mut writer = Writer::new(Vec::new());
+    writer.enable_text_mode();
+    writer.write_all(b"command=fetch")?;
+    writer.write_all(b"agent=git/2.37.3")?;
+    writer.write_all(b"object-format=sha1")?;
+    encode::delim_to_write(writer.inner_mut())?;
+    writer.write_all(format!("want {}", commit_hash).as_bytes())?;
+    writer.write_all(b"filter blob:none")?;
+    writer.write_all(format!("shallow {}", commit_hash).as_bytes())?;
+    writer.write_all(b"deepen 1")?;
+    writer.write_all(b"done")?;
+    encode::flush_to_write(writer.inner_mut())?;
+    let body = writer.into_inner();
+
+    fetch_packfile(url, body, token).await
 }
 
 pub fn resolve_paths(
@@ -205,6 +202,118 @@ pub fn resolve_paths(
     let mut path_map = HashMap::new();
     walk_tree(objects, &root_tree_oid, String::new(), &mut path_map)?;
     Ok(path_map)
+}
+
+const SIDEBAND_PACKFILE: u8 = 1;
+const SIDEBAND_PROGRESS: u8 = 2;
+const SIDEBAND_ERROR: u8 = 3;
+
+async fn git_upload_pack(
+    url: &str,
+    body: Vec<u8>,
+    accept: &str,
+    token: Option<&str>,
+) -> Result<reqwest::Response, SparseCheckoutError> {
+    let client = reqwest::Client::builder()
+        .timeout(DOWNLOAD_TIMEOUT)
+        .build()
+        .context("failed to build reqwest client")?;
+    let mut req = client
+        .post(format!("{}/git-upload-pack", url))
+        .header("Accept", accept)
+        .header("Content-Type", "application/x-git-upload-pack-request")
+        .header("Git-Protocol", "version=2")
+        .body(body);
+    if let Some(t) = token {
+        req = req.header("Authorization", format!("Bearer {}", t));
+    }
+    Ok(req.send().await?)
+}
+
+async fn fetch_packfile(
+    url: &str,
+    body: Vec<u8>,
+    token: Option<&str>,
+) -> Result<HashMap<ObjectId, Vec<u8>>, SparseCheckoutError> {
+    let response =
+        git_upload_pack(url, body, "application/x-git-upload-pack-result", token).await?;
+    let status = response.status();
+    if !status.is_success() {
+        let body = response.text().await.unwrap_or_default();
+        return Err(SparseCheckoutError::Internal(anyhow::anyhow!(
+            "invalid response status {}: {}",
+            status,
+            body
+        )));
+    }
+    let response_bytes = response.bytes().await?;
+
+    let mut reader =
+        StreamingPeekableIter::new(&response_bytes[..], &[PacketLineRef::Flush], false);
+    let mut packfile = Vec::new();
+
+    while let Some(line) = reader.read_line() {
+        let line = line
+            .context("packet reader error")?
+            .context("packet line error")?;
+        if let PacketLineRef::Data(data) = line {
+            if data.is_empty() {
+                continue;
+            }
+            match data[0] {
+                SIDEBAND_PACKFILE => packfile.extend_from_slice(&data[1..]),
+                SIDEBAND_PROGRESS => {}
+                SIDEBAND_ERROR => {
+                    Err(anyhow::anyhow!("{}", String::from_utf8_lossy(&data[1..])))?;
+                }
+                _ => {
+                    if let Ok(text) = std::str::from_utf8(data) {
+                        if let Some(stripped) = text.strip_prefix("ERR ") {
+                            Err(anyhow::anyhow!("server error: {}", stripped))?;
+                        }
+                        if text.starts_with("nak") {
+                            Err(anyhow::anyhow!(
+                                "server NAK: requested objects not available"
+                            ))?;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if packfile.is_empty() {
+        Err(anyhow::anyhow!("empty packfile from server"))?;
+    }
+
+    let pack = data::File::from_data(&packfile[..], PathBuf::new(), gix_hash::Kind::Sha1)
+        .context("failed to parse pack file")?;
+    let mut objects = HashMap::new();
+    let mut inflate = gix_features::zlib::Inflate::default();
+    let mut out = Vec::new();
+
+    let num_objects = pack.num_objects();
+    let mut offset: u64 = 12;
+    for _ in 0..num_objects {
+        let entry = pack.entry(offset).context("failed to read pack entry")?;
+        let decompressed_size = entry.decompressed_size as usize;
+        out.clear();
+        out.resize(decompressed_size, 0);
+        let consumed = pack
+            .decompress_entry(&entry, &mut inflate, &mut out)
+            .context("failed to decompress pack entry")?;
+
+        if !entry.header.is_delta() {
+            let kind = entry.header.as_kind().expect("non-delta entry");
+            let oid = compute_hash(gix_hash::Kind::Sha1, kind, &out)
+                .context("failed to compute object hash")?;
+            objects.insert(oid, out.clone());
+        }
+
+        offset = entry.data_offset + consumed as u64;
+    }
+
+    Ok(objects)
 }
 
 fn walk_tree(
@@ -235,74 +344,4 @@ fn walk_tree(
     }
 
     Ok(())
-}
-
-pub async fn ls_refs(
-    url: &str,
-    ref_prefix: &str,
-    token: Option<&str>,
-) -> Result<HashMap<String, String>, anyhow::Error> {
-    let mut writer = Writer::new(Vec::new());
-    writer.enable_text_mode();
-    writer.write_all(b"command=ls-refs")?;
-    writer.write_all(b"agent=git/2.37.3")?;
-    writer.write_all(b"object-format=sha1")?;
-    encode::delim_to_write(writer.inner_mut())?;
-    writer.write_all(b"peel")?;
-    writer.write_all(format!("ref-prefix {}", ref_prefix).as_bytes())?;
-    encode::flush_to_write(writer.inner_mut())?;
-    let body = writer.into_inner();
-
-    let mut req = reqwest::Client::new()
-        .post(format!("{}/git-upload-pack", url))
-        .header("Accept", "application/x-git-upload-pack-advertisement")
-        .header("Content-Type", "application/x-git-upload-pack-request")
-        .header("Git-Protocol", "version=2")
-        .body(body);
-    if let Some(t) = token {
-        req = req.header("Authorization", format!("Bearer {}", t));
-    }
-    let response = req.send().await?;
-
-    let status = response.status();
-    if !status.is_success() {
-        anyhow::bail!("invalid response status {}", status);
-    }
-    let response_bytes = response.bytes().await?;
-
-    let mut result = HashMap::new();
-    let mut reader =
-        StreamingPeekableIter::new(&response_bytes[..], &[PacketLineRef::Flush], false);
-    while let Some(line) = reader.read_line() {
-        let line = line??;
-        if let PacketLineRef::Data(data) = line
-            && let Ok(text) = std::str::from_utf8(data)
-            && let Some((hash, name)) = text.trim_end().split_once(' ')
-        {
-            result.insert(name.to_string(), hash.to_string());
-        }
-    }
-    Ok(result)
-}
-
-pub async fn fetch_without_blobs(
-    url: &str,
-    commit_hash: &str,
-    token: Option<&str>,
-) -> anyhow::Result<HashMap<ObjectId, Vec<u8>>> {
-    let mut writer = Writer::new(Vec::new());
-    writer.enable_text_mode();
-    writer.write_all(b"command=fetch")?;
-    writer.write_all(b"agent=git/2.37.3")?;
-    writer.write_all(b"object-format=sha1")?;
-    encode::delim_to_write(writer.inner_mut())?;
-    writer.write_all(format!("want {}", commit_hash).as_bytes())?;
-    writer.write_all(b"filter blob:none")?;
-    writer.write_all(format!("shallow {}", commit_hash).as_bytes())?;
-    writer.write_all(b"deepen 1")?;
-    writer.write_all(b"done")?;
-    encode::flush_to_write(writer.inner_mut())?;
-    let body = writer.into_inner();
-
-    fetch_packfile(url, body, token).await
 }

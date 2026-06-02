@@ -1,20 +1,24 @@
 use std::collections::HashMap;
 use std::str::FromStr;
+use std::sync::Arc;
 use std::sync::OnceLock;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
+
+const MAX_TASK_CONCURRENCY: usize = 8;
+const TASK_TIMEOUT: Duration = Duration::from_secs(300);
 
 use chrono::{DateTime, Utc};
 use cron::Schedule;
 use sea_orm::{
     ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, TransactionTrait,
 };
+use tokio::sync::Semaphore;
 use tokio::sync::watch;
-use tokio::time;
 
 use crate::task::{
     CalculateAndCreateDownloadTaskParam, Error as TaskError,
-    ExecuteDownloadTaskAndCreateMergeTaskParam, ExecuteMergeTaskParam,
+    ExecuteDownloadTaskAndCreateMergeTaskParam, ExecuteMergeTaskParam, MAX_POLL_INTERVAL,
     TaskPlanConfigDataDownloadConfig, calculate_and_create_download_task,
     execute_download_task_and_create_merge_task, execute_merge_task, get_file_name_by_task_type,
     query_pending_tasks, query_plans_latest_datetime,
@@ -47,13 +51,38 @@ pub fn start_scheduler(conn: DatabaseConnection) {
 
     tokio::spawn(async move {
         let mut shutdown_rx = shutdown_rx;
-        let mut interval = time::interval(Duration::from_secs(30));
+        let sleep = tokio::time::sleep(Duration::ZERO);
+        tokio::pin!(sleep);
+
         loop {
             tokio::select! {
-                _ = interval.tick() => {
-                    if let Err(e) = app_background_task_run(&conn).await {
-                        tracing::error!("background task run error: {:?}", e);
+                _ = sleep.as_mut() => {
+                    let start = std::time::Instant::now();
+                    tracing::info!("background task run started");
+
+                    if let Err(e) = process_all_plans(&conn).await {
+                        tracing::error!("process plans error: {:?}", e);
                     }
+                    if let Err(e) = drain_tasks(&conn).await {
+                        tracing::error!("drain tasks error: {:?}", e);
+                    }
+                    if let Err(e) = run_scheduled_tasks(&conn).await {
+                        tracing::error!("scheduled tasks error: {:?}", e);
+                    }
+
+                    tracing::info!("background task run completed in {:?}", start.elapsed());
+
+                    let now = Utc::now();
+                    let max_wake = now + chrono::TimeDelta::from_std(MAX_POLL_INTERVAL)
+                        .unwrap_or_else(|_| chrono::TimeDelta::seconds(60));
+                    let wake_at = compute_next_cron_wake(&conn)
+                        .await
+                        .map(|t| if t < max_wake { t } else { max_wake })
+                        .unwrap_or(max_wake);
+                    let duration = (wake_at - now)
+                        .to_std()
+                        .unwrap_or(MAX_POLL_INTERVAL);
+                    sleep.set(tokio::time::sleep(duration));
                 }
                 _ = shutdown_rx.changed() => {
                     if *shutdown_rx.borrow() {
@@ -65,18 +94,6 @@ pub fn start_scheduler(conn: DatabaseConnection) {
             }
         }
     });
-}
-
-pub async fn app_background_task_run(conn: &DatabaseConnection) -> Result<(), anyhow::Error> {
-    let start = std::time::Instant::now();
-    tracing::info!("background task run started");
-
-    process_all_plans(conn).await?;
-    run_tasks(conn).await?;
-    run_scheduled_tasks(conn).await?;
-
-    tracing::info!("background task run completed in {:?}", start.elapsed());
-    Ok(())
 }
 
 struct PlanRunContext {
@@ -130,6 +147,36 @@ fn should_plan_run(cron_expr: &str, last_run: Option<DateTime<Utc>>) -> bool {
             .is_some_and(|next| next <= now),
         None => true,
     }
+}
+
+async fn compute_next_cron_wake(conn: &DatabaseConnection) -> Option<DateTime<Utc>> {
+    let plans = entity::task_plan::Entity::find()
+        .filter(entity::task_plan::Column::Enable.eq(Some(true)))
+        .all(conn)
+        .await
+        .ok()?;
+
+    let now = Utc::now();
+    let mut next: Option<DateTime<Utc>> = None;
+
+    for plan in &plans {
+        let cron_str = plan.cron.as_deref().unwrap_or("");
+        if cron_str.is_empty() {
+            continue;
+        }
+        let Ok(schedule) = Schedule::from_str(cron_str) else {
+            continue;
+        };
+        if let Some(t) = schedule.after(&now).next() {
+            match next {
+                Some(n) if t < n => next = Some(t),
+                None => next = Some(t),
+                _ => {}
+            }
+        }
+    }
+
+    next
 }
 
 async fn process_single_plan(
@@ -203,7 +250,7 @@ async fn process_single_plan(
     Ok(())
 }
 
-async fn process_all_plans(conn: &DatabaseConnection) -> Result<(), anyhow::Error> {
+pub async fn process_all_plans(conn: &DatabaseConnection) -> Result<(), anyhow::Error> {
     let PlanRunContext {
         plans,
         mut plan_data_plans,
@@ -228,140 +275,191 @@ async fn process_all_plans(conn: &DatabaseConnection) -> Result<(), anyhow::Erro
     Ok(())
 }
 
-pub async fn run_tasks(conn: &DatabaseConnection) -> Result<(), anyhow::Error> {
-    let tasks = query_pending_tasks(conn).await?;
-
-    if tasks.is_empty() {
-        return Ok(());
-    }
-
-    tracing::info!("found {} pending tasks", tasks.len());
-
-    for task in tasks {
-        let now = Utc::now();
-        let retry_count = task.retry_count.unwrap_or(0) + 1;
-        let task_clone = task.clone();
-        let start = std::time::Instant::now();
-
-        let result = conn
-            .transaction(|txn| {
-                Box::pin(async move {
-                    super::apply_task_result(
-                        task_clone.clone().into_active_model(),
-                        entity::task::Status::Running,
-                        None,
-                        None,
-                        Some(retry_count),
-                        now,
-                        txn,
-                    )
-                    .await?;
-
-                    let result = match task_clone.r#type {
-                        Some(ref t)
-                            if matches!(
-                                t,
-                                entity::task::Type::JobDataDownload
-                                    | entity::task::Type::CompanyDataDownload
-                            ) =>
-                        {
-                            execute_download_task_and_create_merge_task(
-                                txn,
-                                ExecuteDownloadTaskAndCreateMergeTaskParam {
-                                    download_task_id: task_clone.id.clone(),
-                                    now,
-                                },
-                            )
-                            .await
-                            .map(|_| ())
-                        }
-                        Some(ref t)
-                            if matches!(
-                                t,
-                                entity::task::Type::JobDataMerge
-                                    | entity::task::Type::CompanyDataMerge
-                            ) =>
-                        {
-                            execute_merge_task(
-                                txn,
-                                ExecuteMergeTaskParam {
-                                    merge_task_id: task_clone.id.clone(),
-                                    now,
-                                },
-                            )
-                            .await
-                            .map(|_| ())
-                        }
-                        _ => Err(TaskError::Internal(anyhow::anyhow!(
-                            "unsupported task type"
-                        ))),
-                    };
-
-                    let elapsed = start.elapsed().as_millis() as i32;
-                    let task = entity::task::Entity::find_by_id(task_clone.id.clone())
-                        .one(txn)
-                        .await?
-                        .ok_or_else(|| anyhow::anyhow!("task not found id = {}", task_clone.id))?;
-                    let task_active = task.into_active_model();
-
-                    match result {
-                        Ok(_) => {
-                            super::apply_task_result(
-                                task_active,
-                                entity::task::Status::Finished,
-                                None,
-                                Some(elapsed),
-                                None,
-                                now,
-                                txn,
-                            )
-                            .await?;
-                        }
-                        Err(TaskError::FinishedButError(reason)) => {
-                            super::apply_task_result(
-                                task_active,
-                                entity::task::Status::FinishedButError,
-                                Some(reason),
-                                Some(elapsed),
-                                None,
-                                now,
-                                txn,
-                            )
-                            .await?;
-                        }
-                        Err(e) => return Err(anyhow::anyhow!("{:?}", e)),
-                    }
-
-                    Ok::<(), anyhow::Error>(())
-                })
+async fn mark_task_error(
+    task: entity::task::Model,
+    err_msg: String,
+    elapsed: i32,
+    retry_count: i32,
+    now: DateTime<Utc>,
+    conn: &DatabaseConnection,
+) {
+    let _ = conn
+        .transaction(|txn| {
+            Box::pin(async move {
+                super::apply_task_result(
+                    task.into_active_model(),
+                    entity::task::Status::Error,
+                    Some(err_msg),
+                    Some(elapsed),
+                    Some(retry_count),
+                    now,
+                    txn,
+                )
+                .await
             })
-            .await;
+        })
+        .await;
+}
 
-        if let Err(e) = result {
-            let elapsed = start.elapsed().as_millis() as i32;
-            let err_msg = match &e {
+async fn execute_single_task(
+    task: entity::task::Model,
+    conn: &DatabaseConnection,
+) -> Result<(), anyhow::Error> {
+    let now = Utc::now();
+    let retry_count = task.retry_count.unwrap_or(0) + 1;
+    let task_clone = task.clone();
+    let start = std::time::Instant::now();
+
+    let result = tokio::time::timeout(TASK_TIMEOUT, async {
+        conn.transaction(|txn| {
+            Box::pin(async move {
+                super::apply_task_result(
+                    task_clone.clone().into_active_model(),
+                    entity::task::Status::Running,
+                    None,
+                    None,
+                    Some(retry_count),
+                    now,
+                    txn,
+                )
+                .await?;
+
+                let work_result = match task_clone.r#type {
+                    Some(ref t) if t.is_download() => {
+                        execute_download_task_and_create_merge_task(
+                            txn,
+                            ExecuteDownloadTaskAndCreateMergeTaskParam {
+                                download_task_id: task_clone.id.clone(),
+                                now,
+                            },
+                        )
+                        .await
+                        .map(|_| ())
+                    }
+                    Some(ref t) if t.is_merge() => {
+                        execute_merge_task(
+                            txn,
+                            ExecuteMergeTaskParam {
+                                merge_task_id: task_clone.id.clone(),
+                                now,
+                            },
+                        )
+                        .await
+                        .map(|_| ())
+                    }
+                    _ => Err(TaskError::Internal(anyhow::anyhow!(
+                        "unsupported task type"
+                    ))),
+                };
+
+                let elapsed = start.elapsed().as_millis() as i32;
+                let task = entity::task::Entity::find_by_id(task_clone.id.clone())
+                    .one(txn)
+                    .await?
+                    .ok_or_else(|| anyhow::anyhow!("task not found id = {}", task_clone.id))?;
+                let task_active = task.into_active_model();
+
+                match work_result {
+                    Ok(_) => {
+                        super::apply_task_result(
+                            task_active,
+                            entity::task::Status::Finished,
+                            None,
+                            Some(elapsed),
+                            None,
+                            now,
+                            txn,
+                        )
+                        .await?;
+                    }
+                    Err(TaskError::FinishedButError(reason)) => {
+                        super::apply_task_result(
+                            task_active,
+                            entity::task::Status::FinishedButError,
+                            Some(reason),
+                            Some(elapsed),
+                            None,
+                            now,
+                            txn,
+                        )
+                        .await?;
+                    }
+                    Err(e) => return Err(anyhow::anyhow!("{:?}", e)),
+                }
+
+                Ok::<(), anyhow::Error>(())
+            })
+        })
+        .await
+    })
+    .await;
+
+    let elapsed = start.elapsed().as_millis() as i32;
+
+    match result {
+        Ok(Ok(())) => {}
+        Ok(Err(transaction_err)) => {
+            let err_msg = match &transaction_err {
                 sea_orm::TransactionError::Connection(db_err) => db_err.to_string(),
                 sea_orm::TransactionError::Transaction(inner_err) => format!("{:?}", inner_err),
             };
-            super::apply_task_result(
-                task.clone().into_active_model(),
-                entity::task::Status::Error,
-                Some(err_msg.clone()),
-                Some(elapsed),
-                Some(retry_count),
-                now,
-                conn,
-            )
-            .await
-            .ok();
             tracing::warn!("task execution error id={}: {}", task.id, err_msg);
+            mark_task_error(task, err_msg, elapsed, retry_count, now, conn).await;
+        }
+        Err(_) => {
+            let err_msg = format!("task timed out after {:?}", TASK_TIMEOUT);
+            tracing::warn!("task execution timeout id={}: {}", task.id, err_msg);
+            mark_task_error(task, err_msg, elapsed, retry_count, now, conn).await;
         }
     }
 
     Ok(())
 }
 
-async fn run_scheduled_tasks(_conn: &DatabaseConnection) -> Result<(), anyhow::Error> {
+async fn execute_task_batch(
+    tasks: Vec<entity::task::Model>,
+    conn: &DatabaseConnection,
+) -> Result<(), anyhow::Error> {
+    let semaphore = Arc::new(Semaphore::new(MAX_TASK_CONCURRENCY));
+    let mut handles = Vec::with_capacity(tasks.len());
+
+    for task in tasks {
+        let permit = semaphore.clone().acquire_owned().await;
+        let conn = conn.clone();
+        handles.push(tokio::spawn(async move {
+            let _permit = permit;
+            execute_single_task(task, &conn).await
+        }));
+    }
+
+    for handle in handles {
+        if let Err(e) = handle.await {
+            tracing::error!("task panicked: {:?}", e);
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn run_tasks(conn: &DatabaseConnection) -> Result<(), anyhow::Error> {
+    let tasks = query_pending_tasks(conn).await?;
+    if tasks.is_empty() {
+        return Ok(());
+    }
+    tracing::info!("found {} pending tasks", tasks.len());
+    execute_task_batch(tasks, conn).await
+}
+
+pub async fn drain_tasks(conn: &DatabaseConnection) -> Result<(), anyhow::Error> {
+    loop {
+        run_tasks(conn).await?;
+        if query_pending_tasks(conn).await?.is_empty() {
+            return Ok(());
+        }
+    }
+}
+
+pub async fn run_scheduled_tasks(_conn: &DatabaseConnection) -> Result<(), anyhow::Error> {
     // TODO: placeholder for cleanup tasks (like scheduleClearFile)
     Ok(())
 }

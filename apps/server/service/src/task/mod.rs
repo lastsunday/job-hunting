@@ -1,9 +1,9 @@
 pub mod scheduler;
 
-use std::{collections::HashMap, path::PathBuf, str::FromStr};
+use std::{collections::HashMap, path::PathBuf, str::FromStr, time::Duration};
 
 use anyhow::Context;
-use chrono::{DateTime, FixedOffset, Utc};
+use chrono::{DateTime, FixedOffset, TimeDelta, Utc};
 use cron::Schedule;
 use entity::task::ActiveModel as TaskActiveModel;
 use entity::task_data_download::ActiveModel as TaskDataDownloadActiveModel;
@@ -13,7 +13,7 @@ use entity::task_plan::ActiveModel as TaskPlanActiveModel;
 use framework::id::gen_id;
 use reqwest::Url;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DbErr, EntityTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, Condition, ConnectionTrait, DbErr, EntityTrait,
     IntoActiveModel, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
@@ -24,7 +24,7 @@ use thiserror::Error;
 use crate::sync::{CompanyImporter, ImportResult, JobImporter};
 use crate::{
     common::{FileError, FileParser},
-    repo::{DownloadFileParam, FileInfo, GitRepo, QueryFileDateAndMaxSeqParam, Repo},
+    repo::{DownloadError, DownloadFileParam, FileInfo, GitRepo, QueryFileDateAndMaxSeqParam, Repo},
 };
 
 #[derive(Debug, Error)]
@@ -37,6 +37,9 @@ pub enum Error {
 
     #[error("{0}")]
     FinishedButError(String),
+
+    #[error("download timeout: {0}")]
+    DownloadTimeout(String),
 
     #[error(transparent)]
     Internal(#[from] anyhow::Error),
@@ -556,18 +559,44 @@ pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + C
     let datetime = datetime.context("download data task datetime not found")?;
     let file_name = file_name.context("file name not found")?;
     // execulate download task
+    let path = format!("{}/{}", datetime.format("%Y/%m-%d"), file_name);
     let FileInfo {
         content,
         file_name,
         size,
-    } = repo
+    } = match repo
         .download_file(DownloadFileParam {
             url,
             datetime: datetime.to_utc(),
             file_name,
             token,
         })
-        .await?;
+        .await
+    {
+        Ok(info) => info,
+        Err(e) => match e {
+            DownloadError::Timeout => {
+                return Err(Error::DownloadTimeout(format!(
+                    "download timeout for path: {}",
+                    path
+                )));
+            }
+            DownloadError::FileNotFound(p) => {
+                let one_day = chrono::Duration::days(1);
+                if now - datetime.to_utc() >= one_day {
+                    return Err(Error::FinishedButError(format!(
+                        "file {} never upload",
+                        p
+                    )));
+                }
+                return Err(Error::Internal(anyhow::anyhow!(
+                    "file {} not found, retry later",
+                    p
+                )));
+            }
+            DownloadError::Internal(err) => return Err(Error::Internal(err)),
+        },
+    };
 
     let file_id = gen_id();
 
@@ -882,7 +911,11 @@ pub async fn execute_merge_task<C: TransactionTrait + ConnectionTrait>(
     Ok(result)
 }
 
-const TASK_STATUS_ERROR_MAX_RETRY_COUNT: i32 = 2880;
+pub(crate) const MAX_POLL_INTERVAL: Duration = Duration::from_secs(60);
+
+const TASK_RETRY_MIN_INTERVAL_SECS: i64 = MAX_POLL_INTERVAL.as_secs() as i64;
+const TASK_STATUS_ERROR_MAX_RETRY_COUNT: i32 =
+    (24i64 * 60 * 60 / TASK_RETRY_MIN_INTERVAL_SECS) as i32;
 
 pub(crate) async fn query_plans_latest_datetime(
     plan_ids: Vec<String>,
@@ -904,9 +937,15 @@ pub(crate) async fn query_plans_latest_datetime(
         .collect())
 }
 
+pub(crate) const TASK_QUERY_BATCH_SIZE: usize = 8;
+pub(crate) const TASK_QUERY_BATCH_MULTIPLIER: usize = 8;
+
 pub(crate) async fn query_pending_tasks(
     conn: &impl ConnectionTrait,
 ) -> Result<Vec<entity::task::Model>, anyhow::Error> {
+    let cutoff = (Utc::now() - TimeDelta::seconds(TASK_RETRY_MIN_INTERVAL_SECS))
+        .fixed_offset();
+
     let tasks = entity::task::Entity::find()
         .filter(
             entity::task::Column::Status.is_in(vec![
@@ -919,8 +958,17 @@ pub(crate) async fn query_pending_tasks(
             entity::task::Column::RetryCount
                 .lt(Some(TASK_STATUS_ERROR_MAX_RETRY_COUNT)),
         )
-        .order_by(entity::task::Column::CreateDatetime, sea_orm::Order::Asc)
-        .limit(100)
+        .filter(
+            Condition::any()
+                .add(entity::task::Column::Status.ne(entity::task::Status::Error))
+                .add(
+                    Condition::all()
+                        .add(entity::task::Column::Status.eq(entity::task::Status::Error))
+                        .add(entity::task::Column::UpdateDatetime.lt(Some(cutoff))),
+                ),
+        )
+        .order_by(entity::task::Column::UpdateDatetime, sea_orm::Order::Asc)
+        .limit(TASK_QUERY_BATCH_SIZE as u64 * TASK_QUERY_BATCH_MULTIPLIER as u64)
         .all(conn)
         .await?;
     Ok(tasks)
