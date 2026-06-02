@@ -13,6 +13,7 @@ pub struct AppConfig {
     server: ServerConfig,
     database: DatabaseConfig,
     auth: AuthConfig,
+    task: TaskConfig,
 }
 
 impl AppConfig {
@@ -55,6 +56,7 @@ impl AppConfig {
             server: ServerConfig::new(),
             database: DatabaseConfig::new(),
             auth: AuthConfig::new(),
+            task: TaskConfig::new(),
         }
     }
 
@@ -69,8 +71,35 @@ impl AppConfig {
     pub fn auth(&self) -> &AuthConfig {
         &self.auth
     }
+
+    pub fn task(&self) -> &TaskConfig {
+        &self.task
+    }
 }
 
 pub fn get() -> &'static AppConfig {
     &CONFIG
+}
+
+#[derive(Debug, Deserialize)]
+pub struct TaskConfig {
+    history_file_max_size: Option<i64>,
+}
+
+impl Default for TaskConfig {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl TaskConfig {
+    pub fn new() -> Self {
+        Self {
+            history_file_max_size: Some(5 * 1024 * 1024 * 1024),
+        }
+    }
+
+    pub fn history_file_max_size(&self) -> i64 {
+        self.history_file_max_size.unwrap_or(5 * 1024 * 1024 * 1024)
+    }
 }
