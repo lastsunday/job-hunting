@@ -304,22 +304,28 @@ async fn test_app_background_task_run_full_flow() {
     }
 
     // data already imported (drain_tasks executes merge tasks in same run)
-    let job_count = entity::job::Entity::find()
-        .count(&state.conn)
-        .await
-        .unwrap();
-    assert!(job_count > 0, "jobs should be imported");
-
-    let job = entity::job::Entity::find()
-        .one(&state.conn)
-        .await
-        .unwrap()
-        .unwrap();
-    let expected_uri = format!(
+    let uri_1 = format!(
         "data://{}@localhost/{}/{}/2024/01-01/job.zip",
         ADMIN_USERNAME, ADMIN_USERNAME, DATA_REPO
     );
-    assert_eq!(job.uri, Some(expected_uri));
+    let uri_2 = format!(
+        "data://{}@localhost/{}/{}/2024/01-02/job.zip",
+        ADMIN_USERNAME, ADMIN_USERNAME, DATA_REPO
+    );
+
+    let job_count = entity::job::Entity::find()
+        .filter(entity::job::Column::Uri.eq(Some(uri_1)))
+        .count(&state.conn)
+        .await
+        .unwrap();
+    assert!(job_count > 0, "should have imported 2024-01-01 jobs");
+
+    let job_count_v2 = entity::job::Entity::find()
+        .filter(entity::job::Column::Uri.eq(Some(uri_2)))
+        .count(&state.conn)
+        .await
+        .unwrap();
+    assert!(job_count_v2 > 0, "should have imported 2024-01-02 jobs");
 
     // second run: no pending tasks, should be a no-op
     scheduler::process_all_plans(&state.conn).await.unwrap();
@@ -345,12 +351,13 @@ async fn test_app_background_task_run_full_flow() {
     }
 
     // data unchanged
+    let total = job_count + job_count_v2;
     let job_count_after = entity::job::Entity::find()
         .count(&state.conn)
         .await
         .unwrap();
     assert_eq!(
-        job_count, job_count_after,
+        total, job_count_after,
         "job count should remain same after no-op run"
     );
 
