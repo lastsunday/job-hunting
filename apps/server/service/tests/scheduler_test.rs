@@ -1,7 +1,7 @@
 use chrono::Utc;
 use sea_orm::{ActiveValue, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter};
-use service::task::scheduler;
 use service::task::TaskPlanConfigDataDownloadConfig;
+use service::task::scheduler;
 
 mod common;
 
@@ -16,7 +16,7 @@ async fn test_app_background_task_run_no_plans() {
 
     scheduler::process_all_plans(&state.conn).await.unwrap();
     scheduler::drain_tasks(&state.conn).await.unwrap();
-    scheduler::run_scheduled_tasks(&state.conn).await.unwrap();
+    scheduler::run_scheduled_tasks(&state.conn, -1).await.unwrap();
 
     state.conn.close().await.unwrap();
     tear_down(&container).await;
@@ -62,7 +62,7 @@ async fn test_app_background_task_run_with_plan() {
 
     scheduler::process_all_plans(&state.conn).await.unwrap();
     scheduler::drain_tasks(&state.conn).await.unwrap();
-    scheduler::run_scheduled_tasks(&state.conn).await.unwrap();
+    scheduler::run_scheduled_tasks(&state.conn, -1).await.unwrap();
 
     state.conn.close().await.unwrap();
     tear_down(&container).await;
@@ -102,10 +102,7 @@ async fn test_run_tasks_download_task_missing_plan() {
 
     scheduler::run_tasks(&state.conn).await.unwrap();
 
-    let tasks = entity::task::Entity::find()
-        .all(&state.conn)
-        .await
-        .unwrap();
+    let tasks = entity::task::Entity::find().all(&state.conn).await.unwrap();
     assert_eq!(tasks.len(), 1);
     assert_eq!(
         tasks[0].status,
@@ -149,10 +146,7 @@ async fn test_run_tasks_merge_task_missing_file() {
 
     scheduler::run_tasks(&state.conn).await.unwrap();
 
-    let tasks = entity::task::Entity::find()
-        .all(&state.conn)
-        .await
-        .unwrap();
+    let tasks = entity::task::Entity::find().all(&state.conn).await.unwrap();
     assert_eq!(tasks.len(), 1);
     assert_eq!(
         tasks[0].status,
@@ -192,10 +186,7 @@ async fn test_run_tasks_exceeds_max_retry() {
 
     scheduler::run_tasks(&state.conn).await.unwrap();
 
-    let tasks = entity::task::Entity::find()
-        .all(&state.conn)
-        .await
-        .unwrap();
+    let tasks = entity::task::Entity::find().all(&state.conn).await.unwrap();
     assert_eq!(tasks.len(), 1);
     assert_eq!(
         tasks[0].status,
@@ -264,7 +255,7 @@ async fn test_app_background_task_run_full_flow() {
     // first run: calculate download tasks + execute them
     scheduler::process_all_plans(&state.conn).await.unwrap();
     scheduler::drain_tasks(&state.conn).await.unwrap();
-    scheduler::run_scheduled_tasks(&state.conn).await.unwrap();
+    scheduler::run_scheduled_tasks(&state.conn, -1).await.unwrap();
 
     // verify download tasks finished, merge tasks created
     let all_tasks = entity::task::Entity::find()
@@ -279,9 +270,7 @@ async fn test_app_background_task_run_full_flow() {
         .filter(|t| {
             matches!(
                 t.r#type,
-                Some(
-                    entity::task::Type::JobDataDownload | entity::task::Type::CompanyDataDownload,
-                )
+                Some(entity::task::Type::JobDataDownload | entity::task::Type::CompanyDataDownload,)
             )
         })
         .collect();
@@ -335,16 +324,14 @@ async fn test_app_background_task_run_full_flow() {
     // second run: no pending tasks, should be a no-op
     scheduler::process_all_plans(&state.conn).await.unwrap();
     scheduler::drain_tasks(&state.conn).await.unwrap();
-    scheduler::run_scheduled_tasks(&state.conn).await.unwrap();
+    scheduler::run_scheduled_tasks(&state.conn, -1).await.unwrap();
 
     // verify merge tasks still finished
     let merge_tasks_after = entity::task::Entity::find()
-        .filter(
-            entity::task::Column::Type.is_in(vec![
-                entity::task::Type::JobDataMerge,
-                entity::task::Type::CompanyDataMerge,
-            ]),
-        )
+        .filter(entity::task::Column::Type.is_in(vec![
+            entity::task::Type::JobDataMerge,
+            entity::task::Type::CompanyDataMerge,
+        ]))
         .all(&state.conn)
         .await
         .unwrap();
@@ -362,7 +349,10 @@ async fn test_app_background_task_run_full_flow() {
         .count(&state.conn)
         .await
         .unwrap();
-    assert_eq!(job_count, job_count_after, "job count should remain same after no-op run");
+    assert_eq!(
+        job_count, job_count_after,
+        "job count should remain same after no-op run"
+    );
 
     state.conn.close().await.unwrap();
     tear_down(&container).await;

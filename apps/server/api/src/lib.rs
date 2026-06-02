@@ -58,7 +58,10 @@ async fn start() -> anyhow::Result<()> {
     // state
     let state = AppState { conn: conn.clone() };
     // background scheduler
-    service::task::scheduler::start_scheduler(conn);
+    let scheduler_config = service::task::scheduler::SchedulerConfig {
+        history_file_max_size: framework::config::get().task().history_file_max_size(),
+    };
+    service::task::scheduler::start_scheduler(conn, scheduler_config);
     // router
     let app = create_router(state);
     // app start

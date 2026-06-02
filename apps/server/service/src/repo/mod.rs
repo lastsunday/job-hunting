@@ -100,10 +100,7 @@ impl Repo for GitRepo {
         Ok(result)
     }
 
-    async fn download_file(
-        &self,
-        param: DownloadFileParam,
-    ) -> Result<FileInfo, DownloadError> {
+    async fn download_file(&self, param: DownloadFileParam) -> Result<FileInfo, DownloadError> {
         let DownloadFileParam {
             url,
             datetime,

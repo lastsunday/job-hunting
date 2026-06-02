@@ -24,7 +24,9 @@ use thiserror::Error;
 use crate::sync::{CompanyImporter, ImportResult, JobImporter};
 use crate::{
     common::{FileError, FileParser},
-    repo::{DownloadError, DownloadFileParam, FileInfo, GitRepo, QueryFileDateAndMaxSeqParam, Repo},
+    repo::{
+        DownloadError, DownloadFileParam, FileInfo, GitRepo, QueryFileDateAndMaxSeqParam, Repo,
+    },
 };
 
 #[derive(Debug, Error)]
@@ -584,10 +586,7 @@ pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + C
             DownloadError::FileNotFound(p) => {
                 let one_day = chrono::Duration::days(1);
                 if now - datetime.to_utc() >= one_day {
-                    return Err(Error::FinishedButError(format!(
-                        "file {} never upload",
-                        p
-                    )));
+                    return Err(Error::FinishedButError(format!("file {} never upload", p)));
                 }
                 return Err(Error::Internal(anyhow::anyhow!(
                     "file {} not found, retry later",
@@ -943,21 +942,15 @@ pub(crate) const TASK_QUERY_BATCH_MULTIPLIER: usize = 8;
 pub(crate) async fn query_pending_tasks(
     conn: &impl ConnectionTrait,
 ) -> Result<Vec<entity::task::Model>, anyhow::Error> {
-    let cutoff = (Utc::now() - TimeDelta::seconds(TASK_RETRY_MIN_INTERVAL_SECS))
-        .fixed_offset();
+    let cutoff = (Utc::now() - TimeDelta::seconds(TASK_RETRY_MIN_INTERVAL_SECS)).fixed_offset();
 
     let tasks = entity::task::Entity::find()
-        .filter(
-            entity::task::Column::Status.is_in(vec![
-                entity::task::Status::Ready,
-                entity::task::Status::Running,
-                entity::task::Status::Error,
-            ]),
-        )
-        .filter(
-            entity::task::Column::RetryCount
-                .lt(Some(TASK_STATUS_ERROR_MAX_RETRY_COUNT)),
-        )
+        .filter(entity::task::Column::Status.is_in(vec![
+            entity::task::Status::Ready,
+            entity::task::Status::Running,
+            entity::task::Status::Error,
+        ]))
+        .filter(entity::task::Column::RetryCount.lt(Some(TASK_STATUS_ERROR_MAX_RETRY_COUNT)))
         .filter(
             Condition::any()
                 .add(entity::task::Column::Status.ne(entity::task::Status::Error))
@@ -994,6 +987,9 @@ async fn apply_task_result<C: ConnectionTrait>(
         active.retry_count = ActiveValue::Set(Some(retry));
     }
     active.update_datetime = ActiveValue::Set(Some(now.fixed_offset()));
-    active.update(conn).await.map_err(|e| anyhow::anyhow!("{:?}", e))?;
+    active
+        .update(conn)
+        .await
+        .map_err(|e| anyhow::anyhow!("{:?}", e))?;
     Ok(())
 }

@@ -3,11 +3,11 @@ use std::{pin::Pin, sync::LazyLock};
 use axum::{body::Body, extract::Request, http::Response, http::header};
 use tower_http::auth::{AsyncAuthorizeRequest, AsyncRequireAuthorizationLayer};
 
+use crate::prelude::*;
 use crate::{
     auth::Jwt,
     error::{ApiError, auth_code::AuthErrorCode},
 };
-use crate::prelude::*;
 
 static AUTH_LAYER_INSTANCE: LazyLock<AsyncRequireAuthorizationLayer<JwtAuth>> =
     LazyLock::new(|| AsyncRequireAuthorizationLayer::new(JwtAuth::new(Jwt::global())));

@@ -116,16 +116,11 @@ pub async fn setup_gitea_with_test_data() -> (ContainerAsync<Gitea>, String, Str
 
     let path_string = gen_unique_random_path();
     let local_path = Path::new(&path_string);
-    let repo = git_clone_by_http(
-        &repo_url,
-        local_path,
-        ADMIN_USERNAME,
-        ADMIN_PASSWORD,
-    )
-    .unwrap_or_else(|e| {
-        fs::remove_dir_all(local_path).unwrap();
-        panic!("failed to clone: {}", e)
-    });
+    let repo = git_clone_by_http(&repo_url, local_path, ADMIN_USERNAME, ADMIN_PASSWORD)
+        .unwrap_or_else(|e| {
+            fs::remove_dir_all(local_path).unwrap();
+            panic!("failed to clone: {}", e)
+        });
 
     let resources_data_path = Path::new("tests").join("resources").join("data");
     let test_data_file_map = create_test_file_map();

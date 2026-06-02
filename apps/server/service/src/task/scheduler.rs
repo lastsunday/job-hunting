@@ -11,7 +11,8 @@ const TASK_TIMEOUT: Duration = Duration::from_secs(300);
 use chrono::{DateTime, Utc};
 use cron::Schedule;
 use sea_orm::{
-    ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel, QueryFilter, TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
+    Order, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
 };
 use tokio::sync::Semaphore;
 use tokio::sync::watch;
@@ -37,7 +38,11 @@ pub fn stop_scheduler() {
     }
 }
 
-pub fn start_scheduler(conn: DatabaseConnection) {
+pub struct SchedulerConfig {
+    pub history_file_max_size: i64,
+}
+
+pub fn start_scheduler(conn: DatabaseConnection, config: SchedulerConfig) {
     if SCHEDULER_RUNNING
         .compare_exchange(false, true, Ordering::AcqRel, Ordering::Relaxed)
         .is_err()
@@ -66,7 +71,7 @@ pub fn start_scheduler(conn: DatabaseConnection) {
                     if let Err(e) = drain_tasks(&conn).await {
                         tracing::error!("drain tasks error: {:?}", e);
                     }
-                    if let Err(e) = run_scheduled_tasks(&conn).await {
+                    if let Err(e) = run_scheduled_tasks(&conn, config.history_file_max_size).await {
                         tracing::error!("scheduled tasks error: {:?}", e);
                     }
 
@@ -325,28 +330,24 @@ async fn execute_single_task(
                 .await?;
 
                 let work_result = match task_clone.r#type {
-                    Some(ref t) if t.is_download() => {
-                        execute_download_task_and_create_merge_task(
-                            txn,
-                            ExecuteDownloadTaskAndCreateMergeTaskParam {
-                                download_task_id: task_clone.id.clone(),
-                                now,
-                            },
-                        )
-                        .await
-                        .map(|_| ())
-                    }
-                    Some(ref t) if t.is_merge() => {
-                        execute_merge_task(
-                            txn,
-                            ExecuteMergeTaskParam {
-                                merge_task_id: task_clone.id.clone(),
-                                now,
-                            },
-                        )
-                        .await
-                        .map(|_| ())
-                    }
+                    Some(ref t) if t.is_download() => execute_download_task_and_create_merge_task(
+                        txn,
+                        ExecuteDownloadTaskAndCreateMergeTaskParam {
+                            download_task_id: task_clone.id.clone(),
+                            now,
+                        },
+                    )
+                    .await
+                    .map(|_| ()),
+                    Some(ref t) if t.is_merge() => execute_merge_task(
+                        txn,
+                        ExecuteMergeTaskParam {
+                            merge_task_id: task_clone.id.clone(),
+                            now,
+                        },
+                    )
+                    .await
+                    .map(|_| ()),
                     _ => Err(TaskError::Internal(anyhow::anyhow!(
                         "unsupported task type"
                     ))),
@@ -459,7 +460,121 @@ pub async fn drain_tasks(conn: &DatabaseConnection) -> Result<(), anyhow::Error>
     }
 }
 
-pub async fn run_scheduled_tasks(_conn: &DatabaseConnection) -> Result<(), anyhow::Error> {
-    // TODO: placeholder for cleanup tasks (like scheduleClearFile)
-    Ok(())
+async fn find_ready_file_ids(
+    file_ids: Vec<String>,
+    conn: &DatabaseConnection,
+) -> Result<Vec<String>, anyhow::Error> {
+    let merges = entity::task_data_merge::Entity::find()
+        .filter(entity::task_data_merge::Column::DataId.is_in(file_ids.clone()))
+        .all(conn)
+        .await?;
+
+    let merge_ids: Vec<String> = merges.iter().map(|m| m.id.clone()).collect();
+
+    let unfinished_file_ids = if merge_ids.is_empty() {
+        vec![]
+    } else {
+        let tasks = entity::task::Entity::find()
+            .filter(entity::task::Column::DataId.is_in(merge_ids))
+            .filter(entity::task::Column::Status.ne(entity::task::Status::Finished))
+            .all(conn)
+            .await?;
+
+        let unfinished_merge_ids: Vec<String> =
+            tasks.iter().filter_map(|t| t.data_id.clone()).collect();
+
+        if unfinished_merge_ids.is_empty() {
+            vec![]
+        } else {
+            entity::task_data_merge::Entity::find()
+                .filter(entity::task_data_merge::Column::Id.is_in(unfinished_merge_ids))
+                .all(conn)
+                .await?
+                .into_iter()
+                .filter_map(|m| m.data_id)
+                .collect()
+        }
+    };
+
+    Ok(file_ids
+        .into_iter()
+        .filter(|id| !unfinished_file_ids.contains(id))
+        .collect())
+}
+
+async fn logically_delete_files(
+    file_ids: &[String],
+    conn: &DatabaseConnection,
+) -> Result<(), anyhow::Error> {
+    conn.transaction(|txn| {
+        let ids = file_ids.to_vec();
+        Box::pin(async move {
+            for id in &ids {
+                let file = entity::file::Entity::find_by_id(id.clone())
+                    .one(txn)
+                    .await?
+                    .ok_or_else(|| anyhow::anyhow!("file not found: {}", id))?;
+                let mut active: entity::file::ActiveModel = file.into();
+                active.content = ActiveValue::Set(Some(vec![]));
+                active.is_delete = ActiveValue::Set(Some(true));
+                active.update(txn).await?;
+            }
+            tracing::info!("[SCHEDULE] logically deleted {} history files", ids.len());
+            Ok::<_, anyhow::Error>(())
+        })
+    })
+    .await
+    .map_err(|e| anyhow::anyhow!("{:?}", e))
+}
+
+async fn schedule_clear_file(conn: &DatabaseConnection, max_size: i64) -> Result<(), anyhow::Error> {
+    if max_size < 0 {
+        return Ok(());
+    }
+
+    let total: i64 = entity::file::Entity::find()
+        .filter(entity::file::Column::IsDelete.eq(Some(false)))
+        .all(conn)
+        .await?
+        .iter()
+        .map(|f| f.size.unwrap_or(0))
+        .sum();
+
+    if total <= max_size {
+        tracing::info!(
+            "[SCHEDULE] total file size {} <= max_size {}, skip",
+            total,
+            max_size
+        );
+        return Ok(());
+    }
+
+    const FILE_BATCH_SIZE: u64 = 64;
+
+    let files = entity::file::Entity::find()
+        .filter(entity::file::Column::IsDelete.eq(Some(false)))
+        .order_by(entity::file::Column::UpdateDatetime, Order::Asc)
+        .limit(FILE_BATCH_SIZE)
+        .all(conn)
+        .await?;
+
+    if files.is_empty() {
+        return Ok(());
+    }
+
+    let file_ids: Vec<String> = files.iter().map(|f| f.id.clone()).collect();
+
+    let ready_ids = find_ready_file_ids(file_ids, conn).await?;
+
+    if ready_ids.is_empty() {
+        tracing::info!("[SCHEDULE] no ready files to delete in this batch");
+        return Ok(());
+    }
+
+    logically_delete_files(&ready_ids, conn).await
+}
+
+pub async fn run_scheduled_tasks(conn: &DatabaseConnection, max_size: i64) -> Result<(), anyhow::Error> {
+    tracing::info!("[TASK] [SCHEDULE] run_scheduled_tasks");
+    schedule_clear_file(conn, max_size).await
 }
