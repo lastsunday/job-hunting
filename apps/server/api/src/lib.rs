@@ -1,6 +1,7 @@
 pub mod company;
 pub mod config;
 pub mod index;
+pub mod state;
 pub mod job;
 pub mod statistics;
 pub mod sync;
@@ -18,8 +19,9 @@ use bytesize::ByteSize;
 use framework::error::critical_code::CriticalErrorCode;
 use framework::error::framework_code::FrameworkErrorCode;
 use migration::MigratorTrait;
-use service::AppState;
 use tokio::net::TcpListener;
+
+use crate::state::AppState;
 
 use framework::error::ApiResult;
 use framework::trace::*;
@@ -38,16 +40,28 @@ use utoipa_axum::router::OpenApiRouter;
 use utoipa_scalar::{Scalar, Servable as ScalarServable};
 
 use framework::auth::Jwt;
+use framework::config::auth::AuthConfig;
 
 #[tokio::main]
 async fn start() -> anyhow::Result<()> {
     //init logger
     logger::init();
     // config
-    let port = config::get().server().port();
-    let database_url = config::get().database().url();
+    let figment = config::Config::load(&[])?;
+    let config = config::Config::new(&figment)?;
+    let port = config.server_port;
+    let database_url = &config.database_url;
     // auth
-    Jwt::init(config::get().auth().clone());
+    Jwt::init(AuthConfig {
+        access_token_secret: Some(config.auth_access_token_secret.clone()),
+        access_token_expires_in: Some(config.auth_access_token_expires_in),
+        refresh_token_secret: Some(config.auth_refresh_token_secret.clone()),
+        refresh_token_expires_in: Some(config.auth_refresh_token_expires_in),
+        audience: Some(config.auth_audience.clone()),
+        issuer: Some(config.auth_issuer.clone()),
+        client_id: Some(config.auth_client_id.clone()),
+        client_secret: Some(config.auth_client_secret.clone()),
+    });
     // database init
     let conn: sea_orm::DatabaseConnection =
         framework::database::establish_connection(database_url).await?;
@@ -56,10 +70,14 @@ async fn start() -> anyhow::Result<()> {
     // database schema init or upgrade
     migration::Migrator::up(&conn, None).await?;
     // state
-    let state = AppState { conn: conn.clone() };
+    let state = AppState {
+        conn: conn.clone(),
+        auth_client_id: config.auth_client_id.clone(),
+        auth_client_secret: config.auth_client_secret.clone(),
+    };
     // background scheduler
     let scheduler_config = service::task::scheduler::SchedulerConfig {
-        history_file_max_size: config::get().task().history_file_max_size(),
+        history_file_max_size: config.history_file_max_size,
     };
     service::task::scheduler::start_scheduler(conn, scheduler_config);
     // router

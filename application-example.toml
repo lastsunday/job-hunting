@@ -1,0 +1,52 @@
+### Job Hunting Configuration
+###
+### THIS FILE IS GENERATED.
+###
+### You should rename this file before configuring your server.
+###
+
+[global]
+
+# The port the server will listen on.
+#
+#server_port = 3000
+
+# The database connection URL.
+#
+#database_url = sqlite://db.sqlite?mode=rwc
+
+# Secret key for signing access tokens.
+#
+#auth_access_token_secret = "QLjJTeVblAlM47de"
+
+# Access token expiration time in seconds.
+#
+#auth_access_token_expires_in = 28800
+
+# Secret key for signing refresh tokens.
+#
+#auth_refresh_token_secret = "N8lI0uitNzJl6vYK"
+
+# Refresh token expiration time in seconds.
+#
+#auth_refresh_token_expires_in = 15897600
+
+# JWT audience claim.
+#
+#auth_audience = "audience"
+
+# JWT issuer claim.
+#
+#auth_issuer = "issuer"
+
+# OAuth client ID.
+#
+#auth_client_id = "d1aicsr57dijo7h963ig"
+
+# OAuth client secret.
+#
+#auth_client_secret = "ujTgh2lEQYy0PXhK"
+
+# Maximum size of history file in bytes.
+#
+#history_file_max_size = 5368709120

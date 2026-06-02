@@ -193,7 +193,7 @@ pub fn create_routes(state: AppState) -> OpenApiRouter {
     (status=OK,body=ApiResponse<ApiPageResult<company::Model>>)
 ))]
 pub async fn search(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
     ValidJson(param): ValidJson<SearchParam>,
 ) -> ApiResult<ApiResponse<ApiPageResult<company::Model>>> {
     let num = param.page.num;
@@ -332,7 +332,7 @@ pub async fn search(
     (status=OK,body=ApiResponse<company::Model>)
 ))]
 pub async fn get_by_id(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
     Path(id): Path<String>,
 ) -> ApiResult<ApiResponse<company::Model>> {
     let company = Company::find_by_id(&id)
@@ -347,7 +347,7 @@ pub async fn get_by_id(
     (status=OK,body=ApiResponse<company::Model>)
 ))]
 pub async fn create(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
     Extension(principal): Extension<Principal>,
     ValidJson(param): ValidJson<CreateCompanyRequest>,
 ) -> ApiResult<ApiResponse<company::Model>> {
@@ -391,7 +391,7 @@ pub async fn create(
     (status=OK,body=ApiResponse<company::Model>)
 ))]
 pub async fn update(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
     Extension(principal): Extension<Principal>,
     Path(id): Path<String>,
     ValidJson(param): ValidJson<UpdateCompanyRequest>,
@@ -491,7 +491,7 @@ pub async fn update(
     (status=OK,body=ApiResponse<String>)
 ))]
 pub async fn delete_company(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
     Path(id): Path<String>,
 ) -> ApiResult<ApiResponse<String>> {
     let company = Company::find_by_id(&id)

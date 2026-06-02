@@ -1,105 +1,185 @@
-use std::sync::LazyLock;
+pub mod database;
+pub mod server;
+pub mod task;
 
-use anyhow::Context;
-use config::{Config, FileFormat};
-use framework::config::{ServerConfig, auth::AuthConfig, database::DatabaseConfig};
+use std::path::PathBuf;
+
+use anyhow::Error;
+use figment::{
+    Figment,
+    providers::{Env, Format, Toml},
+};
+use macros::config_example_generator;
 use serde::Deserialize;
 
-static CONFIG: LazyLock<AppConfig> =
-    LazyLock::new(|| AppConfig::load().expect("Failed to initialize config"));
-
-#[derive(Debug, Default, Deserialize)]
-pub struct AppConfig {
-    server: ServerConfig,
-    database: DatabaseConfig,
-    auth: AuthConfig,
-    task: TaskConfig,
-}
-
-impl AppConfig {
-    pub fn load() -> anyhow::Result<Self> {
-        match Config::builder()
-            .add_source(
-                config::File::with_name("application")
-                    .format(FileFormat::Yaml)
-                    .required(false),
-            )
-            .add_source(
-                config::Environment::with_prefix("APP")
-                    .try_parsing(true)
-                    .separator("_")
-                    .list_separator(","),
-            )
-            .build()
-            .with_context(|| anyhow::anyhow!("Failed to load config"))?
-            .try_deserialize()
-        {
-            Ok(config) => {
-                tracing::info!("Load config file successfully");
-                tracing::info!("{:#?}", config);
-                Ok(config)
-            }
-            Err(e) => {
-                tracing::warn!(
-                    "Failed to load config file,using default config,error = {:?}",
-                    e
-                );
-                let config = Self::new();
-                tracing::info!("{:#?}", config);
-                Ok(config)
-            }
-        }
-    }
-
-    pub fn new() -> Self {
-        Self {
-            server: ServerConfig::new(),
-            database: DatabaseConfig::new(),
-            auth: AuthConfig::new(),
-            task: TaskConfig::new(),
-        }
-    }
-
-    pub fn server(&self) -> &ServerConfig {
-        &self.server
-    }
-
-    pub fn database(&self) -> &DatabaseConfig {
-        &self.database
-    }
-
-    pub fn auth(&self) -> &AuthConfig {
-        &self.auth
-    }
-
-    pub fn task(&self) -> &TaskConfig {
-        &self.task
-    }
-}
-
-pub fn get() -> &'static AppConfig {
-    &CONFIG
-}
-
+/// ### Job Hunting Configuration
+///
+/// ### THIS FILE IS GENERATED.
+///
+/// You should rename this file before configuring your server.
 #[derive(Debug, Deserialize)]
-pub struct TaskConfig {
-    history_file_max_size: Option<i64>,
+#[config_example_generator(
+    filename = "application-example.toml",
+    section = "global",
+    undocumented = "# This item is undocumented. Please contribute documentation for it.",
+    header = r#"### Job Hunting Configuration
+###
+### THIS FILE IS GENERATED.
+###
+### You should rename this file before configuring your server.
+###
+"#,
+    ignore = "config_paths catchall"
+)]
+pub struct Config {
+    /// The port the server will listen on.
+    ///
+    /// default: 3000
+    #[serde(default = "default_server_port")]
+    pub server_port: u16,
+
+    /// The database connection URL.
+    ///
+    /// default: sqlite://db.sqlite?mode=rwc
+    #[serde(default = "default_database_url")]
+    pub database_url: String,
+
+    /// Secret key for signing access tokens.
+    ///
+    /// default: "QLjJTeVblAlM47de"
+    #[serde(default = "default_auth_access_token_secret")]
+    pub auth_access_token_secret: String,
+
+    /// Access token expiration time in seconds.
+    ///
+    /// default: 28800
+    #[serde(default = "default_auth_access_token_expires_in")]
+    pub auth_access_token_expires_in: u64,
+
+    /// Secret key for signing refresh tokens.
+    ///
+    /// default: "N8lI0uitNzJl6vYK"
+    #[serde(default = "default_auth_refresh_token_secret")]
+    pub auth_refresh_token_secret: String,
+
+    /// Refresh token expiration time in seconds.
+    ///
+    /// default: 15897600
+    #[serde(default = "default_auth_refresh_token_expires_in")]
+    pub auth_refresh_token_expires_in: u64,
+
+    /// JWT audience claim.
+    ///
+    /// default: "audience"
+    #[serde(default = "default_auth_audience")]
+    pub auth_audience: String,
+
+    /// JWT issuer claim.
+    ///
+    /// default: "issuer"
+    #[serde(default = "default_auth_issuer")]
+    pub auth_issuer: String,
+
+    /// OAuth client ID.
+    ///
+    /// default: "d1aicsr57dijo7h963ig"
+    #[serde(default = "default_auth_client_id")]
+    pub auth_client_id: String,
+
+    /// OAuth client secret.
+    ///
+    /// default: "ujTgh2lEQYy0PXhK"
+    #[serde(default = "default_auth_client_secret")]
+    pub auth_client_secret: String,
+
+    /// Maximum size of history file in bytes.
+    ///
+    /// default: 5368709120
+    #[serde(default = "default_history_file_max_size")]
+    pub history_file_max_size: i64,
 }
 
-impl Default for TaskConfig {
-    fn default() -> Self {
-        Self::new()
+impl Config {
+    pub fn load(paths: &[PathBuf]) -> Result<Figment, Error> {
+        let envs = [Env::var("APP_CONFIG")];
+        let config = envs
+            .into_iter()
+            .flatten()
+            .map(Toml::file)
+            .chain(paths.iter().cloned().map(Toml::file))
+            .fold(Figment::new(), |config, file| config.merge(file))
+            .merge(Env::prefixed("APP_").global().split("__"));
+
+        Ok(config)
+    }
+
+    pub fn new(raw_config: &Figment) -> Result<Self, Error> {
+        let config = raw_config.extract::<Self>().map_err(|e| {
+            anyhow::anyhow!("There was a problem with your configuration file: {e}")
+        })?;
+
+        Ok(config)
     }
 }
 
-impl TaskConfig {
-    pub fn new() -> Self {
+impl Default for Config {
+    fn default() -> Self {
         Self {
-            history_file_max_size: Some(5 * 1024 * 1024 * 1024),
+            server_port: default_server_port(),
+            database_url: default_database_url(),
+            auth_access_token_secret: default_auth_access_token_secret(),
+            auth_access_token_expires_in: default_auth_access_token_expires_in(),
+            auth_refresh_token_secret: default_auth_refresh_token_secret(),
+            auth_refresh_token_expires_in: default_auth_refresh_token_expires_in(),
+            auth_audience: default_auth_audience(),
+            auth_issuer: default_auth_issuer(),
+            auth_client_id: default_auth_client_id(),
+            auth_client_secret: default_auth_client_secret(),
+            history_file_max_size: default_history_file_max_size(),
         }
     }
+}
 
-    pub fn history_file_max_size(&self) -> i64 {
-        self.history_file_max_size.unwrap_or(5 * 1024 * 1024 * 1024)
-    }
+fn default_server_port() -> u16 {
+    3000
+}
+
+fn default_database_url() -> String {
+    String::from("sqlite://db.sqlite?mode=rwc")
+}
+
+fn default_auth_access_token_secret() -> String {
+    String::from("QLjJTeVblAlM47de")
+}
+
+fn default_auth_access_token_expires_in() -> u64 {
+    28800
+}
+
+fn default_auth_refresh_token_secret() -> String {
+    String::from("N8lI0uitNzJl6vYK")
+}
+
+fn default_auth_refresh_token_expires_in() -> u64 {
+    15897600
+}
+
+fn default_auth_audience() -> String {
+    String::from("audience")
+}
+
+fn default_auth_issuer() -> String {
+    String::from("issuer")
+}
+
+fn default_auth_client_id() -> String {
+    String::from("d1aicsr57dijo7h963ig")
+}
+
+fn default_auth_client_secret() -> String {
+    String::from("ujTgh2lEQYy0PXhK")
+}
+
+fn default_history_file_max_size() -> i64 {
+    5 * 1024 * 1024 * 1024
 }

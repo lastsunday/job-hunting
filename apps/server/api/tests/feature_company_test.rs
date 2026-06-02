@@ -10,10 +10,9 @@ use cucumber::when;
 use cucumber::{World, given};
 use futures::FutureExt;
 use serde_json::json;
-use service::AppState;
+use api::state::AppState;
 
 use api::company::CompanyErrorCode;
-use api::config;
 use api::setup_company;
 use api::setup_default;
 use axum::extract::connect_info::MockConnectInfo;
@@ -21,6 +20,7 @@ use axum::{Router, http::StatusCode};
 use entity::company::{ActiveModel, Entity as Company};
 use framework::auth::Jwt;
 use framework::auth::Principal;
+use framework::config::auth::AuthConfig;
 use framework::id::gen_id;
 use sea_orm::{DatabaseConnection, EntityTrait, Set};
 use utoipa_axum::router::OpenApiRouter;
@@ -681,7 +681,16 @@ async fn main() {
                 let (container, state) = setup_database().await;
                 world.container = container;
                 world.state = Some(state.clone());
-                Jwt::init(config::get().auth().clone());
+                Jwt::init(AuthConfig {
+                    access_token_secret: Some(String::from("QLjJTeVblAlM47de")),
+                    access_token_expires_in: Some(28800),
+                    refresh_token_secret: Some(String::from("N8lI0uitNzJl6vYK")),
+                    refresh_token_expires_in: Some(15897600),
+                    audience: Some(String::from("audience")),
+                    issuer: Some(String::from("issuer")),
+                    client_id: Some(String::from("d1aicsr57dijo7h963ig")),
+                    client_secret: Some(String::from("ujTgh2lEQYy0PXhK")),
+                });
                 let principal = Principal {
                     id: String::from("testid"),
                     name: String::from("test"),

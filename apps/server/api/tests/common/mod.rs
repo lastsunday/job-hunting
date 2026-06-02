@@ -7,7 +7,7 @@ use chrono::{DateTime, FixedOffset};
 use http_body_util::BodyExt;
 use migration::MigratorTrait;
 use serde_json::Value;
-use service::AppState;
+use api::state::AppState;
 use std::str::FromStr;
 use testcontainers::ContainerAsync;
 use testcontainers_modules::postgres::Postgres;
@@ -27,7 +27,11 @@ pub async fn setup_database() -> (Option<ContainerAsync<Postgres>>, AppState) {
         .await
         .unwrap();
     migration::Migrator::up(&conn, None).await.unwrap();
-    let state = AppState { conn };
+    let state = AppState {
+        conn,
+        auth_client_id: String::from("d1aicsr57dijo7h963ig"),
+        auth_client_secret: String::from("ujTgh2lEQYy0PXhK"),
+    };
     (container, state)
 }
 

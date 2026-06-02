@@ -65,6 +65,8 @@ tower = "0.5.3"
 cucumber = "0.23.0"
 mockall = "0.14.0"
 reqwest = "0.13.4"
+itertools = "0.14.0"
+figment = "0.10.19"
 
 [profile.dev]
 opt-level = 1

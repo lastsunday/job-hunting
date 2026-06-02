@@ -46,7 +46,7 @@ pub struct YearQuery {
     (status = OK, body = ApiResponse<Vec<StatItem>>)
 ))]
 pub async fn job_scan_time(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
     Query(query): Query<YearQuery>,
 ) -> ApiResult<ApiResponse<Vec<StatItem>>> {
     let results: Vec<(String, i64)> = if let Some(year) = query.year {
@@ -122,7 +122,7 @@ pub async fn job_scan_time(
     (status = OK, body = ApiResponse<Vec<StatItem>>)
 ))]
 pub async fn job_salary(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
 ) -> ApiResult<ApiResponse<Vec<StatItem>>> {
     let salary_ranges = vec![
         ("0-5k", 0f32, 5000f32),
@@ -199,7 +199,7 @@ pub async fn job_salary(
     (status = OK, body = ApiResponse<Vec<StatItem>>)
 ))]
 pub async fn job_location(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
 ) -> ApiResult<ApiResponse<Vec<StatItem>>> {
     let results: Vec<(String, i64)> = Job::find()
         .select_only()
@@ -267,7 +267,7 @@ fn extract_city(location: &str) -> String {
     (status = OK, body = ApiResponse<Vec<StatItem>>)
 ))]
 pub async fn job_platform(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
 ) -> ApiResult<ApiResponse<Vec<StatItem>>> {
     let results: Vec<(String, i64)> = Job::find()
         .select_only()
@@ -292,7 +292,7 @@ pub async fn job_platform(
     (status = OK, body = ApiResponse<Vec<StatItem>>)
 ))]
 pub async fn job_degree(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
 ) -> ApiResult<ApiResponse<Vec<StatItem>>> {
     let results: Vec<(String, i64)> = Job::find()
         .select_only()
@@ -394,7 +394,7 @@ fn categorize_degree(degree: &str) -> String {
     (status = OK, body = ApiResponse<Vec<StatItem>>)
 ))]
 pub async fn job_year(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
 ) -> ApiResult<ApiResponse<Vec<StatItem>>> {
     let results: Vec<(Option<i32>, i64)> = Job::find()
         .select_only()
@@ -428,7 +428,7 @@ pub async fn job_year(
     (status = OK, body = ApiResponse<Vec<StatItem>>)
 ))]
 pub async fn company_insurance(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
 ) -> ApiResult<ApiResponse<Vec<StatItem>>> {
     let insurance_ranges = vec![
         ("0", 0, 0),
@@ -477,7 +477,7 @@ pub async fn company_insurance(
     (status = OK, body = ApiResponse<Vec<StatItem>>)
 ))]
 pub async fn company_industry(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
 ) -> ApiResult<ApiResponse<Vec<StatItem>>> {
     let results: Vec<(String, i64)> = Company::find()
         .select_only()
@@ -506,7 +506,7 @@ pub async fn company_industry(
     (status = OK, body = ApiResponse<Vec<StatItem>>)
 ))]
 pub async fn company_status(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
 ) -> ApiResult<ApiResponse<Vec<StatItem>>> {
     let results: Vec<(String, i64)> = Company::find()
         .select_only()
@@ -531,7 +531,7 @@ pub async fn company_status(
     (status = OK, body = ApiResponse<Vec<StatItem>>)
 ))]
 pub async fn company_source_update(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
     Query(query): Query<YearQuery>,
 ) -> ApiResult<ApiResponse<Vec<StatItem>>> {
     let results: Vec<(String, i64)> = if let Some(year) = query.year {

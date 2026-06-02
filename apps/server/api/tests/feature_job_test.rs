@@ -1,8 +1,8 @@
-use api::config;
 use api::setup_default;
 use api::setup_job;
 use framework::auth::Jwt;
 use framework::auth::Principal;
+use framework::config::auth::AuthConfig;
 use axum::extract::connect_info::MockConnectInfo;
 use chrono::DateTime;
 use chrono::Duration;
@@ -23,7 +23,7 @@ use cucumber::{World, given};
 use framework::id::gen_id;
 use futures::FutureExt;
 use serde_json::json;
-use service::AppState;
+use api::state::AppState;
 use std::net::SocketAddr;
 use utoipa_axum::router::OpenApiRouter;
 mod common;
@@ -604,7 +604,16 @@ async fn main() {
                 let (container, state) = setup_database().await;
                 world.container = container;
                 world.state = Some(state.clone());
-                Jwt::init(config::get().auth().clone());
+                Jwt::init(AuthConfig {
+                    access_token_secret: Some(String::from("QLjJTeVblAlM47de")),
+                    access_token_expires_in: Some(28800),
+                    refresh_token_secret: Some(String::from("N8lI0uitNzJl6vYK")),
+                    refresh_token_expires_in: Some(15897600),
+                    audience: Some(String::from("audience")),
+                    issuer: Some(String::from("issuer")),
+                    client_id: Some(String::from("d1aicsr57dijo7h963ig")),
+                    client_secret: Some(String::from("ujTgh2lEQYy0PXhK")),
+                });
                 let principal = Principal {
                     id: String::from("testid"),
                     name: String::from("test"),

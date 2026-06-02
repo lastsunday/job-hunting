@@ -15,12 +15,10 @@ use framework::{
     password::{hash, verify},
 };
 use serde::{Deserialize, Serialize};
-use service::AppState;
+use crate::state::AppState;
 use utoipa::{IntoParams, ToSchema};
 use utoipa_axum::{router::OpenApiRouter, routes};
 use validator::Validate;
-
-use crate::config;
 
 use framework::prelude::*;
 
@@ -73,7 +71,7 @@ pub struct LoginResult {
     (status=OK,body=ApiResponse<LoginResult>)
 ))]
 async fn login(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     ValidJson(param): ValidJson<LoginParam>,
 ) -> ApiResult<ApiResponse<LoginResult>> {
@@ -123,11 +121,11 @@ pub struct AccessTokenParam {
     (status=OK,body=ApiResponse<LoginResult>)
 ))]
 async fn access_token(
+    State(state): State<AppState>,
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     ValidQuery(param): ValidQuery<AccessTokenParam>,
 ) -> ApiResult<ApiResponse<LoginResult>> {
-    let auth = config::get().auth();
-    if !param.client_id.eq(auth.client_id()) || !param.client_secret.eq(auth.client_secret()) {
+    if param.client_id != state.auth_client_id || param.client_secret != state.auth_client_secret {
         return Err(err!(UserErrorCode::ClientInvalid));
     } else if !param.grant_type.eq("refresh_token") {
         return Err(err!(UserErrorCode::GrantInvalid));
@@ -162,7 +160,7 @@ pub struct ResetPasswordParam {
     (status=OK,body=ApiResponse<String>)
 ))]
 async fn reset_password(
-    State(AppState { conn }): State<AppState>,
+    State(AppState { conn, .. }): State<AppState>,
     Extension(principal): Extension<Principal>,
     ValidJson(param): ValidJson<ResetPasswordParam>,
 ) -> ApiResult<ApiResponse<()>> {
