@@ -45,20 +45,16 @@ pub struct Jwt {
 impl Jwt {
     fn new(config: Arc<AuthConfig>) -> Self {
         let mut access_token_validation = Validation::new(jsonwebtoken::Algorithm::HS256);
-        access_token_validation.set_audience(
-            config
-                .audience
-                .as_ref()
-                .expect("auth audience is empty")
-                .as_bytes(),
-        );
-        access_token_validation.set_issuer(
-            config
-                .issuer
-                .as_ref()
-                .expect("auth issuer is empty")
-                .as_bytes(),
-        );
+        access_token_validation.set_audience(&[config
+            .audience
+            .as_ref()
+            .expect("auth audience is empty")
+            .as_str()]);
+        access_token_validation.set_issuer(&[config
+            .issuer
+            .as_ref()
+            .expect("auth issuer is empty")
+            .as_str()]);
         access_token_validation
             .set_required_spec_claims(&["jti", "sub", "aud", "iss", "iat", "exp"]);
         let access_token_secret = config
@@ -67,20 +63,16 @@ impl Jwt {
             .expect("auth access token secret is empty");
 
         let mut refresh_token_validation = Validation::new(jsonwebtoken::Algorithm::HS256);
-        refresh_token_validation.set_audience(
-            config
-                .audience
-                .as_ref()
-                .expect("auth audience is empty")
-                .as_bytes(),
-        );
-        refresh_token_validation.set_issuer(
-            config
-                .issuer
-                .as_ref()
-                .expect("auth issuer is empty")
-                .as_bytes(),
-        );
+        refresh_token_validation.set_audience(&[config
+            .audience
+            .as_ref()
+            .expect("auth audience is empty")
+            .as_str()]);
+        refresh_token_validation.set_issuer(&[config
+            .issuer
+            .as_ref()
+            .expect("auth issuer is empty")
+            .as_str()]);
         refresh_token_validation
             .set_required_spec_claims(&["jti", "sub", "aud", "iss", "iat", "exp"]);
 
