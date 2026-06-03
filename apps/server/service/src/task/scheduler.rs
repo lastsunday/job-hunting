@@ -8,6 +8,7 @@ use std::time::Duration;
 const MAX_TASK_CONCURRENCY: usize = 8;
 const TASK_TIMEOUT: Duration = Duration::from_secs(300);
 
+use anyhow::Context;
 use chrono::{DateTime, Utc};
 use cron::Schedule;
 use sea_orm::{
@@ -39,7 +40,7 @@ pub fn stop_scheduler() {
 }
 
 pub struct SchedulerConfig {
-    pub history_file_max_size: i64,
+    pub history_file_max_size: Option<i64>,
 }
 
 pub fn start_scheduler(conn: DatabaseConnection, config: SchedulerConfig) {
@@ -527,7 +528,11 @@ async fn logically_delete_files(
     .map_err(|e| anyhow::anyhow!("{:?}", e))
 }
 
-async fn schedule_clear_file(conn: &DatabaseConnection, max_size: i64) -> Result<(), anyhow::Error> {
+async fn schedule_clear_file(
+    conn: &DatabaseConnection,
+    max_size: Option<i64>,
+) -> Result<(), anyhow::Error> {
+    let max_size = max_size.context("max size not found")?;
     if max_size < 0 {
         return Ok(());
     }
@@ -574,7 +579,10 @@ async fn schedule_clear_file(conn: &DatabaseConnection, max_size: i64) -> Result
     logically_delete_files(&ready_ids, conn).await
 }
 
-pub async fn run_scheduled_tasks(conn: &DatabaseConnection, max_size: i64) -> Result<(), anyhow::Error> {
+pub async fn run_scheduled_tasks(
+    conn: &DatabaseConnection,
+    max_size: Option<i64>,
+) -> Result<(), anyhow::Error> {
     tracing::info!("[TASK] [SCHEDULE] run_scheduled_tasks");
     schedule_clear_file(conn, max_size).await
 }

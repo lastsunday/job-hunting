@@ -1,14 +1,15 @@
+use api::AppState;
 use axum::{
     Router,
     body::Body,
     http::{self, Request, Response},
 };
 use chrono::{DateTime, FixedOffset};
+use framework::config::auth::AuthConfig;
 use http_body_util::BodyExt;
 use migration::MigratorTrait;
 use serde_json::Value;
-use api::state::AppState;
-use std::str::FromStr;
+use std::{str::FromStr, sync::Arc};
 use testcontainers::ContainerAsync;
 use testcontainers_modules::postgres::Postgres;
 use tower::ServiceExt;
@@ -29,8 +30,16 @@ pub async fn setup_database() -> (Option<ContainerAsync<Postgres>>, AppState) {
     migration::Migrator::up(&conn, None).await.unwrap();
     let state = AppState {
         conn,
-        auth_client_id: String::from("d1aicsr57dijo7h963ig"),
-        auth_client_secret: String::from("ujTgh2lEQYy0PXhK"),
+        auth_config: Arc::new(AuthConfig {
+            access_token_secret: Some(String::from("QLjJTeVblAlM47de")),
+            access_token_expires_in: Some(28800),
+            refresh_token_secret: Some(String::from("N8lI0uitNzJl6vYK")),
+            refresh_token_expires_in: Some(15897600),
+            audience: Some(String::from("audience")),
+            issuer: Some(String::from("issuer")),
+            client_id: Some(String::from("d1aicsr57dijo7h963ig")),
+            client_secret: Some(String::from("ujTgh2lEQYy0PXhK")),
+        }),
     };
     (container, state)
 }

@@ -1,12 +1,10 @@
 use serde::Deserialize;
 
+use crate::config::{ListeningAddr, ListeningPort};
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct ServerConfig {
-    pub port: u16,
-}
-
-impl Default for ServerConfig {
-    fn default() -> Self {
-        Self { port: 3000 }
-    }
+    pub server_name: Option<String>,
+    pub address: Option<ListeningAddr>,
+    pub port: Option<ListeningPort>,
 }

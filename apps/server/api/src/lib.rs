@@ -1,27 +1,38 @@
 pub mod company;
 pub mod config;
 pub mod index;
-pub mod state;
 pub mod job;
+pub mod server;
 pub mod statistics;
 pub mod sync;
 pub mod user;
 
 use std::net::SocketAddr;
+use std::sync::Arc;
 use std::time::Duration;
 
 use axum::Router;
+use axum::ServiceExt;
 use axum::extract::DefaultBodyLimit;
 use axum::extract::Request;
 use axum::http::StatusCode;
 use axum::routing::get;
 use bytesize::ByteSize;
+use either::Either;
 use framework::error::critical_code::CriticalErrorCode;
 use framework::error::framework_code::FrameworkErrorCode;
+use futures::future::join_all;
 use migration::MigratorTrait;
+use sea_orm::DatabaseConnection;
+use service::task::scheduler::SchedulerConfig;
+use service::task::scheduler::start_scheduler;
 use tokio::net::TcpListener;
+use tokio_util::sync::CancellationToken;
+use tower_layer::Layer;
 
-use crate::state::AppState;
+use crate::config::database::DatabaseConfig;
+use crate::config::server::ServerConfig;
+use crate::config::task::TaskConfig;
 
 use framework::error::ApiResult;
 use framework::trace::*;
@@ -42,54 +53,89 @@ use utoipa_scalar::{Scalar, Servable as ScalarServable};
 use framework::auth::Jwt;
 use framework::config::auth::AuthConfig;
 
-#[tokio::main]
-async fn start() -> anyhow::Result<()> {
-    //init logger
-    logger::init();
-    // config
-    let figment = config::Config::load(&[])?;
-    let config = config::Config::new(&figment)?;
-    let port = config.server_port;
-    let database_url = &config.database_url;
+pub async fn start(
+    server_config: Arc<ServerConfig>,
+    database_config: Arc<DatabaseConfig>,
+    auth_config: Arc<AuthConfig>,
+    task_config: Arc<TaskConfig>,
+) -> anyhow::Result<()> {
     // auth
-    Jwt::init(AuthConfig {
-        access_token_secret: Some(config.auth_access_token_secret.clone()),
-        access_token_expires_in: Some(config.auth_access_token_expires_in),
-        refresh_token_secret: Some(config.auth_refresh_token_secret.clone()),
-        refresh_token_expires_in: Some(config.auth_refresh_token_expires_in),
-        audience: Some(config.auth_audience.clone()),
-        issuer: Some(config.auth_issuer.clone()),
-        client_id: Some(config.auth_client_id.clone()),
-        client_secret: Some(config.auth_client_secret.clone()),
-    });
+    Jwt::init(auth_config.clone());
     // database init
+    let database_url = database_config.url.as_ref().expect("database url is empty");
     let conn: sea_orm::DatabaseConnection =
         framework::database::establish_connection(database_url).await?;
+    let conn_clone = conn.clone();
     conn.ping().await?;
     tracing::info!("Database connected successfully");
     // database schema init or upgrade
     migration::Migrator::up(&conn, None).await?;
+    let ct = tokio_util::sync::CancellationToken::new();
+    let ct_for_app = ct.clone();
+    let mut handles = Vec::new();
+    handles.push(tokio::spawn(async move {
+        if let Err(error) = start_app(server_config, auth_config, conn, ct_for_app).await {
+            tracing::error!("{:?}", error);
+        }
+    }));
+    handles.push(tokio::spawn(async move {
+        start_scheduler(
+            conn_clone,
+            SchedulerConfig {
+                history_file_max_size: task_config.history_file_max_size,
+            },
+        );
+    }));
+    let join_results = join_all(handles).await;
+    tracing::info!("all joinhandle({}) end", join_results.len());
+    Ok(())
+}
+
+#[allow(clippy::too_many_arguments)]
+pub async fn start_app(
+    server_config: Arc<ServerConfig>,
+    auth_config: Arc<AuthConfig>,
+    conn: sea_orm::DatabaseConnection,
+    ct: CancellationToken,
+) -> anyhow::Result<()> {
+    let addrs = server_config
+        .address
+        .as_ref()
+        .expect("server address is empty")
+        .addrs
+        .clone();
+    let port = match &server_config
+        .port
+        .as_ref()
+        .expect("server port is empty")
+        .ports
+    {
+        Either::Left(value) => value,
+        Either::Right(values) => values.first().expect("port is empty"),
+    };
     // state
-    let state = AppState {
-        conn: conn.clone(),
-        auth_client_id: config.auth_client_id.clone(),
-        auth_client_secret: config.auth_client_secret.clone(),
-    };
-    // background scheduler
-    let scheduler_config = service::task::scheduler::SchedulerConfig {
-        history_file_max_size: config.history_file_max_size,
-    };
-    service::task::scheduler::start_scheduler(conn, scheduler_config);
+    let state = AppState { conn, auth_config };
     // router
-    let app = create_router(state);
+    let (app, ct) = create_router(state, ct);
     // app start
-    let listener = TcpListener::bind(format!("0.0.0.0:{port}")).await?;
-    tracing::info!("listening on http://0.0.0.0:{port}");
+    tracing::info!("app start");
+    let addr = match addrs {
+        Either::Left(value) => value.to_string(),
+        Either::Right(values) => values.first().expect("addrs is empty").to_string(),
+    };
+    let listener = TcpListener::bind(format!("{addr}:{port}")).await?;
+    tracing::info!("listening on {addr}:{port}");
+    let app = NormalizePathLayer::trim_trailing_slash().layer(app);
     axum::serve(
         listener,
-        app.into_make_service_with_connect_info::<SocketAddr>(),
+        ServiceExt::<Request>::into_make_service_with_connect_info::<SocketAddr>(app),
     )
+    .with_graceful_shutdown(async move {
+        tokio::signal::ctrl_c().await.unwrap();
+        ct.cancel();
+    })
     .await?;
+    tracing::info!("app end");
     Ok(())
 }
 
@@ -97,7 +143,10 @@ async fn start() -> anyhow::Result<()> {
 #[openapi()]
 struct ApiDoc;
 
-pub fn create_router(state: AppState) -> Router {
+pub fn create_router(
+    state: AppState,
+    cancellation_token: CancellationToken,
+) -> (Router, CancellationToken) {
     let mut api = ApiDoc::openapi();
     api.components.as_mut().unwrap().add_security_scheme(
         "AccessToken",
@@ -115,7 +164,7 @@ pub fn create_router(state: AppState) -> Router {
     app = setup_api_fallback(app);
     app = setup_default(app);
     app = app.merge(Scalar::with_url("/docs", api));
-    app
+    (app, cancellation_token)
 }
 
 pub fn setup_default(router: Router) -> Router {
@@ -206,10 +255,8 @@ pub fn setup_web(router: Router) -> Router {
         )
 }
 
-pub fn main() {
-    let result = start();
-
-    if let Some(err) = result.err() {
-        println!("Error: {err}");
-    }
+#[derive(Clone, Debug)]
+pub struct AppState {
+    pub conn: DatabaseConnection,
+    pub auth_config: Arc<AuthConfig>,
 }

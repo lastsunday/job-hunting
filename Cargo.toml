@@ -8,6 +8,7 @@ edition = "2024"
 authors = ["lastsunday"]
 
 [workspace.dependencies]
+build-metadata = { package = "build-metadata", path = "apps/server/build-metadata", default-features = false }
 axum = "0.8.9"
 tokio = "1.52.3"
 tracing = "0.1.44"
@@ -67,6 +68,13 @@ mockall = "0.14.0"
 reqwest = "0.13.4"
 itertools = "0.14.0"
 figment = "0.10.19"
+either = "1.16.0"
+tokio-util = "0.7.18"
+tower-layer = "0.3.3"
+clap = "4.6.1"
+core_affinity = "0.8.3"
+built = "0.8.1"
+toml = "1.1.2+spec-1.1.0"
 
 [profile.dev]
 opt-level = 1

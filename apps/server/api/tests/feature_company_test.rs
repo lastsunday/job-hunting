@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::net::SocketAddr;
+use std::sync::Arc;
 
+use api::AppState;
 use chrono::DateTime;
 use chrono::FixedOffset;
 use chrono::TimeZone;
@@ -10,7 +12,6 @@ use cucumber::when;
 use cucumber::{World, given};
 use futures::FutureExt;
 use serde_json::json;
-use api::state::AppState;
 
 use api::company::CompanyErrorCode;
 use api::setup_company;
@@ -639,7 +640,10 @@ async fn company_search_contains_address(world: &mut CompanyWorld, step: &Step) 
             if let Some(table) = step.table.as_ref() {
                 for row in table.rows.iter().skip(1) {
                     let has_address = items.iter().any(|item| {
-                        item.get("address").and_then(|n| n.as_str()).map(|a| a.contains(row[0].as_str())).unwrap_or(false)
+                        item.get("address")
+                            .and_then(|n| n.as_str())
+                            .map(|a| a.contains(row[0].as_str()))
+                            .unwrap_or(false)
                     });
                     assert!(has_address, "搜索结果应包含地址 {}", row[0]);
                 }
@@ -681,7 +685,7 @@ async fn main() {
                 let (container, state) = setup_database().await;
                 world.container = container;
                 world.state = Some(state.clone());
-                Jwt::init(AuthConfig {
+                Jwt::init(Arc::new(AuthConfig {
                     access_token_secret: Some(String::from("QLjJTeVblAlM47de")),
                     access_token_expires_in: Some(28800),
                     refresh_token_secret: Some(String::from("N8lI0uitNzJl6vYK")),
@@ -690,7 +694,7 @@ async fn main() {
                     issuer: Some(String::from("issuer")),
                     client_id: Some(String::from("d1aicsr57dijo7h963ig")),
                     client_secret: Some(String::from("ujTgh2lEQYy0PXhK")),
-                });
+                }));
                 let principal = Principal {
                     id: String::from("testid"),
                     name: String::from("test"),

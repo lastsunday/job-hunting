@@ -14,7 +14,7 @@ async fn test_clear_file_max_size_negative() {
     insert_file(&conn, "f1", 100, 1).await;
     insert_file(&conn, "f2", 200, 2).await;
 
-    scheduler::run_scheduled_tasks(&conn, -1)
+    scheduler::run_scheduled_tasks(&conn, Some(-1))
         .await
         .unwrap();
 
@@ -37,7 +37,7 @@ async fn test_clear_file_under_limit() {
     insert_file(&conn, "f1", 100, 1).await;
     insert_file(&conn, "f2", 200, 2).await;
 
-    scheduler::run_scheduled_tasks(&conn, 1000)
+    scheduler::run_scheduled_tasks(&conn, Some(1000))
         .await
         .unwrap();
 
@@ -57,7 +57,7 @@ async fn test_clear_file_under_limit() {
 async fn test_clear_file_no_files() {
     let (container, conn) = common::setup_database().await;
 
-    scheduler::run_scheduled_tasks(&conn, 100)
+    scheduler::run_scheduled_tasks(&conn, Some(100))
         .await
         .unwrap();
 
@@ -78,7 +78,7 @@ async fn test_clear_file_no_ready() {
     insert_merge_with_task(&conn, "m2", "f2", entity::task::Status::Running).await;
     insert_merge_with_task(&conn, "m3", "f3", entity::task::Status::Error).await;
 
-    scheduler::run_scheduled_tasks(&conn, 0)
+    scheduler::run_scheduled_tasks(&conn, Some(0))
         .await
         .unwrap();
 
@@ -106,7 +106,7 @@ async fn test_clear_file_partial_ready() {
     insert_merge_with_task(&conn, "m2", "f2", entity::task::Status::Finished).await;
     insert_merge_with_task(&conn, "m3", "f3", entity::task::Status::Ready).await;
 
-    scheduler::run_scheduled_tasks(&conn, 0)
+    scheduler::run_scheduled_tasks(&conn, Some(0))
         .await
         .unwrap();
 
@@ -142,7 +142,7 @@ async fn test_clear_file_no_merge_record() {
     insert_file(&conn, "f1", 100, 1).await;
     insert_file(&conn, "f2", 200, 2).await;
 
-    scheduler::run_scheduled_tasks(&conn, 0)
+    scheduler::run_scheduled_tasks(&conn, Some(0))
         .await
         .unwrap();
 
@@ -168,16 +168,10 @@ async fn test_clear_file_finished_but_error_not_ready() {
     insert_file(&conn, "f1", 100, 1).await;
     insert_file(&conn, "f2", 200, 2).await;
 
-    insert_merge_with_task(
-        &conn,
-        "m1",
-        "f1",
-        entity::task::Status::FinishedButError,
-    )
-    .await;
+    insert_merge_with_task(&conn, "m1", "f1", entity::task::Status::FinishedButError).await;
     insert_merge_with_task(&conn, "m2", "f2", entity::task::Status::Finished).await;
 
-    scheduler::run_scheduled_tasks(&conn, 0)
+    scheduler::run_scheduled_tasks(&conn, Some(0))
         .await
         .unwrap();
 
@@ -206,7 +200,7 @@ async fn test_clear_file_batch_limit() {
         insert_file(&conn, &file_id, 100, i as i64 + 1).await;
     }
 
-    scheduler::run_scheduled_tasks(&conn, 0)
+    scheduler::run_scheduled_tasks(&conn, Some(0))
         .await
         .unwrap();
 
@@ -236,7 +230,7 @@ async fn test_clear_file_total_equals_max_size() {
     insert_file(&conn, "f1", 100, 1).await;
     insert_file(&conn, "f2", 200, 2).await;
 
-    scheduler::run_scheduled_tasks(&conn, 300)
+    scheduler::run_scheduled_tasks(&conn, Some(300))
         .await
         .unwrap();
 
@@ -259,7 +253,7 @@ async fn test_clear_file_size_none() {
     insert_file(&conn, "f1", 100, 1).await;
     insert_file_size_none(&conn, "f2", 2).await;
 
-    scheduler::run_scheduled_tasks(&conn, 0)
+    scheduler::run_scheduled_tasks(&conn, Some(0))
         .await
         .unwrap();
 
@@ -284,7 +278,7 @@ async fn test_clear_file_multiple_merges_mixed() {
     insert_merge_with_task(&conn, "m1", "f1", entity::task::Status::Finished).await;
     insert_merge_with_task(&conn, "m2", "f1", entity::task::Status::Ready).await;
 
-    scheduler::run_scheduled_tasks(&conn, 0)
+    scheduler::run_scheduled_tasks(&conn, Some(0))
         .await
         .unwrap();
 
@@ -309,7 +303,7 @@ async fn test_clear_file_multiple_merges_all_finished() {
     insert_merge_with_task(&conn, "m1", "f1", entity::task::Status::Finished).await;
     insert_merge_with_task(&conn, "m2", "f1", entity::task::Status::Finished).await;
 
-    scheduler::run_scheduled_tasks(&conn, 0)
+    scheduler::run_scheduled_tasks(&conn, Some(0))
         .await
         .unwrap();
 
@@ -333,7 +327,7 @@ async fn test_clear_file_mixed_deleted_and_not() {
     insert_file(&conn, "f2", 200, 2).await;
     insert_file_deleted(&conn, "f3", 300, 3).await;
 
-    scheduler::run_scheduled_tasks(&conn, 0)
+    scheduler::run_scheduled_tasks(&conn, Some(0))
         .await
         .unwrap();
 
@@ -363,7 +357,7 @@ async fn test_clear_file_exceeds_limit_oldest_first() {
     insert_file(&conn, "f2", 100, 20).await;
     insert_file(&conn, "f3", 100, 10).await;
 
-    scheduler::run_scheduled_tasks(&conn, 150)
+    scheduler::run_scheduled_tasks(&conn, Some(150))
         .await
         .unwrap();
 

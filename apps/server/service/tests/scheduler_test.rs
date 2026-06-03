@@ -16,7 +16,9 @@ async fn test_app_background_task_run_no_plans() {
 
     scheduler::process_all_plans(&conn).await.unwrap();
     scheduler::drain_tasks(&conn).await.unwrap();
-    scheduler::run_scheduled_tasks(&conn, -1).await.unwrap();
+    scheduler::run_scheduled_tasks(&conn, Some(-1))
+        .await
+        .unwrap();
 
     conn.close().await.unwrap();
     tear_down(&container).await;
@@ -62,7 +64,9 @@ async fn test_app_background_task_run_with_plan() {
 
     scheduler::process_all_plans(&conn).await.unwrap();
     scheduler::drain_tasks(&conn).await.unwrap();
-    scheduler::run_scheduled_tasks(&conn, -1).await.unwrap();
+    scheduler::run_scheduled_tasks(&conn, Some(-1))
+        .await
+        .unwrap();
 
     conn.close().await.unwrap();
     tear_down(&container).await;
@@ -255,7 +259,9 @@ async fn test_app_background_task_run_full_flow() {
     // first run: calculate download tasks + execute them
     scheduler::process_all_plans(&conn).await.unwrap();
     scheduler::drain_tasks(&conn).await.unwrap();
-    scheduler::run_scheduled_tasks(&conn, -1).await.unwrap();
+    scheduler::run_scheduled_tasks(&conn, Some(-1))
+        .await
+        .unwrap();
 
     // verify download tasks finished, merge tasks created
     let all_tasks = entity::task::Entity::find()
@@ -330,7 +336,9 @@ async fn test_app_background_task_run_full_flow() {
     // second run: no pending tasks, should be a no-op
     scheduler::process_all_plans(&conn).await.unwrap();
     scheduler::drain_tasks(&conn).await.unwrap();
-    scheduler::run_scheduled_tasks(&conn, -1).await.unwrap();
+    scheduler::run_scheduled_tasks(&conn, Some(-1))
+        .await
+        .unwrap();
 
     // verify merge tasks still finished
     let merge_tasks_after = entity::task::Entity::find()
@@ -352,10 +360,7 @@ async fn test_app_background_task_run_full_flow() {
 
     // data unchanged
     let total = job_count + job_count_v2;
-    let job_count_after = entity::job::Entity::find()
-        .count(&conn)
-        .await
-        .unwrap();
+    let job_count_after = entity::job::Entity::find().count(&conn).await.unwrap();
     assert_eq!(
         total, job_count_after,
         "job count should remain same after no-op run"

@@ -1,15 +1,41 @@
-### Job Hunting Configuration
+### job-hunting Configuration
 ###
-### THIS FILE IS GENERATED.
+### THIS FILE IS GENERATED. CHANGES/CONTRIBUTIONS IN THE REPO WILL BE
+### OVERWRITTEN!
 ###
-### You should rename this file before configuring your server.
+### You should rename this file before configuring your server. Changes to
+### documentation and defaults can be contributed in source code at
+### src/config/mod.rs. This file is generated when building.
+###
+### Any values pre-populated are the default values for said config option.
+###
+### At the minimum, you MUST edit all the config options to your environment
+### that say "YOU NEED TO EDIT THIS".
 ###
 
 [global]
 
-# The port the server will listen on.
+# This item is undocumented. Please contribute documentation for it.
 #
-#server_port = 3000
+#server_name = localhost.localdomain
+
+# The default address (IPv4 or IPv6) continuwuity will listen on.
+#
+# If you are using Docker or a container NAT networking setup, this must
+# be "0.0.0.0".
+#
+#
+#address = 127.0.0.1
+
+# The port(s) continuwuity will listen on.
+#
+# For reverse proxying, see:
+# https://continuwuity.org/deploying/generic.html#setting-up-the-reverse-proxy
+#
+# If you are using Docker, don't change this, you'll need to map an
+# external port to this.
+#
+#port = 3000
 
 # The database connection URL.
 #

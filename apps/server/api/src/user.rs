@@ -1,5 +1,6 @@
 use std::net::SocketAddr;
 
+use anyhow::Context;
 use axum::{
     Extension, debug_handler,
     extract::{ConnectInfo, State},
@@ -15,7 +16,6 @@ use framework::{
     password::{hash, verify},
 };
 use serde::{Deserialize, Serialize};
-use crate::state::AppState;
 use utoipa::{IntoParams, ToSchema};
 use utoipa_axum::{router::OpenApiRouter, routes};
 use validator::Validate;
@@ -33,6 +33,8 @@ pub enum UserErrorCode {
 
 use entity::{prelude::*, user};
 use sea_orm::{ActiveValue::Set, prelude::*};
+
+use crate::AppState;
 
 const TAG: &str = "auth";
 
@@ -125,7 +127,17 @@ async fn access_token(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     ValidQuery(param): ValidQuery<AccessTokenParam>,
 ) -> ApiResult<ApiResponse<LoginResult>> {
-    if param.client_id != state.auth_client_id || param.client_secret != state.auth_client_secret {
+    let client_id = state
+        .auth_config
+        .client_id
+        .clone()
+        .context("client id not found in server config")?;
+    let client_secret = state
+        .auth_config
+        .client_secret
+        .clone()
+        .context("client secret not found in server config")?;
+    if param.client_id != client_id || param.client_secret != client_secret {
         return Err(err!(UserErrorCode::ClientInvalid));
     } else if !param.grant_type.eq("refresh_token") {
         return Err(err!(UserErrorCode::GrantInvalid));
@@ -186,6 +198,8 @@ async fn reset_password(
 #[utoipa::path(get, path = "/auth/user",tag=TAG,security(()),responses(
     (status=OK,body=ApiResponse<Principal>)
 ))]
-async fn get_current_user(Extension(principal): Extension<Principal>) -> ApiResult<ApiResponse<Principal>> {
+async fn get_current_user(
+    Extension(principal): Extension<Principal>,
+) -> ApiResult<ApiResponse<Principal>> {
     Ok(ApiResponse::success(Some(principal)))
 }
