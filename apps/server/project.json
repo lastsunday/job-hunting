@@ -51,11 +51,27 @@
         "{options.target-dir}"
       ],
       "options": {
-        "target-dir": "dist/target/job-hunting-server"
+        "target-dir": "dist/target/job-hunting-server",
+        "args": "--config=application.toml"
       },
       "configurations": {
         "production": {
           "release": true
+        }
+      }
+    },
+    "dev": {
+      "executor": "@monodon/rust:run",
+      "outputs": [
+        "{options.target-dir}"
+      ],
+      "options": {
+        "target-dir": "dist/target/job-hunting-server",
+        "args": "--config=application-dev.toml"
+      },
+      "configurations": {
+        "production": {
+          "release": false
         }
       }
     }

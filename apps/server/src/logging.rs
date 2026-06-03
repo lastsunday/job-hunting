@@ -122,6 +122,15 @@ where
     }
 }
 
+fn mk_filter(enabled: bool, level: LevelFilter) -> EnvFilter {
+    if !enabled {
+        return EnvFilter::new("off");
+    }
+    EnvFilter::builder()
+        .with_default_directive(level.into())
+        .from_env_lossy()
+}
+
 pub fn init(config: LogConfig) -> anyhow::Result<LoggingHandle> {
     let console_level = config
         .console_level
@@ -132,22 +141,10 @@ pub fn init(config: LogConfig) -> anyhow::Result<LoggingHandle> {
         .parse::<LevelFilter>()
         .context("invalid file log level")?;
 
-    let console_filter = if config.console_enabled {
-        EnvFilter::builder()
-            .with_default_directive(console_level.into())
-            .from_env_lossy()
-    } else {
-        EnvFilter::new("off")
-    };
+    let console_filter = mk_filter(config.console_enabled, console_level);
     let (console_filter_layer, console_reload) = reload::Layer::new(console_filter);
 
-    let file_filter = if config.file_enabled {
-        EnvFilter::builder()
-            .with_default_directive(file_level.into())
-            .from_env_lossy()
-    } else {
-        EnvFilter::new("off")
-    };
+    let file_filter = mk_filter(config.file_enabled, file_level);
     let (file_filter_layer, file_reload) = reload::Layer::new(file_filter);
 
     let (file_writer, appender_guard) = if config.file_enabled {

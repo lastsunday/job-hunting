@@ -52,7 +52,7 @@ pub struct LogConfig {
     pub file_name: String,
     pub file_max_files: usize,
     pub file_rotation: LogRotation,
-    pub tokio_console_enabled: bool,
     pub flame_enabled: bool,
     pub flame_directory: String,
+    pub tokio_console_enabled: bool,
 }
