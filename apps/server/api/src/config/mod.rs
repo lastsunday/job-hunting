@@ -1,5 +1,6 @@
 pub mod check;
 pub mod database;
+pub mod log;
 pub mod manager;
 pub mod server;
 pub mod task;
@@ -135,6 +136,84 @@ pub struct Config {
     /// default: 5368709120
     #[serde(default = "default_history_file_max_size")]
     pub history_file_max_size: i64,
+
+    /// Enable console log output.
+    ///
+    /// default: true
+    #[serde(default = "default_log_console_enabled")]
+    pub log_console_enabled: bool,
+
+    /// Console log level (trace/debug/info/warn/error).
+    ///
+    /// default: "info"
+    #[serde(default = "default_log_console_level")]
+    pub log_console_level: String,
+
+    /// Console log format (text/json/compact/pretty).
+    ///
+    /// default: "text"
+    #[serde(default = "default_log_console_format")]
+    pub log_console_format: String,
+
+    /// Enable file log output.
+    ///
+    /// default: false
+    #[serde(default = "default_log_file_enabled")]
+    pub log_file_enabled: bool,
+
+    /// File log level.
+    ///
+    /// default: "info"
+    #[serde(default = "default_log_file_level")]
+    pub log_file_level: String,
+
+    /// File log format.
+    ///
+    /// default: "json"
+    #[serde(default = "default_log_file_format")]
+    pub log_file_format: String,
+
+    /// File log output directory.
+    ///
+    /// default: "./logs"
+    #[serde(default = "default_log_file_directory")]
+    pub log_file_directory: String,
+
+    /// File log filename prefix.
+    ///
+    /// default: "server"
+    #[serde(default = "default_log_file_name")]
+    pub log_file_name: String,
+
+    /// Max rotated log files to retain.
+    ///
+    /// default: 10
+    #[serde(default = "default_log_file_max_files")]
+    pub log_file_max_files: usize,
+
+    /// File rotation interval (daily/hourly/never).
+    ///
+    /// default: "daily"
+    #[serde(default = "default_log_file_rotation")]
+    pub log_file_rotation: String,
+
+    /// Enable console-subscriber (tokio-console) for async runtime introspection.
+    ///
+    /// default: false
+    #[serde(default = "default_log_tokio_console_enabled")]
+    pub log_tokio_console_enabled: bool,
+
+    /// Enable tracing-flame output.
+    ///
+    /// default: false
+    #[serde(default = "default_log_flame_enabled")]
+    pub log_flame_enabled: bool,
+
+    /// Flame graph output directory.
+    ///
+    /// default: "./flame"
+    #[serde(default = "default_log_flame_directory")]
+    pub log_flame_directory: String,
 
     #[serde(flatten)]
     #[allow(clippy::zero_sized_map_values)]
@@ -272,4 +351,56 @@ fn default_auth_client_secret() -> String {
 
 fn default_history_file_max_size() -> i64 {
     5 * 1024 * 1024 * 1024
+}
+
+fn default_log_console_enabled() -> bool {
+    true
+}
+
+fn default_log_console_level() -> String {
+    String::from("info")
+}
+
+fn default_log_console_format() -> String {
+    String::from("text")
+}
+
+fn default_log_file_enabled() -> bool {
+    false
+}
+
+fn default_log_file_level() -> String {
+    String::from("info")
+}
+
+fn default_log_file_format() -> String {
+    String::from("json")
+}
+
+fn default_log_file_directory() -> String {
+    String::from("./logs")
+}
+
+fn default_log_file_name() -> String {
+    String::from("server")
+}
+
+fn default_log_file_max_files() -> usize {
+    10
+}
+
+fn default_log_file_rotation() -> String {
+    String::from("daily")
+}
+
+fn default_log_flame_enabled() -> bool {
+    false
+}
+
+fn default_log_flame_directory() -> String {
+    String::from("./flame")
+}
+
+fn default_log_tokio_console_enabled() -> bool {
+    false
 }

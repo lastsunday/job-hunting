@@ -8,6 +8,7 @@ use tracing::info;
 
 use crate::{clap::Args, server::Server};
 mod clap;
+mod logging;
 mod restart;
 mod runtime;
 mod server;

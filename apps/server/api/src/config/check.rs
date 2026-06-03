@@ -8,7 +8,7 @@ use super::DEPRECATED_KEYS;
 #[allow(clippy::cognitive_complexity)]
 pub fn check(config: &Config) -> Result<(), anyhow::Error> {
     if cfg!(debug_assertions) {
-        warn!("Note: chobits was built without optimisations (i.e. debug build)");
+        warn!("Note: job-hunting was built without optimisations (i.e. debug build)");
     }
 
     warn_deprecated(config);

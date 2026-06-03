@@ -76,3 +76,55 @@
 # Maximum size of history file in bytes.
 #
 #history_file_max_size = 5368709120
+
+# Enable console log output.
+#
+#log_console_enabled = true
+
+# Console log level (trace/debug/info/warn/error).
+#
+#log_console_level = "info"
+
+# Console log format (text/json/compact/pretty).
+#
+#log_console_format = "text"
+
+# Enable file log output.
+#
+#log_file_enabled = false
+
+# File log level.
+#
+#log_file_level = "info"
+
+# File log format.
+#
+#log_file_format = "json"
+
+# File log output directory.
+#
+#log_file_directory = "./logs"
+
+# File log filename prefix.
+#
+#log_file_name = "server"
+
+# Max rotated log files to retain.
+#
+#log_file_max_files = 10
+
+# File rotation interval (daily/hourly/never).
+#
+#log_file_rotation = "daily"
+
+# Enable console-subscriber (tokio-console) for async runtime introspection.
+#
+#log_tokio_console_enabled = false
+
+# Enable tracing-flame output.
+#
+#log_flame_enabled = false
+
+# Flame graph output directory.
+#
+#log_flame_directory = "./flame"
