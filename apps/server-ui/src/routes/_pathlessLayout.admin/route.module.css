@@ -75,3 +75,39 @@
   width: 25px;
   height: 25px;
 }
+
+.childLink {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  font-size: var(--mantine-font-size-sm);
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-2));
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm) var(--mantine-spacing-xs) 36px;
+  border-radius: var(--mantine-radius-sm);
+  font-weight: 400;
+
+  @mixin hover {
+    background-color: light-dark(
+      var(--mantine-color-gray-0),
+      var(--mantine-color-dark-6)
+    );
+    color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+  }
+
+  &[data-active] {
+    &,
+    &:hover {
+      background-color: var(--mantine-color-blue-light);
+      color: var(--mantine-color-blue-light-color);
+    }
+  }
+}
+
+.chevron {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+}
+
+.chevronRotated {
+  transform: rotate(90deg);
+}

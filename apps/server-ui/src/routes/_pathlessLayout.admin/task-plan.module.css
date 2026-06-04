@@ -1,0 +1,26 @@
+.mapViewContainer {
+  display: flex;
+  gap: var(--mantine-spacing-md);
+  height: calc(100vh - 280px);
+}
+
+.mapContainer {
+  flex: 1;
+  border-radius: var(--mantine-radius-md);
+  overflow: hidden;
+}
+
+.sidebar {
+  width: 380px;
+  overflow-y: auto;
+}
+
+@media (max-width: $mantine-breakpoint-sm) {
+  .mapViewContainer {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+  }
+}

@@ -7,7 +7,7 @@ use service::task::{
     CalculateAndCreateDownloadTaskParam, CreatePlanParam,
     ExecuteDownloadTaskAndCreateMergeTaskParam, ExecuteMergeTaskParam, RepoType,
     TaskPlanConfigDataDownloadConfig, TaskType, Type, calculate_and_create_download_task,
-    create_plan, execute_download_task_and_create_merge_task, execute_merge_task,
+    create_data_plan, execute_download_task_and_create_merge_task, execute_merge_task,
     get_file_name_by_task_type,
 };
 
@@ -51,7 +51,7 @@ async fn test_full_flow() {
     let task_enable = true;
     let cron = "0 */30 * * * * *";
 
-    let (task_data_plan_id, task_plan_id) = create_plan(
+    let (task_data_plan_id, task_plan_id) = create_data_plan(
         &conn,
         CreatePlanParam {
             user_name: user_name.to_string(),

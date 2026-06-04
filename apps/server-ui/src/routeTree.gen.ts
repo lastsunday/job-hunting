@@ -13,9 +13,12 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as PathlessLayoutIndexRouteImport } from './routes/_pathlessLayout/index'
 import { Route as PathlessLayoutAdminRouteRouteImport } from './routes/_pathlessLayout.admin/route'
 import { Route as PathlessLayoutAdminIndexRouteImport } from './routes/_pathlessLayout.admin/index'
+import { Route as PathlessLayoutAdminTaskPlanRouteImport } from './routes/_pathlessLayout.admin/task-plan'
 import { Route as PathlessLayoutAdminSyncRouteImport } from './routes/_pathlessLayout.admin/sync'
 import { Route as PathlessLayoutAdminJobsRouteImport } from './routes/_pathlessLayout.admin/jobs'
 import { Route as PathlessLayoutAdminCompaniesRouteImport } from './routes/_pathlessLayout.admin/companies'
+import { Route as PathlessLayoutAdminTaskPlanIndexRouteImport } from './routes/_pathlessLayout.admin/task-plan/index'
+import { Route as PathlessLayoutAdminTaskPlanDataPlanIndexRouteImport } from './routes/_pathlessLayout.admin/task-plan/data-plan/index'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -39,6 +42,12 @@ const PathlessLayoutAdminIndexRoute =
     path: '/',
     getParentRoute: () => PathlessLayoutAdminRouteRoute,
   } as any)
+const PathlessLayoutAdminTaskPlanRoute =
+  PathlessLayoutAdminTaskPlanRouteImport.update({
+    id: '/task-plan',
+    path: '/task-plan',
+    getParentRoute: () => PathlessLayoutAdminRouteRoute,
+  } as any)
 const PathlessLayoutAdminSyncRoute = PathlessLayoutAdminSyncRouteImport.update({
   id: '/sync',
   path: '/sync',
@@ -55,6 +64,18 @@ const PathlessLayoutAdminCompaniesRoute =
     path: '/companies',
     getParentRoute: () => PathlessLayoutAdminRouteRoute,
   } as any)
+const PathlessLayoutAdminTaskPlanIndexRoute =
+  PathlessLayoutAdminTaskPlanIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PathlessLayoutAdminTaskPlanRoute,
+  } as any)
+const PathlessLayoutAdminTaskPlanDataPlanIndexRoute =
+  PathlessLayoutAdminTaskPlanDataPlanIndexRouteImport.update({
+    id: '/data-plan/',
+    path: '/data-plan/',
+    getParentRoute: () => PathlessLayoutAdminTaskPlanRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
@@ -63,7 +84,10 @@ export interface FileRoutesByFullPath {
   '/admin/companies': typeof PathlessLayoutAdminCompaniesRoute
   '/admin/jobs': typeof PathlessLayoutAdminJobsRoute
   '/admin/sync': typeof PathlessLayoutAdminSyncRoute
+  '/admin/task-plan': typeof PathlessLayoutAdminTaskPlanRouteWithChildren
   '/admin/': typeof PathlessLayoutAdminIndexRoute
+  '/admin/task-plan/': typeof PathlessLayoutAdminTaskPlanIndexRoute
+  '/admin/task-plan/data-plan/': typeof PathlessLayoutAdminTaskPlanDataPlanIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -72,6 +96,8 @@ export interface FileRoutesByTo {
   '/admin/jobs': typeof PathlessLayoutAdminJobsRoute
   '/admin/sync': typeof PathlessLayoutAdminSyncRoute
   '/admin': typeof PathlessLayoutAdminIndexRoute
+  '/admin/task-plan': typeof PathlessLayoutAdminTaskPlanIndexRoute
+  '/admin/task-plan/data-plan': typeof PathlessLayoutAdminTaskPlanDataPlanIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -81,7 +107,10 @@ export interface FileRoutesById {
   '/_pathlessLayout/admin/companies': typeof PathlessLayoutAdminCompaniesRoute
   '/_pathlessLayout/admin/jobs': typeof PathlessLayoutAdminJobsRoute
   '/_pathlessLayout/admin/sync': typeof PathlessLayoutAdminSyncRoute
+  '/_pathlessLayout/admin/task-plan': typeof PathlessLayoutAdminTaskPlanRouteWithChildren
   '/_pathlessLayout/admin/': typeof PathlessLayoutAdminIndexRoute
+  '/_pathlessLayout/admin/task-plan/': typeof PathlessLayoutAdminTaskPlanIndexRoute
+  '/_pathlessLayout/admin/task-plan/data-plan/': typeof PathlessLayoutAdminTaskPlanDataPlanIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -92,7 +121,10 @@ export interface FileRouteTypes {
     | '/admin/companies'
     | '/admin/jobs'
     | '/admin/sync'
+    | '/admin/task-plan'
     | '/admin/'
+    | '/admin/task-plan/'
+    | '/admin/task-plan/data-plan/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -101,6 +133,8 @@ export interface FileRouteTypes {
     | '/admin/jobs'
     | '/admin/sync'
     | '/admin'
+    | '/admin/task-plan'
+    | '/admin/task-plan/data-plan'
   id:
     | '__root__'
     | '/login'
@@ -109,7 +143,10 @@ export interface FileRouteTypes {
     | '/_pathlessLayout/admin/companies'
     | '/_pathlessLayout/admin/jobs'
     | '/_pathlessLayout/admin/sync'
+    | '/_pathlessLayout/admin/task-plan'
     | '/_pathlessLayout/admin/'
+    | '/_pathlessLayout/admin/task-plan/'
+    | '/_pathlessLayout/admin/task-plan/data-plan/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -148,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PathlessLayoutAdminIndexRouteImport
       parentRoute: typeof PathlessLayoutAdminRouteRoute
     }
+    '/_pathlessLayout/admin/task-plan': {
+      id: '/_pathlessLayout/admin/task-plan'
+      path: '/task-plan'
+      fullPath: '/admin/task-plan'
+      preLoaderRoute: typeof PathlessLayoutAdminTaskPlanRouteImport
+      parentRoute: typeof PathlessLayoutAdminRouteRoute
+    }
     '/_pathlessLayout/admin/sync': {
       id: '/_pathlessLayout/admin/sync'
       path: '/sync'
@@ -169,13 +213,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PathlessLayoutAdminCompaniesRouteImport
       parentRoute: typeof PathlessLayoutAdminRouteRoute
     }
+    '/_pathlessLayout/admin/task-plan/': {
+      id: '/_pathlessLayout/admin/task-plan/'
+      path: '/'
+      fullPath: '/admin/task-plan/'
+      preLoaderRoute: typeof PathlessLayoutAdminTaskPlanIndexRouteImport
+      parentRoute: typeof PathlessLayoutAdminTaskPlanRoute
+    }
+    '/_pathlessLayout/admin/task-plan/data-plan/': {
+      id: '/_pathlessLayout/admin/task-plan/data-plan/'
+      path: '/data-plan'
+      fullPath: '/admin/task-plan/data-plan/'
+      preLoaderRoute: typeof PathlessLayoutAdminTaskPlanDataPlanIndexRouteImport
+      parentRoute: typeof PathlessLayoutAdminTaskPlanRoute
+    }
   }
 }
+
+interface PathlessLayoutAdminTaskPlanRouteChildren {
+  PathlessLayoutAdminTaskPlanIndexRoute: typeof PathlessLayoutAdminTaskPlanIndexRoute
+  PathlessLayoutAdminTaskPlanDataPlanIndexRoute: typeof PathlessLayoutAdminTaskPlanDataPlanIndexRoute
+}
+
+const PathlessLayoutAdminTaskPlanRouteChildren: PathlessLayoutAdminTaskPlanRouteChildren =
+  {
+    PathlessLayoutAdminTaskPlanIndexRoute:
+      PathlessLayoutAdminTaskPlanIndexRoute,
+    PathlessLayoutAdminTaskPlanDataPlanIndexRoute:
+      PathlessLayoutAdminTaskPlanDataPlanIndexRoute,
+  }
+
+const PathlessLayoutAdminTaskPlanRouteWithChildren =
+  PathlessLayoutAdminTaskPlanRoute._addFileChildren(
+    PathlessLayoutAdminTaskPlanRouteChildren,
+  )
 
 interface PathlessLayoutAdminRouteRouteChildren {
   PathlessLayoutAdminCompaniesRoute: typeof PathlessLayoutAdminCompaniesRoute
   PathlessLayoutAdminJobsRoute: typeof PathlessLayoutAdminJobsRoute
   PathlessLayoutAdminSyncRoute: typeof PathlessLayoutAdminSyncRoute
+  PathlessLayoutAdminTaskPlanRoute: typeof PathlessLayoutAdminTaskPlanRouteWithChildren
   PathlessLayoutAdminIndexRoute: typeof PathlessLayoutAdminIndexRoute
 }
 
@@ -184,6 +261,8 @@ const PathlessLayoutAdminRouteRouteChildren: PathlessLayoutAdminRouteRouteChildr
     PathlessLayoutAdminCompaniesRoute: PathlessLayoutAdminCompaniesRoute,
     PathlessLayoutAdminJobsRoute: PathlessLayoutAdminJobsRoute,
     PathlessLayoutAdminSyncRoute: PathlessLayoutAdminSyncRoute,
+    PathlessLayoutAdminTaskPlanRoute:
+      PathlessLayoutAdminTaskPlanRouteWithChildren,
     PathlessLayoutAdminIndexRoute: PathlessLayoutAdminIndexRoute,
   }
 

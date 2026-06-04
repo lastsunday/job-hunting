@@ -141,6 +141,7 @@
     "blob-polyfill": "9.0.20240710",
     "buffer": "6.0.3",
     "core-js": "3.49.0",
+    "cron-parser": "^5.5.0",
     "crc-32": "1.2.2",
     "cross-env": "10.1.0",
     "crypto-js": "4.2.0",

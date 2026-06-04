@@ -1,6 +1,7 @@
 pub mod download;
 pub mod error;
 pub mod merge;
+pub mod data_plan;
 pub mod plan;
 pub mod scheduler;
 pub mod utils;
@@ -15,8 +16,12 @@ pub use error::Error;
 pub use merge::{
     execute_merge_task, DataCount, ExecuteMergeTaskParam, TaskDataMergeConfig,
 };
+pub use data_plan::{
+    create_data_plan, delete_data_plan, get_data_plan_by_id, update_data_plan, UpdateDataPlanParam,
+};
 pub use plan::{
-    create_plan, CreatePlanParam, RepoType, TaskPlanConfigDataDownloadConfig, Type,
+    create_plan, search_plans, get_plan_by_id, update_plan, delete_plan, CreatePlanParam,
+    RepoType, SearchPlanParam, TaskPlanConfigDataDownloadConfig, Type, UpdatePlanParam,
 };
 pub use utils::get_file_name_by_task_type;
 
