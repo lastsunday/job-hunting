@@ -23,7 +23,7 @@
   "repoType": "Repo Type",
   "github": "GitHub",
   "token": "Token",
-  "userNamePlaceholder": "GitHub username",
+  "userNamePlaceholder": "Username",
   "repoNamePlaceholder": "Repository name",
   "perPage": "per page",
   "nextRun": "Next run",
