@@ -1,7 +1,7 @@
 {
   "dataDownloadTitle": "数据下载",
   "id": "ID",
-  "username": "用户名",
+  "userName": "用户名",
   "repoName": "仓库",
   "enable": "启用",
   "cron": "Cron 表达式",

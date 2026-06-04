@@ -11,7 +11,7 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
     pub r#type: Option<Type>,
-    pub username: Option<String>,
+    pub user_name: Option<String>,
     pub repo_name: Option<String>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub datetime: Option<DateTimeWithTimeZone>,

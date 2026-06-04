@@ -40,7 +40,7 @@ const TAG: &str = "task_data_plan";
 pub struct TaskDataPlanDetail {
     pub id: String,
     pub plan_id: Option<String>,
-    pub username: Option<String>,
+    pub user_name: Option<String>,
     pub repo_name: Option<String>,
     pub repo_type: Option<String>,
     pub r#type: Option<PlanType>,
@@ -70,7 +70,7 @@ pub fn create_routes(state: AppState) -> OpenApiRouter {
 pub struct SearchParam {
     #[validate(nested)]
     pub page: PageParam,
-    pub username: Option<String>,
+    pub user_name: Option<String>,
     pub repo_name: Option<String>,
     pub repo_type: Option<String>,
     pub r#type: Option<PlanType>,
@@ -109,8 +109,8 @@ pub async fn search(
     }
 
     let mut data_query = task_data_plan::Entity::find();
-    if let Some(v) = param.username {
-        data_query = data_query.filter(task_data_plan::Column::Username.contains(v));
+    if let Some(v) = param.user_name {
+        data_query = data_query.filter(task_data_plan::Column::UserName.contains(v));
     }
     if let Some(v) = param.repo_name {
         data_query = data_query.filter(task_data_plan::Column::RepoName.contains(v));
@@ -156,7 +156,7 @@ pub async fn search(
             TaskDataPlanDetail {
                 id: dp.id,
                 plan_id: dp.plan_id,
-                username: dp.username,
+                user_name: dp.user_name,
                 repo_name: dp.repo_name,
                 repo_type: dp.repo_type,
                 r#type: plan.and_then(|p| p.r#type.clone()),
@@ -177,7 +177,7 @@ pub struct CreateTaskPlanRequest {
     pub r#type: Option<PlanType>,
     pub enable: Option<bool>,
     pub cron: Option<String>,
-    pub username: Option<String>,
+    pub user_name: Option<String>,
     pub repo_name: Option<String>,
     pub repo_type: Option<String>,
     pub token: Option<String>,
@@ -209,13 +209,13 @@ pub async fn create(
     let task_type = Type::DataDownload(TaskPlanConfigDataDownloadConfig {
         task_type_list,
         url: param.url.clone(),
-        user_name: param.username.clone(),
+        user_name: param.user_name.clone(),
         repo_name: param.repo_name.clone(),
         token: param.token.clone(),
     });
 
     let cron = param.cron.ok_or(err!(TaskPlanErrorCode::CronInvalid))?;
-    let user_name = param.username.ok_or(err!(TaskPlanErrorCode::PlanIdEmpty))?;
+    let user_name = param.user_name.ok_or(err!(TaskPlanErrorCode::PlanIdEmpty))?;
     let repo_name = param
         .repo_name
         .ok_or(err!(TaskPlanErrorCode::PlanIdEmpty))?;
@@ -243,7 +243,7 @@ pub async fn create(
     Ok(ApiResponse::success(Some(TaskDataPlanDetail {
         id: dp.id,
         plan_id: dp.plan_id,
-        username: dp.username,
+        user_name: dp.user_name,
         repo_name: dp.repo_name,
         repo_type: dp.repo_type,
         r#type: plan.r#type,
@@ -270,7 +270,7 @@ pub async fn get_by_id(
     Ok(ApiResponse::success(Some(TaskDataPlanDetail {
         id: dp.id,
         plan_id: dp.plan_id,
-        username: dp.username,
+        user_name: dp.user_name,
         repo_name: dp.repo_name,
         repo_type: dp.repo_type,
         r#type: plan.r#type,
@@ -287,7 +287,7 @@ pub struct UpdateTaskPlanRequest {
     pub r#type: Option<PlanType>,
     pub enable: Option<bool>,
     pub cron: Option<String>,
-    pub username: Option<String>,
+    pub user_name: Option<String>,
     pub repo_name: Option<String>,
     pub repo_type: Option<String>,
     pub token: Option<String>,
@@ -320,7 +320,7 @@ pub async fn update(
             r#type: param.r#type,
             enable: param.enable,
             cron: param.cron,
-            username: param.username,
+            user_name: param.user_name,
             repo_name: param.repo_name,
             repo_type: param.repo_type,
             token: param.token,
@@ -334,7 +334,7 @@ pub async fn update(
     Ok(ApiResponse::success(Some(TaskDataPlanDetail {
         id: dp.id,
         plan_id: dp.plan_id,
-        username: dp.username,
+        user_name: dp.user_name,
         repo_name: dp.repo_name,
         repo_type: dp.repo_type,
         r#type: plan.r#type,

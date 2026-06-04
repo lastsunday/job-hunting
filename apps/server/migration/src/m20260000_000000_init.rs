@@ -247,7 +247,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(string_uniq(TaskDataPlan::Id))
                     .col(string_null(TaskDataPlan::PlanId))
-                    .col(string_null(TaskDataPlan::Username))
+                    .col(string_null(TaskDataPlan::UserName))
                     .col(string_null(TaskDataPlan::RepoName))
                     .col(string_null(TaskDataPlan::RepoType))
                     .col(timestamp_with_time_zone_null(TaskDataPlan::CreateDatetime))
@@ -268,7 +268,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(string_uniq(TaskDataSourcePlan::Id))
                     .col(string_null(TaskDataSourcePlan::PlanId))
-                    .col(string_null(TaskDataSourcePlan::Username))
+                    .col(string_null(TaskDataSourcePlan::UserName))
                     .col(string_null(TaskDataSourcePlan::RepoName))
                     .col(string_null(TaskDataSourcePlan::RepoType))
                     .col(timestamp_with_time_zone_null(
@@ -293,7 +293,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(string_uniq(TaskDataDownload::Id))
                     .col(string_null(TaskDataDownload::Type))
-                    .col(string_null(TaskDataDownload::Username))
+                    .col(string_null(TaskDataDownload::UserName))
                     .col(string_null(TaskDataDownload::RepoName))
                     .col(timestamp_with_time_zone_null(TaskDataDownload::Datetime))
                     .col(json_binary_null(TaskDataDownload::Config))
@@ -321,7 +321,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(string_uniq(TaskDataMerge::Id))
                     .col(string_null(TaskDataMerge::Type))
-                    .col(string_null(TaskDataMerge::Username))
+                    .col(string_null(TaskDataMerge::UserName))
                     .col(string_null(TaskDataMerge::RepoName))
                     .col(timestamp_with_time_zone_null(TaskDataMerge::Datetime))
                     .col(string_null(TaskDataMerge::DataId))
@@ -710,7 +710,7 @@ enum TaskDataPlan {
     Table,
     Id,
     PlanId,
-    Username,
+    UserName,
     RepoName,
     RepoType,
     CreateDatetime,
@@ -722,7 +722,7 @@ enum TaskDataSourcePlan {
     Table,
     Id,
     PlanId,
-    Username,
+    UserName,
     RepoName,
     RepoType,
     CreateDatetime,
@@ -734,7 +734,7 @@ enum TaskDataDownload {
     Table,
     Id,
     Type,
-    Username,
+    UserName,
     RepoName,
     Datetime,
     Config,
@@ -749,7 +749,7 @@ enum TaskDataMerge {
     Table,
     Id,
     Type,
-    Username,
+    UserName,
     RepoName,
     Datetime,
     DataId,

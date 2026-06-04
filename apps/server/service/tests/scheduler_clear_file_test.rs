@@ -437,7 +437,7 @@ async fn insert_merge_with_task(
     let merge = entity::task_data_merge::ActiveModel {
         id: ActiveValue::Set(merge_id.to_string()),
         r#type: ActiveValue::Set(Some(entity::task_data_merge::Type::JobDataMerge)),
-        username: ActiveValue::Set(Some("test".to_string())),
+        user_name: ActiveValue::Set(Some("test".to_string())),
         repo_name: ActiveValue::Set(Some("test-repo".to_string())),
         datetime: ActiveValue::Set(Some(now.fixed_offset())),
         data_id: ActiveValue::Set(Some(file_id.to_string())),

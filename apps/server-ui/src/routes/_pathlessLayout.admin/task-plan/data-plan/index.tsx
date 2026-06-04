@@ -51,7 +51,7 @@ export const Route = createFileRoute('/_pathlessLayout/admin/task-plan/data-plan
 
 interface SearchParam {
   page: { num: number; size: number };
-  username?: string;
+  user_name?: string;
   repo_name?: string;
   repo_type?: string;
   enable?: boolean;
@@ -152,7 +152,7 @@ function RouteComponent() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const [loading, setLoading] = useState(true);
-  const [searchUsername, setSearchUsername] = useState('');
+  const [searchUserName, setSearchUserName] = useState('');
   const [searchRepoName, setSearchRepoName] = useState('');
   const [searchEnable, setSearchEnable] = useState<string>('');
   const [openedModal, { open: openModal, close: closeModal }] =
@@ -212,7 +212,7 @@ function RouteComponent() {
     enable: boolean;
     cron: string;
     cronIsCustom: boolean;
-    username: string;
+    user_name: string;
     repo_name: string;
     repo_type: string;
     token: string;
@@ -221,7 +221,7 @@ function RouteComponent() {
     enable: true,
     cron: '',
     cronIsCustom: false,
-    username: '',
+    user_name: '',
     repo_name: '',
     repo_type: 'GITHUB',
     token: '',
@@ -233,7 +233,7 @@ function RouteComponent() {
     try {
       const param: SearchParam = {
         page: { num: page, size: pageSize },
-        username: searchUsername || undefined,
+        user_name: searchUserName || undefined,
         repo_name: searchRepoName || undefined,
         enable:
           searchEnable === 'true'
@@ -262,7 +262,7 @@ function RouteComponent() {
   };
 
   const handleReset = () => {
-    setSearchUsername('');
+    setSearchUserName('');
     setSearchRepoName('');
     setSearchEnable('');
     setPage(1);
@@ -282,7 +282,7 @@ function RouteComponent() {
       enable: true,
       cron: '',
       cronIsCustom: false,
-      username: '',
+      user_name: '',
       repo_name: '',
       repo_type: 'GITHUB',
       token: '',
@@ -302,7 +302,7 @@ function RouteComponent() {
       enable: item.enable ?? true,
       cron: cronVal,
       cronIsCustom: cronVal !== '' && !PRESET_VALUES.includes(cronVal),
-      username: item.username ?? '',
+      user_name: item.user_name ?? '',
       repo_name: item.repo_name ?? '',
       repo_type: item.repo_type ?? 'GITHUB',
       token: (cfg.token as string) || '',
@@ -330,7 +330,7 @@ function RouteComponent() {
       showNotification({ color: 'red', title: t('common:error'), message: t('validateTaskTypeRequired') });
       return;
     }
-    if (!formData.username) {
+    if (!formData.user_name) {
       showNotification({ color: 'red', title: t('common:error'), message: t('validateUserNameRequired') });
       return;
     }
@@ -344,7 +344,7 @@ function RouteComponent() {
         const data: UpdateTaskDataPlanRequest = {
           enable: formData.enable,
           cron: formData.cron || undefined,
-          username: formData.username || undefined,
+          user_name: formData.user_name || undefined,
           repo_name: formData.repo_name || undefined,
           repo_type: formData.repo_type || undefined,
           token: formData.token || undefined,
@@ -363,7 +363,7 @@ function RouteComponent() {
         const data: CreateTaskDataPlanRequest = {
           enable: formData.enable,
           cron: formData.cron || undefined,
-          username: formData.username || undefined,
+          user_name: formData.user_name || undefined,
           repo_name: formData.repo_name || undefined,
           repo_type: formData.repo_type || undefined,
           token: formData.token || undefined,
@@ -466,11 +466,11 @@ function RouteComponent() {
           required
         />
         <TextInput
-          label={t('username')}
+          label={t('userName')}
           placeholder={t('userNamePlaceholder')}
-          value={formData.username}
+          value={formData.user_name}
           onChange={(e) =>
-            setFormData({ ...formData, username: e.currentTarget.value })
+            setFormData({ ...formData, user_name: e.currentTarget.value })
           }
           required
         />
@@ -540,9 +540,9 @@ function RouteComponent() {
           </Group>
           <Group>
             <Text size="sm" c="dimmed" w={100}>
-              {t('username')}:
+              {t('userName')}:
             </Text>
-            <Text size="sm">{viewingItem.username || t('common:na')}</Text>
+            <Text size="sm">{viewingItem.user_name || t('common:na')}</Text>
           </Group>
           <Group>
             <Text size="sm" c="dimmed" w={100}>
@@ -657,7 +657,7 @@ function RouteComponent() {
         </Text>
       </Table.Td>
       <Table.Td>
-        <Text size="sm">{item.username || t('common:na')}</Text>
+        <Text size="sm">{item.user_name || t('common:na')}</Text>
       </Table.Td>
       <Table.Td>
         <Text size="sm">{item.repo_name || t('common:na')}</Text>
@@ -724,10 +724,10 @@ function RouteComponent() {
       <Card shadow="sm" padding="lg" radius="md" withBorder>
         <Group gap="md" align="flex-end">
           <TextInput
-            label={t('username')}
+            label={t('userName')}
             placeholder={t('userNamePlaceholder')}
-            value={searchUsername}
-            onChange={(e) => setSearchUsername(e.currentTarget.value)}
+            value={searchUserName}
+            onChange={(e) => setSearchUserName(e.currentTarget.value)}
             style={{ minWidth: 140 }}
           />
           <TextInput
@@ -765,7 +765,7 @@ function RouteComponent() {
               <Table.Tr>
                 <Table.Th style={{ minWidth: 60 }}>#</Table.Th>
                 <Table.Th style={{ minWidth: 100 }}>
-                  {t('username')}
+                  {t('userName')}
                 </Table.Th>
                 <Table.Th style={{ minWidth: 100 }}>
                   {t('repoName')}

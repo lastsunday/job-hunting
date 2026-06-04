@@ -219,7 +219,7 @@ async fn process_single_plan(
     let retention_day = 365 * 10;
 
     for data_plan in data_plans {
-        let user_name = data_plan.username.as_deref().unwrap_or("");
+        let user_name = data_plan.user_name.as_deref().unwrap_or("");
         let repo_name = data_plan.repo_name.as_deref().unwrap_or("");
         let url = config.url.as_deref().unwrap_or("");
 

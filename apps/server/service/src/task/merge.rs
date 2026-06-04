@@ -53,7 +53,7 @@ pub async fn execute_merge_task<C: TransactionTrait + ConnectionTrait>(
         ))?;
     let entity::task_data_merge::Model {
         r#type,
-        username,
+        user_name,
         repo_name,
         data_id,
         data_page_num,
@@ -93,7 +93,7 @@ pub async fn execute_merge_task<C: TransactionTrait + ConnectionTrait>(
     }
     let excel_data = excel_data[row_start_index..row_end_index].to_vec();
     let mut merge_data_task_active_model = merge_data_task.into_active_model();
-    let username = username.context("username not found")?;
+    let user_name = user_name.context("user_name not found")?;
     let repo_name = repo_name.context("repo name not found")?;
     let TaskDataMergeConfig { url, .. } =
         serde_json::from_str(&config.context("merge config not exists")?)
@@ -105,12 +105,12 @@ pub async fn execute_merge_task<C: TransactionTrait + ConnectionTrait>(
     let file_name = file_name.context("file name not found")?;
     let path = format!(
         "{}/{}/{}/{}",
-        username,
+        user_name,
         repo_name,
         datetime.format("%Y/%m-%d"),
         file_name
     );
-    let uri = format!("data://{}@{}/{}", username, host, path);
+    let uri = format!("data://{}@{}/{}", user_name, host, path);
     let result = conn
         .transaction::<_, _, anyhow::Error>(|txn| {
             Box::pin(async move {

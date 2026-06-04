@@ -51,7 +51,7 @@ async fn test_app_background_task_run_with_plan() {
     let data_plan = entity::task_data_plan::ActiveModel {
         id: ActiveValue::Set(task_data_plan_id.clone()),
         plan_id: ActiveValue::Set(Some(task_plan_id.clone())),
-        username: ActiveValue::Set(Some("test-user".to_string())),
+        user_name: ActiveValue::Set(Some("test-user".to_string())),
         repo_name: ActiveValue::Set(Some("test-repo".to_string())),
         repo_type: ActiveValue::Set(Some("GITHUB".to_string())),
         create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
@@ -245,7 +245,7 @@ async fn test_app_background_task_run_full_flow() {
     let data_plan = entity::task_data_plan::ActiveModel {
         id: ActiveValue::Set(xid::new().to_string()),
         plan_id: ActiveValue::Set(Some(task_plan_id.clone())),
-        username: ActiveValue::Set(Some(ADMIN_USERNAME.to_string())),
+        user_name: ActiveValue::Set(Some(ADMIN_USERNAME.to_string())),
         repo_name: ActiveValue::Set(Some(DATA_REPO.to_string())),
         repo_type: ActiveValue::Set(Some("GITHUB".to_string())),
         create_datetime: ActiveValue::Set(Some(now.fixed_offset())),

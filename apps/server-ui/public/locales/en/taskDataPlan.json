@@ -1,7 +1,7 @@
 {
   "dataDownloadTitle": "Data Download",
   "id": "ID",
-  "username": "Username",
+  "userName": "Username",
   "repoName": "Repository",
   "enable": "Enabled",
   "cron": "Cron Expression",

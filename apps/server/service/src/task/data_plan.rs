@@ -21,7 +21,7 @@ pub struct UpdateDataPlanParam {
     pub r#type: Option<entity::task_plan::Type>,
     pub enable: Option<bool>,
     pub cron: Option<String>,
-    pub username: Option<String>,
+    pub user_name: Option<String>,
     pub repo_name: Option<String>,
     pub repo_type: Option<String>,
     pub token: Option<String>,
@@ -68,7 +68,7 @@ pub async fn create_data_plan<C: TransactionTrait>(
                 let data_plan = task_data_plan::ActiveModel {
                     id: ActiveValue::Set(data_plan_id.clone()),
                     plan_id: ActiveValue::Set(Some(plan_id.clone())),
-                    username: ActiveValue::Set(Some(user_name)),
+                    user_name: ActiveValue::Set(Some(user_name)),
                     repo_name: ActiveValue::Set(Some(repo_name)),
                     repo_type: ActiveValue::Set(Some(repo_type.to_string())),
                     create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
@@ -146,8 +146,8 @@ pub async fn update_data_plan<C: ConnectionTrait>(
         .ok_or_else(|| Error::Internal(anyhow::anyhow!("task_data_plan has no plan_id")))?;
 
     let mut dp_active = data_plan.into_active_model();
-    if let Some(v) = param.username {
-        dp_active.username = ActiveValue::Set(Some(v));
+    if let Some(v) = param.user_name {
+        dp_active.user_name = ActiveValue::Set(Some(v));
     }
     if let Some(v) = param.repo_name {
         dp_active.repo_name = ActiveValue::Set(Some(v));

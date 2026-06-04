@@ -3,7 +3,7 @@ import { getJson, postJson, putJson, deleteJson } from '@/api/http';
 export interface TaskDataPlanDetail {
   id: string;
   plan_id?: string;
-  username?: string;
+  user_name?: string;
   repo_name?: string;
   repo_type?: string;
   type?: string;
@@ -18,7 +18,7 @@ export interface CreateTaskDataPlanRequest {
   type?: string;
   enable?: boolean;
   cron?: string;
-  username?: string;
+  user_name?: string;
   repo_name?: string;
   repo_type?: string;
   token?: string;
@@ -30,7 +30,7 @@ export interface UpdateTaskDataPlanRequest {
   type?: string;
   enable?: boolean;
   cron?: string;
-  username?: string;
+  user_name?: string;
   repo_name?: string;
   repo_type?: string;
   token?: string;
@@ -41,7 +41,7 @@ export interface UpdateTaskDataPlanRequest {
 export const taskDataPlanApi = {
   search: (params: {
     page: { num: number; size: number };
-    username?: string;
+    user_name?: string;
     repo_name?: string;
     repo_type?: string;
     type?: string;

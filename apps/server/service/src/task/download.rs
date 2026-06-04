@@ -181,7 +181,7 @@ async fn query_date_list<C: ConnectionTrait>(
         TaskType::CompanyDataDownload => entity::task_data_download::Type::CompanyDataDownload,
     };
     let items = entity::task_data_download::Entity::find()
-        .filter(entity::task_data_download::Column::Username.eq(Some(user_name.to_string())))
+        .filter(entity::task_data_download::Column::UserName.eq(Some(user_name.to_string())))
         .filter(entity::task_data_download::Column::RepoName.eq(Some(repo_name.to_string())))
         .filter(entity::task_data_download::Column::Type.eq(Some(task_type_param)))
         .filter(entity::task_data_download::Column::Datetime.gte(start_date.fixed_offset()))
@@ -269,7 +269,7 @@ async fn save_data_download_task<C: TransactionTrait>(
                         let task_data_download = TaskDataDownloadActiveModel {
                             id: ActiveValue::Set(task_data_id.clone()),
                             r#type: ActiveValue::Set(Some(task_download_model_type.clone())),
-                            username: ActiveValue::Set(Some(user_name.clone())),
+                            user_name: ActiveValue::Set(Some(user_name.clone())),
                             repo_name: ActiveValue::Set(Some(repo_name.clone())),
                             datetime: ActiveValue::Set(Some(date.fixed_offset())),
                             config: ActiveValue::Set(Some(config)),
@@ -510,7 +510,7 @@ pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + C
                         .ok_or_else(|| {
                             anyhow::anyhow!("Download data task not found id = {}", task_data_id)
                         })?;
-                let username = &task_data_download.username;
+                let user_name = &task_data_download.user_name;
                 let repo_name = &task_data_download.repo_name;
                 let mut task_data_download_active_model =
                     task_data_download.clone().into_active_model();
@@ -538,7 +538,7 @@ pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + C
                     let task_data_merge = TaskDataMergeActiveModel {
                         id: ActiveValue::Set(task_data_id.clone()),
                         r#type: ActiveValue::Set(Some(merge_data_task_type.clone())),
-                        username: ActiveValue::Set(username.clone()),
+                        user_name: ActiveValue::Set(user_name.clone()),
                         repo_name: ActiveValue::Set(repo_name.clone()),
                         datetime: ActiveValue::Set(Some(datetime)),
                         data_id: ActiveValue::Set(Some(file_id.to_string())),
