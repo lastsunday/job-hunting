@@ -305,6 +305,7 @@ pub struct DownloadTaskResult {
     pub file_name: Option<String>,
     pub content: Vec<u8>,
     pub size: i64,
+    pub sha: String,
     pub plan_id: String,
     pub task_data_id: String,
     pub merge_task_type: entity::task::Type,
@@ -383,6 +384,7 @@ pub async fn download_task_file(
         content,
         file_name,
         size,
+        sha,
     } = match repo
         .download_file(DownloadFileParam {
             url,
@@ -498,6 +500,7 @@ pub async fn download_task_file(
         file_name,
         content,
         size,
+        sha,
         plan_id,
         task_data_id: data_id,
         merge_task_type,
@@ -533,7 +536,7 @@ pub async fn save_download_task_results(
     let file = entity::file::ActiveModel {
         id: ActiveValue::Set(result.file_id.to_string()),
         name: ActiveValue::Set(result.file_name),
-        sha: ActiveValue::NotSet,
+        sha: ActiveValue::Set(Some(result.sha)),
         content: ActiveValue::Set(Some(result.content)),
         size: ActiveValue::Set(Some(result.size)),
         is_delete: ActiveValue::Set(Some(false)),

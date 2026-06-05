@@ -36,6 +36,7 @@ pub struct FileInfo {
     pub content: Vec<u8>,
     pub file_name: Option<String>,
     pub size: i64,
+    pub sha: String,
 }
 
 pub trait Repo {
@@ -117,10 +118,12 @@ impl Repo for GitRepo {
         let content = files_map
             .get(&path)
             .ok_or_else(|| DownloadError::FileNotFound(path.clone()))?;
+        let sha = util::gen_bytes_sha256(&content);
         Ok(FileInfo {
             content: content.clone(),
             file_name: Some(file_name),
             size: content.len() as i64,
+            sha,
         })
     }
 }
