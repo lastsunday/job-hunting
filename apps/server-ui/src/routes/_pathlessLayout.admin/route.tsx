@@ -4,7 +4,6 @@ import {
   AppShell,
   Burger,
   Button,
-  Collapse,
   Group,
   Menu,
   MenuTarget,
@@ -22,8 +21,7 @@ import {
   useRouter,
   useRouterState,
 } from '@tanstack/react-router';
-import { Fragment, useEffect, useState } from 'react';
-import { IconChevronRight } from '@tabler/icons-react';
+import { useEffect, useState } from 'react';
 import logo from '../../assets/logo.svg';
 import { useAuth } from '../../hooks/auth';
 import { useTranslation } from 'react-i18next';
@@ -57,13 +55,6 @@ const data = [
     icon: 'i-mdi:company',
   },
   { link: '/admin/sync', label: 'admin:dataSync', icon: 'i-mdi:sync' },
-  {
-    label: 'admin:taskPlan',
-    icon: 'i-material-symbols:other-admission-outline',
-    children: [
-      { link: '/admin/task-plan/data-plan', label: 'admin:taskDataDownload' },
-    ],
-  },
   { link: '/admin/task', label: 'admin:taskRun', icon: 'i-material-symbols:play-circle-outline' },
 ];
 
@@ -75,7 +66,6 @@ function RouteComponent() {
   const [opened, { toggle }] = useDisclosure();
 
   const [active, setActive] = useState('admin.dashboard');
-  const [taskPlanOpened, setTaskPlanOpened] = useState(false);
 
   const [openedPassword, { open: openPassword, close: closePassword }] =
     useDisclosure(false);
@@ -103,45 +93,6 @@ function RouteComponent() {
   };
 
   const links = data.map((item) => {
-    if (item.children) {
-      const isActive = item.children.some((c) => active === c.label);
-      return (
-        <Fragment key={item.label}>
-          <a
-            className={classes.link}
-            data-active={isActive || undefined}
-            onClick={(event) => {
-              event.preventDefault();
-              setTaskPlanOpened(!taskPlanOpened);
-            }}
-          >
-            <div className={`${item.icon} ${classes.linkIcon}`} />
-            <span>{t(item.label as any)}</span>
-            <IconChevronRight
-              size={14}
-              className={`${classes.chevron} ${taskPlanOpened ? classes.chevronRotated : ''}`}
-            />
-          </a>
-          <Collapse expanded={taskPlanOpened}>
-            {item.children.map((child) => (
-              <a
-                className={classes.childLink}
-                data-active={child.label === active || undefined}
-                key={child.label}
-                href={child.link || '#'}
-                onClick={(event) => {
-                  event.preventDefault();
-                  setActive(child.label);
-                  if (child.link) navigate({ to: child.link });
-                }}
-              >
-                <span>{t(child.label as any)}</span>
-              </a>
-            ))}
-          </Collapse>
-        </Fragment>
-      );
-    }
     return (
       <a
         className={classes.link}

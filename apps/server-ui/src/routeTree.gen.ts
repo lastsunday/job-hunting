@@ -18,8 +18,6 @@ import { Route as PathlessLayoutAdminTaskRouteImport } from './routes/_pathlessL
 import { Route as PathlessLayoutAdminSyncRouteImport } from './routes/_pathlessLayout.admin/sync'
 import { Route as PathlessLayoutAdminJobsRouteImport } from './routes/_pathlessLayout.admin/jobs'
 import { Route as PathlessLayoutAdminCompaniesRouteImport } from './routes/_pathlessLayout.admin/companies'
-import { Route as PathlessLayoutAdminTaskPlanIndexRouteImport } from './routes/_pathlessLayout.admin/task-plan/index'
-import { Route as PathlessLayoutAdminTaskPlanDataPlanIndexRouteImport } from './routes/_pathlessLayout.admin/task-plan/data-plan/index'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -70,18 +68,6 @@ const PathlessLayoutAdminCompaniesRoute =
     path: '/companies',
     getParentRoute: () => PathlessLayoutAdminRouteRoute,
   } as any)
-const PathlessLayoutAdminTaskPlanIndexRoute =
-  PathlessLayoutAdminTaskPlanIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => PathlessLayoutAdminTaskPlanRoute,
-  } as any)
-const PathlessLayoutAdminTaskPlanDataPlanIndexRoute =
-  PathlessLayoutAdminTaskPlanDataPlanIndexRouteImport.update({
-    id: '/data-plan/',
-    path: '/data-plan/',
-    getParentRoute: () => PathlessLayoutAdminTaskPlanRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
@@ -91,10 +77,8 @@ export interface FileRoutesByFullPath {
   '/admin/jobs': typeof PathlessLayoutAdminJobsRoute
   '/admin/sync': typeof PathlessLayoutAdminSyncRoute
   '/admin/task': typeof PathlessLayoutAdminTaskRoute
-  '/admin/task-plan': typeof PathlessLayoutAdminTaskPlanRouteWithChildren
+  '/admin/task-plan': typeof PathlessLayoutAdminTaskPlanRoute
   '/admin/': typeof PathlessLayoutAdminIndexRoute
-  '/admin/task-plan/': typeof PathlessLayoutAdminTaskPlanIndexRoute
-  '/admin/task-plan/data-plan/': typeof PathlessLayoutAdminTaskPlanDataPlanIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -103,9 +87,8 @@ export interface FileRoutesByTo {
   '/admin/jobs': typeof PathlessLayoutAdminJobsRoute
   '/admin/sync': typeof PathlessLayoutAdminSyncRoute
   '/admin/task': typeof PathlessLayoutAdminTaskRoute
+  '/admin/task-plan': typeof PathlessLayoutAdminTaskPlanRoute
   '/admin': typeof PathlessLayoutAdminIndexRoute
-  '/admin/task-plan': typeof PathlessLayoutAdminTaskPlanIndexRoute
-  '/admin/task-plan/data-plan': typeof PathlessLayoutAdminTaskPlanDataPlanIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,10 +99,8 @@ export interface FileRoutesById {
   '/_pathlessLayout/admin/jobs': typeof PathlessLayoutAdminJobsRoute
   '/_pathlessLayout/admin/sync': typeof PathlessLayoutAdminSyncRoute
   '/_pathlessLayout/admin/task': typeof PathlessLayoutAdminTaskRoute
-  '/_pathlessLayout/admin/task-plan': typeof PathlessLayoutAdminTaskPlanRouteWithChildren
+  '/_pathlessLayout/admin/task-plan': typeof PathlessLayoutAdminTaskPlanRoute
   '/_pathlessLayout/admin/': typeof PathlessLayoutAdminIndexRoute
-  '/_pathlessLayout/admin/task-plan/': typeof PathlessLayoutAdminTaskPlanIndexRoute
-  '/_pathlessLayout/admin/task-plan/data-plan/': typeof PathlessLayoutAdminTaskPlanDataPlanIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -133,8 +114,6 @@ export interface FileRouteTypes {
     | '/admin/task'
     | '/admin/task-plan'
     | '/admin/'
-    | '/admin/task-plan/'
-    | '/admin/task-plan/data-plan/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -143,9 +122,8 @@ export interface FileRouteTypes {
     | '/admin/jobs'
     | '/admin/sync'
     | '/admin/task'
-    | '/admin'
     | '/admin/task-plan'
-    | '/admin/task-plan/data-plan'
+    | '/admin'
   id:
     | '__root__'
     | '/login'
@@ -157,8 +135,6 @@ export interface FileRouteTypes {
     | '/_pathlessLayout/admin/task'
     | '/_pathlessLayout/admin/task-plan'
     | '/_pathlessLayout/admin/'
-    | '/_pathlessLayout/admin/task-plan/'
-    | '/_pathlessLayout/admin/task-plan/data-plan/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -232,47 +208,15 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PathlessLayoutAdminCompaniesRouteImport
       parentRoute: typeof PathlessLayoutAdminRouteRoute
     }
-    '/_pathlessLayout/admin/task-plan/': {
-      id: '/_pathlessLayout/admin/task-plan/'
-      path: '/'
-      fullPath: '/admin/task-plan/'
-      preLoaderRoute: typeof PathlessLayoutAdminTaskPlanIndexRouteImport
-      parentRoute: typeof PathlessLayoutAdminTaskPlanRoute
-    }
-    '/_pathlessLayout/admin/task-plan/data-plan/': {
-      id: '/_pathlessLayout/admin/task-plan/data-plan/'
-      path: '/data-plan'
-      fullPath: '/admin/task-plan/data-plan/'
-      preLoaderRoute: typeof PathlessLayoutAdminTaskPlanDataPlanIndexRouteImport
-      parentRoute: typeof PathlessLayoutAdminTaskPlanRoute
-    }
   }
 }
-
-interface PathlessLayoutAdminTaskPlanRouteChildren {
-  PathlessLayoutAdminTaskPlanIndexRoute: typeof PathlessLayoutAdminTaskPlanIndexRoute
-  PathlessLayoutAdminTaskPlanDataPlanIndexRoute: typeof PathlessLayoutAdminTaskPlanDataPlanIndexRoute
-}
-
-const PathlessLayoutAdminTaskPlanRouteChildren: PathlessLayoutAdminTaskPlanRouteChildren =
-  {
-    PathlessLayoutAdminTaskPlanIndexRoute:
-      PathlessLayoutAdminTaskPlanIndexRoute,
-    PathlessLayoutAdminTaskPlanDataPlanIndexRoute:
-      PathlessLayoutAdminTaskPlanDataPlanIndexRoute,
-  }
-
-const PathlessLayoutAdminTaskPlanRouteWithChildren =
-  PathlessLayoutAdminTaskPlanRoute._addFileChildren(
-    PathlessLayoutAdminTaskPlanRouteChildren,
-  )
 
 interface PathlessLayoutAdminRouteRouteChildren {
   PathlessLayoutAdminCompaniesRoute: typeof PathlessLayoutAdminCompaniesRoute
   PathlessLayoutAdminJobsRoute: typeof PathlessLayoutAdminJobsRoute
   PathlessLayoutAdminSyncRoute: typeof PathlessLayoutAdminSyncRoute
   PathlessLayoutAdminTaskRoute: typeof PathlessLayoutAdminTaskRoute
-  PathlessLayoutAdminTaskPlanRoute: typeof PathlessLayoutAdminTaskPlanRouteWithChildren
+  PathlessLayoutAdminTaskPlanRoute: typeof PathlessLayoutAdminTaskPlanRoute
   PathlessLayoutAdminIndexRoute: typeof PathlessLayoutAdminIndexRoute
 }
 
@@ -282,8 +226,7 @@ const PathlessLayoutAdminRouteRouteChildren: PathlessLayoutAdminRouteRouteChildr
     PathlessLayoutAdminJobsRoute: PathlessLayoutAdminJobsRoute,
     PathlessLayoutAdminSyncRoute: PathlessLayoutAdminSyncRoute,
     PathlessLayoutAdminTaskRoute: PathlessLayoutAdminTaskRoute,
-    PathlessLayoutAdminTaskPlanRoute:
-      PathlessLayoutAdminTaskPlanRouteWithChildren,
+    PathlessLayoutAdminTaskPlanRoute: PathlessLayoutAdminTaskPlanRoute,
     PathlessLayoutAdminIndexRoute: PathlessLayoutAdminIndexRoute,
   }
 

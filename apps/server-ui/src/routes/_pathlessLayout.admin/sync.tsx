@@ -24,39 +24,19 @@ import {
   ImportWarning,
 } from '@/api/sync';
 import { useTranslation } from 'react-i18next';
+import DownloadPlansSection from '@/components/sync/DownloadPlansSection';
+import RecentTasksSection from '@/components/sync/RecentTasksSection';
 
 export const Route = createFileRoute('/_pathlessLayout/admin/sync')({
   component: RouteComponent,
 });
 
 function RouteComponent() {
-  const { t } = useTranslation(['sync']);
-
-  const renderErrorMessage = (error: ImportError): string => {
-    const key = `error${error.error_type}`;
-    const params = {
-      row: error.row,
-      field: error.field,
-      value: error.value,
-    };
-    return (
-      t(key, params) ||
-      `${error.error_type}: row ${error.row}, field ${error.field}`
-    );
-  };
-
-  const renderWarningMessage = (warning: ImportWarning): string => {
-    const key = `warning${warning.error_type}`;
-    const params = {
-      file_version: warning.file_version,
-      max_supported_version: warning.max_supported_version,
-      actual_version: warning.actual_version,
-    };
-    return t(key, params) || `${warning.error_type}`;
-  };
+  const { t } = useTranslation(['sync', 'common']);
 
   const [status, setStatus] = useState<SyncStatus | null>(null);
   const [loading, setLoading] = useState(true);
+
   const [syncing, setSyncing] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [dataType, setDataType] = useState<string>('job');
@@ -65,7 +45,7 @@ function RouteComponent() {
 
   const loadData = async () => {
     try {
-      const [statusData] = await Promise.all([syncApi.getStatus()]);
+      const statusData = await syncApi.getStatus();
       setStatus(statusData);
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -79,9 +59,7 @@ function RouteComponent() {
   }, []);
 
   const handleFileImport = async () => {
-    if (!file) {
-      return;
-    }
+    if (!file) return;
     setSyncing(true);
     try {
       const base64 = await new Promise<string>((resolve, reject) => {
@@ -127,32 +105,39 @@ function RouteComponent() {
   };
 
   const formatDuration = (ms: number) => {
-    if (ms < 1000) {
-      return `${ms}ms`;
-    }
+    if (ms < 1000) return `${ms}ms`;
     const seconds = Math.floor(ms / 1000);
-    if (seconds < 60) {
-      return `${seconds}s`;
-    }
+    if (seconds < 60) return `${seconds}s`;
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}m ${remainingSeconds}s`;
   };
 
+  const renderErrorMessage = (error: ImportError): string => {
+    const key = `error${error.error_type}`;
+    const params = { row: error.row, field: error.field, value: error.value };
+    return t(key, params) || `${error.error_type}: row ${error.row}, field ${error.field}`;
+  };
+
+  const renderWarningMessage = (warning: ImportWarning): string => {
+    const key = `warning${warning.error_type}`;
+    const params = {
+      file_version: warning.file_version,
+      max_supported_version: warning.max_supported_version,
+      actual_version: warning.actual_version,
+    };
+    return t(key, params) || `${warning.error_type}`;
+  };
+
   const renderResultModal = () => {
     if (!importResult) return null;
-
     const isSuccess = importResult.valid_result && importResult.success;
 
     return (
       <Modal
         opened={resultModalOpen}
         onClose={() => setResultModalOpen(false)}
-        title={
-          <Title order={4}>
-            {isSuccess ? t('importSuccess') : t('importFailed')}
-          </Title>
-        }
+        title={<Title order={4}>{isSuccess ? t('importSuccess') : t('importFailed')}</Title>}
         size="md"
       >
         <Stack gap="md">
@@ -185,18 +170,14 @@ function RouteComponent() {
                     {
                       value:
                         importResult.total > 0
-                          ? ((importResult.imported + importResult.updated) /
-                              importResult.total) *
-                            100
+                          ? ((importResult.imported + importResult.updated) / importResult.total) * 100
                           : 0,
                       color: 'green',
                     },
                     {
                       value:
                         importResult.total > 0
-                          ? ((importResult.total - importResult.imported) /
-                              importResult.total) *
-                            100
+                          ? ((importResult.total - importResult.imported) / importResult.total) * 100
                           : 0,
                       color: 'gray',
                     },
@@ -204,46 +185,21 @@ function RouteComponent() {
                   label={
                     <Text ta="center" fw={700}>
                       {importResult.imported + importResult.updated}
-                      <Text span size="xs" fw={400}>
-                        {' '}
-                        {t('success')}
-                      </Text>
+                      <Text span size="xs" fw={400}> {t('success')}</Text>
                     </Text>
                   }
                 />
                 <Stack gap="xs">
                   <Group gap="xs">
-                    <Badge
-                      color="green"
-                      variant="filled"
-                      w={16}
-                      h={16}
-                      style={{ padding: 0 }}
-                    />
-                    <Text>
-                      {t('success')}:{' '}
-                      {importResult.imported + importResult.updated}
-                    </Text>
+                    <Badge color="green" variant="filled" w={16} h={16} style={{ padding: 0 }} />
+                    <Text>{t('success')}: {importResult.imported + importResult.updated}</Text>
                   </Group>
                   <Group gap="xs">
-                    <Badge
-                      color="gray"
-                      variant="filled"
-                      w={16}
-                      h={16}
-                      style={{ padding: 0 }}
-                    />
-                    <Text>
-                      {t('duplicate')}:{' '}
-                      {importResult.total - importResult.imported}
-                    </Text>
+                    <Badge color="gray" variant="filled" w={16} h={16} style={{ padding: 0 }} />
+                    <Text>{t('duplicate')}: {importResult.total - importResult.imported}</Text>
                   </Group>
-                  <Text size="sm" c="dimmed">
-                    {t('total')}: {importResult.total}
-                  </Text>
-                  <Text size="sm" c="dimmed">
-                    {t('duration')}: {formatDuration(importResult.cost_time)}
-                  </Text>
+                  <Text size="sm" c="dimmed">{t('total')}: {importResult.total}</Text>
+                  <Text size="sm" c="dimmed">{t('duration')}: {formatDuration(importResult.cost_time)}</Text>
                 </Stack>
               </Group>
             </>
@@ -251,32 +207,20 @@ function RouteComponent() {
             <>
               <Divider />
               <Stack gap="xs">
-                <Text fw={500} c="red">
-                  {t('failureReason')}:
-                </Text>
+                <Text fw={500} c="red">{t('failureReason')}:</Text>
                 {importResult.errors.map((error, index) => (
-                  <Text key={index} c="red" size="sm">
-                    {renderErrorMessage(error)}
-                  </Text>
+                  <Text key={index} c="red" size="sm">{renderErrorMessage(error)}</Text>
                 ))}
                 {importResult.valid_columns.length > 0 && (
                   <>
                     <Text fw={500} mt="sm">
-                      {t('fieldList')} (
-                      {t('fieldCount', {
-                        count: importResult.valid_columns.length,
-                      })}
-                      )
+                      {t('fieldList')} ({t('fieldCount', { count: importResult.valid_columns.length })})
                     </Text>
                     <Group gap="xs" wrap="wrap">
                       {importResult.valid_columns.map((field, index) => (
                         <Badge
                           key={index}
-                          color={
-                            importResult.lack_columns.includes(field)
-                              ? 'red'
-                              : 'green'
-                          }
+                          color={importResult.lack_columns.includes(field) ? 'red' : 'green'}
                           variant="light"
                         >
                           {field}
@@ -298,6 +242,8 @@ function RouteComponent() {
       <Stack>
         <Skeleton height={50} radius="md" />
         <Skeleton height={200} radius="md" />
+        <Skeleton height={400} radius="md" />
+        <Skeleton height={300} radius="md" />
       </Stack>
     );
   }
@@ -307,31 +253,22 @@ function RouteComponent() {
       <Title order={2}>{t('title')}</Title>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <Title order={4} mb="md">
-          {t('syncStatus')}
-        </Title>
+        <Title order={4} mb="md">{t('syncStatus')}</Title>
         <Group>
           <RingProgress
             size={120}
             thickness={12}
             roundCaps
-            sections={[
-              {
-                value: status
-                  ? (status.total_jobs /
-                      (status.total_jobs + status.total_companies || 1)) *
-                    100
-                  : 0,
-                color: 'blue',
-              },
-            ]}
+            sections={[{
+              value: status
+                ? (status.total_jobs / (status.total_jobs + status.total_companies || 1)) * 100
+                : 0,
+              color: 'blue',
+            }]}
             label={
               <Text ta="center" fw={700}>
                 {status?.total_jobs || 0}
-                <Text span size="xs" fw={400}>
-                  {' '}
-                  {t('jobs')}
-                </Text>
+                <Text span size="xs" fw={400}> {t('jobs')}</Text>
               </Text>
             }
           />
@@ -339,37 +276,32 @@ function RouteComponent() {
             size={120}
             thickness={12}
             roundCaps
-            sections={[
-              {
-                value: status
-                  ? (status.total_companies /
-                      (status.total_jobs + status.total_companies || 1)) *
-                    100
-                  : 0,
-                color: 'green',
-              },
-            ]}
+            sections={[{
+              value: status
+                ? (status.total_companies / (status.total_jobs + status.total_companies || 1)) * 100
+                : 0,
+              color: 'green',
+            }]}
             label={
               <Text ta="center" fw={700}>
                 {status?.total_companies || 0}
-                <Text span size="xs" fw={400}>
-                  {' '}
-                  {t('companies')}
-                </Text>
+                <Text span size="xs" fw={400}> {t('companies')}</Text>
               </Text>
             }
           />
           <Stack gap="xs">
             <Text size="sm">
               {t('lastSyncJob')}:{' '}
-              <Badge color="blue">
-                {status?.last_sync_job || t('neverSynced')}
-              </Badge>
+              <Badge color="blue">{status?.last_sync_job || t('neverSynced')}</Badge>
             </Text>
             <Text size="sm">
               {t('lastSyncCompany')}:{' '}
-              <Badge color="green">
-                {status?.last_sync_company || t('neverSynced')}
+              <Badge color="green">{status?.last_sync_company || t('neverSynced')}</Badge>
+            </Text>
+            <Text size="sm">
+              {t('schedulerStatus')}:{' '}
+              <Badge color={status?.scheduler_running ? 'teal' : 'gray'}>
+                {status?.scheduler_running ? t('schedulerRunning') : t('schedulerStopped')}
               </Badge>
             </Text>
           </Stack>
@@ -377,9 +309,7 @@ function RouteComponent() {
       </Card>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <Title order={4} mb="md">
-          {t('fileImport')}
-        </Title>
+        <Title order={4} mb="md">{t('fileImport')}</Title>
         <Stack>
           <Select
             label={t('dataType')}
@@ -402,6 +332,9 @@ function RouteComponent() {
           </Button>
         </Stack>
       </Card>
+
+      <DownloadPlansSection />
+      <RecentTasksSection />
 
       {renderResultModal()}
     </Stack>
