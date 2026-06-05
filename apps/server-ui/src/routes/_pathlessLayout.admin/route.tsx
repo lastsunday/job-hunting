@@ -64,7 +64,7 @@ const data = [
       { link: '/admin/task-plan/data-plan', label: 'admin:taskDataDownload' },
     ],
   },
-  { link: '', label: 'admin:taskRun', icon: 'i-material-symbols:play-circle-outline' },
+  { link: '/admin/task', label: 'admin:taskRun', icon: 'i-material-symbols:play-circle-outline' },
 ];
 
 function RouteComponent() {
