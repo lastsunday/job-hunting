@@ -14,7 +14,9 @@ import {
   Title,
   CopyButton,
   ActionIcon,
+  Loader,
 } from '@mantine/core';
+import { IconRefresh } from '@tabler/icons-react';
 import { taskApi, TaskRunDetail } from '@/api/task';
 import { useTranslation } from 'react-i18next';
 import { formatLocalDate } from '@/utils/date';
@@ -84,6 +86,7 @@ export default function RecentTasksSection() {
 
   const [items, setItems] = useState<TaskRunDetail[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadItems = async () => {
     setLoading(true);
@@ -100,6 +103,18 @@ export default function RecentTasksSection() {
   useEffect(() => {
     loadItems();
   }, []);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const result = await taskApi.list({ page: 1, page_size: 5, return_total: false });
+      setItems(result.items ?? []);
+    } catch (error) {
+      console.error('Failed to refresh recent tasks:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const renderRow = (item: TaskRunDetail, index: number) => {
     const isDownload = item.type?.endsWith('Download');
@@ -230,12 +245,17 @@ export default function RecentTasksSection() {
 
   return (
     <Card shadow="sm" padding="lg" radius="md" withBorder>
-      <Group justify="space-between" mb="md">
-        <Title order={4}>{t('recentTasks')}</Title>
-        <Button variant="light" size="sm" onClick={() => navigate({ to: '/admin/task' })}>
-          {t('viewAllTasks')}
-        </Button>
-      </Group>
+        <Group justify="space-between" mb="md">
+          <Title order={4}>{t('recentTasks')}</Title>
+          <Group gap="xs">
+            <ActionIcon variant="subtle" onClick={handleRefresh} size="sm">
+              {refreshing ? <Loader size={16} /> : <IconRefresh size={16} />}
+            </ActionIcon>
+            <Button variant="light" size="sm" onClick={() => navigate({ to: '/admin/task' })}>
+              {t('viewAllTasks')}
+            </Button>
+          </Group>
+        </Group>
 
       {loading ? (
         <Skeleton height={200} radius="md" />

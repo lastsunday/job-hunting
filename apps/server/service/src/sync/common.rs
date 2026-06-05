@@ -1,6 +1,8 @@
 use chrono::{DateTime, FixedOffset, TimeZone, Utc};
+use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-use crate::sync::types::ImportError as ImportErrorType;
+use crate::sync::result::RowValidationError;
 
 pub const BATCH_SIZE: usize = 900;
 
@@ -36,7 +38,7 @@ pub fn get_f64(
                 Ok(0.0)
             } else {
                 trimmed.parse::<f64>().map_err(|_| {
-                    ImportErrorType::InvalidFloat {
+                    RowValidationError::InvalidFloat {
                         row: row_index,
                         field: field_name,
                         value: trimmed.to_string(),
@@ -64,7 +66,7 @@ pub fn get_f32(
                 Ok(0.0)
             } else {
                 trimmed.parse::<f32>().map_err(|_| {
-                    ImportErrorType::InvalidFloat {
+                    RowValidationError::InvalidFloat {
                         row: row_index,
                         field: field_name,
                         value: trimmed.to_string(),
@@ -92,7 +94,7 @@ pub fn get_i32(
                 Ok(0)
             } else {
                 trimmed.parse::<i32>().map_err(|_| {
-                    ImportErrorType::InvalidInteger {
+                    RowValidationError::InvalidInteger {
                         row: row_index,
                         field: field_name,
                         value: trimmed.to_string(),
@@ -127,4 +129,15 @@ pub fn parse_bool(s: &str) -> Option<bool> {
         "否" | "false" | "0" => Some(false),
         _ => None,
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct SyncStatus {
+    pub last_sync_job: Option<DateTime<FixedOffset>>,
+    pub last_sync_company: Option<DateTime<FixedOffset>>,
+    pub last_scan_job: Option<DateTime<FixedOffset>>,
+    pub last_source_update_company: Option<DateTime<FixedOffset>>,
+    pub scheduler_running: bool,
+    pub total_jobs: i64,
+    pub total_companies: i64,
 }

@@ -30,7 +30,7 @@ use utoipa_axum::{
 
 use service::common::FileParser;
 use service::task::scheduler;
-use service::sync::{CompanyImporter, ImportError, JobImporter, SyncStatus, types::ImportResult};
+use service::sync::{CompanyImporter, ImportError, JobImporter, SyncStatus, result::ImportResult};
 
 const TAG: &str = "sync";
 
@@ -156,9 +156,25 @@ pub(crate) async fn get_sync_status(
         .await
         .map_err(|_| err!(SyncErrorCode::ImportFailed))? as i64;
 
+    let last_scan_job = Job::find()
+        .order_by(entity::job::Column::FirstScanDatetime, Order::Desc)
+        .one(conn)
+        .await
+        .map_err(|_| err!(SyncErrorCode::ImportFailed))?
+        .and_then(|j| j.first_scan_datetime);
+
+    let last_source_update_company = Company::find()
+        .order_by(entity::company::Column::SourceRefreshDatetime, Order::Desc)
+        .one(conn)
+        .await
+        .map_err(|_| err!(SyncErrorCode::ImportFailed))?
+        .and_then(|c| c.source_refresh_datetime);
+
     Ok(ApiResponse::success(Some(SyncStatus {
         last_sync_job: last_job,
         last_sync_company: last_company,
+        last_scan_job,
+        last_source_update_company,
         scheduler_running: scheduler::is_scheduler_running(),
         total_jobs,
         total_companies,

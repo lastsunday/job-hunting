@@ -12,6 +12,8 @@ export interface SyncGitParam {
 export interface SyncStatus {
   last_sync_job?: string;
   last_sync_company?: string;
+  last_scan_job?: string;
+  last_source_update_company?: string;
   scheduler_running: boolean;
   total_jobs: number;
   total_companies: number;

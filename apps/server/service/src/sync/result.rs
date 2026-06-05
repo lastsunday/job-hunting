@@ -1,38 +1,9 @@
-use chrono::{DateTime, FixedOffset};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub enum SyncDataType {
-    Job,
-    Company,
-    JobTag,
-    CompanyTag,
-}
-
-impl SyncDataType {
-    pub fn as_str(&self) -> &'static str {
-        match self {
-            SyncDataType::Job => "job",
-            SyncDataType::Company => "company",
-            SyncDataType::JobTag => "job_tag",
-            SyncDataType::CompanyTag => "company_tag",
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct SyncStatus {
-    pub last_sync_job: Option<DateTime<FixedOffset>>,
-    pub last_sync_company: Option<DateTime<FixedOffset>>,
-    pub scheduler_running: bool,
-    pub total_jobs: i64,
-    pub total_companies: i64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(tag = "error_type")]
-pub enum ImportError {
+pub enum RowValidationError {
     InvalidInteger {
         row: usize,
         field: String,
@@ -49,31 +20,31 @@ pub enum ImportError {
     },
 }
 
-impl std::fmt::Display for ImportError {
+impl std::fmt::Display for RowValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            ImportError::InvalidInteger { row, field, value } => {
+            RowValidationError::InvalidInteger { row, field, value } => {
                 write!(
                     f,
                     "InvalidInteger row:{} field:{} value:{}",
                     row, field, value
                 )
             }
-            ImportError::InvalidFloat { row, field, value } => {
+            RowValidationError::InvalidFloat { row, field, value } => {
                 write!(
                     f,
                     "InvalidFloat row:{} field:{} value:{}",
                     row, field, value
                 )
             }
-            ImportError::MissingRequiredField { row, field } => {
+            RowValidationError::MissingRequiredField { row, field } => {
                 write!(f, "MissingRequiredField row:{} field:{}", row, field)
             }
         }
     }
 }
 
-impl std::error::Error for ImportError {}
+impl std::error::Error for RowValidationError {}
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 #[serde(tag = "error_type")]
@@ -117,16 +88,6 @@ pub struct ImportResult {
     pub imported: usize,
     pub updated: usize,
     pub cost_time: i64,
-    pub errors: Vec<ImportError>,
+    pub errors: Vec<RowValidationError>,
     pub warnings: Vec<ImportWarning>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
-pub struct SyncResult {
-    pub success: bool,
-    pub total_files: usize,
-    pub total_records: usize,
-    pub imported: usize,
-    pub updated: usize,
-    pub errors: Vec<String>,
 }

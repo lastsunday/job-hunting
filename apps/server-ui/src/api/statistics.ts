@@ -5,6 +5,12 @@ export interface StatItem {
   value: number;
 }
 
+export interface DailyBreakdownItem {
+  date: string;
+  status: string;
+  value: number;
+}
+
 export interface YearQuery {
   year?: number;
 }
@@ -33,4 +39,18 @@ export const companyStatsApi = {
 
   getSourceUpdate: (year?: number) =>
     getJson<StatItem[]>('/api/company/statistics/source-update', { year }),
+};
+
+export const taskStatsApi = {
+  getStatusDistribution: (days?: number) =>
+    getJson<StatItem[]>('/api/task/statistics/status', { days }),
+
+  getTypeDistribution: () =>
+    getJson<StatItem[]>('/api/task/statistics/type'),
+
+  getDailyCount: (days?: number) =>
+    getJson<StatItem[]>('/api/task/statistics/daily-count', { days }),
+
+  getDailyBreakdown: (days?: number) =>
+    getJson<DailyBreakdownItem[]>('/api/task/statistics/daily-breakdown', { days }),
 };

@@ -48,19 +48,22 @@ const TASK_TYPE_TO_FORM: Record<string, string> = {
   CompanyDataDownload: 'COMPANY_DATA_DOWNLOAD',
 };
 
-const CRON_PRESETS: { label: string; value: string }[] = [
-  { label: 'Every 30s', value: '*/30 * * * * *' },
-  { label: 'Every Min', value: '0 * * * * *' },
-  { label: 'Every 5 Min', value: '0 */5 * * * *' },
-  { label: 'Every 30 Min', value: '0 */30 * * * *' },
-  { label: 'Every Hour', value: '0 0 * * * *' },
-  { label: 'Every 6 Hour', value: '0 */6 * * * *' },
-  { label: 'Daily', value: '0 0 0 * * *' },
-  { label: 'Weekly', value: '0 0 0 * * 0' },
-  { label: 'Monthly', value: '0 0 0 1 * *' },
+const getCronPresets = (t: (key: string) => string) => [
+  { label: t('cronEvery30s'), value: '*/30 * * * * *' },
+  { label: t('cronEveryMin'), value: '0 * * * * *' },
+  { label: t('cronEvery5Min'), value: '0 */5 * * * *' },
+  { label: t('cronEvery30Min'), value: '0 */30 * * * *' },
+  { label: t('cronEveryHour'), value: '0 0 * * * *' },
+  { label: t('cronEvery6Hour'), value: '0 */6 * * * *' },
+  { label: t('cronDaily'), value: '0 0 0 * * *' },
+  { label: t('cronWeekly'), value: '0 0 0 * * 0' },
+  { label: t('cronMonthly'), value: '0 0 0 1 * *' },
 ];
 
-const PRESET_VALUES = CRON_PRESETS.map((p) => p.value);
+const PRESET_VALUES = [
+  '*/30 * * * * *', '0 * * * * *', '0 */5 * * * *', '0 */30 * * * *',
+  '0 0 * * * *', '0 */6 * * * *', '0 0 0 * * *', '0 0 0 * * 0', '0 0 0 1 * *',
+];
 
 function parsePlanConfig(config?: string | null): Record<string, unknown> {
   try {
@@ -341,7 +344,7 @@ export default function DownloadPlansSection() {
         <Select
           label={t('cron')}
           placeholder={t('cron')}
-          data={[...CRON_PRESETS, { label: 'Custom', value: '__custom__' }]}
+          data={[...getCronPresets(t), { label: t('cronCustom'), value: '__custom__' }]}
           value={form.cronIsCustom ? '__custom__' : form.cron || null}
           onChange={(value) => {
             if (value === '__custom__') {

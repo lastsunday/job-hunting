@@ -5,7 +5,7 @@ use calamine::{Reader, Sheets, open_workbook_auto_from_rs};
 use zip::ZipArchive;
 
 use crate::common::FileError;
-use crate::sync::types::ImportWarning;
+use crate::sync::result::ImportWarning;
 use crate::util::gen_bytes_sha256;
 
 const HEADER_VERSION_PREFIX: &str = "__VERSION_";

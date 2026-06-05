@@ -8,7 +8,7 @@ use crate::sync::common::{
     BATCH_SIZE, get_f32, get_f64, get_field_value, get_i32, parse_bool, parse_datetime,
 };
 use crate::sync::error::ImportError;
-use crate::sync::types::{ImportError as ImportErrorType, ImportResult};
+use crate::sync::result::{ImportResult, RowValidationError};
 use crate::util::gen_source_id;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DbErr, EntityTrait,
@@ -49,9 +49,9 @@ impl JobImporter {
         let (valid, version, actual_version, lack_columns, warnings) =
             FileParser::validate_job_headers(headers);
         if !valid {
-            let errors: Vec<ImportErrorType> = lack_columns
+            let errors: Vec<RowValidationError> = lack_columns
                 .iter()
-                .map(|field| ImportErrorType::MissingRequiredField {
+                .map(|field| RowValidationError::MissingRequiredField {
                     row: 1,
                     field: field.clone(),
                 })
@@ -83,7 +83,7 @@ impl JobImporter {
         let mut job_source_map: HashMap<String, JobSourceActiveModel> = HashMap::new();
 
         // 根据文件的rows构建job source列表
-        let mut errors: Vec<ImportErrorType> = Vec::new();
+        let mut errors: Vec<RowValidationError> = Vec::new();
         for (row_index, row) in rows.iter().enumerate() {
             let job_id = get_field_value(&mapping.job_id, row);
             let job_source_id = gen_source_id(job_id.as_str(), &uri);
@@ -102,10 +102,10 @@ impl JobImporter {
                     job_source_map.insert(job_source_id.clone(), model);
                 }
                 Err(e) => {
-                    if let Some(import_err) = e.downcast_ref::<ImportErrorType>() {
+                    if let Some(import_err) = e.downcast_ref::<RowValidationError>() {
                         errors.push(import_err.clone());
                     } else {
-                        errors.push(ImportErrorType::InvalidInteger {
+                        errors.push(RowValidationError::InvalidInteger {
                             row: row_index + 1,
                             field: "unknown".to_string(),
                             value: e.to_string(),
