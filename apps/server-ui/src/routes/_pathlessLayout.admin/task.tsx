@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import {
+  Collapse,
   Title,
   Text,
   Card,
@@ -18,6 +19,7 @@ import {
   Popover,
 } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
+import { useDisclosure } from '@mantine/hooks';
 import { useEffect, useState } from 'react';
 import { taskApi, TaskRunDetail, TaskType, TaskStatus } from '@/api/task';
 import { handleApiError } from '@/api/error';
@@ -125,6 +127,7 @@ function RouteComponent() {
   const [pageSize, setPageSize] = useState(50);
   const [loading, setLoading] = useState(true);
 
+  const [openedAdvanced, { toggle: toggleAdvanced }] = useDisclosure(false);
   const [typeList, setTypeList] = useState<TaskType[]>([]);
   const [statusList, setStatusList] = useState<TaskStatus[]>([]);
   const [createStart, setCreateStart] = useState<Date | null>(null);
@@ -310,72 +313,88 @@ function RouteComponent() {
       <Title order={2}>{t('title')}</Title>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>
-        <Group gap="md" align="flex-end">
-          <MultiSelect
-            label={t('type')}
-            placeholder={t('typePlaceholder')}
-            data={typeOptions}
-            value={typeList}
-            onChange={setTypeList as any}
-            clearable
-            searchable
-            style={{ minWidth: 200 }}
-          />
-          <MultiSelect
-            label={t('status')}
-            placeholder={t('statusPlaceholder')}
-            data={statusOptions}
-            value={statusList}
-            onChange={setStatusList as any}
-            clearable
-            searchable
-            style={{ minWidth: 180 }}
-          />
-          <Stack gap={2}>
-            <Text size="sm">{t('createDatetime')}</Text>
-            <Group gap={4} wrap="nowrap">
-              <DateTimePicker
-                placeholder={t('createDatetimePlaceholder')}
-                value={createStart}
-                onChange={(v) => setCreateStart(v ?? null)}
-                clearable
-                valueFormat="YYYY-MM-DD HH:mm"
-              />
-              <Text size="sm" c="dimmed" style={{ paddingTop: 6 }}>~</Text>
-              <DateTimePicker
-                placeholder={t('createDatetimePlaceholder')}
-                value={createEnd}
-                onChange={(v) => setCreateEnd(v ?? null)}
-                clearable
-                valueFormat="YYYY-MM-DD HH:mm"
-              />
+        <Stack gap="md">
+          <Group gap="md" align="flex-end">
+            <MultiSelect
+              label={t('type')}
+              placeholder={t('typePlaceholder')}
+              data={typeOptions}
+              value={typeList}
+              onChange={setTypeList as any}
+              clearable
+              searchable
+              style={{ minWidth: 200 }}
+            />
+            <MultiSelect
+              label={t('status')}
+              placeholder={t('statusPlaceholder')}
+              data={statusOptions}
+              value={statusList}
+              onChange={setStatusList as any}
+              clearable
+              searchable
+              style={{ minWidth: 180 }}
+            />
+            <Button variant="outline" onClick={toggleAdvanced}>
+              {t('advancedSearch')}
+              <Text span ml={4} size="xs">
+                {openedAdvanced ? '▲' : '▼'}
+              </Text>
+            </Button>
+            <Button onClick={handleSearch}>{t('common:search')}</Button>
+            <Button variant="default" onClick={handleReset}>
+              {t('common:reset')}
+            </Button>
+          </Group>
+          <Collapse expanded={openedAdvanced}>
+            <Group>
+              <Stack gap={2} style={{ flex: 1, minWidth: 300 }}>
+                <Text size="sm">{t('createDatetime')}</Text>
+                <Group gap={4} wrap="nowrap">
+                  <DateTimePicker
+                    placeholder={t('createDatetimePlaceholder')}
+                    value={createStart}
+                    onChange={(v) => setCreateStart(v ? new Date(v) : null)}
+                    clearable
+                    valueFormat="YYYY-MM-DD HH:mm"
+                    style={{ flex: 1 }}
+                  />
+                  <Text size="sm" c="dimmed" style={{ paddingTop: 6 }}>~</Text>
+                  <DateTimePicker
+                    placeholder={t('createDatetimePlaceholder')}
+                    value={createEnd}
+                    onChange={(v) => setCreateEnd(v ? new Date(v) : null)}
+                    clearable
+                    valueFormat="YYYY-MM-DD HH:mm"
+                    style={{ flex: 1 }}
+                  />
+                </Group>
+              </Stack>
+              <Stack gap={2} style={{ flex: 1, minWidth: 300 }}>
+                <Text size="sm">{t('updateDatetime')}</Text>
+                <Group gap={4} wrap="nowrap">
+                  <DateTimePicker
+                    placeholder={t('updateDatetimePlaceholder')}
+                    value={updateStart}
+                    onChange={(v) => setUpdateStart(v ? new Date(v) : null)}
+                    clearable
+                    valueFormat="YYYY-MM-DD HH:mm"
+                    style={{ flex: 1 }}
+                  />
+                  <Text size="sm" c="dimmed" style={{ paddingTop: 6 }}>~</Text>
+                  <DateTimePicker
+                    placeholder={t('updateDatetimePlaceholder')}
+                    value={updateEnd}
+                    onChange={(v) => setUpdateEnd(v ? new Date(v) : null)}
+                    clearable
+                    valueFormat="YYYY-MM-DD HH:mm"
+                    style={{ flex: 1 }}
+                  />
+                </Group>
+              </Stack>
             </Group>
-          </Stack>
-          <Stack gap={2}>
-            <Text size="sm">{t('updateDatetime')}</Text>
-            <Group gap={4} wrap="nowrap">
-              <DateTimePicker
-                placeholder={t('updateDatetimePlaceholder')}
-                value={updateStart}
-                onChange={(v) => setUpdateStart(v ?? null)}
-                clearable
-                valueFormat="YYYY-MM-DD HH:mm"
-              />
-              <Text size="sm" c="dimmed" style={{ paddingTop: 6 }}>~</Text>
-              <DateTimePicker
-                placeholder={t('updateDatetimePlaceholder')}
-                value={updateEnd}
-                onChange={(v) => setUpdateEnd(v ?? null)}
-                clearable
-                valueFormat="YYYY-MM-DD HH:mm"
-              />
-            </Group>
-          </Stack>
-          <Button onClick={handleSearch}>{t('common:search')}</Button>
-          <Button variant="default" onClick={handleReset}>
-            {t('common:reset')}
-          </Button>
-        </Group>
+          </Collapse>
+        </Stack>
       </Card>
 
       <Card shadow="sm" padding="lg" radius="md" withBorder>

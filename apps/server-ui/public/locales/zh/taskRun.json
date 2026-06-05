@@ -29,5 +29,6 @@
   "seqLabel": "序号：",
   "dataCountLabel": "总数据量：",
   "total": "条",
-  "perPage": "条/页"
+  "perPage": "条/页",
+  "advancedSearch": "高级条件"
 }

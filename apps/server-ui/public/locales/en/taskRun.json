@@ -29,5 +29,6 @@
   "seqLabel": "Seq: ",
   "dataCountLabel": "Total data: ",
   "total": "total",
-  "perPage": "/ page"
+  "perPage": "/ page",
+  "advancedSearch": "Advanced"
 }

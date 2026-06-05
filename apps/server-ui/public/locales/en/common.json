@@ -17,5 +17,6 @@
   "version": "Version",
   "na": "N/A",
   "yes": "Yes",
-  "no": "No"
+  "no": "No",
+  "perPage": "/ page"
 }

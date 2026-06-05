@@ -526,7 +526,11 @@ importers:
         specifier: workspace:*
         version: link:../../libs/analysis
 
-  apps/server-ui: {}
+  apps/server-ui:
+    dependencies:
+      jszip:
+        specifier: 3.10.1
+        version: 3.10.1
 
   apps/server-ui-e2e: {}
 

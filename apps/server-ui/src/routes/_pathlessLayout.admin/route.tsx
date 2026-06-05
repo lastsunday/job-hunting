@@ -54,6 +54,11 @@ const data = [
     label: 'admin:companyData',
     icon: 'i-mdi:company',
   },
+  {
+    link: '/admin/files',
+    label: 'admin:fileData',
+    icon: 'i-mdi:file',
+  },
   { link: '/admin/sync', label: 'admin:dataSync', icon: 'i-mdi:sync' },
   { link: '/admin/task', label: 'admin:taskRun', icon: 'i-material-symbols:play-circle-outline' },
 ];

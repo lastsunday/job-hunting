@@ -2,6 +2,7 @@
   "dashboard": "仪表板",
   "jobData": "职位数据",
   "companyData": "公司数据",
+  "fileData": "文件数据",
   "dataSync": "数据同步",
   "taskPlan": "任务计划",
   "taskDataDownload": "数据下载",

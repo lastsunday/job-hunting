@@ -2,6 +2,7 @@
   "dashboard": "Dashboard",
   "jobData": "Job Data",
   "companyData": "Company Data",
+  "fileData": "File Data",
   "dataSync": "Data Sync",
   "taskPlan": "Task Plans",
   "taskDataDownload": "Data Download",

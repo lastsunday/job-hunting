@@ -7,6 +7,7 @@ import job_en from '../../public/locales/en/job.json';
 import company_en from '../../public/locales/en/company.json';
 import sync_en from '../../public/locales/en/sync.json';
 import password_en from '../../public/locales/en/password.json';
+import file_en from '../../public/locales/en/file.json';
 
 declare module 'i18next' {
   interface CustomTypeOptions {
@@ -20,6 +21,7 @@ declare module 'i18next' {
       company: typeof company_en;
       sync: typeof sync_en;
       password: typeof password_en;
+      file: typeof file_en;
     };
   }
 }
