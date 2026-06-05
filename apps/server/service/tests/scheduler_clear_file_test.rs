@@ -372,6 +372,102 @@ async fn test_clear_file_exceeds_limit_oldest_first() {
     common::tear_down(&container).await;
 }
 
+/// 文件只有 download 引用但无 merge 引用 → 不删
+#[tokio::test]
+async fn test_clear_file_with_download_only() {
+    let (container, conn) = common::setup_database().await;
+
+    insert_file(&conn, "f1", 100, 1).await;
+    insert_download_with_task(&conn, "d1", "f1", entity::task::Status::Finished).await;
+
+    scheduler::run_scheduled_tasks(&conn, Some(0))
+        .await
+        .unwrap();
+
+    let deleted = entity::file::Entity::find()
+        .filter(entity::file::Column::IsDelete.eq(Some(true)))
+        .count(&conn)
+        .await
+        .unwrap();
+    assert_eq!(deleted, 0);
+
+    conn.close().await.unwrap();
+    common::tear_down(&container).await;
+}
+
+/// 文件有 download 引用 + merge 未完成 → 不删
+#[tokio::test]
+async fn test_clear_file_with_download_and_unfinished_merge() {
+    let (container, conn) = common::setup_database().await;
+
+    insert_file(&conn, "f1", 100, 1).await;
+    insert_download_with_task(&conn, "d1", "f1", entity::task::Status::Finished).await;
+    insert_merge_with_task(&conn, "m1", "f1", entity::task::Status::Ready).await;
+
+    scheduler::run_scheduled_tasks(&conn, Some(0))
+        .await
+        .unwrap();
+
+    let deleted = entity::file::Entity::find()
+        .filter(entity::file::Column::IsDelete.eq(Some(true)))
+        .count(&conn)
+        .await
+        .unwrap();
+    assert_eq!(deleted, 0);
+
+    conn.close().await.unwrap();
+    common::tear_down(&container).await;
+}
+
+/// 文件有 download 引用 + merge 已完成 → 可删
+#[tokio::test]
+async fn test_clear_file_with_download_and_finished_merge() {
+    let (container, conn) = common::setup_database().await;
+
+    insert_file(&conn, "f1", 100, 1).await;
+    insert_download_with_task(&conn, "d1", "f1", entity::task::Status::Finished).await;
+    insert_merge_with_task(&conn, "m1", "f1", entity::task::Status::Finished).await;
+
+    scheduler::run_scheduled_tasks(&conn, Some(0))
+        .await
+        .unwrap();
+
+    let deleted = entity::file::Entity::find()
+        .filter(entity::file::Column::IsDelete.eq(Some(true)))
+        .count(&conn)
+        .await
+        .unwrap();
+    assert_eq!(deleted, 1);
+
+    conn.close().await.unwrap();
+    common::tear_down(&container).await;
+}
+
+/// 文件有 download 引用 + 多个 merge 全部完成 → 可删
+#[tokio::test]
+async fn test_clear_file_with_download_and_all_merges_finished() {
+    let (container, conn) = common::setup_database().await;
+
+    insert_file(&conn, "f1", 100, 1).await;
+    insert_download_with_task(&conn, "d1", "f1", entity::task::Status::Finished).await;
+    insert_merge_with_task(&conn, "m1", "f1", entity::task::Status::Finished).await;
+    insert_merge_with_task(&conn, "m2", "f1", entity::task::Status::Finished).await;
+
+    scheduler::run_scheduled_tasks(&conn, Some(0))
+        .await
+        .unwrap();
+
+    let deleted = entity::file::Entity::find()
+        .filter(entity::file::Column::IsDelete.eq(Some(true)))
+        .count(&conn)
+        .await
+        .unwrap();
+    assert_eq!(deleted, 1);
+
+    conn.close().await.unwrap();
+    common::tear_down(&container).await;
+}
+
 async fn insert_file(
     conn: &sea_orm::DatabaseConnection,
     id: &str,
@@ -455,6 +551,42 @@ async fn insert_merge_with_task(
         plan_id: ActiveValue::NotSet,
         r#type: ActiveValue::Set(Some(entity::task::Type::JobDataMerge)),
         data_id: ActiveValue::Set(Some(merge_id.to_string())),
+        status: ActiveValue::Set(Some(task_status)),
+        error_reason: ActiveValue::NotSet,
+        cost_time: ActiveValue::Set(Some(0)),
+        retry_count: ActiveValue::Set(Some(0)),
+        create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+        update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+    };
+    task.insert(conn).await.unwrap();
+}
+
+async fn insert_download_with_task(
+    conn: &sea_orm::DatabaseConnection,
+    download_id: &str,
+    file_id: &str,
+    task_status: entity::task::Status,
+) {
+    let now = Utc::now();
+    let download = entity::task_data_download::ActiveModel {
+        id: ActiveValue::Set(download_id.to_string()),
+        r#type: ActiveValue::Set(Some(entity::task_data_download::Type::JobDataDownload)),
+        user_name: ActiveValue::Set(Some("test".to_string())),
+        repo_name: ActiveValue::Set(Some("test-repo".to_string())),
+        datetime: ActiveValue::Set(Some(now.fixed_offset())),
+        config: ActiveValue::Set(Some("{}".to_string())),
+        data_id: ActiveValue::Set(Some(file_id.to_string())),
+        seq: ActiveValue::Set(Some(1)),
+        create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+        update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+    };
+    download.insert(conn).await.unwrap();
+
+    let task = entity::task::ActiveModel {
+        id: ActiveValue::Set(xid::new().to_string()),
+        plan_id: ActiveValue::NotSet,
+        r#type: ActiveValue::Set(Some(entity::task::Type::JobDataDownload)),
+        data_id: ActiveValue::Set(Some(download_id.to_string())),
         status: ActiveValue::Set(Some(task_status)),
         error_reason: ActiveValue::NotSet,
         cost_time: ActiveValue::Set(Some(0)),

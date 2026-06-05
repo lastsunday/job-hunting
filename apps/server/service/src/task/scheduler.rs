@@ -12,8 +12,8 @@ use anyhow::Context;
 use chrono::{DateTime, Utc};
 use cron::Schedule;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
-    Order, QueryFilter, QueryOrder, QuerySelect, TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
+    IntoActiveModel, QueryFilter, QuerySelect, Statement, TransactionTrait,
 };
 use tokio::sync::Semaphore;
 use tokio::sync::watch;
@@ -513,48 +513,6 @@ pub async fn drain_tasks(conn: &DatabaseConnection) -> Result<(), anyhow::Error>
     }
 }
 
-async fn find_ready_file_ids(
-    file_ids: Vec<String>,
-    conn: &DatabaseConnection,
-) -> Result<Vec<String>, anyhow::Error> {
-    let merges = entity::task_data_merge::Entity::find()
-        .filter(entity::task_data_merge::Column::DataId.is_in(file_ids.clone()))
-        .all(conn)
-        .await?;
-
-    let merge_ids: Vec<String> = merges.iter().map(|m| m.id.clone()).collect();
-
-    let unfinished_file_ids = if merge_ids.is_empty() {
-        vec![]
-    } else {
-        let tasks = entity::task::Entity::find()
-            .filter(entity::task::Column::DataId.is_in(merge_ids))
-            .filter(entity::task::Column::Status.ne(entity::task::Status::Finished))
-            .all(conn)
-            .await?;
-
-        let unfinished_merge_ids: Vec<String> =
-            tasks.iter().filter_map(|t| t.data_id.clone()).collect();
-
-        if unfinished_merge_ids.is_empty() {
-            vec![]
-        } else {
-            entity::task_data_merge::Entity::find()
-                .filter(entity::task_data_merge::Column::Id.is_in(unfinished_merge_ids))
-                .all(conn)
-                .await?
-                .into_iter()
-                .filter_map(|m| m.data_id)
-                .collect()
-        }
-    };
-
-    Ok(file_ids
-        .into_iter()
-        .filter(|id| !unfinished_file_ids.contains(id))
-        .collect())
-}
-
 async fn logically_delete_files(
     file_ids: &[String],
     conn: &DatabaseConnection,
@@ -589,13 +547,15 @@ async fn schedule_clear_file(
         return Ok(());
     }
 
-    let total: i64 = entity::file::Entity::find()
+    let total: Option<(Option<i64>,)> = entity::file::Entity::find()
         .filter(entity::file::Column::IsDelete.eq(Some(false)))
-        .all(conn)
-        .await?
-        .iter()
-        .map(|f| f.size.unwrap_or(0))
-        .sum();
+        .select_only()
+        .column_as(entity::file::Column::Size.sum(), "total")
+        .into_tuple()
+        .one(conn)
+        .await?;
+
+    let total = total.map(|t| t.0.unwrap_or(0)).unwrap_or(0);
 
     if total <= max_size {
         tracing::info!(
@@ -608,23 +568,41 @@ async fn schedule_clear_file(
 
     const FILE_BATCH_SIZE: u64 = 64;
 
-    let files = entity::file::Entity::find()
-        .filter(entity::file::Column::IsDelete.eq(Some(false)))
-        .order_by(entity::file::Column::UpdateDatetime, Order::Asc)
-        .limit(FILE_BATCH_SIZE)
-        .all(conn)
-        .await?;
+    let backend = conn.get_database_backend();
+    let sql = format!(
+        r#"
+        SELECT f.id
+        FROM file f
+        WHERE f.is_delete = FALSE
+          AND (
+            (NOT EXISTS (SELECT 1 FROM task_data_download d WHERE d.data_id = f.id)
+             AND NOT EXISTS (SELECT 1 FROM task_data_merge m WHERE m.data_id = f.id))
+            OR (
+              EXISTS (SELECT 1 FROM task_data_merge m WHERE m.data_id = f.id)
+              AND NOT EXISTS (
+                SELECT 1 FROM task_data_merge m
+                INNER JOIN task t ON t.data_id = m.id
+                WHERE m.data_id = f.id AND t.status != 'FINISHED'
+              )
+            )
+          )
+        ORDER BY f.update_datetime ASC
+        LIMIT {}
+        "#,
+        FILE_BATCH_SIZE,
+    );
+    let stmt = Statement::from_string(backend, sql);
 
-    if files.is_empty() {
-        return Ok(());
+    let rows = conn.query_all_raw(stmt).await?;
+    let mut ready_ids = Vec::new();
+    for row in &rows {
+        if let Ok(id) = row.try_get::<String>("", "id") {
+            ready_ids.push(id);
+        }
     }
 
-    let file_ids: Vec<String> = files.iter().map(|f| f.id.clone()).collect();
-
-    let ready_ids = find_ready_file_ids(file_ids, conn).await?;
-
     if ready_ids.is_empty() {
-        tracing::info!("[SCHEDULE] no ready files to delete in this batch");
+        tracing::info!("[SCHEDULE] no ready files to delete");
         return Ok(());
     }
 
