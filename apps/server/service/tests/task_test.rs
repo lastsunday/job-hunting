@@ -1,14 +1,15 @@
+use anyhow::Context;
 use chrono::{DateTime, Utc};
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, DatabaseConnection, EntityTrait, IntoActiveModel,
-    PaginatorTrait, QueryFilter,
+    PaginatorTrait, QueryFilter, TransactionTrait,
 };
 use service::task::{
     CalculateAndCreateDownloadTaskParam, CreatePlanParam,
     ExecuteDownloadTaskAndCreateMergeTaskParam, ExecuteMergeTaskParam, RepoType,
     TaskPlanConfigDataDownloadConfig, TaskType, Type, calculate_and_create_download_task,
-    create_data_plan, execute_download_task_and_create_merge_task, execute_merge_task,
-    get_file_name_by_task_type,
+    create_data_plan, download_task_file, execute_merge_task, get_file_name_by_task_type,
+    save_download_task_results,
 };
 
 use crate::common::{
@@ -154,16 +155,32 @@ async fn test_full_flow() {
     // NOTE: 3. 执行下载任务和创建合并任务
     let download_task_id = task_ids.first().unwrap().to_string();
     let now: DateTime<Utc> = "2024-01-03T00:00:00Z".parse::<DateTime<Utc>>().unwrap();
-    let merge_task_ids = execute_download_task_and_create_merge_task(
+    let download_result = download_task_file(
         &conn,
         ExecuteDownloadTaskAndCreateMergeTaskParam {
-            download_task_id: download_task_id.to_string(),
+            download_task_id: download_task_id.clone(),
             now,
         },
     )
     .await
     .unwrap();
-    set_task_finished(&conn, &download_task_id, now).await;
+    let download_task_id_clone = download_task_id.clone();
+    conn.transaction(|txn| {
+        Box::pin(async move {
+            save_download_task_results(txn, download_result, now).await?;
+            let task = entity::task::Entity::find_by_id(download_task_id_clone)
+                .one(txn)
+                .await?
+                .context("task not found")?;
+            let mut active = task.into_active_model();
+            active.status = ActiveValue::Set(Some(entity::task::Status::Finished));
+            active.update_datetime = ActiveValue::Set(Some(now.fixed_offset()));
+            active.update(txn).await?;
+            Ok::<_, anyhow::Error>(())
+        })
+    })
+    .await
+    .unwrap();
     // checking
     let entity::task::Model {
         status, data_id, ..
@@ -188,10 +205,18 @@ async fn test_full_flow() {
             .unwrap()
             .unwrap();
     assert!(!content.unwrap().is_empty());
-    let (merge_task_id, _) = merge_task_ids.first().unwrap();
+    let merge_tasks = entity::task::Entity::find()
+        .filter(entity::task::Column::PlanId.eq(Some(plan_id.to_string())))
+        .filter(entity::task::Column::Type.eq(Some(entity::task::Type::JobDataMerge)))
+        .all(&conn)
+        .await
+        .unwrap();
+    let (merge_task_id, merge_task_data_id) = {
+        let mt = merge_tasks.first().unwrap();
+        (mt.id.clone(), mt.data_id.clone().unwrap())
+    };
     let entity::task::Model {
         status: merge_task_status,
-        data_id: merge_task_data_id,
         ..
     } = entity::task::Entity::find_by_id(merge_task_id.to_string())
         .one(&conn)
@@ -202,7 +227,7 @@ async fn test_full_flow() {
     let entity::task_data_merge::Model {
         data_id: merge_file_id,
         ..
-    } = entity::task_data_merge::Entity::find_by_id(merge_task_data_id.unwrap())
+    } = entity::task_data_merge::Entity::find_by_id(merge_task_data_id.to_string())
         .one(&conn)
         .await
         .unwrap()
@@ -222,7 +247,7 @@ async fn test_full_flow() {
     .unwrap();
     // checking
     assert!(data_count > 0);
-    set_task_finished(&conn, merge_task_id, now).await;
+    set_task_finished(&conn, &merge_task_id, now).await;
     let entity::task::Model {
         status: merge_task_status,
         data_id: merge_task_data_id,

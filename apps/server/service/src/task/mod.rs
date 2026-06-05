@@ -7,10 +7,10 @@ pub mod scheduler;
 pub mod utils;
 
 pub use download::{
-    calculate_and_create_download_task, execute_download_task_and_create_merge_task,
+    calculate_and_create_download_task, download_task_file, save_download_task_results,
     CalculateAndCreateDownloadTaskParam, DateAndMaxSeq, DateForStartEndAndList,
-    ExecuteDownloadTaskAndCreateMergeTaskParam, QueryDateListParam, SaveDataDownloadTaskParam,
-    TaskAndDataId, TaskDataDownloadConfig, TaskType,
+    DownloadTaskResult, ExecuteDownloadTaskAndCreateMergeTaskParam, QueryDateListParam,
+    SaveDataDownloadTaskParam, TaskAndDataId, TaskDataDownloadConfig, TaskType,
 };
 pub use error::Error;
 pub use merge::{

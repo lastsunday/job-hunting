@@ -7,8 +7,8 @@ use entity::task_data_download::ActiveModel as TaskDataDownloadActiveModel;
 use entity::task_data_merge::ActiveModel as TaskDataMergeActiveModel;
 use framework::id::gen_id;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, EntityTrait, IntoActiveModel,
-    QueryFilter, TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection,
+    DatabaseTransaction, EntityTrait, IntoActiveModel, QueryFilter, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
 use strum_macros::{Display, EnumString};
@@ -299,10 +299,29 @@ fn get_file_max_record_count_by_task_type(task_type: &entity::task_data_download
     }
 }
 
-pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + ConnectionTrait>(
-    conn: &C,
+pub struct DownloadTaskResult {
+    pub download_task_id: String,
+    pub file_id: String,
+    pub file_name: Option<String>,
+    pub content: Vec<u8>,
+    pub size: i64,
+    pub plan_id: String,
+    pub task_data_id: String,
+    pub merge_task_type: entity::task::Type,
+    pub merge_data_task_type: entity::task_data_merge::Type,
+    pub total: u32,
+    pub page_size: u32,
+    pub total_page: u32,
+    pub merge_config: String,
+    pub datetime: DateTime<FixedOffset>,
+    pub user_name: Option<String>,
+    pub repo_name: Option<String>,
+}
+
+pub async fn download_task_file(
+    conn: &DatabaseConnection,
     param: ExecuteDownloadTaskAndCreateMergeTaskParam,
-) -> Result<Vec<TaskAndDataId>, Error> {
+) -> Result<DownloadTaskResult, Error> {
     let ExecuteDownloadTaskAndCreateMergeTaskParam {
         download_task_id,
         now,
@@ -335,16 +354,18 @@ pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + C
         .ok_or_else(|| anyhow::anyhow!("Task data download not found data_id = {}", data_id))?;
 
     let entity::task_data_download::Model {
-        config,
+        config: download_config,
         datetime,
         r#type: download_type,
+        user_name,
+        repo_name,
         ..
     } = task_data_download.clone();
 
-    let config =
-        config.ok_or_else(|| anyhow::anyhow!("Task config not found for data_id = {}", data_id))?;
-    let TaskDataDownloadConfig { url, file_name } = serde_json::from_str(&config)
-        .context(format!("parse config json failure,str = {}", config))?;
+    let download_config = download_config
+        .ok_or_else(|| anyhow::anyhow!("Task config not found for data_id = {}", data_id))?;
+    let TaskDataDownloadConfig { url, file_name } = serde_json::from_str(&download_config)
+        .context(format!("parse config json failure,str = {}", download_config))?;
     let merge_config = crate::task::merge::TaskDataMergeConfig {
         url: url.clone(),
         file_name: file_name.clone(),
@@ -471,97 +492,91 @@ pub async fn execute_download_task_and_create_merge_task<C: TransactionTrait + C
         ))?,
     };
 
-    let result = conn
-        .transaction::<_, _, anyhow::Error>(|txn| {
-            Box::pin(async move {
-                let mut task_data_download_model = task_data_download.into_active_model();
-                task_data_download_model.data_id = ActiveValue::Set(Some(file_id.clone()));
-                task_data_download_model.update(txn).await?;
-                let file = entity::file::ActiveModel {
-                    id: ActiveValue::Set(file_id.to_string()),
-                    name: ActiveValue::Set(file_name),
-                    sha: ActiveValue::NotSet,
-                    content: ActiveValue::Set(Some(content)),
-                    size: ActiveValue::Set(Some(size)),
-                    is_delete: ActiveValue::Set(Some(false)),
-                    create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
-                    update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
-                };
-                file.insert(txn).await?;
-                let task = entity::task::Entity::find_by_id(download_task_id.to_string())
-                    .one(txn)
-                    .await?
-                    .ok_or_else(|| {
-                        anyhow::anyhow!("Download task not found id = {}", download_task_id)
-                    })?;
-                let task_data_id = &task
-                    .data_id
-                    .clone()
-                    .ok_or_else(|| anyhow::anyhow!("Download task has no data_id"))?;
-                let plan_id = &task
-                    .plan_id
-                    .clone()
-                    .ok_or_else(|| anyhow::anyhow!("Download task has no plan_id"))?;
-
-                let task_data_download =
-                    &entity::task_data_download::Entity::find_by_id(task_data_id.to_string())
-                        .one(txn)
-                        .await?
-                        .ok_or_else(|| {
-                            anyhow::anyhow!("Download data task not found id = {}", task_data_id)
-                        })?;
-                let user_name = &task_data_download.user_name;
-                let repo_name = &task_data_download.repo_name;
-                let mut task_data_download_active_model =
-                    task_data_download.clone().into_active_model();
-                task_data_download_active_model.data_id =
-                    ActiveValue::Set(Some(file_id.to_string()));
-                task_data_download_active_model.update_datetime =
-                    ActiveValue::Set(Some(now.fixed_offset()));
-                task_data_download_active_model.update(txn).await?;
-                let mut result = vec![];
-                for page_num in 1..=total_page {
-                    let task_id = gen_id();
-                    let task_data_id = gen_id();
-                    let task = TaskActiveModel {
-                        id: ActiveValue::Set(task_id.clone()),
-                        plan_id: ActiveValue::Set(Some(plan_id.clone())),
-                        r#type: ActiveValue::Set(Some(merge_task_type.clone())),
-                        data_id: ActiveValue::Set(Some(task_data_id.clone())),
-                        status: ActiveValue::Set(Some(entity::task::Status::Ready)),
-                        error_reason: ActiveValue::Set(None),
-                        cost_time: ActiveValue::Set(Some(0)),
-                        retry_count: ActiveValue::Set(Some(0)),
-                        create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
-                        update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
-                    };
-                    let task_data_merge = TaskDataMergeActiveModel {
-                        id: ActiveValue::Set(task_data_id.clone()),
-                        r#type: ActiveValue::Set(Some(merge_data_task_type.clone())),
-                        user_name: ActiveValue::Set(user_name.clone()),
-                        repo_name: ActiveValue::Set(repo_name.clone()),
-                        datetime: ActiveValue::Set(Some(datetime)),
-                        data_id: ActiveValue::Set(Some(file_id.to_string())),
-                        data_count: ActiveValue::Set(Some(total as i32)),
-                        config: ActiveValue::Set(Some(merge_config.to_string())),
-                        data_page_num: ActiveValue::Set(Some(page_num as i32)),
-                        data_page_size: ActiveValue::Set(Some(page_size as i32)),
-                        create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
-                        update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
-                    };
-                    entity::task::Entity::insert(task).exec(txn).await?;
-                    entity::task_data_merge::Entity::insert(task_data_merge)
-                        .exec(txn)
-                        .await?;
-                    result.push((task_id, task_data_id));
-                }
-                Ok(result)
-            })
-        })
-        .await
-        .map_err(|e| match e {
-            sea_orm::TransactionError::Connection(db_err) => db_err.into(),
-            sea_orm::TransactionError::Transaction(db_err) => db_err,
-        })?;
-    Ok(result)
+    Ok(DownloadTaskResult {
+        download_task_id,
+        file_id,
+        file_name,
+        content,
+        size,
+        plan_id,
+        task_data_id: data_id,
+        merge_task_type,
+        merge_data_task_type,
+        total,
+        page_size,
+        total_page,
+        merge_config,
+        datetime,
+        user_name,
+        repo_name,
+    })
 }
+
+pub async fn save_download_task_results(
+    txn: &DatabaseTransaction,
+    result: DownloadTaskResult,
+    now: DateTime<Utc>,
+) -> Result<(), anyhow::Error> {
+    let task_data_download_model =
+        entity::task_data_download::Entity::find_by_id(result.task_data_id.to_string())
+            .one(txn)
+            .await?
+            .ok_or_else(|| {
+                anyhow::anyhow!("Task data download not found id = {}", result.task_data_id)
+            })?;
+    let mut task_data_download_active = task_data_download_model.into_active_model();
+    task_data_download_active.data_id = ActiveValue::Set(Some(result.file_id.to_string()));
+    task_data_download_active.update_datetime =
+        ActiveValue::Set(Some(now.fixed_offset()));
+    task_data_download_active.update(txn).await?;
+
+    let file = entity::file::ActiveModel {
+        id: ActiveValue::Set(result.file_id.to_string()),
+        name: ActiveValue::Set(result.file_name),
+        sha: ActiveValue::NotSet,
+        content: ActiveValue::Set(Some(result.content)),
+        size: ActiveValue::Set(Some(result.size)),
+        is_delete: ActiveValue::Set(Some(false)),
+        create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+        update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+    };
+    file.insert(txn).await?;
+
+    for page_num in 1..=result.total_page {
+        let merge_task_id = gen_id();
+        let merge_data_id = gen_id();
+        let merge_task = TaskActiveModel {
+            id: ActiveValue::Set(merge_task_id.clone()),
+            plan_id: ActiveValue::Set(Some(result.plan_id.clone())),
+            r#type: ActiveValue::Set(Some(result.merge_task_type.clone())),
+            data_id: ActiveValue::Set(Some(merge_data_id.clone())),
+            status: ActiveValue::Set(Some(entity::task::Status::Ready)),
+            error_reason: ActiveValue::Set(None),
+            cost_time: ActiveValue::Set(Some(0)),
+            retry_count: ActiveValue::Set(Some(0)),
+            create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+            update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+        };
+        let task_data_merge = TaskDataMergeActiveModel {
+            id: ActiveValue::Set(merge_data_id.clone()),
+            r#type: ActiveValue::Set(Some(result.merge_data_task_type.clone())),
+            user_name: ActiveValue::Set(result.user_name.clone()),
+            repo_name: ActiveValue::Set(result.repo_name.clone()),
+            datetime: ActiveValue::Set(Some(result.datetime)),
+            data_id: ActiveValue::Set(Some(result.file_id.to_string())),
+            data_count: ActiveValue::Set(Some(result.total as i32)),
+            config: ActiveValue::Set(Some(result.merge_config.clone())),
+            data_page_num: ActiveValue::Set(Some(page_num as i32)),
+            data_page_size: ActiveValue::Set(Some(result.page_size as i32)),
+            create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+            update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
+        };
+        entity::task::Entity::insert(merge_task).exec(txn).await?;
+        entity::task_data_merge::Entity::insert(task_data_merge)
+            .exec(txn)
+            .await?;
+    }
+
+    Ok(())
+}
+

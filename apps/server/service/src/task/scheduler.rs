@@ -19,11 +19,11 @@ use tokio::sync::Semaphore;
 use tokio::sync::watch;
 
 use crate::task::{
-    CalculateAndCreateDownloadTaskParam, Error as TaskError,
+    CalculateAndCreateDownloadTaskParam, DownloadTaskResult, Error as TaskError,
     ExecuteDownloadTaskAndCreateMergeTaskParam, ExecuteMergeTaskParam, MAX_POLL_INTERVAL,
     TaskPlanConfigDataDownloadConfig, calculate_and_create_download_task,
-    execute_download_task_and_create_merge_task, execute_merge_task, get_file_name_by_task_type,
-    query_pending_tasks, query_plans_latest_datetime,
+    download_task_file, execute_merge_task, get_file_name_by_task_type,
+    query_pending_tasks, query_plans_latest_datetime, save_download_task_results,
 };
 
 static SCHEDULER_RUNNING: AtomicBool = AtomicBool::new(false);
@@ -317,52 +317,68 @@ async fn execute_single_task(
     let start = std::time::Instant::now();
 
     let result = tokio::time::timeout(TASK_TIMEOUT, async {
-        conn.transaction(|txn| {
-            Box::pin(async move {
-                super::apply_task_result(
-                    task_clone.clone().into_active_model(),
-                    entity::task::Status::Running,
-                    None,
-                    None,
-                    Some(retry_count),
+        // Phase 1: Mark task as Running (short transaction)
+        let task_active = task_clone.clone().into_active_model();
+        if let Err(e) = conn
+            .transaction(|txn| {
+                Box::pin(async move {
+                    super::apply_task_result(
+                        task_active,
+                        entity::task::Status::Running,
+                        None,
+                        None,
+                        Some(retry_count),
+                        now,
+                        txn,
+                    )
+                    .await
+                })
+            })
+            .await
+        {
+            return Err(anyhow::anyhow!("{:?}", e));
+        }
+
+        // Phase 2: Execute task work (outside any transaction)
+        let work_result: Result<Option<DownloadTaskResult>, TaskError> = match task_clone.r#type {
+            Some(ref t) if t.is_download() => download_task_file(
+                conn,
+                ExecuteDownloadTaskAndCreateMergeTaskParam {
+                    download_task_id: task_clone.id.clone(),
                     now,
-                    txn,
-                )
-                .await?;
+                },
+            )
+            .await
+            .map(Some),
+            Some(ref t) if t.is_merge() => execute_merge_task(
+                conn,
+                ExecuteMergeTaskParam {
+                    merge_task_id: task_clone.id.clone(),
+                    now,
+                },
+            )
+            .await
+            .map(|_| None),
+            _ => Err(TaskError::Internal(anyhow::anyhow!(
+                "unsupported task type"
+            ))),
+        };
 
-                let work_result = match task_clone.r#type {
-                    Some(ref t) if t.is_download() => execute_download_task_and_create_merge_task(
-                        txn,
-                        ExecuteDownloadTaskAndCreateMergeTaskParam {
-                            download_task_id: task_clone.id.clone(),
-                            now,
-                        },
-                    )
-                    .await
-                    .map(|_| ()),
-                    Some(ref t) if t.is_merge() => execute_merge_task(
-                        txn,
-                        ExecuteMergeTaskParam {
-                            merge_task_id: task_clone.id.clone(),
-                            now,
-                        },
-                    )
-                    .await
-                    .map(|_| ()),
-                    _ => Err(TaskError::Internal(anyhow::anyhow!(
-                        "unsupported task type"
-                    ))),
-                };
+        let elapsed = start.elapsed().as_millis() as i32;
 
-                let elapsed = start.elapsed().as_millis() as i32;
-                let task = entity::task::Entity::find_by_id(task_clone.id.clone())
-                    .one(txn)
-                    .await?
-                    .ok_or_else(|| anyhow::anyhow!("task not found id = {}", task_clone.id))?;
-                let task_active = task.into_active_model();
-
-                match work_result {
-                    Ok(_) => {
+        // Phase 3: Mark final status (short transaction)
+        match work_result {
+            Ok(Some(download_result)) => {
+                conn.transaction(|txn| {
+                    Box::pin(async move {
+                        save_download_task_results(txn, download_result, now).await?;
+                        let task = entity::task::Entity::find_by_id(task_clone.id.clone())
+                            .one(txn)
+                            .await?
+                            .ok_or_else(|| {
+                                anyhow::anyhow!("task not found id = {}", task_clone.id)
+                            })?;
+                        let task_active = task.into_active_model();
                         super::apply_task_result(
                             task_active,
                             entity::task::Status::Finished,
@@ -372,9 +388,47 @@ async fn execute_single_task(
                             now,
                             txn,
                         )
-                        .await?;
-                    }
-                    Err(TaskError::FinishedButError(reason)) => {
+                        .await
+                    })
+                })
+                .await
+                .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+            }
+            Ok(None) => {
+                conn.transaction(|txn| {
+                    Box::pin(async move {
+                        let task = entity::task::Entity::find_by_id(task_clone.id.clone())
+                            .one(txn)
+                            .await?
+                            .ok_or_else(|| {
+                                anyhow::anyhow!("task not found id = {}", task_clone.id)
+                            })?;
+                        let task_active = task.into_active_model();
+                        super::apply_task_result(
+                            task_active,
+                            entity::task::Status::Finished,
+                            None,
+                            Some(elapsed),
+                            None,
+                            now,
+                            txn,
+                        )
+                        .await
+                    })
+                })
+                .await
+                .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+            }
+            Err(TaskError::FinishedButError(reason)) => {
+                conn.transaction(|txn| {
+                    Box::pin(async move {
+                        let task = entity::task::Entity::find_by_id(task_clone.id.clone())
+                            .one(txn)
+                            .await?
+                            .ok_or_else(|| {
+                                anyhow::anyhow!("task not found id = {}", task_clone.id)
+                            })?;
+                        let task_active = task.into_active_model();
                         super::apply_task_result(
                             task_active,
                             entity::task::Status::FinishedButError,
@@ -384,15 +438,16 @@ async fn execute_single_task(
                             now,
                             txn,
                         )
-                        .await?;
-                    }
-                    Err(e) => return Err(anyhow::anyhow!("{:?}", e)),
-                }
+                        .await
+                    })
+                })
+                .await
+                .map_err(|e| anyhow::anyhow!("{:?}", e))?;
+            }
+            Err(e) => return Err(anyhow::anyhow!("{:?}", e)),
+        }
 
-                Ok::<(), anyhow::Error>(())
-            })
-        })
-        .await
+        Ok::<(), anyhow::Error>(())
     })
     .await;
 
@@ -400,11 +455,8 @@ async fn execute_single_task(
 
     match result {
         Ok(Ok(())) => {}
-        Ok(Err(transaction_err)) => {
-            let err_msg = match &transaction_err {
-                sea_orm::TransactionError::Connection(db_err) => db_err.to_string(),
-                sea_orm::TransactionError::Transaction(inner_err) => format!("{:?}", inner_err),
-            };
+        Ok(Err(err)) => {
+            let err_msg = format!("{:?}", err);
             tracing::warn!("task execution error id={}: {}", task.id, err_msg);
             mark_task_error(task, err_msg, elapsed, retry_count, now, conn).await;
         }

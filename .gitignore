@@ -54,7 +54,7 @@ out
 test-output
 lua
 
-*.sqlite
+*.sqlite*
 application.yaml
 
 # book

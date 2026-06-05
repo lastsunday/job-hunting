@@ -107,8 +107,8 @@ export default function RecentTasksSection() {
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      const result = await taskApi.list({ page: 1, page_size: 5, return_total: false });
-      setItems(result.items ?? []);
+      const result = await taskApi.search({ page: { num: 1, size: 5 } });
+      setItems(result.items);
     } catch (error) {
       console.error('Failed to refresh recent tasks:', error);
     } finally {
