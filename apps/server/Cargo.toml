@@ -14,7 +14,7 @@ crate-type = [
 
 [dependencies]
 framework = { path = "framework" }
-api = { path = "api" }
+api = { path = "api", features = ["embed-frontend"] }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = [

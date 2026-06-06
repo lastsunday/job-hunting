@@ -16,4 +16,8 @@ rust-embed = { workspace = true, features = [
   "include-flate",
   "interpolate-folder-path",
   "mime-guess",
-] }
+], optional = true }
+
+[features]
+default = ["embed-frontend"]
+embed-frontend = ["dep:rust-embed"]

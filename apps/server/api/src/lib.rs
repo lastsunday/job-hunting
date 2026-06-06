@@ -20,6 +20,7 @@ use axum::ServiceExt;
 use axum::extract::DefaultBodyLimit;
 use axum::extract::Request;
 use axum::http::StatusCode;
+#[cfg(feature = "embed-frontend")]
 use axum::routing::get;
 use bytesize::ByteSize;
 use either::Either;
@@ -41,6 +42,7 @@ use crate::config::task::TaskConfig;
 use framework::error::ApiResult;
 use framework::trace::*;
 use framework::*;
+#[cfg(feature = "embed-frontend")]
 use tower_http::compression::CompressionLayer;
 use tower_http::cors;
 use tower_http::cors::CorsLayer;
@@ -176,8 +178,9 @@ pub fn create_router(
 }
 
 pub fn setup_default(router: Router) -> Router {
+    #[cfg(feature = "embed-frontend")]
+    let router = router.fallback(web::index_handler);
     let app = router
-        .fallback(web::index_handler)
         .method_not_allowed_fallback(async || -> ApiResult<()> {
             tracing::warn!("Method not allowed");
             Err(err!(FrameworkErrorCode::MethodNotAllowed))
@@ -264,7 +267,8 @@ fn setup_api_fallback(router: Router) -> Router {
 }
 
 pub fn setup_web(router: Router) -> Router {
-    router
+    #[cfg(feature = "embed-frontend")]
+    let router = router
         .nest(
             "/assets",
             Router::new()
@@ -276,7 +280,8 @@ pub fn setup_web(router: Router) -> Router {
             Router::new()
                 .route("/{*file}", get(web::locales_handler))
                 .route_layer(CompressionLayer::new()),
-        )
+        );
+    router
 }
 
 #[derive(Clone, Debug)]

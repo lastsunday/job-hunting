@@ -54,7 +54,7 @@ entity = { path = "../entity" }
 migration = { path = "../migration" }
 service = { path = "../service" }
 framework = { path = "../framework" }
-web = { path = "../web" }
+web = { path = "../web", optional = true }
 framework-macros = { path = "../framework/macros" }
 strum = { workspace = true }
 strum_macros = { workspace = true }
@@ -63,6 +63,10 @@ either = { workspace = true, features = ["serde"] }
 tokio-util = { workspace = true }
 futures = { workspace = true }
 tower-layer = { workspace = true }
+
+[features]
+default = []
+embed-frontend = ["web/embed-frontend"]
 
 [dev-dependencies]
 tower = { workspace = true, features = ["util"] }
