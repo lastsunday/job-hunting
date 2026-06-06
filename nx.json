@@ -95,7 +95,8 @@
   ],
   "release": {
     "projects": [
-      "apps/extension"
+      "apps/extension",
+      "apps/server"
     ],
     "projectsRelationship": "independent",
     "changelog": {
