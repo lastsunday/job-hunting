@@ -602,9 +602,7 @@ async fn test_import_job_invalid_number_format() {
 
     data[1][15] = "面议".to_string();
 
-    let result = JobImporter::import(&conn, data, TEST_URI_V1)
-        .await
-        .unwrap();
+    let result = JobImporter::import(&conn, data, TEST_URI_V1).await.unwrap();
 
     println!(
         "Result: success={}, errors={:?}",

@@ -29,8 +29,8 @@ use utoipa_axum::{
 };
 
 use service::common::FileParser;
-use service::task::scheduler;
 use service::sync::{CompanyImporter, ImportError, JobImporter, SyncStatus, result::ImportResult};
+use service::task::scheduler;
 
 const TAG: &str = "sync";
 

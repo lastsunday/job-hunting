@@ -21,9 +21,9 @@ use tokio::sync::watch;
 use crate::task::{
     CalculateAndCreateDownloadTaskParam, DownloadTaskResult, Error as TaskError,
     ExecuteDownloadTaskAndCreateMergeTaskParam, ExecuteMergeTaskParam, MAX_POLL_INTERVAL,
-    TaskPlanConfigDataDownloadConfig, calculate_and_create_download_task,
-    download_task_file, execute_merge_task, get_file_name_by_task_type,
-    query_pending_tasks, query_plans_latest_datetime, save_download_task_results,
+    TaskPlanConfigDataDownloadConfig, calculate_and_create_download_task, download_task_file,
+    execute_merge_task, get_file_name_by_task_type, query_pending_tasks,
+    query_plans_latest_datetime, save_download_task_results,
 };
 
 static SCHEDULER_RUNNING: AtomicBool = AtomicBool::new(false);

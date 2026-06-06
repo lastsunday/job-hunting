@@ -15,8 +15,7 @@ pub async fn setup_database() -> (Option<ContainerAsync<Postgres>>, DatabaseConn
     // sqlite
     let container = None;
     let database_url = &"sqlite::memory:";
-    let conn: DatabaseConnection =
-        database::establish_connection(database_url).await.unwrap();
+    let conn: DatabaseConnection = database::establish_connection(database_url).await.unwrap();
     migration::Migrator::up(&conn, None).await.unwrap();
     (container, conn)
 }

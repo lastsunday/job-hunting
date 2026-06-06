@@ -269,10 +269,7 @@ async fn test_full_flow() {
     assert_eq!(data_count, merge_task_data_count.unwrap());
 
     // checking job record
-    let count = entity::job::Entity::find()
-        .count(&conn)
-        .await
-        .unwrap();
+    let count = entity::job::Entity::find().count(&conn).await.unwrap();
     assert!(count > 0);
     let job = entity::job::Entity::find()
         .one(&conn)

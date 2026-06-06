@@ -12,8 +12,8 @@ use serde::{Deserialize, Serialize};
 use super::download::TaskType;
 use super::error::Error;
 use super::plan::{
-    delete_plan as delete_task_plan, get_plan_by_id, update_plan, CreatePlanParam, RepoType,
-    TaskPlanConfigDataDownloadConfig, Type, UpdatePlanParam,
+    CreatePlanParam, RepoType, TaskPlanConfigDataDownloadConfig, Type, UpdatePlanParam,
+    delete_plan as delete_task_plan, get_plan_by_id, update_plan,
 };
 
 #[derive(Default, Deserialize, Serialize, Debug, Clone)]
@@ -74,9 +74,7 @@ pub async fn create_data_plan<C: TransactionTrait>(
                     create_datetime: ActiveValue::Set(Some(now.fixed_offset())),
                     update_datetime: ActiveValue::Set(Some(now.fixed_offset())),
                 };
-                task_data_plan::Entity::insert(data_plan)
-                    .exec(txn)
-                    .await?;
+                task_data_plan::Entity::insert(data_plan).exec(txn).await?;
 
                 Ok((data_plan_id, plan_id))
             })
@@ -196,7 +194,9 @@ async fn create_task_plan_inner<C: ConnectionTrait>(
                     .context("task plan config data download config to json string failure")?,
                 None => serde_json::to_string(&TaskPlanConfigDataDownloadConfig {
                     task_type_list: task_plan_config_data_download_config.task_type_list.clone(),
-                    url: Some(super::plan::gen_url_by_repo_type(repo_type, user_name, repo_name)),
+                    url: Some(super::plan::gen_url_by_repo_type(
+                        repo_type, user_name, repo_name,
+                    )),
                     user_name: Some(user_name.to_string()),
                     repo_name: Some(repo_name.to_string()),
                     token,

@@ -2,7 +2,7 @@ use std::{collections::HashMap, path::PathBuf, time::Duration};
 
 use chrono::{DateTime, FixedOffset, TimeDelta, Utc};
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, Condition, EntityTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, Condition, ConnectionTrait, EntityTrait,
     QueryFilter, QueryOrder, QuerySelect,
 };
 

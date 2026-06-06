@@ -215,7 +215,9 @@ pub async fn create(
     });
 
     let cron = param.cron.ok_or(err!(TaskPlanErrorCode::CronInvalid))?;
-    let user_name = param.user_name.ok_or(err!(TaskPlanErrorCode::PlanIdEmpty))?;
+    let user_name = param
+        .user_name
+        .ok_or(err!(TaskPlanErrorCode::PlanIdEmpty))?;
     let repo_name = param
         .repo_name
         .ok_or(err!(TaskPlanErrorCode::PlanIdEmpty))?;

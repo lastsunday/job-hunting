@@ -4,9 +4,7 @@ use chrono::{Duration, Utc};
 use entity::task::{Column as TaskColumn, Entity as Task};
 use framework::{data::ApiResponse, error::ApiResult};
 use sea_orm::sea_query::Expr;
-use sea_orm::{
-    ColumnTrait, EntityTrait, ExprTrait, QueryFilter, QueryOrder, QuerySelect,
-};
+use sea_orm::{ColumnTrait, EntityTrait, ExprTrait, QueryFilter, QueryOrder, QuerySelect};
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 use utoipa_axum::{
@@ -173,8 +171,10 @@ pub async fn task_daily_breakdown(
         .all(&conn)
         .await?;
 
-    let mut date_status_map: std::collections::BTreeMap<String, std::collections::HashMap<String, i64>> =
-        std::collections::BTreeMap::new();
+    let mut date_status_map: std::collections::BTreeMap<
+        String,
+        std::collections::HashMap<String, i64>,
+    > = std::collections::BTreeMap::new();
     for (raw_date, status, value) in results {
         let date = if raw_date.len() >= 10 {
             raw_date[..10].to_string()
@@ -182,7 +182,11 @@ pub async fn task_daily_breakdown(
             raw_date
         };
         let status_key = status.unwrap_or_else(|| "未知".to_string());
-        *date_status_map.entry(date).or_default().entry(status_key).or_insert(0) += value;
+        *date_status_map
+            .entry(date)
+            .or_default()
+            .entry(status_key)
+            .or_insert(0) += value;
     }
 
     let mut items = Vec::new();

@@ -17,9 +17,7 @@ use framework::{
     error::ApiResult,
     middleware::get_auth_layer,
 };
-use sea_orm::{
-    ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
-};
+use sea_orm::{ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use utoipa::ToSchema;
@@ -114,27 +112,27 @@ pub async fn search(
         .order_by_desc(task::Column::UpdateDatetime)
         .paginate(&conn, param.page.size);
 
-    let total = paginator.num_items().await.map_err(|_| err!(TaskRunErrorCode::SearchFailed))?;
-    let tasks = paginator.fetch_page(param.page.num - 1).await.map_err(|_| err!(TaskRunErrorCode::SearchFailed))?;
+    let total = paginator
+        .num_items()
+        .await
+        .map_err(|_| err!(TaskRunErrorCode::SearchFailed))?;
+    let tasks = paginator
+        .fetch_page(param.page.num - 1)
+        .await
+        .map_err(|_| err!(TaskRunErrorCode::SearchFailed))?;
 
     let mut download_map: HashMap<String, entity::task_data_download::Model> = HashMap::new();
     let mut merge_map: HashMap<String, entity::task_data_merge::Model> = HashMap::new();
 
     let download_ids: Vec<&str> = tasks
         .iter()
-        .filter(|t| {
-            t.r#type.as_ref().is_some_and(|ty| ty.is_download())
-                && t.data_id.is_some()
-        })
+        .filter(|t| t.r#type.as_ref().is_some_and(|ty| ty.is_download()) && t.data_id.is_some())
         .filter_map(|t| t.data_id.as_deref())
         .collect();
 
     let merge_ids: Vec<&str> = tasks
         .iter()
-        .filter(|t| {
-            t.r#type.as_ref().is_some_and(|ty| ty.is_merge())
-                && t.data_id.is_some()
-        })
+        .filter(|t| t.r#type.as_ref().is_some_and(|ty| ty.is_merge()) && t.data_id.is_some())
         .filter_map(|t| t.data_id.as_deref())
         .collect();
 
@@ -166,46 +164,53 @@ pub async fn search(
             let is_download = t.r#type.as_ref().is_some_and(|ty| ty.is_download());
             let is_merge = t.r#type.as_ref().is_some_and(|ty| ty.is_merge());
 
-            let (detail_user_name, detail_repo_name, detail_datetime, detail_seq, detail_data_count, detail_data_page_num, detail_data_page_size) =
-                if is_download {
-                    if let Some(data_id) = &t.data_id {
-                        if let Some(d) = download_map.get(data_id) {
-                            (
-                                d.user_name.clone(),
-                                d.repo_name.clone(),
-                                d.datetime,
-                                d.seq,
-                                None,
-                                None,
-                                None,
-                            )
-                        } else {
-                            (None, None, None, None, None, None, None)
-                        }
-                    } else {
-                        (None, None, None, None, None, None, None)
-                    }
-                } else if is_merge {
-                    if let Some(data_id) = &t.data_id {
-                        if let Some(d) = merge_map.get(data_id) {
-                            (
-                                d.user_name.clone(),
-                                d.repo_name.clone(),
-                                d.datetime,
-                                None,
-                                d.data_count,
-                                d.data_page_num,
-                                d.data_page_size,
-                            )
-                        } else {
-                            (None, None, None, None, None, None, None)
-                        }
+            let (
+                detail_user_name,
+                detail_repo_name,
+                detail_datetime,
+                detail_seq,
+                detail_data_count,
+                detail_data_page_num,
+                detail_data_page_size,
+            ) = if is_download {
+                if let Some(data_id) = &t.data_id {
+                    if let Some(d) = download_map.get(data_id) {
+                        (
+                            d.user_name.clone(),
+                            d.repo_name.clone(),
+                            d.datetime,
+                            d.seq,
+                            None,
+                            None,
+                            None,
+                        )
                     } else {
                         (None, None, None, None, None, None, None)
                     }
                 } else {
                     (None, None, None, None, None, None, None)
-                };
+                }
+            } else if is_merge {
+                if let Some(data_id) = &t.data_id {
+                    if let Some(d) = merge_map.get(data_id) {
+                        (
+                            d.user_name.clone(),
+                            d.repo_name.clone(),
+                            d.datetime,
+                            None,
+                            d.data_count,
+                            d.data_page_num,
+                            d.data_page_size,
+                        )
+                    } else {
+                        (None, None, None, None, None, None, None)
+                    }
+                } else {
+                    (None, None, None, None, None, None, None)
+                }
+            } else {
+                (None, None, None, None, None, None, None)
+            };
 
             TaskRunDetail {
                 id: t.id,

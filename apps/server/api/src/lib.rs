@@ -180,11 +180,10 @@ pub fn create_router(
 pub fn setup_default(router: Router) -> Router {
     #[cfg(feature = "embed-frontend")]
     let router = router.fallback(web::index_handler);
-    let app = router
-        .method_not_allowed_fallback(async || -> ApiResult<()> {
-            tracing::warn!("Method not allowed");
-            Err(err!(FrameworkErrorCode::MethodNotAllowed))
-        });
+    let app = router.method_not_allowed_fallback(async || -> ApiResult<()> {
+        tracing::warn!("Method not allowed");
+        Err(err!(FrameworkErrorCode::MethodNotAllowed))
+    });
     let timeout =
         TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, Duration::from_secs(300));
     let body_limit = DefaultBodyLimit::max(ByteSize::mib(100).as_u64() as usize);

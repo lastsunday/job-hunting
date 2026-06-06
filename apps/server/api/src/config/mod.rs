@@ -404,5 +404,3 @@ fn default_log_flame_directory() -> String {
 fn default_log_tokio_console_enabled() -> bool {
     false
 }
-
-

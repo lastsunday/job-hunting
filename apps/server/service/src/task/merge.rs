@@ -2,8 +2,7 @@ use anyhow::Context;
 use chrono::{DateTime, Utc};
 use reqwest::Url;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ConnectionTrait, EntityTrait, IntoActiveModel,
-    TransactionTrait,
+    ActiveModelTrait, ActiveValue, ConnectionTrait, EntityTrait, IntoActiveModel, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
 

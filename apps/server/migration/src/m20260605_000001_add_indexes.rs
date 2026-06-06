@@ -215,10 +215,20 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_index(Index::drop().name("idx-file-update-datetime").table(File::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-file-update-datetime")
+                    .table(File::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-file-is-delete").table(File::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-file-is-delete")
+                    .table(File::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
             .drop_index(
@@ -237,52 +247,132 @@ impl MigrationTrait for Migration {
             )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-task-data-id").table(Task::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-task-data-id")
+                    .table(Task::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-job-first-publish-datetime").table(Job::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-job-first-publish-datetime")
+                    .table(Job::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-job-update-datetime").table(Job::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-job-update-datetime")
+                    .table(Job::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-job-create-datetime").table(Job::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-job-create-datetime")
+                    .table(Job::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-job-first-scan-datetime").table(Job::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-job-first-scan-datetime")
+                    .table(Job::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-job-platform").table(Job::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-job-platform")
+                    .table(Job::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-company-update-datetime").table(Company::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-company-update-datetime")
+                    .table(Company::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-company-source-refresh-datetime").table(Company::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-company-source-refresh-datetime")
+                    .table(Company::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-task-plan-id").table(Task::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-task-plan-id")
+                    .table(Task::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-task-status-update-datetime").table(Task::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-task-status-update-datetime")
+                    .table(Task::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-task-plan-enable").table(TaskPlan::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-task-plan-enable")
+                    .table(TaskPlan::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-task-plan-type").table(TaskPlan::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-task-plan-type")
+                    .table(TaskPlan::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-task-data-plan-plan-id").table(TaskDataPlan::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-task-data-plan-plan-id")
+                    .table(TaskDataPlan::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-task-data-download-user-repo-type-datetime").table(TaskDataDownload::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-task-data-download-user-repo-type-datetime")
+                    .table(TaskDataDownload::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-job-source-job-id").table(JobSource::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-job-source-job-id")
+                    .table(JobSource::Table)
+                    .to_owned(),
+            )
             .await?;
         manager
-            .drop_index(Index::drop().name("idx-company-source-company-id").table(CompanySource::Table).to_owned())
+            .drop_index(
+                Index::drop()
+                    .name("idx-company-source-company-id")
+                    .table(CompanySource::Table)
+                    .to_owned(),
+            )
             .await?;
         Ok(())
     }

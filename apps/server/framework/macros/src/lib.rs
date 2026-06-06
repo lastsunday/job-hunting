@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use quote::quote_spanned;
-use syn::{parse_macro_input, Ident, Type};
+use syn::{Ident, Type, parse_macro_input};
 
 // Proc-macro attribute for automatically implementing standard error code enums.
 // Only works on enums, automatically implements AppErrorCode trait

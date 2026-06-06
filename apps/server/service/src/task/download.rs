@@ -366,7 +366,10 @@ pub async fn download_task_file(
     let download_config = download_config
         .ok_or_else(|| anyhow::anyhow!("Task config not found for data_id = {}", data_id))?;
     let TaskDataDownloadConfig { url, file_name } = serde_json::from_str(&download_config)
-        .context(format!("parse config json failure,str = {}", download_config))?;
+        .context(format!(
+            "parse config json failure,str = {}",
+            download_config
+        ))?;
     let merge_config = crate::task::merge::TaskDataMergeConfig {
         url: url.clone(),
         file_name: file_name.clone(),
@@ -529,8 +532,7 @@ pub async fn save_download_task_results(
             })?;
     let mut task_data_download_active = task_data_download_model.into_active_model();
     task_data_download_active.data_id = ActiveValue::Set(Some(result.file_id.to_string()));
-    task_data_download_active.update_datetime =
-        ActiveValue::Set(Some(now.fixed_offset()));
+    task_data_download_active.update_datetime = ActiveValue::Set(Some(now.fixed_offset()));
     task_data_download_active.update(txn).await?;
 
     let file = entity::file::ActiveModel {
@@ -582,4 +584,3 @@ pub async fn save_download_task_results(
 
     Ok(())
 }
-

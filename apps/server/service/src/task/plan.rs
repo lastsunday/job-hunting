@@ -3,10 +3,10 @@ use std::str::FromStr;
 use anyhow::Context;
 use chrono::{DateTime, Utc};
 use cron::Schedule;
+use entity::task_data_source_plan::Entity as TaskDataSourcePlanEntity;
 use entity::task_plan::ActiveModel as TaskPlanActiveModel;
 use entity::task_plan::Column as TaskPlanColumn;
 use entity::task_plan::Entity as TaskPlanEntity;
-use entity::task_data_source_plan::Entity as TaskDataSourcePlanEntity;
 use framework::id::gen_id;
 use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, EntityTrait, IntoActiveModel,
@@ -133,11 +133,13 @@ pub async fn search_plans<C: ConnectionTrait>(
     let order_dir = param.order_dir.unwrap_or("desc".to_string());
     let is_asc = order_dir == "asc";
 
-    let selection = TaskPlanEntity::find().apply_if(param.r#type, |query, v| {
-        query.filter(TaskPlanColumn::Type.eq(v))
-    }).apply_if(param.enable, |query, v| {
-        query.filter(TaskPlanColumn::Enable.eq(v))
-    });
+    let selection = TaskPlanEntity::find()
+        .apply_if(param.r#type, |query, v| {
+            query.filter(TaskPlanColumn::Type.eq(v))
+        })
+        .apply_if(param.enable, |query, v| {
+            query.filter(TaskPlanColumn::Enable.eq(v))
+        });
 
     let paginate = match order_by.as_str() {
         "create_datetime" => {
@@ -179,7 +181,9 @@ pub async fn get_plan_by_id<C: ConnectionTrait>(
     TaskPlanEntity::find_by_id(id)
         .one(conn)
         .await?
-        .ok_or(sea_orm::DbErr::RecordNotFound("task_plan not found".to_string()))
+        .ok_or(sea_orm::DbErr::RecordNotFound(
+            "task_plan not found".to_string(),
+        ))
 }
 
 pub async fn update_plan<C: ConnectionTrait>(
@@ -226,8 +230,7 @@ pub async fn update_plan<C: ConnectionTrait>(
             config.url = Some(v);
         }
         active_model.config = ActiveValue::Set(Some(
-            serde_json::to_string(&config)
-                .context("serialize task plan config failure")?,
+            serde_json::to_string(&config).context("serialize task plan config failure")?,
         ));
     }
 
@@ -240,10 +243,7 @@ pub async fn update_plan<C: ConnectionTrait>(
         .ok_or_else(|| Error::Internal(anyhow::anyhow!("task_plan not found after update")))
 }
 
-pub async fn delete_plan<C: ConnectionTrait>(
-    conn: &C,
-    id: &str,
-) -> Result<(), sea_orm::DbErr> {
+pub async fn delete_plan<C: ConnectionTrait>(conn: &C, id: &str) -> Result<(), sea_orm::DbErr> {
     let id = id.to_string();
     TaskDataSourcePlanEntity::delete_many()
         .filter(entity::task_data_source_plan::Column::PlanId.eq(&id))
@@ -257,7 +257,11 @@ pub(super) fn validate_cron(expr: &str) -> bool {
     Schedule::from_str(expr).is_ok()
 }
 
-pub(super) fn gen_url_by_repo_type(repo_type: &RepoType, user_name: &str, repo_name: &str) -> String {
+pub(super) fn gen_url_by_repo_type(
+    repo_type: &RepoType,
+    user_name: &str,
+    repo_name: &str,
+) -> String {
     match repo_type {
         RepoType::Github => format!("https://github.com/{}/{}", user_name, repo_name),
     }

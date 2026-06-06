@@ -6,9 +6,9 @@ pub enum FileErrorCode {
 }
 
 use crate::AppState;
-use axum::{debug_handler, extract::Path, extract::State};
 use axum::body::Body;
 use axum::response::Response;
+use axum::{debug_handler, extract::Path, extract::State};
 use chrono::{DateTime, FixedOffset};
 use entity::file::{self, Entity as File};
 use entity::schema::date_time_with_time_zone_or_null_schema;
@@ -169,7 +169,9 @@ pub async fn search(
         })
         .collect();
 
-    Ok(ApiResponse::success(Some(ApiPageResult::new(file_items, total))))
+    Ok(ApiResponse::success(Some(ApiPageResult::new(
+        file_items, total,
+    ))))
 }
 
 #[debug_handler]
