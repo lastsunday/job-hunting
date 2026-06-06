@@ -1,0 +1,16 @@
+name: Setup Rust
+description: Install Rust toolchain with caching
+
+inputs:
+  components:
+    description: Comma-separated list of components to install
+    default: clippy, rustfmt
+
+runs:
+  using: composite
+  steps:
+    - name: Install Rust toolchain
+      uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6
+      with:
+        components: ${{ inputs.components }}
+        cache: true

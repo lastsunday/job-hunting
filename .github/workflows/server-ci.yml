@@ -1,0 +1,68 @@
+name: server-ci
+run-name: ${{ github.actor }} server CI
+
+permissions:
+  contents: read
+  checks: write
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "apps/server**"
+      - ".github/**"
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - "apps/server**"
+      - ".github/**"
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ui-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-pnpm
+
+      - name: Run unit tests
+        run: |
+          pnpm exec nx run @job-hunting/server-ui:test
+
+      - name: Setup e2e tests
+        run: |
+          pnpm exec nx run @job-hunting/server-ui-e2e:e2e:install
+
+      - name: Run e2e tests
+        run: |
+          pnpm exec nx run @job-hunting/server-ui-e2e:e2e
+
+  server-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-rust
+
+      - name: Run tests
+        run: |
+          cargo test --workspace --exclude job-hunting-server --exclude web --verbose
+
+      - name: Clippy
+        run: |
+          cargo clippy --workspace -- -D warnings
+
+      - name: Format check
+        run: |
+          cargo fmt --check
