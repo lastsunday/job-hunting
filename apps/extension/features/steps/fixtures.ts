@@ -19,7 +19,11 @@ export const test = base.extend<Fixtures>({
             ],
         });
         await use(context);
-        await context.close({ timeout: 5000 });
+        await Promise.all(context.pages().map(p => p.close().catch(() => {})));
+        await Promise.race([
+            context.close(),
+            new Promise<void>(resolve => setTimeout(resolve, 5000)),
+        ]);
     },
     extensionId: async ({ context }, use) => {
         let background: { url(): string };
