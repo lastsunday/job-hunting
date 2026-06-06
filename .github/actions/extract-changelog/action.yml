@@ -1,0 +1,21 @@
+name: Extract Changelog
+description: Extract the latest release notes from a CHANGELOG.md file
+
+inputs:
+  changelog-path:
+    description: Path to CHANGELOG.md
+    required: true
+  output-path:
+    description: Path to write extracted changelog
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Extract latest release notes
+      shell: bash
+      run: |
+        awk '/^##[^#]/{print NR}' "${{ inputs.changelog-path }}" \
+          | head -n 2 | xargs | tr ' ' ',' \
+          | xargs -I {} sed -n {}p "${{ inputs.changelog-path }}" \
+          | sed '$d' > "${{ inputs.output-path }}"

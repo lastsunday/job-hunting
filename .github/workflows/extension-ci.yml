@@ -33,8 +33,6 @@ jobs:
           fetch-depth: 0
 
       - uses: ./.github/actions/setup-pnpm
-        with:
-          pnpm-version: "10.13.1"
 
       - name: Run unit tests
         run: |
@@ -62,6 +60,7 @@ jobs:
         with:
           ref: gh-test
           path: gh-test
+          fetch-depth: 1
 
       - name: (allure-report) Build test report
         uses: simple-elf/allure-report-action@53ebb757a2097edc77c53ecef4d454fc2f2f774c

@@ -12,12 +12,14 @@ on:
     paths:
       - "apps/server**"
       - ".github/**"
+      - "pnpm-lock.yaml"
   pull_request:
     branches:
       - dev
     paths:
       - "apps/server**"
       - ".github/**"
+      - "pnpm-lock.yaml"
 
 env:
   CARGO_TERM_COLOR: always

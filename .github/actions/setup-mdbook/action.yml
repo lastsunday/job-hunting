@@ -1,0 +1,40 @@
+name: Setup mdBook
+description: Install mdBook and mdbook-mermaid with caching
+
+runs:
+  using: composite
+  steps:
+    - name: Cache mdbook
+      id: cache-mdbook
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2294
+      with:
+        path: ./mdbook-bin
+        key: ${{ runner.os }}-mdbook-v1
+
+    - name: Install mdbook
+      if: steps.cache-mdbook.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        tag=$(curl 'https://api.github.com/repos/rust-lang/mdbook/releases/latest' | jq -r '.tag_name')
+        url="https://github.com/rust-lang/mdbook/releases/download/${tag}/mdbook-${tag}-x86_64-unknown-linux-gnu.tar.gz"
+        mkdir -p mdbook-bin
+        curl -sSL $url | tar -xz --directory=./mdbook-bin
+
+    - name: Add mdbook to PATH
+      shell: bash
+      run: echo "$(pwd)/mdbook-bin" >> $GITHUB_PATH
+
+    - name: Cache mdbook-mermaid
+      id: cache-mermaid
+      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2294
+      with:
+        path: |
+          ~/.cargo/bin/mdbook-mermaid
+          ~/.cargo/.crates2.json
+          ~/.cargo/.crates.toml
+        key: ${{ runner.os }}-mdbook-mermaid-v1
+
+    - name: Install mdbook-mermaid
+      if: steps.cache-mermaid.outputs.cache-hit != 'true'
+      shell: bash
+      run: cargo install mdbook-mermaid

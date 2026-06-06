@@ -7,7 +7,7 @@ inputs:
     default: "22"
   pnpm-version:
     description: pnpm version
-    default: "10.5.0"
+    default: "10.13.1"
 
 runs:
   using: composite
