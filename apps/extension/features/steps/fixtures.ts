@@ -1,6 +1,8 @@
 import { chromium, type BrowserContext } from "@playwright/test";
 import { test as base, createBdd } from 'playwright-bdd';
 import path from "path";
+import { APP_ID } from "../../common/config";
+
 const pathToExtension = path.resolve(".output/chrome-mv3");
 
 type Fixtures = {
@@ -20,31 +22,8 @@ export const test = base.extend<Fixtures>({
     });
     await use(context);
   },
-  extensionId: async ({ context }, use) => {
-    let background: { url(): string };
-    if (pathToExtension.endsWith("-mv3")) {
-      const swPromise = context.waitForEvent("serviceworker", { timeout: 120000 });
-      const serviceWorkers = context.serviceWorkers();
-      if (serviceWorkers.length > 0) {
-        background = serviceWorkers[0];
-      } else {
-        try {
-          background = await swPromise;
-        } catch (error) {
-          throw new Error(
-            `Failed to load extension service worker within 60s. ` +
-            `Ensure extension is built (wxt build) and output exists at ${pathToExtension}. ${error}`
-          );
-        }
-      }
-    } else {
-      [background] = context.backgroundPages();
-      if (!background)
-        background = await context.waitForEvent("backgroundpage");
-    }
-
-    const extensionId = background.url().split("/")[2];
-    await use(extensionId);
+  extensionId: async ({ }, use) => {
+    await use(APP_ID);
   },
 });
 
