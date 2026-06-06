@@ -16,6 +16,6 @@ runs:
       shell: bash
       run: |
         awk '
-          /^## v?[0-9]+\.[0-9]+\.[0-9]/ { if (found) exit; found=1 }
+          /^## [0-9]+\.[0-9]+\.[0-9]+ \([0-9]{4}-[0-9]{2}-[0-9]{2}\)/ { if (found) exit; found=1 }
           found
         ' "${{ inputs.changelog-path }}" > "${{ inputs.output-path }}"

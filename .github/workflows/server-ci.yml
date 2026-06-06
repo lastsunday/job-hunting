@@ -11,18 +11,22 @@ concurrency:
 
 on:
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch to run against
+        default: dev
   push:
     branches:
       - dev
     paths:
-      - "apps/server**"
+      - "apps/server*/**"
       - ".github/**"
       - "pnpm-lock.yaml"
   pull_request:
     branches:
       - dev
     paths:
-      - "apps/server**"
+      - "apps/server*/**"
       - ".github/**"
       - "pnpm-lock.yaml"
 

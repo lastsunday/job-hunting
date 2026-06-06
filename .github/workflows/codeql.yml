@@ -1,5 +1,14 @@
 name: codeql
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
 on:
   workflow_dispatch:
   push:
@@ -22,10 +31,6 @@ on:
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
-      security-events: write
 
     strategy:
       fail-fast: false
@@ -41,13 +46,12 @@ jobs:
           fetch-depth: 1
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@7fd177fa680c9881b53cdab4d346d32574c9f7f4 # v3.35.4
+        uses: github/codeql-action/init@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
         with:
           languages: ${{ matrix.language }}
-          queries: ${{ matrix.language == 'rust' && 'codeql/rust-queries' || '' }}
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@7fd177fa680c9881b53cdab4d346d32574c9f7f4 # v3.35.4
+        uses: github/codeql-action/autobuild@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@7fd177fa680c9881b53cdab4d346d32574c9f7f4 # v3.35.4
+        uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2

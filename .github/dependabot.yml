@@ -4,12 +4,16 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    reviewers:
+      - "lastsunday"
 
   - package-ecosystem: npm
     directory: /
     schedule:
       interval: weekly
     open-pull-requests-limit: 5
+    reviewers:
+      - "lastsunday"
     groups:
       production-dependencies:
         dependency-type: "production"
@@ -26,3 +30,5 @@ updates:
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    reviewers:
+      - "lastsunday"
