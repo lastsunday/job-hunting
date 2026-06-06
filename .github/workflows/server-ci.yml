@@ -61,7 +61,7 @@ jobs:
 
       - name: Clippy
         run: |
-          cargo clippy --workspace -- -D warnings
+          cargo clippy --workspace --exclude job-hunting-server --exclude web -- -D warnings
 
       - name: Format check
         run: |

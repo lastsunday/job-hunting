@@ -106,6 +106,7 @@ jobs:
           pnpm exec nx run @job-hunting/server-ui:build
 
       - name: Move UI dist to web/
+        if: runner.os == 'Windows'
         run: |
           rm -rf ./web/dist
           mv ../server-ui/dist ./web/dist
