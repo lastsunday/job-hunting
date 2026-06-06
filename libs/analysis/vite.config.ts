@@ -2,7 +2,6 @@
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import * as path from 'path';
-import { playwright } from '@vitest/browser-playwright';
 
 export default defineConfig({
   root: __dirname,

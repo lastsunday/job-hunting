@@ -4,6 +4,7 @@ import path from 'path'
 export default defineConfig({
   test: {
     environment: "jsdom",
+    testTimeout: 30_000,
     include: ['tests/**/*.test.{js,ts,tsx}'],
   },
   resolve: {

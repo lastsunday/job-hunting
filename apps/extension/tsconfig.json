@@ -4,6 +4,7 @@
     "./.wxt/tsconfig.json"
   ],
   "compilerOptions": {
+    "ignoreDeprecations": "6.0",
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "target": "ESNext",

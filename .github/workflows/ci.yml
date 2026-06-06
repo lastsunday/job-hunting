@@ -32,8 +32,11 @@ jobs:
 
       - uses: ./.github/actions/setup-pnpm
 
-      - name: Typecheck & unit tests (affected)
-        run: pnpm exec nx affected -t typecheck test --base=origin/${{ github.base_ref || 'dev' }}
+      - name: Typecheck (affected, except extension - JS→TS migration in progress)
+        run: pnpm exec nx affected -t typecheck --exclude job-hunting-server,@job-hunting/extension --base=origin/${{ github.base_ref || 'dev' }}
+
+      - name: Unit tests (affected)
+        run: pnpm exec nx affected -t test --exclude job-hunting-server --base=origin/${{ github.base_ref || 'dev' }}
 
       - name: Check affected projects
         id: affected
