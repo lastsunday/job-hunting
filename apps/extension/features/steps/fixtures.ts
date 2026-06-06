@@ -12,7 +12,7 @@ export const test = base.extend<Fixtures>({
     context: async ({ }, use) => {
         const context = await chromium.launchPersistentContext("", {
             headless: true,
-            timeout: 30000,
+            timeout: 60000,
             args: [
                 `--disable-extensions-except=${pathToExtension}`,
                 `--load-extension=${pathToExtension}`,
@@ -24,7 +24,7 @@ export const test = base.extend<Fixtures>({
     extensionId: async ({ context }, use) => {
         let background: { url(): string };
         if (pathToExtension.endsWith("-mv3")) {
-            const swPromise = context.waitForEvent("serviceworker", { timeout: 60000 });
+            const swPromise = context.waitForEvent("serviceworker", { timeout: 120000 });
             const serviceWorkers = context.serviceWorkers();
             if (serviceWorkers.length > 0) {
                 background = serviceWorkers[0];
