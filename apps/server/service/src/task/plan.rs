@@ -211,7 +211,7 @@ pub async fn update_plan<C: ConnectionTrait>(
     if param.task_type_list.is_some() || param.token.is_some() || param.url.is_some() {
         let mut config: TaskPlanConfigDataDownloadConfig = existing_config
             .as_deref()
-            .map(|c| serde_json::from_str(c))
+            .map(serde_json::from_str)
             .transpose()
             .ok()
             .flatten()

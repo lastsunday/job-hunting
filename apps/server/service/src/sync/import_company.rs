@@ -345,6 +345,7 @@ impl CompanyImporter {
     }
 
     // 根据CSV行构建company_source模型
+    #[allow(clippy::too_many_arguments)]
     fn build_company_source(
         id: &str,
         company_id: &str,

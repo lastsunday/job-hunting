@@ -226,7 +226,7 @@ pub async fn job_location(
         .into_iter()
         .map(|(name, value)| StatItem { name, value })
         .collect();
-    items.sort_by(|a, b| b.value.cmp(&a.value));
+    items.sort_by_key(|b| std::cmp::Reverse(b.value));
 
     Ok(ApiResponse::success(Some(items)))
 }
@@ -324,7 +324,7 @@ pub async fn job_degree(
         .into_iter()
         .map(|(name, value)| StatItem { name, value })
         .collect();
-    items.sort_by(|a, b| b.value.cmp(&a.value));
+    items.sort_by_key(|b| std::cmp::Reverse(b.value));
 
     Ok(ApiResponse::success(Some(items)))
 }

@@ -118,7 +118,7 @@ impl Repo for GitRepo {
         let content = files_map
             .get(&path)
             .ok_or_else(|| DownloadError::FileNotFound(path.clone()))?;
-        let sha = util::gen_bytes_sha256(&content);
+        let sha = util::gen_bytes_sha256(content);
         Ok(FileInfo {
             content: content.clone(),
             file_name: Some(file_name),

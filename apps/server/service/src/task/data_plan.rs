@@ -176,6 +176,7 @@ pub async fn update_data_plan<C: ConnectionTrait>(
     Ok((dp, plan))
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn create_task_plan_inner<C: ConnectionTrait>(
     conn: &C,
     user_name: &str,

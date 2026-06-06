@@ -375,6 +375,7 @@ impl JobImporter {
     }
 
     // 根据CSV行构建job_source模型
+    #[allow(clippy::too_many_arguments)]
     fn build_job_source(
         id: &str,
         job_id: &str,
