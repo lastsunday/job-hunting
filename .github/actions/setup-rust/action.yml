@@ -14,3 +14,4 @@ runs:
       with:
         components: ${{ inputs.components }}
         cache: true
+        cache-on-failure: true

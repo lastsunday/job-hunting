@@ -31,7 +31,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - uses: ./.github/actions/extract-changelog
         with:
@@ -91,7 +91,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Set VERSION
         run: |
@@ -107,7 +107,7 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           rm -rf ./web/dist
-          mv ../server-ui/dist ./web/dist
+          mv ${{ github.workspace }}/apps/server-ui/dist ./web/dist
 
       - uses: taiki-e/upload-rust-binary-action@3962470d6e7f1993108411bc3f75a135ec67fc8c
         with:

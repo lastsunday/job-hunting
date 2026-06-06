@@ -6,7 +6,7 @@ runs:
   steps:
     - name: Cache mdbook
       id: cache-mdbook
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2294
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: ./mdbook-bin
         key: ${{ runner.os }}-mdbook-v1
@@ -26,7 +26,7 @@ runs:
 
     - name: Cache mdbook-mermaid
       id: cache-mermaid
-      uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2294
+      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: |
           ~/.cargo/bin/mdbook-mermaid
