@@ -21,16 +21,6 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    allow:
-      - dependency-type: "production"
-        update-types:
-          - "version-update:semver-patch"
-          - "version-update:semver-minor"
-      - dependency-type: "development"
-        update-types:
-          - "version-update:semver-patch"
-          - "version-update:semver-minor"
-
   - package-ecosystem: cargo
     directory: /apps/server
     schedule:

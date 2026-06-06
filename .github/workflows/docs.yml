@@ -1,6 +1,10 @@
 name: docs
 run-name: ${{ github.actor }} docs
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
   push:

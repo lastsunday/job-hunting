@@ -5,6 +5,10 @@ permissions:
   contents: read
   checks: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
   push:
@@ -35,6 +39,10 @@ jobs:
           fetch-depth: 1
 
       - uses: ./.github/actions/setup-pnpm
+
+      - name: Typecheck
+        run: |
+          pnpm exec nx run @job-hunting/server-ui:typecheck
 
       - name: Run unit tests
         run: |

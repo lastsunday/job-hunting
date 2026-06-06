@@ -5,6 +5,10 @@ permissions:
   contents: read
   checks: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
   push:
@@ -35,6 +39,12 @@ jobs:
 
       - uses: ./.github/actions/setup-pnpm
 
+      # typecheck 暂不加入: 项目大部分代码还是 JS（JS→TS 迁移中），tsconfig 也关了严格模式，
+      # 现在跑 typecheck 检查不到什么东西，等迁移完成后再启用
+      # - name: Typecheck
+      #   run: |
+      #     pnpm exec nx run @job-hunting/extension:typecheck
+
       - name: Run unit tests
         run: |
           pnpm exec nx run @job-hunting/extension:test:unit
@@ -50,14 +60,14 @@ jobs:
 
       - name: (allure-report) Set up JDK
         uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12
-        if: steps.e2e.outcome == 'success' && !cancelled()
+        if: !cancelled()
         with:
           distribution: zulu
           java-version: 17
 
       - name: (allure-report) Load test report history
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        if: steps.e2e.outcome == 'success' && !cancelled()
+        if: !cancelled()
         continue-on-error: true
         with:
           ref: gh-test
@@ -66,7 +76,7 @@ jobs:
 
       - name: (allure-report) Build test report
         uses: simple-elf/allure-report-action@53ebb757a2097edc77c53ecef4d454fc2f2f774c
-        if: steps.e2e.outcome == 'success' && !cancelled()
+        if: !cancelled()
         with:
           gh_pages: gh-test
           allure_history: gh-test
@@ -74,7 +84,7 @@ jobs:
 
       - name: (allure-report) Upload test report to action artifacts
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
-        if: steps.e2e.outcome == 'success' && !cancelled()
+        if: !cancelled()
         with:
           name: extension-e2e-tests-allure-report
           path: allure-report/
@@ -82,7 +92,7 @@ jobs:
 
       - name: (cucumber-report) Upload test report to action artifacts
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
-        if: steps.e2e.outcome == 'success' && !cancelled()
+        if: !cancelled()
         with:
           name: extension-e2e-tests-cucumber-report
           path: apps/extension/cucumber-report/
