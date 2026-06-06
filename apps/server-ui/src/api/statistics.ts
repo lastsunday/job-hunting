@@ -45,8 +45,8 @@ export const taskStatsApi = {
   getStatusDistribution: (days?: number) =>
     getJson<StatItem[]>('/api/task/statistics/status', { days }),
 
-  getTypeDistribution: () =>
-    getJson<StatItem[]>('/api/task/statistics/type'),
+  getTypeDistribution: (days?: number) =>
+    getJson<StatItem[]>('/api/task/statistics/type', { days }),
 
   getDailyCount: (days?: number) =>
     getJson<StatItem[]>('/api/task/statistics/daily-count', { days }),

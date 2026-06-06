@@ -14,11 +14,10 @@
     "rootDir": "src",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "baseUrl": ".",
-    "resolveJsonModule": true,
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "resolveJsonModule": true
   },
   "exclude": [
     "out-tsc",

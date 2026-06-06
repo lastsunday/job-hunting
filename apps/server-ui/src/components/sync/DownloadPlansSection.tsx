@@ -98,7 +98,7 @@ function TaskTypeCell({ config }: { config?: string | null }) {
     <Group gap={4}>
       {list.map((v) => (
         <Badge key={v} size="sm" color="cyan">
-          {t(TASK_TYPE_LABELS[v] || v)}
+          {t((TASK_TYPE_LABELS[v] || v) as string)}
         </Badge>
       ))}
     </Group>
@@ -344,7 +344,7 @@ export default function DownloadPlansSection() {
         <Select
           label={t('cron')}
           placeholder={t('cron')}
-          data={[...getCronPresets(t), { label: t('cronCustom'), value: '__custom__' }]}
+          data={[...getCronPresets(t as unknown as (key: string) => string), { label: t('cronCustom'), value: '__custom__' }]}
           value={form.cronIsCustom ? '__custom__' : form.cron || null}
           onChange={(value) => {
             if (value === '__custom__') {
@@ -455,13 +455,13 @@ export default function DownloadPlansSection() {
                 <Text size="sm" c="dimmed" w={100}>{t('token')}:</Text>
                 <Group gap={4}>
                   <Text size="sm" style={{ fontFamily: showToken ? undefined : 'monospace' }}>
-                    {cfg.token ? (showToken ? cfg.token : '••••••••') : t('common:na')}
+                    {(cfg.token ? (showToken ? cfg.token : '••••••••') : t('common:na')) as string}
                   </Text>
-                  {cfg.token && (
+                  {cfg.token ? (
                     <ActionIcon variant="subtle" size="sm" onClick={() => setShowToken(!showToken)}>
                       {showToken ? <IconEyeOff size={14} /> : <IconEye size={14} />}
                     </ActionIcon>
-                  )}
+                  ) : null}
                 </Group>
               </Group>
               <Group>

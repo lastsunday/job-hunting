@@ -70,7 +70,6 @@ function RouteComponent() {
   const [statusDist, setStatusDist] = useState<StatItem[]>([]);
   const [taskStatsDays, setTaskStatsDays] = useState<number | undefined>(30);
   const [typeDist, setTypeDist] = useState<StatItem[]>([]);
-  const [dailyCount, setDailyCount] = useState<StatItem[]>([]);
   const [dailyBreakdown, setDailyBreakdown] = useState<DailyBreakdownItem[]>([]);
   const [statsOpened, setStatsOpened] = useState(false);
   const [refreshingStatus, setRefreshingStatus] = useState(false);
@@ -117,13 +116,11 @@ function RouteComponent() {
     Promise.all([
       taskStatsApi.getStatusDistribution(taskStatsDays),
       taskStatsApi.getTypeDistribution(taskStatsDays),
-      taskStatsApi.getDailyCount(taskStatsDays),
       taskStatsApi.getDailyBreakdown(taskStatsDays),
     ])
-      .then(([s, t, d, b]) => {
+      .then(([s, t, b]) => {
         setStatusDist(s);
         setTypeDist(t);
-        setDailyCount(d);
         setDailyBreakdown(b);
       })
       .catch(() => {});
@@ -185,19 +182,17 @@ function RouteComponent() {
   };
 
   const renderErrorMessage = (error: ImportError): string => {
-    const key = `error${error.error_type}`;
-    const params = { row: error.row, field: error.field, value: error.value };
-    return t(key, params) || `${error.error_type}: row ${error.row}, field ${error.field}`;
+    const key = `error${error.error_type}` as const;
+    const params: Record<string, unknown> = { row: error.row, field: error.field };
+    if ('value' in error) {
+      params.value = error.value;
+    }
+    return (t as (k: string, p: Record<string, unknown>) => string)(key, params) || `${error.error_type}: row ${error.row}, field ${error.field}`;
   };
 
   const renderWarningMessage = (warning: ImportWarning): string => {
-    const key = `warning${warning.error_type}`;
-    const params = {
-      file_version: warning.file_version,
-      max_supported_version: warning.max_supported_version,
-      actual_version: warning.actual_version,
-    };
-    return t(key, params) || `${warning.error_type}`;
+    const key = `warning${warning.error_type}` as const;
+    return (t as (k: string, p: Record<string, unknown>) => string)(key, warning as unknown as Record<string, unknown>) || `${warning.error_type}`;
   };
 
   const renderResultModal = () => {
@@ -440,7 +435,7 @@ function RouteComponent() {
                     </Group>
                     <Group gap="xs">
                       <Text size="sm" c="dimmed">{t('schedulerStatus')}:</Text>
-                      <Badge color={status?.scheduler_running ? 'teal' : 'gray'} size="sm" variant="light" dot>
+                      <Badge color={status?.scheduler_running ? 'teal' : 'gray'} size="sm" variant="dot">
                         {status?.scheduler_running ? t('schedulerRunning') : t('schedulerStopped')}
                       </Badge>
                     </Group>
@@ -539,7 +534,7 @@ function RouteComponent() {
                           emphasis: { label: { show: true, fontSize: 13, fontWeight: 'bold' } },
                           data: filled.map((item) => ({
                             value: item.value,
-                            name: t(toPascalCase(item.name), { ns: 'taskRun' }),
+                            name: t(toPascalCase(item.name) as any, { ns: 'taskRun' }) as string,
                             itemStyle: { color: statusColors[item.name] ?? '#868e96' },
                           })),
                         }],
@@ -571,7 +566,7 @@ function RouteComponent() {
                         emphasis: { label: { show: true, fontSize: 13, fontWeight: 'bold' } },
                         data: typeDist.map((item) => ({
                           value: item.value,
-                          name: t(toPascalCase(item.name), { ns: 'taskRun' }),
+                          name: t(toPascalCase(item.name) as any, { ns: 'taskRun' }) as string,
                           itemStyle: { color: ({ JOB_DATA_DOWNLOAD: '#228be6', JOB_DATA_MERGE: '#20c997', COMPANY_DATA_DOWNLOAD: '#4c6ef5', COMPANY_DATA_MERGE: '#15aabf' })[item.name] ?? '#868e96' },
                         })),
                       }],
@@ -606,7 +601,7 @@ function RouteComponent() {
                       yAxis: { type: 'value', minInterval: 1 },
                       series: [
                         ...statusOrder.map((status) => ({
-                          name: t(toPascalCase(status), { ns: 'taskRun' }),
+                          name: t(toPascalCase(status) as any, { ns: 'taskRun' }) as string,
                           type: 'bar',
                           stack: 'total',
                           barMaxWidth: 36,

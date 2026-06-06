@@ -5,6 +5,15 @@ import { Text } from '@mantine/core';
 import { useEffect, useRef, useCallback } from 'react';
 import classes from './LocationMap.module.css';
 
+interface FeatureCollection {
+  type: 'FeatureCollection';
+  features: {
+    type: 'Feature';
+    geometry: { type: 'Point'; coordinates: [number, number] };
+    properties: Record<string, unknown>;
+  }[];
+}
+
 export interface MapItem {
   id: string;
   name: string;
@@ -104,7 +113,7 @@ export function LocationMap({
         return { ...item, longitude: lng, latitude: lat };
       }) ?? [];
 
-  const geojsonData: GeoJSON.FeatureCollection = {
+  const geojsonData: FeatureCollection = {
     type: 'FeatureCollection',
     features: validItems.map((item) => ({
       type: 'Feature' as const,

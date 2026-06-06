@@ -137,12 +137,12 @@ function RouteComponent() {
 
   const typeOptions = TASK_TYPE_VALUES.map((v) => ({
     value: v,
-    label: t(v),
+    label: t(v as string),
   }));
 
   const statusOptions = TASK_STATUS_VALUES.map((v) => ({
     value: v,
-    label: t(v),
+    label: t(v as string),
   }));
 
   const loadItems = async (p?: number) => {
@@ -229,7 +229,7 @@ function RouteComponent() {
             color={TYPE_COLOR[item.type] || 'gray'}
             leftSection={<div className={`${TYPE_ICON[item.type] || ''} text-base`} />}
           >
-            {t(item.type)}
+            {t(item.type as string)}
           </Badge>
         ) : (
           <Text size="sm">{t('common:na')}</Text>
@@ -242,14 +242,14 @@ function RouteComponent() {
             color={STATUS_COLOR[item.status] || 'gray'}
             leftSection={<div className={`${STATUS_ICON[item.status] || ''} text-base`} />}
           >
-            {t(item.status)}
+            {t(item.status as string)}
           </Badge>
         ) : (
           <Text size="sm">{t('common:na')}</Text>
         )}
       </Table.Td>
       <Table.Td>
-        {renderTaskSummary(item, t)}
+        {renderTaskSummary(item, t as unknown as (k: string, options?: Record<string, unknown>) => string)}
       </Table.Td>
       <Table.Td>
         <Text size="sm">
@@ -446,7 +446,7 @@ function RouteComponent() {
   );
 }
 
-function renderTaskSummary(item: TaskRunDetail, t: (k: string) => string) {
+function renderTaskSummary(item: TaskRunDetail, t: (k: string, options?: Record<string, unknown>) => string) {
   const isDownload = item.type?.endsWith('Download');
   const isMerge = item.type?.endsWith('Merge');
 

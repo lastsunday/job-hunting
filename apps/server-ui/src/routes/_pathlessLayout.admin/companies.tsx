@@ -37,7 +37,6 @@ import { useEffect, useState } from 'react';
 import {
   companyApi,
   Company,
-  CreateCompanyRequest,
   UpdateCompanyRequest,
 } from '@/api/company';
 import { postJson } from '@/api/http';
@@ -143,9 +142,9 @@ function RouteComponent() {
     legal_person: string;
     unified_code: string;
     web_site: string;
-    insurance_num: number;
-    self_risk: number;
-    union_risk: number;
+    insurance_num: number | undefined;
+    self_risk: number | undefined;
+    union_risk: number | undefined;
     address: string;
     scope: string;
     tax_no: string;
@@ -938,7 +937,7 @@ function RouteComponent() {
               setFormData({ ...formData, name: e.currentTarget.value })
             }
             required
-            disabled={editingCompany}
+            disabled={!!editingCompany}
           />
           <Textarea
             label={t('company:companyDescription')}

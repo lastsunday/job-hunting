@@ -8,7 +8,6 @@ import { RouterProvider, createRouter } from '@tanstack/react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MantineProvider } from '@mantine/core';
 import { DatesProvider } from '@mantine/dates';
-import dayjs from 'dayjs';
 import 'dayjs/locale/zh-cn';
 import i18n from './i18n/i18n';
 // Import the generated route tree
