@@ -27,7 +27,7 @@ env:
   BIN_NAME: job-hunting-server
 
 jobs:
-  create-release:
+  prepare:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -44,15 +44,15 @@ jobs:
           changelog-path: ${{ env.ROOT_DIR }}CHANGELOG.md
           output-path: /tmp/CHANGELOG.txt
 
-      - name: Create Release
-        if: inputs.dry-run != true
-        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
+      - name: Upload changelog
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
         with:
-          body_path: /tmp/CHANGELOG.txt
-          make_latest: false
+          name: release-changelog
+          path: /tmp/CHANGELOG.txt
+          retention-days: 1
 
   build-assets:
-    needs: create-release
+    needs: prepare
     defaults:
       run:
         shell: bash
@@ -80,14 +80,14 @@ jobs:
             targetOSAndARCH: window-amd64
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Setup Perl
+      - name: Setup Perl (Windows only)
         uses: shogo82148/actions-setup-perl@22423f01bde48fb88785c007e3166fbbbd8e892a
         if: contains(matrix.os, 'windows')
         with:
           perl-version: "5.38"
           distribution: strawberry
 
-      - name: Set Perl environment variables
+      - name: Set Perl environment variables (Windows only)
         shell: powershell
         working-directory: \
         if: runner.os == 'Windows'
@@ -101,14 +101,12 @@ jobs:
           fetch-depth: 1
 
       - name: Set VERSION
-        run: |
-          echo "VERSION=${GITHUB_REF_NAME#job-hunting-server@}" >> $GITHUB_ENV
+        run: echo "VERSION=${GITHUB_REF_NAME#job-hunting-server@}" >> $GITHUB_ENV
 
       - uses: ./.github/actions/setup-pnpm
 
       - name: Build UI
-        run: |
-          pnpm exec nx run @job-hunting/server-ui:build
+        run: pnpm exec nx run @job-hunting/server-ui:build
 
       - name: Move UI dist to web/
         if: runner.os == 'Windows'
@@ -126,17 +124,43 @@ jobs:
           features: vendored-openssl
 
       - name: Rename bin for artifact
-        if: matrix.target != 'x86_64-pc-windows-msvc'
+        shell: bash
         run: |
-          mv ${{ github.workspace }}/dist/target/${{ matrix.target }}/release/${{ env.BIN_NAME }} \
-             ${{ github.workspace }}/dist/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}-${{ matrix.targetOSAndARCH }}
+          ext=""
+          if [ "${{ runner.os }}" = "Windows" ]; then ext=".exe"; fi
+          src="${{ github.workspace }}/dist/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}$ext"
+          dst="${{ github.workspace }}/dist/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}-${{ matrix.targetOSAndARCH }}$ext"
+          mv "$src" "$dst"
 
       - name: Upload artifact
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
-        if: matrix.target != 'x86_64-pc-windows-msvc'
         with:
           name: ${{ env.BIN_NAME }}-${{ matrix.targetOSAndARCH }}
-          path: ${{ github.workspace }}/dist/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}-${{ matrix.targetOSAndARCH }}
+          path: ${{ github.workspace }}/dist/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}-${{ matrix.targetOSAndARCH }}*
+
+  create-release:
+    needs: build-assets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download changelog
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+        with:
+          name: release-changelog
+
+      - name: Download all binaries
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+        with:
+          path: release-binaries
+          pattern: ${{ env.BIN_NAME }}-*
+          merge-multiple: true
+
+      - name: Create Release
+        if: inputs.dry-run != true
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
+        with:
+          body_path: /tmp/CHANGELOG.txt
+          make_latest: false
+          files: release-binaries/*
 
   push-docker:
     needs: build-assets
@@ -195,9 +219,7 @@ jobs:
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
         with:
           context: ${{ env.ROOT_DIR }}
-          platforms: |
-            linux/amd64
-            linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: ${{ inputs.dry-run != true }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

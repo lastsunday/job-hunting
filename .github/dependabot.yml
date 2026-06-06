@@ -4,6 +4,8 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    labels:
+      - dependencies
     reviewers:
       - "lastsunday"
 
@@ -11,9 +13,12 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
+    labels:
+      - dependencies
     reviewers:
       - "lastsunday"
+    versioning-strategy: increase
     groups:
       production-dependencies:
         dependency-type: "production"
@@ -25,10 +30,31 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      major-updates:
+        dependency-type: "production"
+        update-types:
+          - "major"
+    ignore:
+      - dependency-name: "@types/*"
+        update-types:
+          - "version-update:semver-patch"
+          - "version-update:semver-minor"
+
   - package-ecosystem: cargo
     directory: /apps/server
     schedule:
       interval: weekly
     open-pull-requests-limit: 10
+    labels:
+      - dependencies
+    reviewers:
+      - "lastsunday"
+
+  - package-ecosystem: docker
+    directory: /apps/server
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
     reviewers:
       - "lastsunday"

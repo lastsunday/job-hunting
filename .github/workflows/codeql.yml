@@ -1,4 +1,5 @@
 name: codeql
+run-name: ${{ github.actor }} CodeQL analysis
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -11,6 +12,8 @@ permissions:
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
   push:
     branches:
       - dev
@@ -27,6 +30,9 @@ on:
       - "apps/extension/**"
       - "libs/**"
       - ".github/**"
+  merge_group:
+    branches:
+      - dev
 
 jobs:
   analyze:
@@ -50,8 +56,13 @@ jobs:
         with:
           languages: ${{ matrix.language }}
 
+      - name: Build Rust
+        if: matrix.language == 'rust'
+        run: cargo build --workspace --exclude job-hunting-server --exclude web --verbose
+
       - name: Autobuild
         uses: github/codeql-action/autobuild@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        if: matrix.language != 'rust'
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
