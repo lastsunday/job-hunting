@@ -4,25 +4,10 @@ description: Install mdBook and mdbook-mermaid with caching
 runs:
   using: composite
   steps:
-    - name: Cache mdbook
-      id: cache-mdbook
-      uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
-      with:
-        path: ./mdbook-bin
-        key: ${{ runner.os }}-mdbook-v1
-
     - name: Install mdbook
-      if: steps.cache-mdbook.outputs.cache-hit != 'true'
-      shell: bash
-      run: |
-        tag=$(curl 'https://api.github.com/repos/rust-lang/mdbook/releases/latest' | jq -r '.tag_name')
-        url="https://github.com/rust-lang/mdbook/releases/download/${tag}/mdbook-${tag}-x86_64-unknown-linux-gnu.tar.gz"
-        mkdir -p mdbook-bin
-        curl -sSL $url | tar -xz --directory=./mdbook-bin
-
-    - name: Add mdbook to PATH
-      shell: bash
-      run: echo "$(pwd)/mdbook-bin" >> $GITHUB_PATH
+      uses: peaceiris/actions-mdbook@ee6f822a157334f7a0d22bf0fb1d2ede6513d040 # v2.0.2
+      with:
+        mdbook-version: latest
 
     - name: Cache mdbook-mermaid
       id: cache-mermaid

@@ -48,17 +48,15 @@ jobs:
 
       - uses: ./.github/actions/setup-mdbook
 
-      - name: Deploy GitHub Pages
+      - name: Build docs
         run: |
           cd docs
           mdbook build
-          git worktree add gh-pages
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          cd gh-pages
-          git update-ref -d refs/heads/gh-pages
-          rm -rf *
-          mv ../book/* .
-          git add .
-          git commit -m "Deploy $GITHUB_SHA to gh-pages"
-          git push --force --set-upstream origin gh-pages
+
+      - name: Deploy GitHub Pages
+        uses: peaceiris/actions-gh-pages@4f9cc6602d3f66b9c108549d475ec49e8ef4d45e # v4.0.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/book
+          publish_branch: gh-pages
+          force_orphan: true
