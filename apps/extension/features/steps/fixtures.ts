@@ -12,6 +12,7 @@ export const test = base.extend<Fixtures>({
     context: async ({ }, use) => {
         const context = await chromium.launchPersistentContext("", {
             headless: true,
+            timeout: 30000,
             args: [
                 `--disable-extensions-except=${pathToExtension}`,
                 `--load-extension=${pathToExtension}`,
