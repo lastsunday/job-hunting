@@ -5,7 +5,7 @@ runs:
   using: composite
   steps:
     - name: Install mdbook
-      uses: peaceiris/actions-mdbook@ee6f822a157334f7a0d22bf0fb1d2ede6513d040 # v2.0.2
+      uses: peaceiris/actions-mdbook@ee69d230fe19748b7abf22df32acaa93833fad08 # v2.0.0
       with:
         mdbook-version: latest
 
