@@ -24,9 +24,20 @@ export const test = base.extend<Fixtures>({
     extensionId: async ({ context }, use) => {
         let background: { url(): string };
         if (pathToExtension.endsWith("-mv3")) {
-            const swPromise = context.waitForEvent("serviceworker", { timeout: 30000 });
-            [background] = context.serviceWorkers();
-            if (!background) background = await swPromise;
+            const swPromise = context.waitForEvent("serviceworker", { timeout: 60000 });
+            const serviceWorkers = context.serviceWorkers();
+            if (serviceWorkers.length > 0) {
+                background = serviceWorkers[0];
+            } else {
+                try {
+                    background = await swPromise;
+                } catch (error) {
+                    throw new Error(
+                        `Failed to load extension service worker within 60s. ` +
+                        `Ensure extension is built (wxt build) and output exists at ${pathToExtension}. ${error}`
+                    );
+                }
+            }
         } else {
             [background] = context.backgroundPages();
             if (!background)
