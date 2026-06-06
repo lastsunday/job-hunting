@@ -1,0 +1,75 @@
+name: docs
+run-name: ${{ github.actor }} docs
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "docs/**"
+      - ".github/**"
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - "docs/**"
+      - ".github/**"
+
+jobs:
+  test:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - name: Install mdbook
+        run: |
+          tag=$(curl 'https://api.github.com/repos/rust-lang/mdbook/releases/latest' | jq -r '.tag_name')
+          url="https://github.com/rust-lang/mdbook/releases/download/${tag}/mdbook-${tag}-x86_64-unknown-linux-gnu.tar.gz"
+          mkdir bin
+          curl -sSL $url | tar -xz --directory=bin
+          echo "$(pwd)/bin" >> $GITHUB_PATH
+          cargo install mdbook-mermaid
+
+      - name: Run tests
+        run: |
+          cd docs
+          mdbook test
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: test
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - name: Install mdbook
+        run: |
+          tag=$(curl 'https://api.github.com/repos/rust-lang/mdbook/releases/latest' | jq -r '.tag_name')
+          url="https://github.com/rust-lang/mdbook/releases/download/${tag}/mdbook-${tag}-x86_64-unknown-linux-gnu.tar.gz"
+          mkdir mdbook
+          curl -sSL $url | tar -xz --directory=./mdbook
+          echo "$(pwd)/mdbook" >> $GITHUB_PATH
+          cargo install mdbook-mermaid
+
+      - name: Deploy GitHub Pages
+        run: |
+          cd docs
+          mdbook build
+          git worktree add gh-pages
+          git config user.name "Deploy from CI"
+          git config user.email ""
+          cd gh-pages
+          git update-ref -d refs/heads/gh-pages
+          rm -rf *
+          mv ../book/* .
+          git add .
+          git commit -m "Deploy $GITHUB_SHA to gh-pages"
+          git push --force --set-upstream origin gh-pages

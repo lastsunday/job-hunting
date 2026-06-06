@@ -1,0 +1,38 @@
+name: analysis-ci
+run-name: ${{ github.actor }} analysis CI
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "libs/analysis/**"
+      - ".github/**"
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - "libs/analysis/**"
+      - ".github/**"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup-pnpm
+
+      - name: Setup e2e tests
+        run: |
+          pnpm exec nx run analysis:e2e:install
+
+      - name: Run e2e tests
+        run: |
+          pnpm exec nx run analysis:test
