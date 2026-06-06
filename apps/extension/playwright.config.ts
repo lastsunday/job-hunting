@@ -15,13 +15,11 @@ export default defineConfig({
   // Retry on CI only.
   retries: process.env.CI ? 1 : 0,
 
-  // Opt out of parallel tests on CI.
-  workers: process.env.CI ? 1 : undefined,
+  workers: process.env.CI ? 2 : undefined,
+  fullyParallel: true,
 
-  // Increase global timeout to 3 minutes (waitForEvent is 120s)
   timeout: 180000,
 
-  // Reporter to use
   reporter: [
     cucumberReporter('html', {
       outputFile: 'cucumber-report/index.html',
@@ -31,23 +29,19 @@ export default defineConfig({
   ],
 
   use: {
-    // Collect trace when retrying the failed test.
-    trace: { mode: "retain-on-first-failure" },
-    screenshot: { mode: 'on' },
-    // Enable video recording for debugging
+    trace: { mode: 'retain-on-first-failure' },
+    screenshot: { mode: 'only-on-failure' },
     video: 'retain-on-failure',
-    // Enable detailed logging
-    launchOptions: {
-      args: ['--enable-logging', '--v=1'],
-    },
+    ...(process.env.CI || process.env.DEBUG
+      ? { launchOptions: { args: ['--enable-logging', '--v=1'] } }
+      : {}),
   },
 
-  // Configure projects for major browsers.
   projects: [
     {
-      name: "chromium",
-      //channel: "chromium" -> https://github.com/microsoft/playwright/issues/33682
-      use: { ...devices["Desktop Chrome"], channel: "chromium" },
+      name: 'chromium',
+      // https://github.com/microsoft/playwright/issues/33682
+      use: { ...devices['Desktop Chrome'], channel: 'chromium' },
     },
     {
       name: 'Microsoft Edge',
