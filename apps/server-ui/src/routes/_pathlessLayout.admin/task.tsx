@@ -137,12 +137,12 @@ function RouteComponent() {
 
   const typeOptions = TASK_TYPE_VALUES.map((v) => ({
     value: v,
-    label: t(v as string),
+    label: t(v as any) as string,
   }));
 
   const statusOptions = TASK_STATUS_VALUES.map((v) => ({
     value: v,
-    label: t(v as string),
+    label: t(v as any) as string,
   }));
 
   const loadItems = async (p?: number) => {
@@ -229,7 +229,7 @@ function RouteComponent() {
             color={TYPE_COLOR[item.type] || 'gray'}
             leftSection={<div className={`${TYPE_ICON[item.type] || ''} text-base`} />}
           >
-            {t(item.type as string)}
+            {t(item.type as any)}
           </Badge>
         ) : (
           <Text size="sm">{t('common:na')}</Text>
@@ -242,7 +242,7 @@ function RouteComponent() {
             color={STATUS_COLOR[item.status] || 'gray'}
             leftSection={<div className={`${STATUS_ICON[item.status] || ''} text-base`} />}
           >
-            {t(item.status as string)}
+            {t(item.status as any)}
           </Badge>
         ) : (
           <Text size="sm">{t('common:na')}</Text>

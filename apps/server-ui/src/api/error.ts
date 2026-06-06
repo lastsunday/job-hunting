@@ -10,7 +10,7 @@ export function handleApiError(error: unknown) {
     code = error.code;
     message = error.message;
     const key = String(code);
-    const translated = i18n.t(`error:${key}`);
+    const translated = i18n.t(`error:${key}` as any);
 
     showNotification({
       color: 'red',

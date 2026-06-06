@@ -113,7 +113,7 @@ function RouteComponent() {
         }}
       >
         <div className={`${item.icon} ${classes.linkIcon}`} />
-        <span>{t(item.label as string)}</span>
+        <span>{t(item.label as any)}</span>
       </a>
     );
   });

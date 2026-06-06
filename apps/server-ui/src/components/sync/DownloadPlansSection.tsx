@@ -98,7 +98,7 @@ function TaskTypeCell({ config }: { config?: string | null }) {
     <Group gap={4}>
       {list.map((v) => (
         <Badge key={v} size="sm" color="cyan">
-          {t((TASK_TYPE_LABELS[v] || v) as string)}
+          {t((TASK_TYPE_LABELS[v] || v) as any)}
         </Badge>
       ))}
     </Group>
