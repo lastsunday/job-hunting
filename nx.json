@@ -91,30 +91,68 @@
       "options": {
         "testTargetName": "test"
       }
+    },
+    {
+      "plugin": "@monodon/rust",
+      "options": {
+        "buildTargetName": "build",
+        "testTargetName": "test",
+        "lintTargetName": "lint",
+        "runTargetName": "run",
+        "checkTargetName": "check"
+      }
     }
   ],
   "release": {
-    "projects": [
-      "apps/extension",
-      "apps/server"
-    ],
-    "projectsRelationship": "independent",
-    "changelog": {
-      "projectChangelogs": {
-        "renderOptions": {
-          "authors": true,
-          "mapAuthorsToGitHubUsernames": true,
-          "commitReferences": false,
-          "versionTitleDate": true
+    "groups": {
+      "server": {
+        "projects": [
+          "apps/server",
+          "apps/server-ui"
+        ],
+        "projectsRelationship": "fixed",
+        "changelog": {
+          "file": "apps/server/CHANGELOG.md",
+          "projectChangelogs": {
+            "renderOptions": {
+              "authors": true,
+              "mapAuthorsToGitHubUsernames": true,
+              "commitReferences": false,
+              "versionTitleDate": true
+            }
+          }
+        },
+        "version": {
+          "currentVersionResolver": "disk"
+        },
+        "versionPlans": true,
+        "git": {
+          "commitMessage": "bump({projectName}): {version}"
+        }
+      },
+      "extension": {
+        "projects": [
+          "apps/extension"
+        ],
+        "projectsRelationship": "independent",
+        "changelog": {
+          "projectChangelogs": {
+            "renderOptions": {
+              "authors": true,
+              "mapAuthorsToGitHubUsernames": true,
+              "commitReferences": false,
+              "versionTitleDate": true
+            }
+          }
+        },
+        "versionPlans": true,
+        "version": {
+          "conventionalCommits": true
+        },
+        "git": {
+          "commitMessage": "bump({projectName}): {version}"
         }
       }
-    },
-    "versionPlans": true,
-    "version": {
-      "conventionalCommits": true
-    },
-    "git": {
-      "commitMessage": "bump({projectName}): {version}"
     }
   },
   "workspaceLayout": {
