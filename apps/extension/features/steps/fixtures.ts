@@ -19,7 +19,7 @@ export const test = base.extend<Fixtures>({
             ],
         });
         await use(context);
-        await context.close();
+        await context.close({ timeout: 5000 });
     },
     extensionId: async ({ context }, use) => {
         let background: { url(): string };
