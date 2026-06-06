@@ -86,7 +86,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install Rust toolchain
-        uses: actions-rust-lang/setup-rust@v1
+        uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6
         with:
           cache: true
 
