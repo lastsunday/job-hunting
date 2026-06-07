@@ -49,7 +49,7 @@ jobs:
         run: pnpm exec playwright install --with-deps
 
       - name: Moon CI pipeline (affected)
-        run: pnpm exec moon ci --affected --base=origin/${{ github.base_ref || 'dev' }}
+        run: pnpm exec moon ci --base=origin/${{ github.base_ref || 'dev' }}
 
       - name: Run extension e2e tests
         if: steps.affected.outputs.extension == 'true'
