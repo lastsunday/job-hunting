@@ -1,3 +1,8 @@
 language: 'typescript'
 layer: 'application'
 tags: ['chrome-extension']
+
+tasks:
+  compile:
+    options:
+      runInCI: false # 项目从 JS 迁移到 TS，有许多预存类型错误，仅本地开发时使用
