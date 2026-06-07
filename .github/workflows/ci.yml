@@ -35,14 +35,16 @@ jobs:
       - name: Typecheck (affected, except extension - JS→TS migration in progress)
         run: pnpm exec nx affected -t typecheck --exclude job-hunting-server,@job-hunting/extension --base=origin/${{ github.base_ref || 'dev' }}
 
-      - name: Unit tests (affected)
-        run: pnpm exec nx affected -t test --exclude job-hunting-server --base=origin/${{ github.base_ref || 'dev' }}
-
-      - name: Check affected projects
+      - name: Check affected projects (for Playwright & e2e)
         id: affected
         run: |
           PROJECTS=$(pnpm exec nx show projects --affected --base=origin/${{ github.base_ref || 'dev' }} | tr '\n' ' ')
           echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
+          if echo "$PROJECTS" | grep -q '"analysis"'; then
+            echo "analysis=true" >> $GITHUB_OUTPUT
+          else
+            echo "analysis=false" >> $GITHUB_OUTPUT
+          fi
           if echo "$PROJECTS" | grep -q '@job-hunting/extension'; then
             echo "extension=true" >> $GITHUB_OUTPUT
           else
@@ -54,18 +56,17 @@ jobs:
             echo "server-ui-e2e=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Install Playwright (extension)
-        if: steps.affected.outputs.extension == 'true'
-        run: pnpm exec nx run @job-hunting/extension:test:e2e:install
+      - name: Install Playwright (for browser-based tests)
+        if: steps.affected.outputs.analysis == 'true' || steps.affected.outputs.extension == 'true' || steps.affected.outputs.server-ui-e2e == 'true'
+        run: pnpm exec playwright install --with-deps
+
+      - name: Unit tests (affected)
+        run: pnpm exec nx affected -t test --exclude job-hunting-server --base=origin/${{ github.base_ref || 'dev' }}
 
       - name: Run extension e2e tests
         id: extension-e2e
         if: steps.affected.outputs.extension == 'true'
         run: pnpm exec nx run @job-hunting/extension:test:e2e
-
-      - name: Install Playwright (server-ui-e2e)
-        if: steps.affected.outputs.server-ui-e2e == 'true'
-        run: pnpm exec nx run @job-hunting/server-ui-e2e:e2e:install
 
       - name: Run server-ui e2e tests
         if: steps.affected.outputs.server-ui-e2e == 'true'
