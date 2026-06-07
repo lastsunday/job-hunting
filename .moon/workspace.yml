@@ -1,0 +1,11 @@
+projects:
+  - 'apps/*'
+  - 'libs/*'
+
+vcs:
+  defaultBranch: 'dev'
+  client: 'git'
+
+pipeline:
+  cacheLifetime: '7 days'
+  installDependencies: true

@@ -16,9 +16,5 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
-  },
-  "nx": {
-    "sourceRoot": "libs/analysis/src",
-    "projectType": "library"
   }
 }

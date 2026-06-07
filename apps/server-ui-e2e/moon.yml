@@ -1,0 +1,3 @@
+language: 'typescript'
+layer: 'automation'
+tags: ['e2e', 'playwright']

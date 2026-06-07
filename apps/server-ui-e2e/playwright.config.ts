@@ -1,11 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
-import { nxE2EPreset } from '@nx/playwright/preset';
-import { workspaceRoot } from '@nx/devkit';
+import path from 'path';
 
 const baseURL = process.env['BASE_URL'] || 'http://localhost:4300';
+const workspaceRoot = path.resolve(__dirname, '../..');
 
 export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: './src' }),
+  testDir: './src',
   retries: process.env.CI ? 1 : 0,
   fullyParallel: !process.env.CI,
 
@@ -16,7 +16,7 @@ export default defineConfig({
 
   webServer: [
     {
-      command: 'pnpm exec nx run server-ui:preview',
+      command: 'moon run server-ui:preview',
       url: 'http://localhost:4300',
       reuseExistingServer: !process.env.CI,
       cwd: workspaceRoot,
@@ -26,7 +26,6 @@ export default defineConfig({
   projects: [
     {
       name: 'chromium',
-      // https://github.com/microsoft/playwright/issues/33682
       use: { ...devices['Desktop Chrome'], channel: 'chromium' },
     },
     {

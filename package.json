@@ -9,19 +9,7 @@
     "@eslint/compat": "2.1.0",
     "@eslint/js": "10.0.1",
     "@iconify/json": "2.2.477",
-    "@monodon/rust": "3.0.0",
-    "@nx/devkit": "22.7.2",
-    "@nx/eslint": "22.7.2",
-    "@nx/eslint-plugin": "22.7.2",
-    "@nx/jest": "22.7.2",
-    "@nx/js": "22.7.2",
-    "@nx/next": "22.7.2",
-    "@nx/playwright": "22.7.2",
-    "@nx/react": "22.7.2",
-    "@nx/storybook": "22.7.2",
-    "@nx/vite": "22.7.2",
-    "@nx/vitest": "22.7.2",
-    "@nx/web": "22.7.2",
+    "@moonrepo/cli": "2.3.2",
     "@playwright/test": "1.60.0",
     "@rollup/plugin-node-resolve": "16.0.3",
     "@storybook/addon-docs": "10.4.0",
@@ -76,7 +64,6 @@
     "jsdom": "29.1.1",
     "jsonc-eslint-parser": "3.1.0",
     "lightningcss": "1.32.0",
-    "nx": "22.7.2",
     "playwright": "1.60.0",
     "playwright-bdd": "8.5.1",
     "postcss": "8.5.15",
@@ -178,5 +165,6 @@
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "4.4.3",
     "zustand": "5.0.13"
-  }
+  },
+  "packageManager": "pnpm@10.13.1"
 }

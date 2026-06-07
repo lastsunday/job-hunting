@@ -38,8 +38,8 @@ testem.log
 .DS_Store
 Thumbs.db
 
-.nx/cache
-.nx/workspace-data
+.moon/cache
+.moon/workspace-data
 apps/extension/package-lock.json
 
 vite.config.*.timestamp*
@@ -62,8 +62,7 @@ docs/book/
 
 
 .claude/worktrees
-.nx/polygraph
-.nx/self-healing
+
 
 application.toml
 application-dev.toml

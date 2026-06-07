@@ -35,8 +35,8 @@ jobs:
 
       - name: Build & zip
         run: |
-          pnpm exec nx run @job-hunting/extension:zip
-          pnpm exec nx run @job-hunting/extension:zip:firefox
+          moon run extension:zip
+          moon run extension:zip-firefox
 
       - name: Rename zips
         run: |

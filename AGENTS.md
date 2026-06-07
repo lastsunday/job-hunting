@@ -75,6 +75,22 @@
 - server-ui: 不要修改 TanStack Router 路由配置之外的自动生成文件
 - extension: 扩展 API 必须用 `fillBridgeApi()` 注册，不要直接跨 context 调用函数
 
+### 构建工具
+- **Monorepo**: Moon (@moonrepo/cli 2.3.2)
+- **配置**: `.moon/workspace.yml`, `.moon/toolchains.yml`
+- **JS/TS 任务**: Moon 自动从 `package.json` scripts 推断（script 名中的 `:` 自动转为 `-`）
+- **Rust 任务**: 在 `moon.yml` 中显式定义
+- **常用命令**:
+  - `pnpm exec moon run <project>:<task>` — 运行某项目的特定任务
+  - `pnpm exec moon run :<task>` — 所有项目运行某任务
+  - `pnpm exec moon run <tag>:<task>` — 某 tag 的所有项目运行某任务
+  - `pnpm exec moon ci --affected` — CI 中运行受影响项目的 pipeline
+  - `pnpm exec moon query projects` — 列出所有项目
+  - `pnpm exec moon query tasks` — 列出所有任务
+  - `pnpm exec moon check` — 验证配置
+- **工具链**: Moon 通过 proto 管理 Node.js/pnpm 版本
+- **注意**: `.moon/toolchains.yml` 必须是复数（Moon v2.3 bug 导致 `moon init` 生成单数 `toolchain.yml` 但实际不加载）
+
 ## 3. 目录结构
 
 ```

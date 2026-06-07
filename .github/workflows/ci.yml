@@ -19,7 +19,7 @@ on:
     branches: [dev]
 
 jobs:
-  nx-ci:
+  ci:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -32,45 +32,32 @@ jobs:
 
       - uses: ./.github/actions/setup-pnpm
 
-      - name: Typecheck (affected, except extension - JS→TS migration in progress)
-        run: pnpm exec nx affected -t typecheck --exclude job-hunting-server,@job-hunting/extension --base=origin/${{ github.base_ref || 'dev' }}
-
-      - name: Check affected projects (for Playwright & e2e)
+      - name: Check affected projects (for Playwright install)
         id: affected
         run: |
-          PROJECTS=$(pnpm exec nx show projects --affected --base=origin/${{ github.base_ref || 'dev' }} | tr '\n' ' ')
-          echo "projects=$PROJECTS" >> $GITHUB_OUTPUT
-          if echo "$PROJECTS" | grep -q '"analysis"'; then
-            echo "analysis=true" >> $GITHUB_OUTPUT
-          else
-            echo "analysis=false" >> $GITHUB_OUTPUT
-          fi
-          if echo "$PROJECTS" | grep -q '@job-hunting/extension'; then
+          BASE=origin/${{ github.base_ref || 'dev' }}
+          CHANGED=$(git diff --name-only "$BASE" HEAD -- apps/extension/ apps/server-ui-e2e/ apps/server-ui/ libs/analysis/)
+          if echo "$CHANGED" | grep -q 'apps/extension/'; then
             echo "extension=true" >> $GITHUB_OUTPUT
-          else
-            echo "extension=false" >> $GITHUB_OUTPUT
           fi
-          if echo "$PROJECTS" | grep -q '@job-hunting/server-ui-e2e'; then
-            echo "server-ui-e2e=true" >> $GITHUB_OUTPUT
-          else
-            echo "server-ui-e2e=false" >> $GITHUB_OUTPUT
+          if echo "$CHANGED" | grep -q 'apps/server-ui-e2e\|apps/server-ui\|libs/analysis'; then
+            echo "playwright=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Install Playwright (for browser-based tests)
-        if: steps.affected.outputs.analysis == 'true' || steps.affected.outputs.extension == 'true' || steps.affected.outputs.server-ui-e2e == 'true'
+        if: steps.affected.outputs.playwright == 'true' || steps.affected.outputs.extension == 'true'
         run: pnpm exec playwright install --with-deps
 
-      - name: Unit tests (affected)
-        run: pnpm exec nx affected -t test --exclude job-hunting-server --base=origin/${{ github.base_ref || 'dev' }}
+      - name: Moon CI pipeline (affected)
+        run: moon ci --affected --base=origin/${{ github.base_ref || 'dev' }}
 
       - name: Run extension e2e tests
-        id: extension-e2e
         if: steps.affected.outputs.extension == 'true'
-        run: pnpm exec nx run @job-hunting/extension:test:e2e
+        run: moon run extension:test-e2e
 
       - name: Run server-ui e2e tests
-        if: steps.affected.outputs.server-ui-e2e == 'true'
-        run: pnpm exec nx run @job-hunting/server-ui-e2e:e2e
+        if: steps.affected.outputs.extension == 'true'
+        run: moon run server-ui-e2e:e2e
 
       - name: (allure-report) Load test report history
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -124,8 +111,6 @@ jobs:
           CHANGED=$(git diff --name-only "$BASE" HEAD -- apps/server/ .github/ Cargo.* rust-toolchain.toml)
           if [ -n "$CHANGED" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
       - uses: ./.github/actions/setup-rust

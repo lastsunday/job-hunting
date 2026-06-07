@@ -1,0 +1,3 @@
+language: 'typescript'
+layer: 'library'
+tags: ['lit', 'web-components']

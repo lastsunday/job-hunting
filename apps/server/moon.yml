@@ -1,0 +1,28 @@
+language: 'rust'
+tags: ['backend']
+
+tasks:
+  build:
+    command: 'cargo build --release --package job-hunting-server'
+    outputs: ['dist/target/job-hunting-server']
+
+  test:
+    command: 'cargo test --package job-hunting-server'
+
+  lint:
+    command: 'cargo clippy --package job-hunting-server -- -D warnings'
+
+  run:
+    command: 'cargo run --package job-hunting-server -- --config=application.toml'
+    options:
+      persistent: true
+      cache: false
+
+  dev:
+    command: 'cargo run --package job-hunting-server -- --config=application-dev.toml'
+    options:
+      persistent: true
+      cache: false
+
+  check:
+    command: 'cargo check --package job-hunting-server'
