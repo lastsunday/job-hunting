@@ -1,3 +1,8 @@
 language: 'typescript'
 layer: 'automation'
 tags: ['e2e', 'playwright']
+
+tasks:
+  e2e:
+    deps:
+      - server-ui:build

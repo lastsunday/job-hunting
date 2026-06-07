@@ -12,9 +12,13 @@ crate-type = [
   #	"dylib",
 ]
 
+[features]
+default = ["embed-frontend"]
+embed-frontend = ["api/embed-frontend"]
+
 [dependencies]
 framework = { path = "framework" }
-api = { path = "api", features = ["embed-frontend"] }
+api = { path = "api" }
 tokio = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = [

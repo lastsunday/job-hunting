@@ -51,14 +51,6 @@ jobs:
       - name: Moon CI pipeline (affected)
         run: pnpm exec moon ci --base=origin/${{ github.base_ref || 'dev' }}
 
-      - name: Run extension e2e tests
-        if: steps.affected.outputs.extension == 'true'
-        run: pnpm exec moon run extension:test-e2e
-
-      - name: Run server-ui e2e tests
-        if: steps.affected.outputs.extension == 'true'
-        run: pnpm exec moon run server-ui-e2e:e2e
-
       - name: (allure-report) Load test report history
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         if: ${{ steps.affected.outputs.extension == 'true' && !cancelled() }}
@@ -91,37 +83,6 @@ jobs:
           name: extension-e2e-tests-cucumber-report
           path: apps/extension/cucumber-report/
           retention-days: 30
-
-  server:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    env:
-      CARGO_TERM_COLOR: always
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          fetch-depth: 0
-          ref: ${{ inputs.ref || github.ref }}
-
-      - name: Check if server changed
-        id: changed
-        run: |
-          BASE=origin/${{ github.base_ref || 'dev' }}
-          CHANGED=$(git diff --name-only "$BASE" HEAD -- apps/server/ .github/ Cargo.* rust-toolchain.toml)
-          if [ -n "$CHANGED" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-          fi
-
-      - uses: ./.github/actions/setup-rust
-        if: steps.changed.outputs.changed == 'true'
-
-      - name: Run tests
-        if: steps.changed.outputs.changed == 'true'
-        run: |
-          cargo test --workspace --exclude job-hunting-server --exclude web --verbose
-          cargo clippy --workspace --exclude job-hunting-server --exclude web -- -D warnings
-          cargo fmt --check
 
   docs-test:
     runs-on: ubuntu-latest

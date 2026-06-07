@@ -2,22 +2,25 @@ language: 'rust'
 tags: ['backend']
 
 tasks:
+  format:
+    command: 'cargo fmt --check'
+
   check:
-    command: 'cargo check --package job-hunting-server'
+    command: 'cargo check --package job-hunting-server --no-default-features'
 
   build:
-    command: 'cargo build --release --package job-hunting-server'
+    command: 'cargo build --release --package job-hunting-server --no-default-features'
     outputs: ['dist/target/job-hunting-server']
     deps:
       - ~:check
 
   lint:
-    command: 'cargo clippy --package job-hunting-server -- -D warnings'
+    command: 'cargo clippy --workspace --exclude web -- -D warnings'
     deps:
       - ~:check
 
   test:
-    command: 'cargo test --package job-hunting-server'
+    command: 'cargo test --package job-hunting-server --no-default-features'
     deps:
       - ~:build
 
