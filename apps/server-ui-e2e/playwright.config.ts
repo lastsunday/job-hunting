@@ -16,10 +16,10 @@ export default defineConfig({
 
   webServer: [
     {
-      command: 'pnpm exec moon run server-ui:preview',
+      command: 'pnpm run preview',
       url: 'http://localhost:4300',
       reuseExistingServer: !process.env.CI,
-      cwd: workspaceRoot,
+      cwd: path.resolve(__dirname, '../server-ui'),
     },
   ],
 
