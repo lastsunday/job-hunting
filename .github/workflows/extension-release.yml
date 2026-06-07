@@ -35,8 +35,8 @@ jobs:
 
       - name: Build & zip
         run: |
-          moon run extension:zip
-          moon run extension:zip-firefox
+          pnpm exec moon run extension:zip
+          pnpm exec moon run extension:zip-firefox
 
       - name: Rename zips
         run: |

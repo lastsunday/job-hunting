@@ -49,15 +49,15 @@ jobs:
         run: pnpm exec playwright install --with-deps
 
       - name: Moon CI pipeline (affected)
-        run: moon ci --affected --base=origin/${{ github.base_ref || 'dev' }}
+        run: pnpm exec moon ci --affected --base=origin/${{ github.base_ref || 'dev' }}
 
       - name: Run extension e2e tests
         if: steps.affected.outputs.extension == 'true'
-        run: moon run extension:test-e2e
+        run: pnpm exec moon run extension:test-e2e
 
       - name: Run server-ui e2e tests
         if: steps.affected.outputs.extension == 'true'
-        run: moon run server-ui-e2e:e2e
+        run: pnpm exec moon run server-ui-e2e:e2e
 
       - name: (allure-report) Load test report history
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683

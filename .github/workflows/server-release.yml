@@ -106,7 +106,7 @@ jobs:
       - uses: ./.github/actions/setup-pnpm
 
       - name: Build UI
-        run: moon run server-ui:build
+        run: pnpm exec moon run server-ui:build
 
       - name: Move UI dist to web/
         if: runner.os == 'Windows'
