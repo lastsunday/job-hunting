@@ -4,5 +4,7 @@ tags: ['e2e', 'playwright']
 
 tasks:
   e2e:
+    command: 'pnpm'
+    args: ['run', 'e2e']
     deps:
       - server-ui:build

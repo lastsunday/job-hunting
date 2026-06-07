@@ -6,6 +6,7 @@ export default defineConfig({
     environment: "jsdom",
     testTimeout: 120_000,
     include: ['tests/**/*.test.{js,ts,tsx}'],
+    silent: true,
   },
   resolve: {
     alias: {
