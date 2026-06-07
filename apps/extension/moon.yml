@@ -7,8 +7,16 @@ tasks:
     options:
       runInCI: false # 项目从 JS 迁移到 TS，有许多预存类型错误，仅本地开发时使用
   build:
+    command: 'pnpm'
+    args: ['run', 'build']
     deps:
       - analysis:build
+  zip:
+    options:
+      runInCI: false # CI 验证编译即可，release 时才打 zip
+  zip-firefox:
+    options:
+      runInCI: false # CI 验证编译即可，release 时才打 zip
   test-e2e:
     deps:
       - ~:build

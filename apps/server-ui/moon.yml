@@ -1,3 +1,11 @@
 language: 'typescript'
 layer: 'application'
 tags: ['react', 'admin']
+
+tasks:
+  preview:
+    command: 'pnpm'
+    args: ['run', 'preview']
+    options:
+      persistent: true
+      runInCI: false

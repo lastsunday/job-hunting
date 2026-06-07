@@ -41,6 +41,7 @@ Thumbs.db
 .moon/cache
 .moon/workspace-data
 apps/extension/package-lock.json
+apps/server-ui-e2e/test-results
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
