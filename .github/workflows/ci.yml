@@ -32,6 +32,8 @@ jobs:
 
       - uses: ./.github/actions/setup-pnpm
 
+      - uses: ./.github/actions/setup-rust
+
       - name: Check affected projects (for Playwright install)
         id: affected
         run: |

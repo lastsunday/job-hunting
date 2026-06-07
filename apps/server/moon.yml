@@ -9,6 +9,12 @@ tasks:
     command: 'cargo check --package job-hunting-server --no-default-features'
 
   build:
+    command: 'cargo build --package job-hunting-server --no-default-features'
+    outputs: ['dist/target/job-hunting-server']
+    deps:
+      - ~:check
+
+  build-release:
     command: 'cargo build --release --package job-hunting-server --no-default-features'
     outputs: ['dist/target/job-hunting-server']
     deps:

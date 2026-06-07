@@ -1,5 +1,5 @@
 name: Setup pnpm
-description: Install pnpm, Node.js, and install dependencies with caching
+description: Install pnpm and Node.js with caching (deps installed by moon ci via installDependencies)
 
 inputs:
   node-version:
@@ -23,7 +23,3 @@ runs:
       with:
         node-version-file: '.node-version'
         cache: pnpm
-
-    - name: Install dependencies
-      shell: bash
-      run: pnpm install --frozen-lockfile
