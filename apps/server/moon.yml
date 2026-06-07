@@ -14,12 +14,6 @@ tasks:
     deps:
       - ~:check
 
-  build-release:
-    command: 'cargo build --release --package job-hunting-server --no-default-features'
-    outputs: ['dist/target/job-hunting-server']
-    deps:
-      - ~:check
-
   lint:
     command: 'cargo clippy --workspace --exclude web -- -D warnings'
     deps:
