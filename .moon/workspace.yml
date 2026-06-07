@@ -8,4 +8,4 @@ vcs:
 
 pipeline:
   cacheLifetime: '7 days'
-  installDependencies: false
+  installDependencies: true

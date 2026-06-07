@@ -17,6 +17,11 @@ tasks:
   zip-firefox:
     options:
       runInCI: false # CI 验证编译即可，release 时才打 zip
+  install-playwright:
+    command: 'pnpm exec playwright install --with-deps'
+    options:
+      cache: false
   test-e2e:
     deps:
       - ~:build
+      - ~:install-playwright
