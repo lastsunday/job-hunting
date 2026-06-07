@@ -30,12 +30,14 @@ jobs:
           fetch-depth: 0
           ref: ${{ inputs.ref || github.ref }}
 
-      - uses: ./.github/actions/setup-pnpm
+      - uses: moonrepo/setup-toolchain@261c62cb5b0f580c7be7c8cd0f023a2e96756095 # v0.6.4
+        with:
+          auto-setup: true
 
       - uses: ./.github/actions/setup-rust
 
       - name: Moon CI pipeline (affected)
-        run: pnpm exec moon ci --base=origin/${{ github.base_ref || 'dev' }}
+        run: moon ci --base=origin/${{ github.base_ref || 'dev' }}
 
       - name: Check if extension e2e reports exist
         id: e2e-report
