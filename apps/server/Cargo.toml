@@ -12,10 +12,6 @@ crate-type = [
   #	"dylib",
 ]
 
-[features]
-default = ["embed-frontend"]
-embed-frontend = ["api/embed-frontend"]
-
 [dependencies]
 framework = { path = "framework" }
 api = { path = "api" }

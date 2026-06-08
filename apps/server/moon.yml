@@ -6,21 +6,21 @@ tasks:
     command: 'cargo fmt --check'
 
   check:
-    command: 'cargo check --package job-hunting-server --no-default-features'
+    command: 'cargo check --package job-hunting-server'
 
   build:
-    command: 'cargo build --package job-hunting-server --no-default-features'
+    command: 'cargo build --package job-hunting-server'
     outputs: ['dist/target/job-hunting-server']
     deps:
       - ~:check
 
   lint:
-    command: 'cargo clippy --workspace --exclude web -- -D warnings'
+    command: 'cargo clippy --workspace -- -D warnings'
     deps:
       - ~:check
 
   test:
-    command: 'cargo test --package job-hunting-server --no-default-features'
+    command: 'cargo test --package job-hunting-server'
     deps:
       - ~:build
 
