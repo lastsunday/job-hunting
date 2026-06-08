@@ -34,11 +34,12 @@ jobs:
         with:
           auto-install: true
 
-      - uses: moonrepo/setup-rust@abb2d32350334249b178c401e5ec5836e0cd88d3 # v1.3.0
+      - uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6
         with:
-          channel: '1.95.0'
+          toolchain: '1.95.0'
           components: clippy, rustfmt
-          cache-base: dev
+          cache: true
+          cache-on-failure: true
 
       - name: Moon CI pipeline (affected)
         run: moon ci --base=origin/${{ github.base_ref || 'dev' }}
