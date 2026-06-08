@@ -8,5 +8,8 @@ node:
 pnpm:
   version: '10.13.1'
 
+rust:
+  version: '1.95.0'
+
 typescript:
   syncProjectReferences: true
