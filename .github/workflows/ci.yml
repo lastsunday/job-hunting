@@ -37,6 +37,12 @@ jobs:
 
       - uses: ./.github/actions/setup-rust
 
+      - name: Debug server:build
+        continue-on-error: true
+        run: pnpm exec moon run server:build
+        env:
+          MOON_OUTPUT_STYLE: stream
+
       - name: Moon CI pipeline (affected)
         run: pnpm exec moon ci --base=origin/${{ github.base_ref || 'dev' }}
         env:
