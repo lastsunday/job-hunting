@@ -24,6 +24,7 @@ jobs:
     permissions:
       contents: read
       checks: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -39,6 +40,7 @@ jobs:
         env:
           MOON_OUTPUT_STYLE: buffer-only-failure
           MOON_LOG: error
+          CARGO_BUILD_JOBS: '2'
 
       - uses: moonrepo/run-report-action@bbe7e99bf2aca819ec660ec01fc59d84bdd492d6
         if: success() || failure()
