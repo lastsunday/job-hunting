@@ -1,2 +1,5 @@
+javascript:
+  inferTasksFromScripts: true
+
 typescript:
   syncProjectReferences: true
