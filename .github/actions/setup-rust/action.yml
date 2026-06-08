@@ -16,7 +16,8 @@ runs:
     - name: Create swap space
       shell: bash
       run: |
-        sudo fallocate -l 10G /swapfile
+        sudo swapoff -a 2>/dev/null || true
+        sudo dd if=/dev/zero of=/swapfile bs=1M count=10240 status=progress
         sudo chmod 600 /swapfile
         sudo mkswap /swapfile
         sudo swapon /swapfile
