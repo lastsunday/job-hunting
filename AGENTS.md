@@ -196,3 +196,31 @@
 - 生成 React 组件时，默认配套同名的 `.module.css`（仅限 server-ui 管理后台，使用 Mantine v9；扩展使用 Ant Design v5）
 - 启动扩展开发用 `cd apps/extension && pnpm run dev`，加载 `.output/chrome-mv3-dev`
 - Rust 路由改动后运行 `cargo check` 验证类型，不用 `cargo run` 全量编译；新增业务逻辑记得同时运行 `cargo test`
+
+## 7. CI 调试指南 (moon)
+
+### 快速定位 moon ci 失败
+
+```
+moon ci 报 Failed
+  ├─ 有任务输出（含 Error / error[E...]）→ 看具体编译/运行错误
+  ├─ 无任务输出，但有 moon 引擎 Error 行（如 task_runner::missing_outputs）
+  │  → 检查 moon.yml 的 outputs 路径是否匹配实际产物
+  └─ 无任务输出，无 moon Error 行，任务静默失败
+     → 可能是 OOM（exit 137），单独跑 pnpm exec moon run <task> 验证
+```
+
+### 关键认知
+
+- moon 中 task 输出（cargo/stdout）和 moon 引擎日志是**两条独立通道**
+- `buffer-only-failure` 仅显示**任务非 0 退出**时的输出。任务 exit 0 但后置校验失败（如 missing_outputs），buffer 会被丢弃
+- moon 引擎 Error 行不会被 `MOON_LOG` 级别过滤，始终可见
+- `missing_outputs` 表示 `moon.yml` 中 `outputs` 声明的路径不存在，修正路径即可
+
+### 调试命令
+
+```bash
+pnpm exec moon run <project>:<task>             # 隔离跑单个任务，看完整输出
+pnpm exec moon run <project>:<task> --log trace  # 带 moon 内部日志（会输出大量信息）
+MOON_DEBUG_PROCESS_INPUT=true moon run <project>:<task>  # 显示传给子进程的 stdin
+pnpm exec moon debug config  # 查看 moon 内部配置加载状态
