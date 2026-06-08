@@ -36,6 +36,14 @@ jobs:
 
       - name: Moon CI pipeline (affected)
         run: pnpm exec moon ci --base=origin/${{ github.base_ref || 'dev' }}
+        env:
+          MOON_OUTPUT_STYLE: grouped
+          MOON_LOG: error
+
+      - uses: moonrepo/run-report-action@bbe7e99bf2aca819ec660ec01fc59d84bdd492d6
+        if: success() || failure()
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check if extension e2e reports exist
         id: e2e-report
