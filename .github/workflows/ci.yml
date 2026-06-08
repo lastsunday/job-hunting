@@ -31,6 +31,8 @@ jobs:
           fetch-depth: 0
           ref: ${{ inputs.ref || github.ref }}
 
+      - uses: ./.github/actions/free-disk-space
+
       - uses: ./.github/actions/setup-pnpm
 
       - uses: ./.github/actions/setup-rust
@@ -40,7 +42,7 @@ jobs:
         env:
           MOON_OUTPUT_STYLE: buffer-only-failure
           MOON_LOG: error
-          CARGO_BUILD_JOBS: '2'
+          RUSTFLAGS: '-C link-arg=-fuse-ld=lld'
 
       - uses: moonrepo/run-report-action@bbe7e99bf2aca819ec660ec01fc59d84bdd492d6
         if: success() || failure()

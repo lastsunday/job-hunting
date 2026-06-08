@@ -80,6 +80,9 @@ jobs:
             targetOSAndARCH: window-amd64
     runs-on: ${{ matrix.os }}
     steps:
+      - uses: ./.github/actions/free-disk-space
+        if: runner.os == 'Linux'
+
       - name: Setup Perl (Windows only)
         uses: shogo82148/actions-setup-perl@22423f01bde48fb88785c007e3166fbbbd8e892a
         if: contains(matrix.os, 'windows')

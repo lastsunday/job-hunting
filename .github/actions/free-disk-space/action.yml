@@ -1,0 +1,19 @@
+name: Free Disk Space
+description: Free up disk space on GitHub Actions runners by removing unused toolchains
+
+runs:
+  using: composite
+  steps:
+    - name: Free Disk Space
+      uses: endersonmenezes/free-disk-space@e6ed9b02e683a3b55ed0252f1ee469ce3b39a885
+      with:
+        remove_android: true
+        remove_dotnet: true
+        remove_haskell: true
+        remove_tool_cache: true
+        rm_cmd: "rmz"
+        rmz_version: "3.1.1"
+        testing: false
+    - name: Show disk usage
+      shell: bash
+      run: df -h
