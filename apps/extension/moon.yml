@@ -21,6 +21,7 @@ tasks:
     command: 'pnpm exec playwright install --with-deps'
     options:
       cache: false
+      mutex: 'playwright-install'
   test-e2e:
     deps:
       - ~:build
