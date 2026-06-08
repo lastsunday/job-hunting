@@ -1,5 +1,12 @@
 javascript:
+  packageManager: 'pnpm'
   inferTasksFromScripts: true
+
+node:
+  version: '24.13.0'
+
+pnpm:
+  version: '10.13.1'
 
 typescript:
   syncProjectReferences: true

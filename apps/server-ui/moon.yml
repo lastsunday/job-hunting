@@ -3,6 +3,9 @@ layer: 'application'
 tags: ['react', 'admin']
 
 tasks:
+  build:
+    command: 'pnpm'
+    args: ['run', 'build']
   preview:
     command: 'pnpm'
     args: ['run', 'preview']
