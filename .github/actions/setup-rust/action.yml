@@ -1,5 +1,5 @@
 name: Setup Rust
-description: Install Rust toolchain with caching and lld linker
+description: Install Rust toolchain with caching
 
 inputs:
   components:
@@ -9,20 +9,6 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Install lld linker
-      shell: bash
-      run: sudo apt-get update && sudo apt-get install -y lld
-
-    - name: Create swap space
-      shell: bash
-      run: |
-        sudo swapoff -a 2>/dev/null || true
-        sudo dd if=/dev/zero of=/swapfile bs=1M count=10240 status=progress
-        sudo chmod 600 /swapfile
-        sudo mkswap /swapfile
-        sudo swapon /swapfile
-        free -h
-
     - name: Install Rust toolchain
       uses: actions-rust-lang/setup-rust-toolchain@46268bd060767258de96ed93c1251119784f2ab6
       with:

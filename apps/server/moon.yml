@@ -10,7 +10,7 @@ tasks:
 
   build:
     command: 'cargo build --package job-hunting-server'
-    outputs: ['dist/target/job-hunting-server']
+    outputs: ['target/debug/job-hunting-server']
     deps:
       - ~:check
 
