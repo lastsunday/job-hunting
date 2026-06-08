@@ -34,8 +34,6 @@ jobs:
         with:
           auto-install: true
 
-      - uses: ./.github/actions/setup-rust
-
       - name: Moon CI pipeline (affected)
         run: moon ci --base=origin/${{ github.base_ref || 'dev' }}
 
