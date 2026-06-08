@@ -131,15 +131,15 @@ jobs:
         run: |
           ext=""
           if [ "${{ runner.os }}" = "Windows" ]; then ext=".exe"; fi
-          src="${{ github.workspace }}/dist/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}$ext"
-          dst="${{ github.workspace }}/dist/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}-${{ matrix.targetOSAndARCH }}$ext"
+          src="${{ github.workspace }}/apps/server/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}$ext"
+          dst="${{ github.workspace }}/apps/server/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}-${{ matrix.targetOSAndARCH }}$ext"
           mv "$src" "$dst"
 
       - name: Upload artifact
         uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
         with:
           name: ${{ env.BIN_NAME }}-${{ matrix.targetOSAndARCH }}
-          path: ${{ github.workspace }}/dist/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}-${{ matrix.targetOSAndARCH }}*
+          path: ${{ github.workspace }}/apps/server/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}-${{ matrix.targetOSAndARCH }}*
 
   create-release:
     needs: build-assets
