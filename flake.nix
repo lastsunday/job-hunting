@@ -65,6 +65,8 @@
               just
               pkg-config
               moon
+              mdbook
+              mdbook-mermaid
             ];
 
             buildInputs = with pkgs; [

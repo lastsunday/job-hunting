@@ -106,9 +106,43 @@ jobs:
       - name: Set VERSION
         run: echo "VERSION=${GITHUB_REF_NAME#job-hunting-server@}" >> $GITHUB_ENV
 
-      - uses: ./.github/actions/setup-pnpm
+      - name: Install Nix (Linux / macOS)
+        if: runner.os != 'Windows'
+        uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d
+        with:
+          extra-conf: |
+            accept-flake-config = true
+
+      - name: Cache Nix store (Linux / macOS)
+        if: runner.os != 'Windows'
+        uses: DeterminateSystems/magic-nix-cache-action@6221693898146dc97e38ad0e013488a16477a4c4
+
+      - name: Install pnpm (Windows)
+        if: runner.os == 'Windows'
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+        with:
+          version: "10.13.1"
+          run_install: false
+
+      - name: Setup Node.js (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
+        with:
+          node-version-file: '.node-version'
+          cache: pnpm
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: pnpm install --frozen-lockfile
+        working-directory: ${{ github.workspace }}
 
       - name: Build UI
+        run: nix develop --command moon run server-ui:build
+        if: runner.os != 'Windows'
+
+      - name: Build UI (Windows)
+        if: runner.os == 'Windows'
         run: pnpm exec moon run server-ui:build
 
       - name: Move UI dist to web/

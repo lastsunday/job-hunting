@@ -33,12 +33,17 @@ jobs:
 
       - uses: ./.github/actions/free-disk-space
 
-      - uses: ./.github/actions/setup-pnpm
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d
+        with:
+          extra-conf: |
+            accept-flake-config = true
 
-      - uses: ./.github/actions/setup-rust
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@6221693898146dc97e38ad0e013488a16477a4c4
 
       - name: Moon CI pipeline (affected)
-        run: pnpm exec moon ci --base=origin/${{ github.base_ref || 'dev' }}
+        run: nix develop --command moon ci --base=origin/${{ github.base_ref || 'dev' }}
         env:
           MOON_OUTPUT_STYLE: buffer-only-failure
           MOON_LOG: error
@@ -99,12 +104,17 @@ jobs:
           fetch-depth: 1
           ref: ${{ inputs.ref || github.ref }}
 
-      - uses: ./.github/actions/setup-mdbook
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d
+        with:
+          extra-conf: |
+            accept-flake-config = true
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@6221693898146dc97e38ad0e013488a16477a4c4
 
       - name: Run tests
-        run: |
-          cd docs
-          mdbook test
+        run: nix develop --command sh -c "cd docs && mdbook test"
 
   docs-deploy:
     if: github.event_name != 'pull_request'
@@ -118,12 +128,17 @@ jobs:
           fetch-depth: 1
           ref: ${{ inputs.ref || github.ref }}
 
-      - uses: ./.github/actions/setup-mdbook
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d
+        with:
+          extra-conf: |
+            accept-flake-config = true
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@6221693898146dc97e38ad0e013488a16477a4c4
 
       - name: Build docs
-        run: |
-          cd docs
-          mdbook build
+        run: nix develop --command sh -c "cd docs && mdbook build"
 
       - name: Deploy GitHub Pages
         uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453
