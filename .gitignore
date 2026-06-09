@@ -69,3 +69,8 @@ docs/book/
 application.toml
 application-dev.toml
 logs/
+
+# Lix / Nix
+.nix-direnv/
+.direnv/
+result

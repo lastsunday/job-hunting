@@ -6,12 +6,14 @@
 - [2. 项目结构与命名](#2-项目结构与命名)
 - [3. 核心禁忌](#3-核心禁忌)
 - [4. 开发工作流](#4-开发工作流)
+  - [4.1 开发环境设置（Lix）](#41-开发环境设置lix)
 - [5. 构建与 CI 调试](#5-构建与-ci-调试)
 - [附录 框架约定与扩展机制](#附录-框架约定与扩展机制)
 
 ## 1. 技术栈
 
 ### Rust (apps/server)
+
 - **Edition 2024** - 使用 RPIT 生命周期捕获规则等新语法
 - **Web**: Axum 0.8 + tower-http + utoipa-axum (Scalar OpenAPI)
 - **ORM**: Sea-ORM (sqlx-postgres, sqlx-sqlite, with-chrono, with-rust_decimal)
@@ -26,6 +28,7 @@
 ### TypeScript
 
 **管理后台 (apps/server-ui):**
+
 - React 19 + Mantine v9 + @mantine/core + @mantine/hooks
 - TanStack Router (file-based routing, auto code-splitting)
 - TanStack Query (React Query)
@@ -37,6 +40,7 @@
 - Prettier: `{ singleQuote: true }`
 
 **浏览器扩展 (apps/extension):**
+
 - WXT framework (Chrome MV3)
 - React 19 + Ant Design v5 + @ant-design/icons
 - react-router 7 (页面路由)
@@ -86,18 +90,18 @@
 
 ### 命名风格
 
-| 语言/层 | 命名风格 | 示例 |
-|---------|---------|------|
-| Rust 变量/函数 | snake_case | `create_routes`, `get_job_by_id` |
-| Rust 类型/Trait | PascalCase | `ApiResult<T>`, `Principal` |
-| Rust 错误码枚举 | `*ErrorCode` (PascalCase) | `UserErrorCode`, `JobErrorCode` |
-| Rust 模块名 | snake_case | `job.rs`, `user.rs` |
-| TS 变量/函数 | camelCase | `loadJobs`, `handleSubmit` |
-| TS 组件/类 | PascalCase | `RouteComponent`, `JobFormData` |
-| TS 文件 | kebab-case + .tsx/.ts | `jobs.tsx`, `http.ts` |
-| DB 表/字段 | snake_case | `company_tag`, `first_scan_datetime` |
-| URI | snake_case | `/api/job/search`、`/api/auth/access_token` |
-| 扩展 API 方法 | className + methodName | `dataSourceMetadataSearch` |
+| 语言/层         | 命名风格                  | 示例                                        |
+| --------------- | ------------------------- | ------------------------------------------- |
+| Rust 变量/函数  | snake_case                | `create_routes`, `get_job_by_id`            |
+| Rust 类型/Trait | PascalCase                | `ApiResult<T>`, `Principal`                 |
+| Rust 错误码枚举 | `*ErrorCode` (PascalCase) | `UserErrorCode`, `JobErrorCode`             |
+| Rust 模块名     | snake_case                | `job.rs`, `user.rs`                         |
+| TS 变量/函数    | camelCase                 | `loadJobs`, `handleSubmit`                  |
+| TS 组件/类      | PascalCase                | `RouteComponent`, `JobFormData`             |
+| TS 文件         | kebab-case + .tsx/.ts     | `jobs.tsx`, `http.ts`                       |
+| DB 表/字段      | snake_case                | `company_tag`, `first_scan_datetime`        |
+| URI             | snake_case                | `/api/job/search`、`/api/auth/access_token` |
+| 扩展 API 方法   | className + methodName    | `dataSourceMetadataSearch`                  |
 
 ## 3. 核心禁忌
 
@@ -120,7 +124,50 @@
 
 ## 4. 开发工作流
 
+### 开发环境设置（Lix）
+
+项目使用 **Lix**（Nix 的社区 fork）管理可复现的开发环境。
+
+**首次设置：**
+
+```bash
+# 1. 安装 Lix
+# Linux
+curl -sSf -L https://install.lix.systems/lix | sh -s -- install
+# macOS (Intel) — 同上命令即可
+# macOS (Apple Silicon) — 同上
+# 注意：不要使用 Determinate Systems 安装器（已停止支持 Intel Mac）
+
+# 2. 安装 direnv（推荐，自动激活环境）
+nix profile install nixpkgs#direnv nixpkgs#nix-direnv
+# 在 ~/.zshrc 或 ~/.bashrc 添加: eval "$(direnv hook zsh)"
+
+# 3. 进入项目（direnv 自动激活，或手动 nix develop）
+cd job-hunting
+direnv allow
+```
+
+**devShell 选择：**
+
+```bash
+nix develop .#server    # 仅 Rust 后端
+nix develop .#frontend  # 仅前端
+nix develop             # 默认完整环境
+```
+
+**版本来源（自动同步，无需手动维护）：**
+
+- Rust 版本 → `rust-toolchain.toml`
+- Node.js 版本 → `.node-version`
+
+**注意事项：**
+
+- macOS Intel (x86_64-darwin)：Lix 官方仍支持（tier 2），如有问题联系维护者
+- 系统依赖（openssl, sqlite, postgresql 等）由 Lix 统一管理，无需 brew/apt
+- CI 中 Lix 提供环境：`nix develop --command pnpm exec moon ci --affected`
+
 ### 新增业务逻辑时 (Rust)
+
 1. `migration/src/`: 创建 SQL 迁移
 2. `entity/src/`: 更新 Sea-ORM 实体，手动补充部分注意不要被自动生成覆盖
 3. `api/src/`: 定义模块专用的 `*ErrorCode`（或在 `framework/error/` 中定义通用错误码）
@@ -129,6 +176,7 @@
 6. 运行 `cargo check && cargo test` 验证类型与测试
 
 ### 新增前端页面时 (server-ui)
+
 1. `routes/`: 按 TanStack Router 文件路由约定新建 `.tsx` 文件
 2. `api/`: 添加对应的 API 调用函数
 3. `components/` + `.module.css`: 组件与样式文件
@@ -137,6 +185,7 @@
 6. 开发调试: `cd apps/server-ui && pnpm run dev`
 
 ### 新增扩展功能时 (extension)
+
 1. `common/data/domain/` 或 `common/data/dto/`: 数据模型
 2. `common/api/`: API 层，`fillBridgeApi()` 注册
 3. `entrypoints/offscreen/` 或 `entrypoints/background/`: Service 实现
@@ -155,6 +204,7 @@
 ## 5. 构建与 CI 调试
 
 ### 构建工具
+
 - **Monorepo**: Moon (@moonrepo/cli 2.3.2)
 - **配置**: `.moon/workspace.yml`, `.moon/toolchains.yml`
 - **JS/TS 任务**: Moon 自动从 `package.json` scripts 推断（script 名中的 `:` 自动转为 `-`）
@@ -184,12 +234,14 @@ moon ci 报 Failed
 ```
 
 **关键认知:**
+
 - moon 中 task 输出（cargo/stdout）和 moon 引擎日志是**两条独立通道**
 - `buffer-only-failure` 仅显示**任务非 0 退出**时的输出。任务 exit 0 但后置校验失败（如 missing_outputs），buffer 会被丢弃
 - moon 引擎 Error 行不会被 `MOON_LOG` 级别过滤，始终可见
 - `missing_outputs` 表示 `moon.yml` 中 `outputs` 声明的路径不存在，修正路径即可
 
 **调试命令:**
+
 ```bash
 pnpm exec moon run <project>:<task>             # 隔离跑单个任务，看完整输出
 pnpm exec moon run <project>:<task> --log trace  # 带 moon 内部日志（会输出大量信息）

@@ -243,9 +243,6 @@ importers:
       '@iconify/json':
         specifier: 2.2.477
         version: 2.2.477
-      '@moonrepo/cli':
-        specifier: 2.3.2
-        version: 2.3.2
       '@playwright/test':
         specifier: 1.60.0
         version: 1.60.0
@@ -1904,45 +1901,6 @@ packages:
 
   '@module-federation/webpack-bundler-runtime@0.21.6':
     resolution: {integrity: sha512-7zIp3LrcWbhGuFDTUMLJ2FJvcwjlddqhWGxi/MW3ur1a+HaO8v5tF2nl+vElKmbG1DFLU/52l3PElVcWf/YcsQ==}
-
-  '@moonrepo/cli@2.3.2':
-    resolution: {integrity: sha512-KSRupv+RlFfXHL2LEYMlNt2AQ1zA6bp6lsnEhjhF6SdCYeOBFKhuJR4mMYBwH5IJi4WPkNRe2IYBXrdHP8T64A==}
-    hasBin: true
-
-  '@moonrepo/core-linux-arm64-gnu@2.3.2':
-    resolution: {integrity: sha512-TwreP+/ttYAy3j7mtRhGGMaHOOxyL5+HDzL2wUUN1xtvgQcE63QxeR77fgNItzII8tf9Nwxbqy/wWq/Gm3KSsQ==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@moonrepo/core-linux-arm64-musl@2.3.2':
-    resolution: {integrity: sha512-0Tl8e4aR0RWkqinnFll6vchuh829bvcMIojsWLc16zCMeZ7sDT86qPeAObWjtIEfs8agv8QRt4CunyCNOjiM+w==}
-    cpu: [arm64]
-    os: [linux]
-
-  '@moonrepo/core-linux-x64-gnu@2.3.2':
-    resolution: {integrity: sha512-K+ccl2xPzYtx/rZOnjkM1RfqXO382Dt8C0Ro/uxE9d5HkFK72O58O+SqnEd2QDfseK6TYkauyG+hqVZm6JB03A==}
-    cpu: [x64]
-    os: [linux]
-
-  '@moonrepo/core-linux-x64-musl@2.3.2':
-    resolution: {integrity: sha512-NvIimqjGAa3u6KMLc4RlOsgWe4r508S4jXLhpgRhOUgxgFTBmh5oXKX/w4Veyp6lGioRN1+9LhxMMWg7Fv5ULw==}
-    cpu: [x64]
-    os: [linux]
-
-  '@moonrepo/core-macos-arm64@2.3.2':
-    resolution: {integrity: sha512-d79yc4Ng+NOKDRMCBsSWgQ/Qnw8Dp/w95kA/Hltz80QeCBjHmjWZBkMDY7vj+P7LWi9yOILKbp/0H5q/xYx4Tw==}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@moonrepo/core-macos-x64@2.3.2':
-    resolution: {integrity: sha512-edWeYzdeF6t7F/g67iZfpx/XWn3KdpY40OciCNiQpF5VSF2nsvoaJYZx3UU5BJYY7pCzcftAtmOQweXDNHJTkg==}
-    cpu: [x64]
-    os: [darwin]
-
-  '@moonrepo/core-windows-x64-msvc@2.3.2':
-    resolution: {integrity: sha512-T8u5nBgLD4oYL6NDpaoNmxXoXSawD1us1NQnmbYNbND4iSanm3sXf/vUXNz50DTONB5AARGG0HKs9sYuOSSNAQ==}
-    cpu: [x64]
-    os: [win32]
 
   '@napi-rs/nice-android-arm-eabi@1.1.1':
     resolution: {integrity: sha512-kjirL3N6TnRPv5iuHw36wnucNqXAO46dzK9oPb0wj076R5Xm8PfUVA9nAFB5ZNMmfJQJVKACAPd/Z2KYMppthw==}
@@ -12219,39 +12177,6 @@ snapshots:
     dependencies:
       '@module-federation/runtime': 0.21.6
       '@module-federation/sdk': 0.21.6
-    optional: true
-
-  '@moonrepo/cli@2.3.2':
-    dependencies:
-      detect-libc: 2.1.2
-    optionalDependencies:
-      '@moonrepo/core-linux-arm64-gnu': 2.3.2
-      '@moonrepo/core-linux-arm64-musl': 2.3.2
-      '@moonrepo/core-linux-x64-gnu': 2.3.2
-      '@moonrepo/core-linux-x64-musl': 2.3.2
-      '@moonrepo/core-macos-arm64': 2.3.2
-      '@moonrepo/core-macos-x64': 2.3.2
-      '@moonrepo/core-windows-x64-msvc': 2.3.2
-
-  '@moonrepo/core-linux-arm64-gnu@2.3.2':
-    optional: true
-
-  '@moonrepo/core-linux-arm64-musl@2.3.2':
-    optional: true
-
-  '@moonrepo/core-linux-x64-gnu@2.3.2':
-    optional: true
-
-  '@moonrepo/core-linux-x64-musl@2.3.2':
-    optional: true
-
-  '@moonrepo/core-macos-arm64@2.3.2':
-    optional: true
-
-  '@moonrepo/core-macos-x64@2.3.2':
-    optional: true
-
-  '@moonrepo/core-windows-x64-msvc@2.3.2':
     optional: true
 
   '@napi-rs/nice-android-arm-eabi@1.1.1':

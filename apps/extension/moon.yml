@@ -3,20 +3,42 @@ layer: 'application'
 tags: ['chrome-extension']
 
 tasks:
-  compile:
+  ensure-deps:
+    command: 'pnpm install'
+    inputs:
+      - '/pnpm-lock.yaml'
+      - '/pnpm-workspace.yaml'
+      - 'package.json'
+    outputs:
+      - 'node_modules'
     options:
-      runInCI: false # 项目从 JS 迁移到 TS，有许多预存类型错误，仅本地开发时使用
+      cache: true
   build:
     command: 'pnpm'
     args: ['run', 'build']
     deps:
+      - ~:ensure-deps
       - analysis:build
+  build-firefox:
+    command: 'pnpm'
+    args: ['run', 'build:firefox']
+    deps:
+      - ~:ensure-deps
+      - analysis:build
+  test-unit:
+    command: 'pnpm'
+    args: ['run', 'test:unit']
+    deps:
+      - ~:ensure-deps
+  compile:
+    options:
+      runInCI: false
   zip:
     options:
-      runInCI: false # CI 验证编译即可，release 时才打 zip
+      runInCI: false
   zip-firefox:
     options:
-      runInCI: false # CI 验证编译即可，release 时才打 zip
+      runInCI: false
   install-playwright:
     command: 'pnpm exec playwright install --with-deps'
     options:
