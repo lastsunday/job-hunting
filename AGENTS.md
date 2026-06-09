@@ -24,6 +24,7 @@
 - **Error**: 自定义 `#[error]` proc-macro (framework-macros)
 - **Testing**: cucumber (BDD) + testcontainers
 - **Other**: chrono, strum, utoipa-scalar
+- **开发环境**: Nix (Lix) + flake + direnv（可复现开发环境）
 
 ### TypeScript
 
@@ -57,6 +58,11 @@
 
 ```
 ├── docs/                      mdBook 项目文档
+├── flake.nix                  Nix flake 配置
+├── flake.lock                 Nix flake lock
+├── .envrc                     direnv 自动激活（use flake）
+├── rust-toolchain.toml        Rust 版本（由 flake 自动读取）
+├── .node-version              Node.js 版本（由 flake 自动读取）
 ├── packages/                  workspace 占位
 ├── libs/
 │   └── analysis/              Lit Web Components 分析组件库
@@ -111,6 +117,7 @@
 - **不要**修改 Nx workspace 结构 (`nx.json`, `pnpm-workspace.yaml`, `project.json`)
 - **不要**引入新依赖前未检查现有依赖是否已满足需求
 - **不要**使用非 Edition 2024 的 Rust 语法（如 `'_` 生命周期 elision 规则、`impl<T>` 旧式 trait bound 等）
+- **不要**手动编辑 `flake.lock`（使用 `nix flake update` 更新）
 
 ### 必须遵守的
 
@@ -150,9 +157,9 @@ direnv allow
 **devShell 选择：**
 
 ```bash
-nix develop .#server    # 仅 Rust 后端
-nix develop .#frontend  # 仅前端
-nix develop             # 默认完整环境
+nix develop .#server    # 仅 Rust 后端（rustToolchain + openssl + sqlite + postgresql）
+nix develop .#frontend  # 仅前端（nodejs + pnpm）
+nix develop             # 默认完整环境（含 moon、just、mdbook、pkg-config 等）
 ```
 
 **版本来源（自动同步，无需手动维护）：**
@@ -164,7 +171,7 @@ nix develop             # 默认完整环境
 
 - macOS Intel (x86_64-darwin)：Lix 官方仍支持（tier 2），如有问题联系维护者
 - 系统依赖（openssl, sqlite, postgresql 等）由 Lix 统一管理，无需 brew/apt
-- CI 中 Lix 提供环境：`nix develop --command pnpm exec moon ci --affected`
+- CI 中 Lix 提供环境：`nix develop --command moon ci --affected`
 
 ### 新增业务逻辑时 (Rust)
 
@@ -210,14 +217,15 @@ nix develop             # 默认完整环境
 - **JS/TS 任务**: Moon 自动从 `package.json` scripts 推断（script 名中的 `:` 自动转为 `-`）
 - **Rust 任务**: 在 `moon.yml` 中显式定义
 - **常用命令**:
-  - `pnpm exec moon run <project>:<task>` — 运行某项目的特定任务
-  - `pnpm exec moon run :<task>` — 所有项目运行某任务
-  - `pnpm exec moon run <tag>:<task>` — 某 tag 的所有项目运行某任务
-  - `pnpm exec moon ci --affected` — CI 中运行受影响项目的 pipeline
-  - `pnpm exec moon query projects` — 列出所有项目
-  - `pnpm exec moon query tasks` — 列出所有任务
-  - `pnpm exec moon check` — 验证配置
-- **工具链**: Moon 通过 proto 管理 Node.js/pnpm 版本
+  - `moon run <project>:<task>` — 运行某项目的特定任务
+  - `moon run :<task>` — 所有项目运行某任务
+  - `moon run <tag>:<task>` — 某 tag 的所有项目运行某任务
+  - `moon ci --affected` — CI 中运行受影响项目的 pipeline
+  - `moon query projects` — 列出所有项目
+  - `moon query tasks` — 列出所有任务
+  - `moon check` — 验证配置
+- **工具链**: 由 Nix flake 统一管理（Node.js → `.node-version`，Rust → `rust-toolchain.toml`，moon CLI 内置于 `flake.nix`）
+- **注意**: 升级 moon 版本时同步更新 `flake.nix` 中的 `moonVersion` 和 `moonSha256`
 - **注意**: `.moon/toolchains.yml` 必须是复数（Moon v2.3 bug 导致 `moon init` 生成单数 `toolchain.yml` 但实际不加载）
 
 ### CI 调试指南
@@ -230,7 +238,7 @@ moon ci 报 Failed
   ├─ 无任务输出，但有 moon 引擎 Error 行（如 task_runner::missing_outputs）
   │  → 检查 moon.yml 的 outputs 路径是否匹配实际产物
   └─ 无任务输出，无 moon Error 行，任务静默失败
-     → 可能是 OOM（exit 137），单独跑 pnpm exec moon run <task> 验证
+     → 可能是 OOM（exit 137），单独跑 moon run <task> 验证
 ```
 
 **关键认知:**
@@ -243,10 +251,10 @@ moon ci 报 Failed
 **调试命令:**
 
 ```bash
-pnpm exec moon run <project>:<task>             # 隔离跑单个任务，看完整输出
-pnpm exec moon run <project>:<task> --log trace  # 带 moon 内部日志（会输出大量信息）
+moon run <project>:<task>             # 隔离跑单个任务，看完整输出
+moon run <project>:<task> --log trace  # 带 moon 内部日志（会输出大量信息）
 MOON_DEBUG_PROCESS_INPUT=true moon run <project>:<task>  # 显示传给子进程的 stdin
-pnpm exec moon debug config  # 查看 moon 内部配置加载状态
+moon debug config  # 查看 moon 内部配置加载状态
 ```
 
 ## 附录 框架约定与扩展机制
