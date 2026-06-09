@@ -121,6 +121,9 @@
 
 ### 必须遵守的
 
+- **提交信息**: 必须使用 Conventional Commits 格式（`feat:` / `fix:` / `perf:` / `remove:` / `deprecate:` / `security:`）。Lefthook commit-msg hook 自动校验格式，不满足会被拒绝。如需跳过用 `git commit --no-verify`。如需在 changelog 中展示详细说明，在 footer 中写入 `CHANGELOG: <description>`。破坏性变更使用 `feat!:` 或 `BREAKING CHANGE:` footer
+- **CHANGELOG 更新**: 发布前运行 `moon run <project>:changelog` 自动更新 CHANGELOG.md，然后提交并打 tag
+
 - Rust: 必须使用 `#[error]` 宏定义错误码（6 位数字），不要手动实现 Error trait
 - Rust: 必须使用 `err!` 宏产生 ApiError，不要直接 `Err(ApiError::...)`
 - Rust: 不要遗漏 `use framework::prelude::*`
@@ -172,6 +175,14 @@ nix develop             # 默认完整环境（含 moon、just、mdbook、pkg-co
 - macOS Intel (x86_64-darwin)：Lix 官方仍支持（tier 2），如有问题联系维护者
 - 系统依赖（openssl, sqlite, postgresql 等）由 Lix 统一管理，无需 brew/apt
 - CI 中 Lix 提供环境：`nix develop --command moon ci --affected`
+
+### Git Hook & 模板自动安装
+
+`.envrc` 中已配置 `lefthook install` + `git config commit.template`，进入目录时自动生效：
+
+- **lefthook**: `commit-msg` hook 校验 Conventional Commits v1.0.0 格式（summary + footer），通过 `--no-verify` 跳过
+- **模板**: `.git-commit-template.txt` 作为提交模板，`git commit`（编辑器）时自动填入提示
+
 
 ### 新增业务逻辑时 (Rust)
 

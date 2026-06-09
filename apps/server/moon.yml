@@ -2,6 +2,12 @@ language: 'rust'
 tags: ['backend']
 
 tasks:
+  changelog:
+    script: |
+      VERSION=$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+' Cargo.toml) && git-cliff --unreleased --tag "$VERSION" --include-path apps/server/** --include-path apps/server-ui/** --config ../../cliff.toml --prepend CHANGELOG.md
+    options:
+      runInCI: false
+
   format:
     command: 'cargo fmt --check'
 

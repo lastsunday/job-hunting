@@ -1,0 +1,26 @@
+<type>(<scope>): <description>
+
+# CHANGELOG: <description>
+# BREAKING CHANGE: <description>
+#
+#
+# This project uses Conventional Commits v1.0.0 — https://conventionalcommits.org
+# Types: feat, fix, build, chore, ci, docs, perf,
+#         refactor, remove, deprecate, revert, security,
+#         style, test
+# CHANGELOG: will add to changelog
+# BREAKING CHANGE: will add to changelog and affect version rule
+#
+## Examples(summary):
+#   feat: add login page
+#
+## Examples(summary + CHANGELOG):
+#   feat: add login page
+#
+#   CHANGELOG: implement OAuth2 login flow
+#
+## Examples(summary + breaking ! + CHANGELOG + BREAKING CHANGE):
+#   feat(api)!: change response format
+#
+#   CHANGELOG: drop Node 18 support
+#   BREAKING CHANGE: use ES2022 features not available in Node 18

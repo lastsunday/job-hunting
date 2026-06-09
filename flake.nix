@@ -67,6 +67,8 @@
               moon
               mdbook
               mdbook-mermaid
+              git-cliff
+              lefthook
             ];
 
             buildInputs = with pkgs; [

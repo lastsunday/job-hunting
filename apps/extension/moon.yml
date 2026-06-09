@@ -33,6 +33,11 @@ tasks:
   compile:
     options:
       runInCI: false
+  changelog:
+    script: |
+      VERSION=$(grep '"version"' package.json | head -1 | sed -E 's/.*"version":[[:space:]]*"(.*)".*/\1/') && git-cliff --unreleased --tag "$VERSION" --include-path apps/extension/** --config ../../cliff.toml --prepend CHANGELOG.md
+    options:
+      runInCI: false
   zip:
     options:
       runInCI: false
