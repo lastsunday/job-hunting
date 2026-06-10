@@ -60,6 +60,10 @@ jobs:
             targetOSAndARCH: window-amd64
     runs-on: ${{ matrix.os }}
     steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+
       - uses: ./.github/actions/free-disk-space
         if: runner.os == 'Linux'
 
@@ -77,10 +81,6 @@ jobs:
         run: |
           echo "PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           echo "OPENSSL_SRC_PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-        with:
-          fetch-depth: 1
 
       - name: Install Nix (Linux / macOS)
         if: runner.os != 'Windows'
