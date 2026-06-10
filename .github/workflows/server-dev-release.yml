@@ -33,7 +33,7 @@ jobs:
 
   build:
     needs: prepare
-    uses: ./.github/workflows/reusable/server-build.yml
+    uses: ./.github/workflows/reusable-server-build.yml
     with:
       version: ${{ needs.prepare.outputs.dev-version }}
       prerelease: true
@@ -42,7 +42,7 @@ jobs:
 
   cleanup:
     needs: build
-    uses: ./.github/workflows/reusable/dev-release-cleanup.yml
+    uses: ./.github/workflows/reusable-dev-release-cleanup.yml
     with:
       tag-prefix: dev-server-
     secrets: inherit

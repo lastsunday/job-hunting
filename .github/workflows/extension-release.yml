@@ -27,7 +27,7 @@ jobs:
 
   release:
     needs: prepare
-    uses: ./.github/workflows/reusable/extension-build.yml
+    uses: ./.github/workflows/reusable-extension-build.yml
     with:
       version: ${{ needs.prepare.outputs.version }}
       dry-run: ${{ inputs.dry-run || false }}

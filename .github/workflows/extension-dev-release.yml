@@ -30,7 +30,7 @@ jobs:
 
   build:
     needs: prepare
-    uses: ./.github/workflows/reusable/extension-build.yml
+    uses: ./.github/workflows/reusable-extension-build.yml
     with:
       version: ${{ needs.prepare.outputs.dev-version }}
       prerelease: true
@@ -39,7 +39,7 @@ jobs:
 
   cleanup:
     needs: build
-    uses: ./.github/workflows/reusable/dev-release-cleanup.yml
+    uses: ./.github/workflows/reusable-dev-release-cleanup.yml
     with:
       tag-prefix: dev-extension-
     secrets: inherit
