@@ -1,49 +1,46 @@
-language: 'rust'
-tags: ['backend']
+language: "rust"
+tags: ["backend"]
 
 tasks:
-  changelog:
-    script: |
-      VERSION=$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+' Cargo.toml) && git-cliff --unreleased --tag "$VERSION" --include-path apps/server/** --include-path apps/server-ui/** --config ../../cliff.toml --prepend CHANGELOG.md
-    options:
-      runInCI: false
-
   bump:
     script: |
-      bash ../../scripts/bump.sh "job-hunting-server" "Cargo.toml" "--include-path apps/server/** --include-path apps/server-ui/**"
+      bash ../../scripts/bump.sh \
+        "job-hunting-server" \
+        "Cargo.toml" \
+        "--include-path apps/server/** --include-path apps/server-ui/**"
     options:
       runInCI: false
 
   format:
-    command: 'cargo fmt --check'
+    command: "cargo fmt --check"
 
   check:
-    command: 'cargo check --package job-hunting-server'
+    command: "cargo check --package job-hunting-server"
 
   build:
-    command: 'cargo build --package job-hunting-server'
-    outputs: ['/target/debug/job-hunting-server']
+    command: "cargo build --package job-hunting-server"
+    outputs: ["/target/debug/job-hunting-server"]
     deps:
       - ~:check
 
   lint:
-    command: 'cargo clippy --workspace -- -D warnings'
+    command: "cargo clippy --workspace -- -D warnings"
     deps:
       - ~:check
 
   test:
-    command: 'cargo test --package job-hunting-server'
+    command: "cargo test --package job-hunting-server"
     deps:
       - ~:build
 
   run:
-    command: 'cargo run --package job-hunting-server -- --config=application.toml'
+    command: "cargo run --package job-hunting-server -- --config=application.toml"
     options:
       persistent: true
       cache: false
 
   dev:
-    command: 'cargo run --package job-hunting-server -- --config=application-dev.toml'
+    command: "cargo run --package job-hunting-server -- --config=application-dev.toml"
     options:
       persistent: true
       cache: false

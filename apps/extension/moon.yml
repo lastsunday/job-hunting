@@ -1,47 +1,44 @@
-language: 'typescript'
-layer: 'application'
-tags: ['chrome-extension']
+language: "typescript"
+layer: "application"
+tags: ["chrome-extension"]
 
 tasks:
   ensure-deps:
-    command: 'pnpm install'
+    command: "pnpm install"
     inputs:
-      - '/pnpm-lock.yaml'
-      - '/pnpm-workspace.yaml'
-      - 'package.json'
+      - "/pnpm-lock.yaml"
+      - "/pnpm-workspace.yaml"
+      - "package.json"
     outputs:
-      - 'node_modules'
+      - "node_modules"
     options:
       cache: true
   build:
-    command: 'pnpm'
-    args: ['run', 'build']
+    command: "pnpm"
+    args: ["run", "build"]
     deps:
       - ~:ensure-deps
       - analysis:build
   build-firefox:
-    command: 'pnpm'
-    args: ['run', 'build:firefox']
+    command: "pnpm"
+    args: ["run", "build:firefox"]
     deps:
       - ~:ensure-deps
       - analysis:build
   test-unit:
-    command: 'pnpm'
-    args: ['run', 'test:unit']
+    command: "pnpm"
+    args: ["run", "test:unit"]
     deps:
       - ~:ensure-deps
   compile:
     options:
       runInCI: false
-  changelog:
-    script: |
-      VERSION=$(grep '"version"' package.json | head -1 | sed -E 's/.*"version":[[:space:]]*"(.*)".*/\1/') && git-cliff --unreleased --tag "$VERSION" --include-path apps/extension/** --config ../../cliff.toml --prepend CHANGELOG.md
-    options:
-      runInCI: false
-
   bump:
     script: |
-      bash ../../scripts/bump.sh "@job-hunting/extension" "package.json" "--include-path apps/extension/** --include-path libs/analysis/**"
+      bash ../../scripts/bump.sh \
+        "@job-hunting/extension" \
+        "package.json" \
+        "--include-path apps/extension/** --include-path libs/analysis/**"
     options:
       runInCI: false
   zip:
@@ -51,10 +48,10 @@ tasks:
     options:
       runInCI: false
   install-playwright:
-    command: 'pnpm exec playwright install --with-deps'
+    command: "pnpm exec playwright install --with-deps"
     options:
       cache: false
-      mutex: 'playwright-install'
+      mutex: "playwright-install"
   test-e2e:
     deps:
       - ~:build
