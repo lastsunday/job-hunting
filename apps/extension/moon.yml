@@ -3,6 +3,15 @@ layer: "application"
 tags: ["chrome-extension"]
 
 tasks:
+  bump:
+    script: |
+      bash ../../scripts/bump.sh \
+        "@job-hunting/extension" \
+        "package.json" \
+        "--include-path apps/extension/** --include-path libs/analysis/**"
+    options:
+      runInCI: false
+
   ensure-deps:
     command: "pnpm install"
     inputs:
@@ -13,45 +22,45 @@ tasks:
       - "node_modules"
     options:
       cache: true
+
   build:
     command: "pnpm"
     args: ["run", "build"]
     deps:
       - ~:ensure-deps
       - analysis:build
+
   build-firefox:
     command: "pnpm"
     args: ["run", "build:firefox"]
     deps:
       - ~:ensure-deps
       - analysis:build
+
   test-unit:
     command: "pnpm"
     args: ["run", "test:unit"]
     deps:
       - ~:ensure-deps
+
   compile:
     options:
       runInCI: false
-  bump:
-    script: |
-      bash ../../scripts/bump.sh \
-        "@job-hunting/extension" \
-        "package.json" \
-        "--include-path apps/extension/** --include-path libs/analysis/**"
-    options:
-      runInCI: false
+
   zip:
     options:
       runInCI: false
+
   zip-firefox:
     options:
       runInCI: false
+
   install-playwright:
     command: "pnpm exec playwright install --with-deps"
     options:
       cache: false
       mutex: "playwright-install"
+
   test-e2e:
     deps:
       - ~:build
