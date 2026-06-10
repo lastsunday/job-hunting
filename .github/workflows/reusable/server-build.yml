@@ -1,0 +1,274 @@
+name: server-build
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+        description: "Version string for artifacts and Docker tags"
+      prerelease:
+        required: false
+        type: boolean
+        default: false
+        description: "Create a GitHub Pre-release instead of Release"
+      dry-run:
+        required: false
+        type: boolean
+        default: false
+        description: "Skip Docker push and GitHub release"
+      tag-name:
+        required: false
+        type: string
+        default: ""
+        description: "Git tag for the release (defaults to GITHUB_REF_NAME)"
+
+env:
+  CARGO_TERM_COLOR: always
+  ROOT_DIR: apps/server/
+  REGISTRY: ghcr.io
+  USER_NAME: lastsunday
+  IMAGE_NAME: job-hunting
+  BIN_NAME: job-hunting-server
+
+jobs:
+  build-assets:
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ env.ROOT_DIR }}
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+            targetOSAndARCH: linux-arm64
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            targetOSAndARCH: macos-arm64
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            targetOSAndARCH: linux-amd64
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            targetOSAndARCH: macos-amd64
+          - target: universal-apple-darwin
+            os: macos-latest
+            targetOSAndARCH: macos
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            targetOSAndARCH: window-amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: ./.github/actions/free-disk-space
+        if: runner.os == 'Linux'
+
+      - name: Setup Perl (Windows only)
+        uses: shogo82148/actions-setup-perl@22423f01bde48fb88785c007e3166fbbbd8e892a
+        if: contains(matrix.os, 'windows')
+        with:
+          perl-version: "5.38"
+          distribution: strawberry
+
+      - name: Set Perl environment variables (Windows only)
+        shell: powershell
+        working-directory: \
+        if: runner.os == 'Windows'
+        run: |
+          echo "PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          echo "OPENSSL_SRC_PERL=$((where.exe perl)[0])" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+
+      - name: Install Nix (Linux / macOS)
+        if: runner.os != 'Windows'
+        uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d
+        with:
+          extra-conf: |
+            accept-flake-config = true
+
+      - name: Cache Nix store (Linux / macOS)
+        if: runner.os != 'Windows'
+        uses: DeterminateSystems/magic-nix-cache-action@6221693898146dc97e38ad0e013488a16477a4c4
+
+      - name: Install pnpm (Windows)
+        if: runner.os == 'Windows'
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+        with:
+          version: "10.13.1"
+          run_install: false
+
+      - name: Setup Node.js (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
+        with:
+          node-version-file: '.node-version'
+          cache: pnpm
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: pnpm install --frozen-lockfile
+        working-directory: ${{ github.workspace }}
+
+      - name: Build UI
+        run: nix develop --command moon run server-ui:build
+        if: runner.os != 'Windows'
+
+      - name: Build UI (Windows)
+        if: runner.os == 'Windows'
+        run: pnpm exec moon run server-ui:build
+
+      - name: Move UI dist to web/
+        if: runner.os == 'Windows'
+        run: |
+          rm -rf ./web/dist
+          mv ${{ github.workspace }}/apps/server-ui/dist ./web/dist
+
+      - uses: taiki-e/upload-rust-binary-action@3962470d6e7f1993108411bc3f75a135ec67fc8c
+        with:
+          bin: ${{ env.BIN_NAME }}
+          archive: $bin-${{ inputs.version }}-$target
+          target: ${{ matrix.target }}
+          dry-run: true
+          manifest-path: Cargo.toml
+          features: vendored-openssl
+
+      - name: Rename bin for artifact
+        shell: bash
+        run: |
+          ext=""
+          if [ "${{ runner.os }}" = "Windows" ]; then ext=".exe"; fi
+          src="${{ github.workspace }}/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}$ext"
+          dst="${{ github.workspace }}/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}-${{ matrix.targetOSAndARCH }}$ext"
+          mv "$src" "$dst"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
+        with:
+          name: ${{ env.BIN_NAME }}-${{ inputs.version }}-${{ matrix.targetOSAndARCH }}
+          path: ${{ github.workspace }}/target/${{ matrix.target }}/release/${{ env.BIN_NAME }}-${{ matrix.targetOSAndARCH }}*
+
+  create-release:
+    needs: build-assets
+    if: ${{ !inputs.dry-run }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        if: ${{ !inputs.prerelease }}
+        with:
+          fetch-depth: 1
+
+      - uses: ./.github/actions/extract-changelog
+        if: ${{ !inputs.prerelease }}
+        with:
+          changelog-path: ${{ env.ROOT_DIR }}CHANGELOG.md
+          output-path: /tmp/RELEASE_BODY.md
+
+      - name: Prepare generic body
+        if: ${{ inputs.prerelease }}
+        run: |
+          {
+            echo "Dev build from \`${GITHUB_SHA:0:7}\`"
+            echo ""
+            echo "Run number: ${GITHUB_RUN_NUMBER}"
+            echo "Date: $(date -u +%Y%m%d)"
+            echo "Version: ${{ inputs.version }}"
+          } > /tmp/RELEASE_BODY.md
+
+      - name: Download all binaries
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+        with:
+          path: release-binaries
+          pattern: ${{ env.BIN_NAME }}-${{ inputs.version }}-*
+          merge-multiple: true
+
+      - uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
+        with:
+          body_path: /tmp/RELEASE_BODY.md
+          prerelease: ${{ inputs.prerelease }}
+          make_latest: false
+          tag_name: ${{ inputs.tag-name || github.ref_name }}
+          name: Server ${{ inputs.version }}
+          files: release-binaries/*
+
+
+  push-docker:
+    needs: build-assets
+    if: ${{ !inputs.dry-run }}
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{ env.ROOT_DIR }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+
+      - name: Download binaries
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16
+        with:
+          path: ${{ env.IMAGE_NAME }}
+          pattern: ${{ env.BIN_NAME }}-${{ inputs.version }}-*
+          merge-multiple: true
+
+      - name: Move & chmod
+        run: |
+          mv ${{ env.IMAGE_NAME }}/* ./
+          chmod 755 ${{ env.BIN_NAME }}-*
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@27d0a4f181a40b142cce983c5393082c365d1480
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f211e3e9ded2d9377c8cadc4489a4e38014bc4c9
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: |
+            ${{ env.USER_NAME }}/${{ env.IMAGE_NAME }}
+            ghcr.io/${{ env.USER_NAME }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ inputs.version }},enable=${{ !inputs.prerelease }}
+            type=raw,value=dev,enable=${{ inputs.prerelease }}
+            type=raw,value=dev-${{ inputs.version }},enable=${{ inputs.prerelease }}
+          flavor: |
+            latest=${{ !inputs.prerelease }}
+
+      - name: Build and push Docker images
+        id: push
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: ${{ env.ROOT_DIR }}
+          platforms: linux/amd64,linux/arm64
+          push: ${{ !inputs.dry-run }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Generate artifact attestation
+        if: ${{ !inputs.dry-run }}
+        uses: actions/attest-build-provenance@ef244123eb79f2f7a7e75d99086184180e6d0018
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.USER_NAME }}/${{ env.IMAGE_NAME }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true

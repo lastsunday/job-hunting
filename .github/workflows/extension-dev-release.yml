@@ -1,0 +1,45 @@
+name: extension-dev-release
+run-name: ${{ github.actor }} extension dev build
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [dev]
+    paths:
+      - "apps/extension/**"
+      - "libs/analysis/**"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      dev-version: ${{ steps.gen.outputs.DEV_VERSION }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+
+      - id: gen
+        run: |
+          dev_version=$(bash scripts/dev-version.sh apps/extension/package.json)
+          echo "DEV_VERSION=$dev_version" >> "$GITHUB_ENV"
+          echo "DEV_VERSION=$dev_version" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: prepare
+    uses: ./.github/workflows/reusable/extension-build.yml
+    with:
+      version: ${{ needs.prepare.outputs.dev-version }}
+      prerelease: true
+      tag-name: dev-extension-${{ github.run_number }}
+    secrets: inherit
+
+  cleanup:
+    needs: build
+    uses: ./.github/workflows/reusable/dev-release-cleanup.yml
+    with:
+      tag-prefix: dev-extension-
+    secrets: inherit
