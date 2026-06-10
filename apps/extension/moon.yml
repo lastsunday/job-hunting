@@ -54,6 +54,7 @@ tasks:
     args: ["run", "zip"]
     deps:
       - ~:ensure-deps
+      - analysis:build
     options:
       runInCI: skip
 
@@ -62,6 +63,7 @@ tasks:
     args: ["run", "zip:firefox"]
     deps:
       - ~:ensure-deps
+      - analysis:build
     options:
       runInCI: skip
 
