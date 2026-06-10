@@ -6,12 +6,18 @@ tasks:
   build:
     command: 'pnpm'
     args: ['run', 'build']
+    deps:
+      - ~:ensure-deps
   test:
     command: 'pnpm'
     args: ['run', 'test']
+    deps:
+      - ~:ensure-deps
   typecheck:
     command: 'pnpm'
     args: ['run', 'typecheck']
+    deps:
+      - ~:ensure-deps
   preview:
     command: 'pnpm'
     args: ['run', 'preview']

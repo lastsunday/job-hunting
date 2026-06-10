@@ -8,6 +8,8 @@ tasks:
     options:
       cache: false
       mutex: 'playwright-install'
+    deps:
+      - ~:ensure-deps
   e2e:
     command: 'pnpm'
     args: ['run', 'e2e']

@@ -12,17 +12,6 @@ tasks:
     options:
       runInCI: false
 
-  ensure-deps:
-    command: "pnpm install"
-    inputs:
-      - "/pnpm-lock.yaml"
-      - "/pnpm-workspace.yaml"
-      - "package.json"
-    outputs:
-      - "node_modules"
-    options:
-      cache: true
-
   build:
     command: "pnpm"
     args: ["run", "build"]
