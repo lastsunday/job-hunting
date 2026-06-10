@@ -92,6 +92,7 @@ jobs:
       - name: Cache Nix store (Linux / macOS)
         if: runner.os != 'Windows'
         uses: DeterminateSystems/magic-nix-cache-action@6221693898146dc97e38ad0e013488a16477a4c4
+        continue-on-error: true
 
       - name: Install pnpm (Windows)
         if: runner.os == 'Windows'

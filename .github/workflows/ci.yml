@@ -41,6 +41,7 @@ jobs:
 
       - name: Cache Nix store
         uses: DeterminateSystems/magic-nix-cache-action@6221693898146dc97e38ad0e013488a16477a4c4
+        continue-on-error: true
 
       - name: Moon CI pipeline (affected)
         run: nix develop --command moon ci --base=origin/${{ github.base_ref || 'dev' }}
@@ -112,6 +113,7 @@ jobs:
 
       - name: Cache Nix store
         uses: DeterminateSystems/magic-nix-cache-action@6221693898146dc97e38ad0e013488a16477a4c4
+        continue-on-error: true
 
       - name: Run tests
         run: nix develop --command sh -c "cd docs && mdbook test"
@@ -136,6 +138,7 @@ jobs:
 
       - name: Cache Nix store
         uses: DeterminateSystems/magic-nix-cache-action@6221693898146dc97e38ad0e013488a16477a4c4
+        continue-on-error: true
 
       - name: Build docs
         run: nix develop --command sh -c "cd docs && mdbook build"
