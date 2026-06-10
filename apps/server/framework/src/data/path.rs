@@ -4,7 +4,7 @@ use axum_valid::HasValidate;
 use crate::error::ApiError;
 
 #[derive(Debug, Clone, Copy, Default, FromRequestParts)]
-#[from_request(via(axum::extract::Query), rejection(ApiError))]
+#[from_request(via(axum::extract::Path), rejection(ApiError))]
 pub struct Path<T>(pub T);
 
 impl<T> HasValidate for Path<T> {

@@ -1,14 +1,15 @@
+use api::AppState;
 use axum::{
     Router,
     body::Body,
     http::{self, Request, Response},
 };
 use chrono::{DateTime, FixedOffset};
+use framework::config::auth::AuthConfig;
 use http_body_util::BodyExt;
 use migration::MigratorTrait;
 use serde_json::Value;
-use service::AppState;
-use std::str::FromStr;
+use std::{str::FromStr, sync::Arc};
 use testcontainers::ContainerAsync;
 use testcontainers_modules::postgres::Postgres;
 use tower::ServiceExt;
@@ -27,7 +28,19 @@ pub async fn setup_database() -> (Option<ContainerAsync<Postgres>>, AppState) {
         .await
         .unwrap();
     migration::Migrator::up(&conn, None).await.unwrap();
-    let state = AppState { conn };
+    let state = AppState {
+        conn,
+        auth_config: Arc::new(AuthConfig {
+            access_token_secret: Some(String::from("QLjJTeVblAlM47de")),
+            access_token_expires_in: Some(28800),
+            refresh_token_secret: Some(String::from("N8lI0uitNzJl6vYK")),
+            refresh_token_expires_in: Some(15897600),
+            audience: Some(String::from("audience")),
+            issuer: Some(String::from("issuer")),
+            client_id: Some(String::from("d1aicsr57dijo7h963ig")),
+            client_secret: Some(String::from("ujTgh2lEQYy0PXhK")),
+        }),
+    };
     (container, state)
 }
 
@@ -143,4 +156,53 @@ pub fn datetime_to_str(datetime: Option<DateTime<FixedOffset>>) -> String {
         Some(item) => item.to_rfc3339(),
         None => "".to_owned(),
     }
+}
+
+#[allow(dead_code)]
+pub async fn put_json(app: Router, uri: &str, json: &Value) -> Response<Body> {
+    put_json_with_token(app, uri, json, None).await
+}
+
+#[allow(dead_code)]
+pub async fn put_json_with_token(
+    app: Router,
+    uri: &str,
+    json: &Value,
+    token: Option<String>,
+) -> Response<Body> {
+    let builder = Request::builder()
+        .method("PUT")
+        .uri(uri)
+        .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
+    let builder = match token {
+        Some(token) => builder.header(http::header::AUTHORIZATION, format!("Bearer {token}")),
+        None => builder,
+    };
+    let request = builder
+        .body(Body::from(serde_json::to_string(json).unwrap()))
+        .unwrap();
+    app.oneshot(request).await.unwrap()
+}
+
+#[allow(dead_code)]
+pub async fn delete_json(app: Router, uri: &str) -> Response<Body> {
+    delete_json_with_token(app, uri, None).await
+}
+
+#[allow(dead_code)]
+pub async fn delete_json_with_token(
+    app: Router,
+    uri: &str,
+    token: Option<String>,
+) -> Response<Body> {
+    let builder = Request::builder()
+        .method("DELETE")
+        .uri(uri)
+        .header(http::header::CONTENT_TYPE, mime::APPLICATION_JSON.as_ref());
+    let builder = match token {
+        Some(token) => builder.header(http::header::AUTHORIZATION, format!("Bearer {token}")),
+        None => builder,
+    };
+    let request = builder.body(Body::from(())).unwrap();
+    app.oneshot(request).await.unwrap()
 }

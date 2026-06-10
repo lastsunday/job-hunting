@@ -2,6 +2,7 @@
 
 # compiled output
 dist
+/target
 tmp
 out-tsc
 
@@ -38,9 +39,10 @@ testem.log
 .DS_Store
 Thumbs.db
 
-.nx/cache
-.nx/workspace-data
+.moon/cache
+.moon/workspace-data
 apps/extension/package-lock.json
+apps/server-ui-e2e/test-results
 
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
@@ -54,7 +56,7 @@ out
 test-output
 lua
 
-*.sqlite
+*.sqlite*
 application.yaml
 
 # book
@@ -62,5 +64,13 @@ docs/book/
 
 
 .claude/worktrees
-.nx/polygraph
-.nx/self-healing
+
+
+application.toml
+application-dev.toml
+logs/
+
+# Lix / Nix
+.nix-direnv/
+.direnv/
+result

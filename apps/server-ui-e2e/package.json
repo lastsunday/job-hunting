@@ -5,10 +5,5 @@
   "scripts": {
     "e2e:install": "playwright install --with-deps",
     "e2e": "playwright test"
-  },
-  "nx": {
-    "implicitDependencies": [
-      "@job-hunting/server-ui"
-    ]
   }
 }

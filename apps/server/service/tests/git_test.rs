@@ -24,7 +24,6 @@ async fn test_clone_by_ssh_repo_success() {
         Ok(repo) => repo,
         Err(e) => {
             tear_down_git_server(Some(gitea)).await;
-            fs::remove_dir_all(local_path).unwrap();
             panic!("failed to clone: {}", e)
         }
     };

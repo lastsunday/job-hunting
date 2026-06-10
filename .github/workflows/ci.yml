@@ -1,0 +1,149 @@
+name: ci
+run-name: ${{ github.actor }} CI
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch to run against
+        default: dev
+  push:
+    branches: [dev]
+  pull_request:
+    branches: [dev]
+  merge_group:
+    branches: [dev]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: ./.github/actions/free-disk-space
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d
+        with:
+          extra-conf: |
+            accept-flake-config = true
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@6221693898146dc97e38ad0e013488a16477a4c4
+
+      - name: Moon CI pipeline (affected)
+        run: nix develop --command moon ci --base=origin/${{ github.base_ref || 'dev' }}
+        env:
+          MOON_OUTPUT_STYLE: buffer-only-failure
+          MOON_LOG: error
+
+      - uses: moonrepo/run-report-action@bbe7e99bf2aca819ec660ec01fc59d84bdd492d6
+        if: success() || failure()
+        with:
+          access-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if extension e2e reports exist
+        id: e2e-report
+        if: ${{ !cancelled() }}
+        run: |
+          if [ -d "apps/extension/allure-results" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: (allure-report) Load test report history
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        if: ${{ steps.e2e-report.outputs.exists == 'true' && !cancelled() }}
+        continue-on-error: true
+        with:
+          ref: gh-test
+          path: gh-test
+          fetch-depth: 1
+
+      - name: (allure-report) Build test report
+        uses: simple-elf/allure-report-action@53ebb757a2097edc77c53ecef4d454fc2f2f774c
+        if: ${{ steps.e2e-report.outputs.exists == 'true' && !cancelled() }}
+        with:
+          gh_pages: gh-test
+          allure_history: gh-test
+          allure_results: apps/extension/allure-results
+
+      - name: (allure-report) Upload test report to action artifacts
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
+        if: ${{ steps.e2e-report.outputs.exists == 'true' && !cancelled() }}
+        with:
+          name: extension-e2e-tests-allure-report
+          path: allure-report/
+          retention-days: 30
+
+      - name: (cucumber-report) Upload test report to action artifacts
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
+        if: ${{ steps.e2e-report.outputs.exists == 'true' && !cancelled() }}
+        with:
+          name: extension-e2e-tests-cucumber-report
+          path: apps/extension/cucumber-report/
+          retention-days: 30
+
+  docs-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d
+        with:
+          extra-conf: |
+            accept-flake-config = true
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@6221693898146dc97e38ad0e013488a16477a4c4
+
+      - name: Run tests
+        run: nix develop --command sh -c "cd docs && mdbook test"
+
+  docs-deploy:
+    if: github.event_name != 'pull_request'
+    needs: docs-test
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d
+        with:
+          extra-conf: |
+            accept-flake-config = true
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@6221693898146dc97e38ad0e013488a16477a4c4
+
+      - name: Build docs
+        run: nix develop --command sh -c "cd docs && mdbook build"
+
+      - name: Deploy GitHub Pages
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/book
+          publish_branch: gh-pages
+          force_orphan: true

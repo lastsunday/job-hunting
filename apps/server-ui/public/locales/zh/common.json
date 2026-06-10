@@ -1,0 +1,22 @@
+{
+  "loading": "加载中...",
+  "error": "错误",
+  "success": "成功",
+  "confirm": "确认",
+  "cancel": "取消",
+  "delete": "删除",
+  "edit": "编辑",
+  "view": "查看",
+  "create": "创建",
+  "update": "更新",
+  "search": "搜索",
+  "reset": "重置",
+  "submit": "提交",
+  "all": "全部",
+  "noData": "暂无数据",
+  "version": "版本",
+  "na": "无",
+  "yes": "是",
+  "no": "否",
+  "perPage": "条/页"
+}

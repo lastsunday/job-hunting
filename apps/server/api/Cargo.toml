@@ -5,11 +5,12 @@ authors.workspace = true
 edition.workspace = true
 
 [dependencies]
+
 axum = { workspace = true, features = ["macros"] }
 tokio = { workspace = true, features = ["full"] }
 tracing = { workspace = true, features = ["async-await"] }
 tracing-subscriber = { workspace = true, features = ["env-filter", "chrono"] }
-config = { workspace = true, features = ["yaml"] }
+figment = { workspace = true, features = ["toml", "env"] }
 serde = { workspace = true, features = ["derive"] }
 anyhow = { workspace = true }
 sea-orm = { workspace = true, features = [
@@ -48,11 +49,20 @@ mime = { workspace = true }
 chrono = { workspace = true }
 testcontainers = { workspace = true }
 testcontainers-modules = { workspace = true, features = ["postgres", "gitea"] }
+base64 = { workspace = true }
 entity = { path = "../entity" }
 migration = { path = "../migration" }
 service = { path = "../service" }
 framework = { path = "../framework" }
 web = { path = "../web" }
+framework-macros = { path = "../framework/macros" }
+strum = { workspace = true }
+strum_macros = { workspace = true }
+macros = { path = "../macros" }
+either = { workspace = true, features = ["serde"] }
+tokio-util = { workspace = true }
+futures = { workspace = true }
+tower-layer = { workspace = true }
 
 [dev-dependencies]
 tower = { workspace = true, features = ["util"] }

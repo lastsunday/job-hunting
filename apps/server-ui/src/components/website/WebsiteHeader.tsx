@@ -113,7 +113,7 @@ export function WebsiteHeader() {
               <div className={`i-mdi:chevron-down`}></div>
             </Center>
           </UnstyledButton>
-          <Collapse in={linksOpened}>{links}</Collapse>
+          <Collapse expanded={linksOpened}>{links}</Collapse>
           <a href="#" className={classes.link}>
             统计
           </a>

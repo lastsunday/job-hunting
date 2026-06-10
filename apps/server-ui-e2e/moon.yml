@@ -1,0 +1,16 @@
+language: 'typescript'
+layer: 'automation'
+tags: ['e2e', 'playwright']
+
+tasks:
+  install-playwright:
+    command: 'pnpm exec playwright install --with-deps'
+    options:
+      cache: false
+      mutex: 'playwright-install'
+  e2e:
+    command: 'pnpm'
+    args: ['run', 'e2e']
+    deps:
+      - server-ui:build
+      - ~:install-playwright

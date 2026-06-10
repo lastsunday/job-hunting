@@ -1,0 +1,27 @@
+name: Extract Changelog
+description: Extract the latest release notes from a CHANGELOG.md file
+
+inputs:
+  changelog-path:
+    description: Path to CHANGELOG.md
+    required: true
+  output-path:
+    description: Path to write extracted changelog
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Extract latest release notes
+      shell: bash
+      run: |
+        awk '
+          /^## [0-9]+\.[0-9]+\.[0-9]+/ {
+            if (found) exit
+            found=1
+          }
+          found
+        ' "${{ inputs.changelog-path }}" > "${{ inputs.output-path }}"
+        if [ ! -s "${{ inputs.output-path }}" ]; then
+          echo "Warning: No release notes extracted from ${{ inputs.changelog-path }}" >&2
+        fi

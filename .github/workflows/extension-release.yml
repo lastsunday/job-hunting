@@ -1,0 +1,34 @@
+name: extension-release
+run-name: ${{ github.actor }} extension release
+
+permissions:
+  contents: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Skip GitHub release
+        type: boolean
+        default: false
+  push:
+    tags:
+      - "@job-hunting/extension@*"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set-version.outputs.VERSION }}
+    steps:
+      - name: Set VERSION
+        id: set-version
+        run: echo "VERSION=${GITHUB_REF_NAME#@job-hunting/extension@}" >> "$GITHUB_OUTPUT"
+
+  release:
+    needs: prepare
+    uses: ./.github/workflows/reusable/extension-build.yml
+    with:
+      version: ${{ needs.prepare.outputs.version }}
+      dry-run: ${{ inputs.dry-run || false }}
+    secrets: inherit

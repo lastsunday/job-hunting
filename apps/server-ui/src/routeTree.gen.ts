@@ -13,6 +13,12 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as PathlessLayoutIndexRouteImport } from './routes/_pathlessLayout/index'
 import { Route as PathlessLayoutAdminRouteRouteImport } from './routes/_pathlessLayout.admin/route'
 import { Route as PathlessLayoutAdminIndexRouteImport } from './routes/_pathlessLayout.admin/index'
+import { Route as PathlessLayoutAdminTaskPlanRouteImport } from './routes/_pathlessLayout.admin/task-plan'
+import { Route as PathlessLayoutAdminTaskRouteImport } from './routes/_pathlessLayout.admin/task'
+import { Route as PathlessLayoutAdminSyncRouteImport } from './routes/_pathlessLayout.admin/sync'
+import { Route as PathlessLayoutAdminJobsRouteImport } from './routes/_pathlessLayout.admin/jobs'
+import { Route as PathlessLayoutAdminFilesRouteImport } from './routes/_pathlessLayout.admin/files'
+import { Route as PathlessLayoutAdminCompaniesRouteImport } from './routes/_pathlessLayout.admin/companies'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -36,16 +42,61 @@ const PathlessLayoutAdminIndexRoute =
     path: '/',
     getParentRoute: () => PathlessLayoutAdminRouteRoute,
   } as any)
+const PathlessLayoutAdminTaskPlanRoute =
+  PathlessLayoutAdminTaskPlanRouteImport.update({
+    id: '/task-plan',
+    path: '/task-plan',
+    getParentRoute: () => PathlessLayoutAdminRouteRoute,
+  } as any)
+const PathlessLayoutAdminTaskRoute = PathlessLayoutAdminTaskRouteImport.update({
+  id: '/task',
+  path: '/task',
+  getParentRoute: () => PathlessLayoutAdminRouteRoute,
+} as any)
+const PathlessLayoutAdminSyncRoute = PathlessLayoutAdminSyncRouteImport.update({
+  id: '/sync',
+  path: '/sync',
+  getParentRoute: () => PathlessLayoutAdminRouteRoute,
+} as any)
+const PathlessLayoutAdminJobsRoute = PathlessLayoutAdminJobsRouteImport.update({
+  id: '/jobs',
+  path: '/jobs',
+  getParentRoute: () => PathlessLayoutAdminRouteRoute,
+} as any)
+const PathlessLayoutAdminFilesRoute =
+  PathlessLayoutAdminFilesRouteImport.update({
+    id: '/files',
+    path: '/files',
+    getParentRoute: () => PathlessLayoutAdminRouteRoute,
+  } as any)
+const PathlessLayoutAdminCompaniesRoute =
+  PathlessLayoutAdminCompaniesRouteImport.update({
+    id: '/companies',
+    path: '/companies',
+    getParentRoute: () => PathlessLayoutAdminRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/admin': typeof PathlessLayoutAdminRouteRouteWithChildren
   '/': typeof PathlessLayoutIndexRoute
+  '/admin/companies': typeof PathlessLayoutAdminCompaniesRoute
+  '/admin/files': typeof PathlessLayoutAdminFilesRoute
+  '/admin/jobs': typeof PathlessLayoutAdminJobsRoute
+  '/admin/sync': typeof PathlessLayoutAdminSyncRoute
+  '/admin/task': typeof PathlessLayoutAdminTaskRoute
+  '/admin/task-plan': typeof PathlessLayoutAdminTaskPlanRoute
   '/admin/': typeof PathlessLayoutAdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/': typeof PathlessLayoutIndexRoute
+  '/admin/companies': typeof PathlessLayoutAdminCompaniesRoute
+  '/admin/files': typeof PathlessLayoutAdminFilesRoute
+  '/admin/jobs': typeof PathlessLayoutAdminJobsRoute
+  '/admin/sync': typeof PathlessLayoutAdminSyncRoute
+  '/admin/task': typeof PathlessLayoutAdminTaskRoute
+  '/admin/task-plan': typeof PathlessLayoutAdminTaskPlanRoute
   '/admin': typeof PathlessLayoutAdminIndexRoute
 }
 export interface FileRoutesById {
@@ -53,18 +104,49 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_pathlessLayout/admin': typeof PathlessLayoutAdminRouteRouteWithChildren
   '/_pathlessLayout/': typeof PathlessLayoutIndexRoute
+  '/_pathlessLayout/admin/companies': typeof PathlessLayoutAdminCompaniesRoute
+  '/_pathlessLayout/admin/files': typeof PathlessLayoutAdminFilesRoute
+  '/_pathlessLayout/admin/jobs': typeof PathlessLayoutAdminJobsRoute
+  '/_pathlessLayout/admin/sync': typeof PathlessLayoutAdminSyncRoute
+  '/_pathlessLayout/admin/task': typeof PathlessLayoutAdminTaskRoute
+  '/_pathlessLayout/admin/task-plan': typeof PathlessLayoutAdminTaskPlanRoute
   '/_pathlessLayout/admin/': typeof PathlessLayoutAdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/login' | '/admin' | '/' | '/admin/'
+  fullPaths:
+    | '/login'
+    | '/admin'
+    | '/'
+    | '/admin/companies'
+    | '/admin/files'
+    | '/admin/jobs'
+    | '/admin/sync'
+    | '/admin/task'
+    | '/admin/task-plan'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/login' | '/' | '/admin'
+  to:
+    | '/login'
+    | '/'
+    | '/admin/companies'
+    | '/admin/files'
+    | '/admin/jobs'
+    | '/admin/sync'
+    | '/admin/task'
+    | '/admin/task-plan'
+    | '/admin'
   id:
     | '__root__'
     | '/login'
     | '/_pathlessLayout/admin'
     | '/_pathlessLayout/'
+    | '/_pathlessLayout/admin/companies'
+    | '/_pathlessLayout/admin/files'
+    | '/_pathlessLayout/admin/jobs'
+    | '/_pathlessLayout/admin/sync'
+    | '/_pathlessLayout/admin/task'
+    | '/_pathlessLayout/admin/task-plan'
     | '/_pathlessLayout/admin/'
   fileRoutesById: FileRoutesById
 }
@@ -104,15 +186,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PathlessLayoutAdminIndexRouteImport
       parentRoute: typeof PathlessLayoutAdminRouteRoute
     }
+    '/_pathlessLayout/admin/task-plan': {
+      id: '/_pathlessLayout/admin/task-plan'
+      path: '/task-plan'
+      fullPath: '/admin/task-plan'
+      preLoaderRoute: typeof PathlessLayoutAdminTaskPlanRouteImport
+      parentRoute: typeof PathlessLayoutAdminRouteRoute
+    }
+    '/_pathlessLayout/admin/task': {
+      id: '/_pathlessLayout/admin/task'
+      path: '/task'
+      fullPath: '/admin/task'
+      preLoaderRoute: typeof PathlessLayoutAdminTaskRouteImport
+      parentRoute: typeof PathlessLayoutAdminRouteRoute
+    }
+    '/_pathlessLayout/admin/sync': {
+      id: '/_pathlessLayout/admin/sync'
+      path: '/sync'
+      fullPath: '/admin/sync'
+      preLoaderRoute: typeof PathlessLayoutAdminSyncRouteImport
+      parentRoute: typeof PathlessLayoutAdminRouteRoute
+    }
+    '/_pathlessLayout/admin/jobs': {
+      id: '/_pathlessLayout/admin/jobs'
+      path: '/jobs'
+      fullPath: '/admin/jobs'
+      preLoaderRoute: typeof PathlessLayoutAdminJobsRouteImport
+      parentRoute: typeof PathlessLayoutAdminRouteRoute
+    }
+    '/_pathlessLayout/admin/files': {
+      id: '/_pathlessLayout/admin/files'
+      path: '/files'
+      fullPath: '/admin/files'
+      preLoaderRoute: typeof PathlessLayoutAdminFilesRouteImport
+      parentRoute: typeof PathlessLayoutAdminRouteRoute
+    }
+    '/_pathlessLayout/admin/companies': {
+      id: '/_pathlessLayout/admin/companies'
+      path: '/companies'
+      fullPath: '/admin/companies'
+      preLoaderRoute: typeof PathlessLayoutAdminCompaniesRouteImport
+      parentRoute: typeof PathlessLayoutAdminRouteRoute
+    }
   }
 }
 
 interface PathlessLayoutAdminRouteRouteChildren {
+  PathlessLayoutAdminCompaniesRoute: typeof PathlessLayoutAdminCompaniesRoute
+  PathlessLayoutAdminFilesRoute: typeof PathlessLayoutAdminFilesRoute
+  PathlessLayoutAdminJobsRoute: typeof PathlessLayoutAdminJobsRoute
+  PathlessLayoutAdminSyncRoute: typeof PathlessLayoutAdminSyncRoute
+  PathlessLayoutAdminTaskRoute: typeof PathlessLayoutAdminTaskRoute
+  PathlessLayoutAdminTaskPlanRoute: typeof PathlessLayoutAdminTaskPlanRoute
   PathlessLayoutAdminIndexRoute: typeof PathlessLayoutAdminIndexRoute
 }
 
 const PathlessLayoutAdminRouteRouteChildren: PathlessLayoutAdminRouteRouteChildren =
   {
+    PathlessLayoutAdminCompaniesRoute: PathlessLayoutAdminCompaniesRoute,
+    PathlessLayoutAdminFilesRoute: PathlessLayoutAdminFilesRoute,
+    PathlessLayoutAdminJobsRoute: PathlessLayoutAdminJobsRoute,
+    PathlessLayoutAdminSyncRoute: PathlessLayoutAdminSyncRoute,
+    PathlessLayoutAdminTaskRoute: PathlessLayoutAdminTaskRoute,
+    PathlessLayoutAdminTaskPlanRoute: PathlessLayoutAdminTaskPlanRoute,
     PathlessLayoutAdminIndexRoute: PathlessLayoutAdminIndexRoute,
   }
 

@@ -1,12 +1,14 @@
-const nx = require('@nx/eslint-plugin');
 const baseConfig = require('../../eslint.config.cjs');
+const react = require('eslint-plugin-react');
+const reactHooks = require('eslint-plugin-react-hooks');
 
 module.exports = [
   ...baseConfig,
-  ...nx.configs['flat/react'],
+  react.configs.flat.recommended,
+  reactHooks.configs['flat/recommended'],
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
-    // Override or add rules here
     rules: {},
+    settings: { react: { version: '19.0' } },
   },
 ];

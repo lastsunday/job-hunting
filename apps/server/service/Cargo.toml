@@ -13,10 +13,16 @@ sea-orm = { workspace = true, features = [
   "macros",
   "debug-print",
 ] }
+thiserror = { workspace = true }
 anyhow = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter"] }
-git2 = { workspace = true }
+git2 = { workspace = true, features = ["ssh"] }
+gix-packetline = { workspace = true, features = ["blocking-io"] }
+gix-hash = { workspace = true }
+gix-object = { workspace = true }
+gix-pack = { workspace = true }
+gix-features = { workspace = true }
 ssh-key = { workspace = true, features = ["getrandom", "ed25519"] }
 chrono = { workspace = true }
 testcontainers = { workspace = true }
@@ -25,9 +31,27 @@ uuid = { workspace = true, features = ["v4"] }
 tokio = { workspace = true, features = ["full"] }
 num_cpus = { workspace = true }
 openssl = { workspace = true, features = ["vendored"] }
+xid = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+base64 = { workspace = true }
+zip = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+utoipa = { workspace = true }
+validator = { workspace = true, features = ["derive"] }
+strum = { workspace = true }
+strum_macros = { workspace = true }
+cron = { workspace = true }
+calamine = { workspace = true }
+regex = { workspace = true }
+reqwest = { workspace = true }
 migration = { path = "../migration" }
 entity = { path = "../entity" }
 framework = { path = "../framework" }
+
+[dev-dependencies]
+mockall = { workspace = true }
 
 [features]
 default = []

@@ -40,6 +40,11 @@ pub struct Model {
     pub is_full_company_name: Option<bool>,
     pub skill_tag: Option<String>,
     pub welfare_tag: Option<String>,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
+    pub first_scan_datetime: Option<DateTimeWithTimeZone>,
+    pub uri: Option<String>,
+    #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
+    pub publish_datetime: Option<DateTimeWithTimeZone>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

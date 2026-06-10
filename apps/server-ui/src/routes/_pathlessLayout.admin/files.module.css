@@ -1,0 +1,9 @@
+.tableContainer {
+  max-height: calc(100vh - 335px);
+  overflow-y: auto;
+}
+
+.previewCodeBlock {
+  max-height: 65vh;
+  overflow: auto;
+}

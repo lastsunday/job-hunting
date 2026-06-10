@@ -2,5 +2,3 @@ packages:
   - packages/*
   - apps/*
   - libs/*
-onlyBuiltDependencies:
-  - nx

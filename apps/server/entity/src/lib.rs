@@ -2,9 +2,22 @@
 
 pub mod prelude;
 
+pub mod company;
+pub mod company_source;
+pub mod company_tag;
+pub mod company_tag_source;
 pub mod config;
+pub mod file;
 pub mod job;
+pub mod job_source;
 pub mod job_tag;
+pub mod job_tag_source;
 pub mod schema;
 pub mod tag;
+pub mod task;
+pub mod task_data_download;
+pub mod task_data_merge;
+pub mod task_data_plan;
+pub mod task_data_source_plan;
+pub mod task_plan;
 pub mod user;

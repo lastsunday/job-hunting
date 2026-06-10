@@ -1,0 +1,14 @@
+{
+  "title": "任务计划",
+  "cronPlaceholder": "例如 0 0 * * * *",
+  "cronEvery30Sec": "每 30 秒",
+  "cronEveryMin": "每分钟",
+  "cronEvery5Min": "每 5 分钟",
+  "cronEvery30Min": "每 30 分钟",
+  "cronEveryHour": "每小时",
+  "cronEvery6Hour": "每 6 小时",
+  "cronDaily": "每天凌晨",
+  "cronWeekly": "每周日",
+  "cronMonthly": "每月 1 号",
+  "cronCustom": "自定义"
+}

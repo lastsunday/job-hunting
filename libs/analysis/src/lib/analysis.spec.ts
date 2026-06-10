@@ -105,7 +105,7 @@ describe('analysis', () => {
     await expect
       .poll(() => page.getByText('点击职位分析').element(), { timeout: 1000 })
       .toBeVisible();
-    page.getByText('点击职位分析').element().click();
+    (page.getByText('点击职位分析').element() as HTMLElement).click();
     await expect
       .poll(
         () => {

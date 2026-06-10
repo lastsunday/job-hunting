@@ -1,0 +1,14 @@
+{
+  "title": "Task Plans",
+  "cronPlaceholder": "e.g. 0 0 * * * *",
+  "cronEvery30Sec": "Every 30 seconds",
+  "cronEveryMin": "Every minute",
+  "cronEvery5Min": "Every 5 minutes",
+  "cronEvery30Min": "Every 30 minutes",
+  "cronEveryHour": "Every hour",
+  "cronEvery6Hour": "Every 6 hours",
+  "cronDaily": "Daily at midnight",
+  "cronWeekly": "Weekly (Sunday)",
+  "cronMonthly": "Monthly on 1st",
+  "cronCustom": "Custom"
+}

@@ -1,0 +1,37 @@
+name: server-release
+run-name: ${{ github.actor }} server release
+
+permissions:
+  contents: write
+  packages: write
+  attestations: write
+  id-token: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Skip Docker push and GitHub release
+        type: boolean
+        default: false
+  push:
+    tags:
+      - "job-hunting-server@*"
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.set-version.outputs.VERSION }}
+    steps:
+      - name: Set VERSION
+        id: set-version
+        run: echo "VERSION=${GITHUB_REF_NAME#job-hunting-server@}" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: prepare
+    uses: ./.github/workflows/reusable/server-build.yml
+    with:
+      version: ${{ needs.prepare.outputs.version }}
+      dry-run: ${{ inputs.dry-run || false }}
+    secrets: inherit

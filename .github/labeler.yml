@@ -1,0 +1,19 @@
+extension:
+  - changed-files:
+      - any-glob-to-any-file: apps/extension/**
+
+server:
+  - changed-files:
+      - any-glob-to-any-file: apps/server/**
+
+server-ui:
+  - changed-files:
+      - any-glob-to-any-file: apps/server-ui/**
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file: docs/**
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: .github/**

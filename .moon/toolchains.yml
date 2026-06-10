@@ -1,0 +1,9 @@
+javascript:
+  packageManager: 'pnpm'
+  inferTasksFromScripts: true
+
+node: {}
+pnpm: {}
+
+typescript:
+  syncProjectReferences: true

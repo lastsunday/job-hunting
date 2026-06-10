@@ -1,0 +1,45 @@
+commit-msg:
+  commands:
+    conventional-commit:
+      run: |
+        commit_file={1}
+        summary=$(head -1 "$commit_file")
+        if ! echo "$summary" | grep -qE '^(feat|fix|build|chore|ci|docs|perf|refactor|remove|deprecate|revert|security|style|test)(\([^)]+\))?!?: .+$'; then
+          echo ""
+          echo "  !! Commit message must follow Conventional Commits v1.0.0:"
+          echo "     <type>[optional scope]: <description>"
+          echo ""
+          echo "     Types: feat, fix, build, chore, ci, docs, perf,"
+          echo "            refactor, remove, deprecate, revert, security,"
+          echo "            style, test"
+          echo ""
+          echo "     Examples:"
+          echo "       feat: add login page"
+          echo "       fix(auth): handle token expiry"
+          echo "       feat(api)!: change response format"
+          echo "       docs: correct spelling"
+          echo ""
+          exit 1
+        fi
+        if grep -qE '^(BREAKING CHANGE|BREAKING-CHANGE|CHANGELOG):[^ ]' "$commit_file"; then
+          echo ""
+          echo "  !! Footer format error: missing space after ':'"
+          echo "     Use: BREAKING CHANGE: <description>"
+          echo "          BREAKING-CHANGE: <description>"
+          echo "          CHANGELOG: <description>"
+          echo ""
+          grep -nE '^(BREAKING CHANGE|BREAKING-CHANGE|CHANGELOG):[^ ]' "$commit_file"
+          echo ""
+          exit 1
+        fi
+        if grep -qE '^(BREAKING CHANGE|BREAKING-CHANGE|CHANGELOG):\s*$' "$commit_file"; then
+          echo ""
+          echo "  !! Footer missing description"
+          echo "     Use: BREAKING CHANGE: <description>"
+          echo "          BREAKING-CHANGE: <description>"
+          echo "          CHANGELOG: <description>"
+          echo ""
+          grep -nE '^(BREAKING CHANGE|BREAKING-CHANGE|CHANGELOG):\s*$' "$commit_file"
+          echo ""
+          exit 1
+        fi

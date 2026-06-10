@@ -1,0 +1,94 @@
+name: extension-build
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+        description: "Version string for artifact and release names"
+      prerelease:
+        required: false
+        type: boolean
+        default: false
+        description: "Create a GitHub Pre-release instead of Release"
+      dry-run:
+        required: false
+        type: boolean
+        default: false
+        description: "Skip GitHub release"
+      tag-name:
+        required: false
+        type: string
+        default: ""
+        description: "Git tag for the release (defaults to GITHUB_REF_NAME)"
+
+env:
+  ROOT_DIR: apps/extension/
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 1
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@e50d5f73bfe71c2dd0aa4218de8f4afa59f8f81d
+        with:
+          extra-conf: |
+            accept-flake-config = true
+
+      - name: Cache Nix store
+        uses: DeterminateSystems/magic-nix-cache-action@6221693898146dc97e38ad0e013488a16477a4c4
+
+      - name: Build & zip
+        run: |
+          nix develop --command moon run extension:zip
+          nix develop --command moon run extension:zip-firefox
+
+      - name: Rename zips
+        run: |
+          mv ${{ env.ROOT_DIR }}.output/*-chrome.zip ${{ env.ROOT_DIR }}.output/job-hunting-extension-chrome-${{ inputs.version }}.zip
+          mv ${{ env.ROOT_DIR }}.output/*-firefox.zip ${{ env.ROOT_DIR }}.output/job-hunting-extension-firefox-${{ inputs.version }}.zip
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
+        with:
+          name: extension-${{ inputs.version }}
+          path: |
+            ${{ env.ROOT_DIR }}.output/job-hunting-extension-chrome-${{ inputs.version }}.zip
+            ${{ env.ROOT_DIR }}.output/job-hunting-extension-firefox-${{ inputs.version }}.zip
+
+      - uses: ./.github/actions/extract-changelog
+        if: ${{ !inputs.prerelease }}
+        with:
+          changelog-path: ${{ env.ROOT_DIR }}CHANGELOG.md
+          output-path: /tmp/RELEASE_BODY.md
+
+      - name: Prepare generic body
+        if: ${{ inputs.prerelease }}
+        run: |
+          {
+            echo "Dev build from \`${GITHUB_SHA:0:7}\`"
+            echo ""
+            echo "Run number: ${GITHUB_RUN_NUMBER}"
+            echo "Date: $(date -u +%Y%m%d)"
+            echo "Version: ${{ inputs.version }}"
+          } > /tmp/RELEASE_BODY.md
+
+      - name: Create Release
+        if: ${{ !inputs.dry-run }}
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
+        with:
+          body_path: /tmp/RELEASE_BODY.md
+          prerelease: ${{ inputs.prerelease }}
+          make_latest: ${{ !inputs.prerelease }}
+          tag_name: ${{ inputs.tag-name || github.ref_name }}
+          name: Extension ${{ inputs.version }}
+          files: |
+            ${{ env.ROOT_DIR }}.output/job-hunting-extension-chrome-${{ inputs.version }}.zip
+            ${{ env.ROOT_DIR }}.output/job-hunting-extension-firefox-${{ inputs.version }}.zip
+
+

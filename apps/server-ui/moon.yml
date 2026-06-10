@@ -1,0 +1,20 @@
+language: 'typescript'
+layer: 'application'
+tags: ['react', 'admin']
+
+tasks:
+  build:
+    command: 'pnpm'
+    args: ['run', 'build']
+  test:
+    command: 'pnpm'
+    args: ['run', 'test']
+  typecheck:
+    command: 'pnpm'
+    args: ['run', 'typecheck']
+  preview:
+    command: 'pnpm'
+    args: ['run', 'preview']
+    options:
+      persistent: true
+      runInCI: false

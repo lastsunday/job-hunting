@@ -12,9 +12,8 @@ pub struct Model {
     pub id: String,
     pub job_id: String,
     pub tag_id: String,
-    pub source_type: Option<i32>,
-    pub source: Option<String>,
     pub seq: Option<i32>,
+    pub uri: Option<String>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub create_datetime: Option<DateTimeWithTimeZone>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]

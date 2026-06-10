@@ -3,7 +3,11 @@ use std::{pin::Pin, sync::LazyLock};
 use axum::{body::Body, extract::Request, http::Response, http::header};
 use tower_http::auth::{AsyncAuthorizeRequest, AsyncRequireAuthorizationLayer};
 
-use crate::{auth::Jwt, error::ApiError};
+use crate::prelude::*;
+use crate::{
+    auth::Jwt,
+    error::{ApiError, auth_code::AuthErrorCode},
+};
 
 static AUTH_LAYER_INSTANCE: LazyLock<AsyncRequireAuthorizationLayer<JwtAuth>> =
     LazyLock::new(|| AsyncRequireAuthorizationLayer::new(JwtAuth::new(Jwt::global())));
@@ -41,26 +45,16 @@ impl AsyncAuthorizeRequest<Body> for JwtAuth {
                 .map(|value| -> Result<_, ApiError> {
                     let token = value
                         .to_str()
-                        .map_err(|_| {
-                            ApiError::Unauthenticated(String::from(
-                                "Authorization not valid string",
-                            ))
-                        })?
+                        .map_err(|_| err!(AuthErrorCode::AuthHeaderInvalid))?
                         .strip_prefix("Bearer ")
-                        .ok_or_else(|| {
-                            ApiError::Unauthenticated(String::from(
-                                "Authorization must start with Bearer",
-                            ))
-                        })?;
+                        .ok_or(err!(AuthErrorCode::BearerRequired))?;
                     Ok(token)
                 })
                 .transpose()?
-                .ok_or_else(|| {
-                    ApiError::Unauthenticated(String::from("Authorization header must exists"))
-                })?;
+                .ok_or(err!(AuthErrorCode::AuthHeaderMissing))?;
             let pricipal = jwt
                 .access_token_decode(token)
-                .map_err(|err| -> ApiError { ApiError::Unauthenticated(format!("{:?}", err)) })?;
+                .map_err(|_| err!(AuthErrorCode::TokenInvalid))?;
             request.extensions_mut().insert(pricipal);
             Ok(request)
         })

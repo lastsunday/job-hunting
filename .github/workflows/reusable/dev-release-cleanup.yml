@@ -1,0 +1,32 @@
+name: dev-release-cleanup
+
+on:
+  workflow_call:
+    inputs:
+      tag-prefix:
+        required: true
+        type: string
+        description: "Tag prefix to clean (e.g. dev-server-, dev-extension-)"
+      keep:
+        required: false
+        type: number
+        default: 5
+        description: "Number of latest releases to keep"
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          KEEP=${{ inputs.keep }}
+          TAG_PREFIX="${{ inputs.tag-prefix }}"
+          gh api --paginate "/repos/${GITHUB_REPOSITORY}/git/refs/tags" \
+            --jq '.[].ref' | grep "^refs/tags/${TAG_PREFIX}" | sort -V | head -n -${KEEP} | while read ref; do
+            tag="${ref#refs/tags/}"
+            echo "Cleaning: $tag"
+            gh release delete "$tag" --yes || true
+            gh api -X DELETE "/repos/${GITHUB_REPOSITORY}/git/refs/${ref#refs/}" || true
+          done

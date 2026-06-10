@@ -1,2 +1,2 @@
 [build]
-target-dir = 'dist/target'
+target-dir = "target"

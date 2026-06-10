@@ -2,7 +2,10 @@ use jsonwebtoken::{
     DecodingKey, EncodingKey, Header, Validation, decode, encode, get_current_timestamp,
 };
 use serde::{Deserialize, Serialize};
-use std::{sync::OnceLock, time::Duration};
+use std::{
+    sync::{Arc, OnceLock},
+    time::Duration,
+};
 use utoipa::ToSchema;
 
 use crate::config::auth::AuthConfig;
@@ -15,7 +18,7 @@ pub struct Principal {
     pub name: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Claims {
     jti: String,
     sub: String,
@@ -40,33 +43,63 @@ pub struct Jwt {
 }
 
 impl Jwt {
-    fn new(config: AuthConfig) -> Self {
+    fn new(config: Arc<AuthConfig>) -> Self {
         let mut access_token_validation = Validation::new(jsonwebtoken::Algorithm::HS256);
-        access_token_validation.set_audience(&[String::from(config.audience())]);
-        access_token_validation.set_issuer(&[String::from(config.issuer())]);
+        access_token_validation.set_audience(&[config
+            .audience
+            .as_ref()
+            .expect("auth audience is empty")
+            .as_str()]);
+        access_token_validation.set_issuer(&[config
+            .issuer
+            .as_ref()
+            .expect("auth issuer is empty")
+            .as_str()]);
         access_token_validation
             .set_required_spec_claims(&["jti", "sub", "aud", "iss", "iat", "exp"]);
-        let access_token_secret = config.access_token_secret().as_bytes();
+        let access_token_secret = config
+            .access_token_secret
+            .as_ref()
+            .expect("auth access token secret is empty");
 
         let mut refresh_token_validation = Validation::new(jsonwebtoken::Algorithm::HS256);
-        refresh_token_validation.set_audience(&[String::from(config.audience())]);
-        refresh_token_validation.set_issuer(&[String::from(config.issuer())]);
+        refresh_token_validation.set_audience(&[config
+            .audience
+            .as_ref()
+            .expect("auth audience is empty")
+            .as_str()]);
+        refresh_token_validation.set_issuer(&[config
+            .issuer
+            .as_ref()
+            .expect("auth issuer is empty")
+            .as_str()]);
         refresh_token_validation
             .set_required_spec_claims(&["jti", "sub", "aud", "iss", "iat", "exp"]);
 
-        let refresh_token_secret = config.refresh_token_secret().as_bytes();
+        let refresh_token_secret = config
+            .refresh_token_secret
+            .as_ref()
+            .expect("auth refresh token secret is empty");
         Self {
             header: Header::new(jsonwebtoken::Algorithm::HS256),
-            access_token_encode_secret: EncodingKey::from_secret(access_token_secret),
-            access_token_decode_secret: DecodingKey::from_secret(access_token_secret),
-            access_token_expires_in: Duration::from_secs(config.access_token_expires_in()),
+            access_token_encode_secret: EncodingKey::from_secret(access_token_secret.as_bytes()),
+            access_token_decode_secret: DecodingKey::from_secret(access_token_secret.as_bytes()),
+            access_token_expires_in: Duration::from_secs(
+                config
+                    .access_token_expires_in
+                    .expect("auth access token expires in is empty"),
+            ),
             access_token_validation,
-            refresh_token_encode_secret: EncodingKey::from_secret(refresh_token_secret),
-            refresh_token_decode_secret: DecodingKey::from_secret(refresh_token_secret),
-            refresh_token_expires_in: Duration::from_secs(config.refresh_token_expires_in()),
+            refresh_token_encode_secret: EncodingKey::from_secret(refresh_token_secret.as_bytes()),
+            refresh_token_decode_secret: DecodingKey::from_secret(refresh_token_secret.as_bytes()),
+            refresh_token_expires_in: Duration::from_secs(
+                config
+                    .refresh_token_expires_in
+                    .expect("auth refresh token expires in is empty"),
+            ),
             refresh_token_validation,
-            audience: String::from(config.audience()),
-            issuer: String::from(config.issuer()),
+            audience: String::from(config.audience.as_ref().expect("auth audience is empty")),
+            issuer: String::from(config.issuer.as_ref().expect("auth issuer is empty")),
         }
     }
 
@@ -144,7 +177,7 @@ impl Jwt {
         self.refresh_token_expires_in.as_secs()
     }
 
-    pub fn init(config: AuthConfig) -> &'static Jwt {
+    pub fn init(config: Arc<AuthConfig>) -> &'static Jwt {
         JWT_INSTANCE.get_or_init(|| -> Self { Self::new(config) })
     }
 
