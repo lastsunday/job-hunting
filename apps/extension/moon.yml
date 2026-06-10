@@ -44,14 +44,20 @@ tasks:
       - ~:ensure-deps
 
   compile:
+    command: "pnpm"
+    args: ["run", "compile"]
     options:
       runInCI: false
 
   zip:
+    command: "pnpm"
+    args: ["run", "zip"]
     options:
       runInCI: false
 
   zip-firefox:
+    command: "pnpm"
+    args: ["run", "zip:firefox"]
     options:
       runInCI: false
 
