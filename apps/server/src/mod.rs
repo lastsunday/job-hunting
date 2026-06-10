@@ -23,6 +23,7 @@ pub fn run_with_args(args: &Args) -> Result<(), Box<dyn Error>> {
     let runtime = runtime::new(args)?;
     let server = Server::new(args, Some(runtime.handle()))?;
 
+    #[cfg(unix)]
     runtime.spawn(signal::signal(server.clone()));
     runtime.block_on(async_main(&server))?;
     runtime::shutdown(&server, runtime);

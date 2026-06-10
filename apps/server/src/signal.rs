@@ -1,7 +1,10 @@
+#[cfg(unix)]
 use std::sync::Arc;
 
+#[cfg(unix)]
 use tokio::signal;
 
+#[cfg(unix)]
 use super::server::Server;
 
 #[cfg(unix)]
