@@ -68,13 +68,17 @@
 │   └── analysis/              Lit Web Components 分析组件库
 ├── apps/
 │   ├── server/                Rust 后端
+│   │   ├── src/               应用入口 (main.rs, clap, logging, runtime 等)
 │   │   ├── api/src/           API 路由层 (每个模块一个 .rs 文件)
 │   │   ├── service/src/       业务逻辑层
 │   │   ├── entity/src/        Sea-ORM Entity (自动生成 + 手动补充)
 │   │   ├── migration/src/     数据库迁移
 │   │   ├── web/src/           Web 层 (静态文件服务)
-│   │   └── framework/         框架层 (error, auth, config, data, middleware 等)
+│   │   ├── framework/         框架层 (error, auth, config, data, middleware 等)
+│   │   ├── macros/            proc-macro crate
+│   │   └── build-metadata/    构建元数据 crate
 │   ├── server-ui/src/         React 管理后台
+│   ├── server-ui-e2e/         管理后台 E2E 测试 (Playwright)
 │   │   ├── components/        UI 组件
 │   │   ├── hooks/             自定义 Hooks
 │   │   ├── routes/            TanStack Router 路由文件
@@ -104,7 +108,8 @@
 | Rust 模块名     | snake_case                | `job.rs`, `user.rs`                         |
 | TS 变量/函数    | camelCase                 | `loadJobs`, `handleSubmit`                  |
 | TS 组件/类      | PascalCase                | `RouteComponent`, `JobFormData`             |
-| TS 文件         | kebab-case + .tsx/.ts     | `jobs.tsx`, `http.ts`                       |
+| TS 组件文件     | PascalCase + .tsx         | `ExcelPreview.tsx`, `LocationMap.tsx`        |
+| TS 非组件文件   | camelCase + .ts           | `taskDataPlan.ts`, `http.ts`                 |
 | DB 表/字段      | snake_case                | `company_tag`, `first_scan_datetime`        |
 | URI             | snake_case                | `/api/job/search`、`/api/auth/access_token` |
 | 扩展 API 方法   | className + methodName    | `dataSourceMetadataSearch`                  |
@@ -114,7 +119,7 @@
 ### 绝对不能做的
 
 - **不要**手动编辑 `routeTree.gen.ts` (TanStack Router 自动生成和覆盖)
-- **不要**修改 Nx workspace 结构 (`nx.json`, `pnpm-workspace.yaml`, `project.json`)
+- **不要**修改 Moon workspace 结构 (`.moon/workspace.yml`, `.moon/toolchains.yml`) 及各项目 `moon.yml` 配置
 - **不要**引入新依赖前未检查现有依赖是否已满足需求
 - **不要**使用非 Edition 2024 的 Rust 语法（如 `'_` 生命周期 elision 规则、`impl<T>` 旧式 trait bound 等）
 - **不要**手动编辑 `flake.lock`（使用 `nix flake update` 更新）
@@ -174,7 +179,7 @@ nix develop             # 默认完整环境（含 moon、just、mdbook、pkg-co
 
 - macOS Intel (x86_64-darwin)：Lix 官方仍支持（tier 2），如有问题联系维护者
 - 系统依赖（openssl, sqlite, postgresql 等）由 Lix 统一管理，无需 brew/apt
-- CI 中 Lix 提供环境：`nix develop --command moon ci --affected`
+- CI 中 Lix 提供环境：`nix develop --command moon ci --base=origin/dev`
 
 ### Git Hook & 模板自动安装
 
@@ -191,7 +196,7 @@ nix develop             # 默认完整环境（含 moon、just、mdbook、pkg-co
 3. `api/src/`: 定义模块专用的 `*ErrorCode`（或在 `framework/error/` 中定义通用错误码）
 4. `service/src/`: 实现具体业务逻辑
 5. `api/src/`: 使用 `create_routes` 导出路由并接入 `api_setup`
-6. 运行 `cargo check && cargo test` 验证类型与测试
+6. 运行 `cargo check && cargo test` 验证类型与测试（API 集成测试使用 cucumber BDD，见 `apps/server/api/tests/`）
 
 ### 新增前端页面时 (server-ui)
 
@@ -199,7 +204,7 @@ nix develop             # 默认完整环境（含 moon、just、mdbook、pkg-co
 2. `api/`: 添加对应的 API 调用函数
 3. `components/` + `.module.css`: 组件与样式文件
 4. 翻译文本添加到 `public/locales/{lang}/{namespace}.json`
-5. 运行 `nx typecheck server-ui` 验证类型
+5. 运行 `moon run server-ui:typecheck` 验证类型
 6. 开发调试: `cd apps/server-ui && pnpm run dev`
 
 ### 新增扩展功能时 (extension)
