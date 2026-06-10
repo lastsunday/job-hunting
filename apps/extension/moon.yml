@@ -52,12 +52,16 @@ tasks:
   zip:
     command: "pnpm"
     args: ["run", "zip"]
+    deps:
+      - ~:ensure-deps
     options:
       runInCI: skip
 
   zip-firefox:
     command: "pnpm"
     args: ["run", "zip:firefox"]
+    deps:
+      - ~:ensure-deps
     options:
       runInCI: skip
 

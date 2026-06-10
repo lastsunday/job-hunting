@@ -46,8 +46,8 @@ jobs:
 
       - name: Build & zip
         run: |
-          nix develop --command moon run extension:zip
-          nix develop --command moon run extension:zip-firefox
+          unset CI && nix develop --command moon run extension:zip
+          unset CI && nix develop --command moon run extension:zip-firefox
 
       - name: Rename zips
         run: |
