@@ -47,19 +47,19 @@ tasks:
     command: "pnpm"
     args: ["run", "compile"]
     options:
-      runInCI: true
+      runInCI: skip
 
   zip:
     command: "pnpm"
     args: ["run", "zip"]
     options:
-      runInCI: true
+      runInCI: skip
 
   zip-firefox:
     command: "pnpm"
     args: ["run", "zip:firefox"]
     options:
-      runInCI: true
+      runInCI: skip
 
   install-playwright:
     command: "pnpm exec playwright install --with-deps"
