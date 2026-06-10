@@ -9,6 +9,7 @@
     "@eslint/compat": "2.1.0",
     "@eslint/js": "10.0.1",
     "@iconify/json": "2.2.477",
+    "@moonrepo/cli": "2.3.2",
     "@playwright/test": "1.60.0",
     "@rollup/plugin-node-resolve": "16.0.3",
     "@storybook/addon-docs": "10.4.0",

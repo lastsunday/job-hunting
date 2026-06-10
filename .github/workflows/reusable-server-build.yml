@@ -121,6 +121,7 @@ jobs:
       - name: Build UI (Windows)
         if: runner.os == 'Windows'
         run: pnpm exec moon run server-ui:build
+        working-directory: ${{ github.workspace }}
 
       - name: Move UI dist to web/
         if: runner.os == 'Windows'
