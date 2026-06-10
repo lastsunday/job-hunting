@@ -9,6 +9,7 @@ tasks:
       - '/pnpm-workspace.yaml'
       - 'package.json'
     outputs:
-      - 'node_modules'
+      - '/node_modules'
     options:
       cache: true
+      mutex: 'pnpm-install'
