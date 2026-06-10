@@ -38,6 +38,12 @@ tasks:
       VERSION=$(grep '"version"' package.json | head -1 | sed -E 's/.*"version":[[:space:]]*"(.*)".*/\1/') && git-cliff --unreleased --tag "$VERSION" --include-path apps/extension/** --config ../../cliff.toml --prepend CHANGELOG.md
     options:
       runInCI: false
+
+  bump:
+    script: |
+      bash ../../scripts/bump.sh "@job-hunting/extension" "package.json" "--include-path apps/extension/** --include-path libs/analysis/**"
+    options:
+      runInCI: false
   zip:
     options:
       runInCI: false

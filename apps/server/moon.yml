@@ -8,6 +8,12 @@ tasks:
     options:
       runInCI: false
 
+  bump:
+    script: |
+      bash ../../scripts/bump.sh "job-hunting-server" "Cargo.toml" "--include-path apps/server/** --include-path apps/server-ui/**"
+    options:
+      runInCI: false
+
   format:
     command: 'cargo fmt --check'
 

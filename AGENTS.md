@@ -122,7 +122,7 @@
 ### 必须遵守的
 
 - **提交信息**: 必须使用 Conventional Commits 格式（`feat:` / `fix:` / `perf:` / `remove:` / `deprecate:` / `security:`）。Lefthook commit-msg hook 自动校验格式，不满足会被拒绝。如需跳过用 `git commit --no-verify`。如需在 changelog 中展示详细说明，在 footer 中写入 `CHANGELOG: <description>`。破坏性变更使用 `feat!:` 或 `BREAKING CHANGE:` footer
-- **CHANGELOG 更新**: 发布前运行 `moon run <project>:changelog` 自动更新 CHANGELOG.md，然后提交并打 tag
+- **CHANGELOG 更新**: 发布前运行 `moon run <project>:bump` 自动版本升级、生成 CHANGELOG、commit 并 tag。底层调用 `scripts/bump.sh`，接受 3 参数：`TAG_PREFIX`、`MANIFEST`、`INCLUDE_PATHS`。首次发布（无 tag）直接标记当前版本；后续发布通过 `git-cliff --bump` 自动检测版本，commit 使用 `--no-verify` 绕过 lefthook
 
 - Rust: 必须使用 `#[error]` 宏定义错误码（6 位数字），不要手动实现 Error trait
 - Rust: 必须使用 `err!` 宏产生 ApiError，不要直接 `Err(ApiError::...)`
@@ -218,6 +218,7 @@ nix develop             # 默认完整环境（含 moon、just、mdbook、pkg-co
 - 生成 React 组件时，默认配套同名的 `.module.css`（仅限 server-ui 管理后台，使用 Mantine v9；扩展使用 Ant Design v5）
 - 启动扩展开发用 `cd apps/extension && pnpm run dev`，加载 `.output/chrome-mv3-dev`
 - Rust 路由改动后运行 `cargo check` 验证类型，不用 `cargo run` 全量编译；新增业务逻辑记得同时运行 `cargo test`
+- 发布时运行 `moon run <project>:bump`，自动升版本、生成 changelog、commit 并 tag
 
 ## 5. 构建与 CI 调试
 
