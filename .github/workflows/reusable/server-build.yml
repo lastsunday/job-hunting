@@ -130,7 +130,7 @@ jobs:
       - uses: taiki-e/upload-rust-binary-action@3962470d6e7f1993108411bc3f75a135ec67fc8c
         with:
           bin: ${{ env.BIN_NAME }}
-          archive: $bin-${{ inputs.version }}-$target
+          archive: ${{ env.BIN_NAME }}-${{ inputs.version }}-${{ matrix.target }}
           target: ${{ matrix.target }}
           dry-run: true
           manifest-path: Cargo.toml
