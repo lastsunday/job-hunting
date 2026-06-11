@@ -13,7 +13,7 @@ pub struct Model {
     pub r#type: Option<Type>,
     pub enable: Option<bool>,
     #[sea_orm(column_type = "Json", nullable)]
-    pub config: Option<String>,
+    pub config: Option<Json>,
     pub cron: Option<String>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub create_datetime: Option<DateTimeWithTimeZone>,

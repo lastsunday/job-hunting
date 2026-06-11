@@ -33,6 +33,13 @@ tasks:
     deps:
       - ~:build
 
+  test-pg:
+    command: "cargo test --package job-hunting-server"
+    env:
+      TEST_DATABASE: "pg"
+    deps:
+      - ~:build
+
   run:
     command: "cargo run --package job-hunting-server -- --config=application.toml"
     options:

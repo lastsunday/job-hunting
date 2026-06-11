@@ -95,7 +95,7 @@ pub async fn execute_merge_task<C: TransactionTrait + ConnectionTrait>(
     let user_name = user_name.context("user_name not found")?;
     let repo_name = repo_name.context("repo name not found")?;
     let TaskDataMergeConfig { url, .. } =
-        serde_json::from_str(&config.context("merge config not exists")?)
+        serde_json::from_value(config.context("merge config not exists")?)
             .context("parse merge config json string failure")?;
     let url = url.context("url not found in task data merge config")?;
     let parsed_url = Url::parse(&url).expect("failed to parse url");

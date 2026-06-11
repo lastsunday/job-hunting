@@ -30,7 +30,7 @@ async fn test_app_background_task_run_with_plan() {
     let now = Utc::now();
 
     let config = TaskPlanConfigDataDownloadConfig::default();
-    let config_json = serde_json::to_string(&config).unwrap();
+    let config_json = serde_json::to_value(&config).unwrap();
 
     let task_plan_id = xid::new().to_string();
     let plan = entity::task_plan::ActiveModel {
@@ -225,7 +225,7 @@ async fn test_app_background_task_run_full_flow() {
         repo_name: Some(DATA_REPO.to_string()),
         token: Some(token.clone()),
     };
-    let config_json = serde_json::to_string(&config).unwrap();
+    let config_json = serde_json::to_value(&config).unwrap();
 
     let task_plan_id = xid::new().to_string();
     let plan = entity::task_plan::ActiveModel {

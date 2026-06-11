@@ -248,7 +248,7 @@ async fn save_data_download_task<C: TransactionTrait>(
                     for seq in 0..max_seq {
                         let seq_file_name =
                             crate::task::utils::get_file_name_by_seq(&file_name, seq)?;
-                        let config = serde_json::to_string(&TaskDataDownloadConfig {
+                        let config = serde_json::to_value(&TaskDataDownloadConfig {
                             url: Some(url.to_string()),
                             file_name: Some(seq_file_name),
                         })?;
@@ -313,7 +313,7 @@ pub struct DownloadTaskResult {
     pub total: u32,
     pub page_size: u32,
     pub total_page: u32,
-    pub merge_config: String,
+    pub merge_config: serde_json::Value,
     pub datetime: DateTime<FixedOffset>,
     pub user_name: Option<String>,
     pub repo_name: Option<String>,
@@ -345,7 +345,7 @@ pub async fn download_task_file(
             .ok_or_else(|| anyhow::anyhow!("task plan not found id = {}", plan_id))?;
 
     let crate::task::plan::TaskPlanConfigDataDownloadConfig { token, .. } =
-        serde_json::from_str(&config.context("task plan config not found")?)
+        serde_json::from_value(config.context("task plan config not found")?)
             .context("parse task plan config failure")?;
 
     let data_id = data_id.ok_or_else(|| anyhow::anyhow!("Download task has no data_id"))?;
@@ -365,17 +365,14 @@ pub async fn download_task_file(
 
     let download_config = download_config
         .ok_or_else(|| anyhow::anyhow!("Task config not found for data_id = {}", data_id))?;
-    let TaskDataDownloadConfig { url, file_name } = serde_json::from_str(&download_config)
-        .context(format!(
-            "parse config json failure,str = {}",
-            download_config
-        ))?;
+    let TaskDataDownloadConfig { url, file_name } =
+        serde_json::from_value(download_config).context("parse config json failure")?;
     let merge_config = crate::task::merge::TaskDataMergeConfig {
         url: url.clone(),
         file_name: file_name.clone(),
     };
     let merge_config =
-        serde_json::to_string(&merge_config).context("merge config to json string failure")?;
+        serde_json::to_value(&merge_config).context("merge config to json value failure")?;
     let url =
         url.ok_or_else(|| anyhow::anyhow!("Task config url not found for data_id = {}", data_id))?;
     let download_type = download_type.context("download type not exists")?;

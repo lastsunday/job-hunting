@@ -12,8 +12,8 @@ use anyhow::Context;
 use chrono::{DateTime, Utc};
 use cron::Schedule;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
-    IntoActiveModel, QueryFilter, QuerySelect, Statement, TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, DbBackend,
+    EntityTrait, IntoActiveModel, QueryFilter, Statement, TransactionTrait,
 };
 use tokio::sync::Semaphore;
 use tokio::sync::watch;
@@ -200,12 +200,14 @@ async fn process_single_plan(
         }
     }
 
-    let config_str = plan.config.as_deref().unwrap_or("");
-    if config_str.is_empty() {
-        return Ok(());
-    }
-    let config: TaskPlanConfigDataDownloadConfig = match serde_json::from_str(config_str) {
-        Ok(c) => c,
+    let config: TaskPlanConfigDataDownloadConfig = match plan
+        .config
+        .as_ref()
+        .map(|v| serde_json::from_value(v.clone()))
+        .transpose()
+    {
+        Ok(Some(c)) => c,
+        Ok(None) => return Ok(()),
         Err(e) => {
             tracing::warn!(
                 "parse task plan config failure, plan_id={}, error={}",
@@ -547,15 +549,19 @@ async fn schedule_clear_file(
         return Ok(());
     }
 
-    let total: Option<(Option<i64>,)> = entity::file::Entity::find()
-        .filter(entity::file::Column::IsDelete.eq(Some(false)))
-        .select_only()
-        .column_as(entity::file::Column::Size.sum(), "total")
-        .into_tuple()
-        .one(conn)
+    let backend = conn.get_database_backend();
+    let sql = match backend {
+        DbBackend::Postgres => {
+            r#"SELECT COALESCE(SUM("size"), 0)::BIGINT AS "total" FROM "file" WHERE "is_delete" = FALSE"#
+        }
+        _ => "SELECT COALESCE(SUM(size), 0) AS total FROM file WHERE is_delete = FALSE",
+    };
+    let result = conn
+        .query_one_raw(Statement::from_string(backend, sql.to_owned()))
         .await?;
-
-    let total = total.map(|t| t.0.unwrap_or(0)).unwrap_or(0);
+    let total: i64 = result
+        .and_then(|r| r.try_get::<i64>("", "total").ok())
+        .unwrap_or(0);
 
     if total <= max_size {
         tracing::info!(

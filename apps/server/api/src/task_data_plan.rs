@@ -45,7 +45,7 @@ pub struct TaskDataPlanDetail {
     pub repo_type: Option<String>,
     pub r#type: Option<PlanType>,
     pub enable: Option<bool>,
-    pub config: Option<String>,
+    pub config: Option<serde_json::Value>,
     pub cron: Option<String>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub create_datetime: Option<DateTime<FixedOffset>>,

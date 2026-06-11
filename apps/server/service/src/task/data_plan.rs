@@ -190,9 +190,9 @@ async fn create_task_plan_inner<C: ConnectionTrait>(
         Type::DataDownload(task_plan_config_data_download_config) => (
             entity::task_plan::Type::DataDownload,
             match &task_plan_config_data_download_config.url {
-                Some(_) => serde_json::to_string(task_plan_config_data_download_config)
-                    .context("task plan config data download config to json string failure")?,
-                None => serde_json::to_string(&TaskPlanConfigDataDownloadConfig {
+                Some(_) => serde_json::to_value(task_plan_config_data_download_config)
+                    .context("task plan config data download config to json value failure")?,
+                None => serde_json::to_value(&TaskPlanConfigDataDownloadConfig {
                     task_type_list: task_plan_config_data_download_config.task_type_list.clone(),
                     url: Some(super::plan::gen_url_by_repo_type(
                         repo_type, user_name, repo_name,
@@ -201,7 +201,7 @@ async fn create_task_plan_inner<C: ConnectionTrait>(
                     repo_name: Some(repo_name.to_string()),
                     token,
                 })
-                .context("task plan config data download config to json string failure")?,
+                .context("task plan config data download config to json value failure")?,
             },
         ),
     };

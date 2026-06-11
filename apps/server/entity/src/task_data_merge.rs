@@ -18,7 +18,7 @@ pub struct Model {
     pub data_id: Option<String>,
     pub data_count: Option<i32>,
     #[sea_orm(column_type = "Json", nullable)]
-    pub config: Option<String>,
+    pub config: Option<Json>,
     pub data_page_num: Option<i32>,
     pub data_page_size: Option<i32>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]

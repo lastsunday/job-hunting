@@ -85,11 +85,11 @@ pub async fn create_plan<C: ConnectionTrait>(
             Type::DataDownload(task_plan_config_data_download_config) => (
                 entity::task_plan::Type::DataDownload,
                 match task_plan_config_data_download_config.url {
-                    Some(_) => serde_json::to_string(task_plan_config_data_download_config)
-                        .context("task plan config data download config to json string failure")?,
+                    Some(_) => serde_json::to_value(task_plan_config_data_download_config)
+                        .context("task plan config data download config to json value failure")?,
                     None => match &repo_type {
                         RepoType::Github => {
-                            serde_json::to_string(&TaskPlanConfigDataDownloadConfig {
+                            serde_json::to_value(&TaskPlanConfigDataDownloadConfig {
                                 task_type_list: task_plan_config_data_download_config
                                     .task_type_list
                                     .clone(),
@@ -99,7 +99,7 @@ pub async fn create_plan<C: ConnectionTrait>(
                                 token,
                             })
                             .context(
-                                "task plan config data download config to json string failure",
+                                "task plan config data download config to json value failure",
                             )?
                         }
                     },
@@ -214,8 +214,7 @@ pub async fn update_plan<C: ConnectionTrait>(
 
     if param.task_type_list.is_some() || param.token.is_some() || param.url.is_some() {
         let mut config: TaskPlanConfigDataDownloadConfig = existing_config
-            .as_deref()
-            .map(serde_json::from_str)
+            .map(|v| serde_json::from_value(v))
             .transpose()
             .ok()
             .flatten()
@@ -230,7 +229,7 @@ pub async fn update_plan<C: ConnectionTrait>(
             config.url = Some(v);
         }
         active_model.config = ActiveValue::Set(Some(
-            serde_json::to_string(&config).context("serialize task plan config failure")?,
+            serde_json::to_value(&config).context("serialize task plan config failure")?,
         ));
     }
 

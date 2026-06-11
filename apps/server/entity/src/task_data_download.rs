@@ -16,7 +16,7 @@ pub struct Model {
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]
     pub datetime: Option<DateTimeWithTimeZone>,
     #[sea_orm(column_type = "Json", nullable)]
-    pub config: Option<String>,
+    pub config: Option<Json>,
     pub data_id: Option<String>,
     pub seq: Option<i32>,
     #[schema(schema_with = date_time_with_time_zone_or_null_schema)]

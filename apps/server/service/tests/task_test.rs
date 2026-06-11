@@ -91,8 +91,7 @@ async fn test_full_flow() {
         && enable == Some(true)&& cron_actual == Some(cron.to_string())
     ));
     let entity::task_plan::Model { config, .. } = task_plan.unwrap();
-    let config: TaskPlanConfigDataDownloadConfig =
-        serde_json::from_str(config.unwrap().as_str()).unwrap();
+    let config: TaskPlanConfigDataDownloadConfig = serde_json::from_value(config.unwrap()).unwrap();
     assert!(
         matches!(config.clone(), TaskPlanConfigDataDownloadConfig { task_type_list:task_type_list_actual, url, user_name:user_name_actual, repo_name:repo_name_actual,.. }
         if task_type_list_actual.len() == 1 && url == Some(repo_url.clone())

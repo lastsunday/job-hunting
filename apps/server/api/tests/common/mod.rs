@@ -9,45 +9,70 @@ use framework::config::auth::AuthConfig;
 use http_body_util::BodyExt;
 use migration::MigratorTrait;
 use serde_json::Value;
-use std::{str::FromStr, sync::Arc};
+use std::str::FromStr;
+use std::sync::Arc;
 use testcontainers::ContainerAsync;
+use testcontainers::runners::AsyncRunner;
 use testcontainers_modules::postgres::Postgres;
 use tower::ServiceExt;
 
 #[allow(dead_code)]
 pub async fn setup_database() -> (Option<ContainerAsync<Postgres>>, AppState) {
-    // postgres
-    // let container = postgres::Postgres::default().start().await.unwrap();
-    // let host_port = container.get_host_port_ipv4(5432).await.unwrap();
-    // let database_url = &format!("postgres://postgres:postgres@127.0.0.1:{host_port}/postgres");
-
-    // sqlite
-    let container = None;
-    let database_url = &"sqlite::memory:";
-    let conn: sea_orm::DatabaseConnection = framework::database::establish_connection(database_url)
-        .await
-        .unwrap();
-    migration::Migrator::up(&conn, None).await.unwrap();
-    let state = AppState {
-        conn,
-        auth_config: Arc::new(AuthConfig {
-            access_token_secret: Some(String::from("QLjJTeVblAlM47de")),
-            access_token_expires_in: Some(28800),
-            refresh_token_secret: Some(String::from("N8lI0uitNzJl6vYK")),
-            refresh_token_expires_in: Some(15897600),
-            audience: Some(String::from("audience")),
-            issuer: Some(String::from("issuer")),
-            client_id: Some(String::from("d1aicsr57dijo7h963ig")),
-            client_secret: Some(String::from("ujTgh2lEQYy0PXhK")),
-        }),
-    };
-    (container, state)
+    match std::env::var("TEST_DATABASE").as_deref() {
+        Ok("pg") => {
+            let container = Postgres::default().start().await.unwrap();
+            let host_port = container.get_host_port_ipv4(5432).await.unwrap();
+            let database_url =
+                format!("postgres://postgres:postgres@127.0.0.1:{host_port}/postgres");
+            let conn = framework::database::establish_connection(&database_url)
+                .await
+                .unwrap();
+            migration::Migrator::up(&conn, None).await.unwrap();
+            let state = AppState {
+                conn,
+                auth_config: Arc::new(AuthConfig {
+                    access_token_secret: Some(String::from("QLjJTeVblAlM47de")),
+                    access_token_expires_in: Some(28800),
+                    refresh_token_secret: Some(String::from("N8lI0uitNzJl6vYK")),
+                    refresh_token_expires_in: Some(15897600),
+                    audience: Some(String::from("audience")),
+                    issuer: Some(String::from("issuer")),
+                    client_id: Some(String::from("d1aicsr57dijo7h963ig")),
+                    client_secret: Some(String::from("ujTgh2lEQYy0PXhK")),
+                }),
+            };
+            (Some(container), state)
+        }
+        _ => {
+            let container = None;
+            let database_url = "sqlite::memory:";
+            let conn: sea_orm::DatabaseConnection =
+                framework::database::establish_connection(database_url)
+                    .await
+                    .unwrap();
+            migration::Migrator::up(&conn, None).await.unwrap();
+            let state = AppState {
+                conn,
+                auth_config: Arc::new(AuthConfig {
+                    access_token_secret: Some(String::from("QLjJTeVblAlM47de")),
+                    access_token_expires_in: Some(28800),
+                    refresh_token_secret: Some(String::from("N8lI0uitNzJl6vYK")),
+                    refresh_token_expires_in: Some(15897600),
+                    audience: Some(String::from("audience")),
+                    issuer: Some(String::from("issuer")),
+                    client_id: Some(String::from("d1aicsr57dijo7h963ig")),
+                    client_secret: Some(String::from("ujTgh2lEQYy0PXhK")),
+                }),
+            };
+            (container, state)
+        }
+    }
 }
 
 #[allow(dead_code)]
 pub async fn tear_down(container: &Option<ContainerAsync<Postgres>>) {
-    if container.is_some() {
-        container.as_ref().unwrap().stop().await.unwrap();
+    if let Some(container) = container {
+        container.stop_with_timeout(None).await.unwrap();
     }
 }
 
