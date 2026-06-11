@@ -12,9 +12,10 @@ use anyhow::Context;
 use chrono::{DateTime, Utc};
 use cron::Schedule;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, DbBackend,
-    EntityTrait, IntoActiveModel, QueryFilter, Statement, TransactionTrait,
+    ActiveModelTrait, ActiveValue, ColumnTrait, ConnectionTrait, DatabaseConnection, EntityTrait,
+    ExprTrait, IntoActiveModel, QueryFilter, QuerySelect, Statement, TransactionTrait,
 };
+use sea_orm::sea_query::{Alias, Expr, Func};
 use tokio::sync::Semaphore;
 use tokio::sync::watch;
 
@@ -549,19 +550,19 @@ async fn schedule_clear_file(
         return Ok(());
     }
 
-    let backend = conn.get_database_backend();
-    let sql = match backend {
-        DbBackend::Postgres => {
-            r#"SELECT COALESCE(SUM("size"), 0)::BIGINT AS "total" FROM "file" WHERE "is_delete" = FALSE"#
-        }
-        _ => "SELECT COALESCE(SUM(size), 0) AS total FROM file WHERE is_delete = FALSE",
-    };
-    let result = conn
-        .query_one_raw(Statement::from_string(backend, sql.to_owned()))
+    let total: Option<(Option<i64>,)> = entity::file::Entity::find()
+        .filter(entity::file::Column::IsDelete.eq(Some(false)))
+        .select_only()
+        .column_as(
+            Expr::expr(Func::sum(Expr::col(entity::file::Column::Size)))
+                .cast_as(Alias::new("BIGINT")),
+            "total",
+        )
+        .into_tuple()
+        .one(conn)
         .await?;
-    let total: i64 = result
-        .and_then(|r| r.try_get::<i64>("", "total").ok())
-        .unwrap_or(0);
+
+    let total = total.map(|t| t.0.unwrap_or(0)).unwrap_or(0);
 
     if total <= max_size {
         tracing::info!(
