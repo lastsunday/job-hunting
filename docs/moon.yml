@@ -1,0 +1,17 @@
+language: "unknown"
+tags: ["docs"]
+
+tasks:
+  build:
+    command: "mdbook build"
+    outputs:
+      - "book/"
+
+  test:
+    command: "mdbook test"
+
+  serve:
+    command: "mdbook serve --open"
+    options:
+      persistent: true
+      cache: false

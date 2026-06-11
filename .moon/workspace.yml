@@ -1,6 +1,7 @@
 projects:
   - 'apps/*'
   - 'libs/*'
+  - 'docs'
 
 vcs:
   defaultBranch: 'dev'
