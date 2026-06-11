@@ -222,7 +222,7 @@ jobs:
 
       - name: Move & chmod
         run: |
-          mv ${{ env.IMAGE_NAME }}/* ./
+          mv ${{ github.workspace }}/${{ env.IMAGE_NAME }}/* ./
           chmod 755 ${{ env.BIN_NAME }}-*
 
       - name: Set up QEMU
