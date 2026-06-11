@@ -22,6 +22,7 @@ import React, { useState } from 'react';
 import { z } from 'zod';
 import { useAuth } from '../hooks/auth';
 import { useTranslation } from 'react-i18next';
+import { changeLanguage } from '../i18n/i18n';
 import classes from './login.module.css';
 
 const fallback = '/admin' as const;
@@ -87,7 +88,7 @@ function RouteComponent() {
         <Select
           value={i18n.language}
           onChange={(value) =>
-            value && i18n.changeLanguage(value as 'zh' | 'en')
+            value && changeLanguage(value as 'zh' | 'en')
           }
           data={[
             { value: 'zh', label: '🇨🇳 中文' },

@@ -25,6 +25,7 @@ import { useEffect, useState } from 'react';
 import logo from '../../assets/logo.svg';
 import { useAuth } from '../../hooks/auth';
 import { useTranslation } from 'react-i18next';
+import { changeLanguage } from '../../i18n/i18n';
 import { UserButton } from '../../widget/UserButton/UserButton';
 import classes from './route.module.css';
 
@@ -185,7 +186,7 @@ function RouteComponent() {
           <Select
             value={i18n.language}
             onChange={(value) =>
-              value && i18n.changeLanguage(value as 'zh' | 'en')
+              value && changeLanguage(value as 'zh' | 'en')
             }
             data={[
               { value: 'zh', label: '🇨🇳 中文' },
