@@ -33,7 +33,7 @@ BDD 测试是 API 层的主要测试方式，使用 [cucumber](https://crates.io
 
 ### 目录结构
 
-```
+```text
 api/tests/
 ├── common/
 │   └── mod.rs              # 测试辅助函数：HTTP 客户端、DB 初始化
@@ -216,7 +216,7 @@ pub async fn setup_database() -> (Option<ContainerAsync<Postgres>>, DatabaseConn
 
 ## 测试用 Fixture 数据
 
-```
+```text
 service/tests/resources/data/
 ├── job-v0.zip / job-v1.zip         # 职位数据
 ├── company-v0.zip / company-v1.zip / company-v2.zip  # 公司数据

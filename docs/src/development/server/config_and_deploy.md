@@ -104,7 +104,7 @@ log_file_rotation = "daily"
 
 迁移由 Sea-ORM 管理，在服务器启动时**自动执行**，无需手动干预：
 
-```rust
+```rust,ignore
 // api/src/lib.rs - api::start() 中
 migration::Migrator::up(&conn, None).await?;
 ```
