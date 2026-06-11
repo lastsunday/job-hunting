@@ -4,10 +4,11 @@ networks:
 
 services:
   postgresql:
-    image: 'bitnami/postgresql:17.2.0'
+    image: "postgres:18.4"
     environment:
-      - POSTGRESQL_PASSWORD=changeme
+      - POSTGRES_PASSWORD=changeme
     ports:
       - 5432:5432
     networks:
       - app-tier
+
