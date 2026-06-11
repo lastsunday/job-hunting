@@ -60,7 +60,8 @@ CURRENT=$(extract_version "$MANIFEST")
 LATEST_TAG=$(git tag -l "${TAG_PREFIX}@*" --sort=-version:refname | head -1)
 
 if [ -z "$LATEST_TAG" ]; then
-  touch CHANGELOG.md && git-cliff --unreleased --tag "$CURRENT" "${INCLUDE_PATHS[@]}" --config "$CONFIG" --prepend CHANGELOG.md
+  touch CHANGELOG.md && git-cliff --unreleased --tag "$CURRENT" --tag-pattern "$TAG_PATTERN" "${INCLUDE_PATHS[@]}" --config "$CONFIG" --prepend CHANGELOG.md
+  [ -s CHANGELOG.md ] || { echo "No unreleased changes for $TAG_PREFIX."; exit 0; }
   commit_and_tag "$CURRENT"
   echo "✔ First release — tagged ${TAG_PREFIX}@$CURRENT"
   print_recent_changelog "$CURRENT"
@@ -79,7 +80,7 @@ NEW=${NEW#"${TAG_PREFIX}@"}
 [ "$NEW" = "$CURRENT" ] && { echo "No unreleased changes."; exit 0; }
 
 update_version "$MANIFEST" "$CURRENT" "$NEW"
-touch CHANGELOG.md && git-cliff --unreleased --tag "$NEW" "${INCLUDE_PATHS[@]}" --config "$CONFIG" --prepend CHANGELOG.md
+touch CHANGELOG.md && git-cliff --unreleased --tag "$NEW" --tag-pattern "$TAG_PATTERN" "${INCLUDE_PATHS[@]}" --config "$CONFIG" --prepend CHANGELOG.md
 commit_and_tag "$NEW"
 
 echo "✔ Bumped $CURRENT → $NEW, tagged ${TAG_PREFIX}@$NEW"

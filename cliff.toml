@@ -2,8 +2,8 @@
 conventional_commits = true
 
 commit_parsers = [
-  { message = "^\\w+(\\(\\w+\\))?\\!:", footer = "CHANGELOG", group = "💣 BREAKING CHANGES" },
-  { body = "BREAKING CHANGE", footer = "CHANGELOG", group = "💣 BREAKING CHANGES" },
+  { message = "^\\w+(\\(\\w+\\))?\\!:", group = "💣 BREAKING CHANGES" },
+  { body = "BREAKING CHANGE", group = "💣 BREAKING CHANGES" },
   { message = "^feat", footer = "CHANGELOG", group = "⭐ Added" },
   { message = "^fix", footer = "CHANGELOG", group = "🐛 Fixed" },
   { message = "^perf", footer = "CHANGELOG", group = "🚀 Performance" },
@@ -18,23 +18,22 @@ trim = false
 body = """
 ## {{ version }} ({{ timestamp | date(format="%Y-%m-%d") }})
 {%- for group, commits in commits | group_by(attribute="group") %}
-{%- set has_matches = false %}
-{%- for commit in commits %}
-{%- if "CHANGELOG: " in commit.raw_message %}
-{%- set has_matches = true %}
-{%- endif %}
-{%- endfor %}
-{%- if has_matches %}
+{%- set_global has_entries = false -%}
+{%- for commit in commits -%}
+{%- if "CHANGELOG: " in commit.raw_message -%}
+{%- set_global has_entries = true -%}
+{%- endif -%}
+{%- endfor -%}
+{%- if has_entries %}
 
-### {{ group | upper_first }}
-{%- for commit in commits %}
-{%- if "CHANGELOG: " in commit.raw_message %}
-{%- for footer in commit.footers %}{% if footer.token == "CHANGELOG" -%}
-- {{ footer.value | upper_first }}
-{%- endif %}{% endfor %}
-{%- endif %}
-{%- endfor %}
-{%- endif %}
+### {{ group }}
+{% for commit in commits -%}
+{%- if "CHANGELOG: " in commit.raw_message -%}
+{%- for footer in commit.footers -%}{% if footer.token == "CHANGELOG" %}
+- {{ footer.value | upper_first }}{% endif %}{% endfor -%}
+{%- endif -%}
+{%- endfor -%}
+{%- endif -%}
 {%- endfor %}
 
 """
