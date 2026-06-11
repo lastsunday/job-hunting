@@ -60,6 +60,7 @@ strum = { workspace = true }
 strum_macros = { workspace = true }
 macros = { path = "../macros" }
 either = { workspace = true, features = ["serde"] }
+build-metadata = { workspace = true }
 tokio-util = { workspace = true }
 futures = { workspace = true }
 tower-layer = { workspace = true }

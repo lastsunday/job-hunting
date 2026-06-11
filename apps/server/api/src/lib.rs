@@ -13,6 +13,7 @@ pub mod user;
 
 use std::net::SocketAddr;
 use std::sync::Arc;
+use std::sync::OnceLock;
 use std::time::Duration;
 
 use axum::Router;
@@ -56,6 +57,18 @@ use utoipa_scalar::{Scalar, Servable as ScalarServable};
 
 use framework::auth::Jwt;
 use framework::config::auth::AuthConfig;
+
+static SERVER_VERSION: OnceLock<&'static str> = OnceLock::new();
+
+pub fn set_server_version(v: &'static str) {
+    let version = build_metadata::version_tag()
+        .map_or_else(|| v.to_owned(), |tag| format!("{v} ({tag})"));
+    SERVER_VERSION.set(Box::leak(version.into_boxed_str())).ok();
+}
+
+pub fn server_version() -> &'static str {
+    SERVER_VERSION.get().copied().unwrap_or("unknown")
+}
 
 pub async fn start(
     server_config: Arc<ServerConfig>,

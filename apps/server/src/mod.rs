@@ -66,6 +66,7 @@ async fn async_main(server: &Arc<Server>) -> Result<(), anyhow::Error> {
     let task_config = Arc::new(TaskConfig {
         history_file_max_size: Some(config.history_file_max_size.to_owned()),
     });
+    api::set_server_version(env!("CARGO_PKG_VERSION"));
     api::start(server_config, database_config, auth_config, task_config).await?;
     info!("Exit runtime");
     Ok(())

@@ -33,7 +33,7 @@ pub async fn hello() -> &'static str {
     (status=OK,body=&'static str)
 ))]
 pub async fn version() -> &'static str {
-    env!("CARGO_PKG_VERSION")
+    crate::server_version()
 }
 
 #[debug_handler]
