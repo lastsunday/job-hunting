@@ -14,6 +14,8 @@
   - [服务器端](./development/server/README.md)
     - [深入开发](./development/server/dev_in_deep.md)
     - [核心逻辑](./development/server/core_logic_flow.md)
+    - [配置与部署](./development/server/config_and_deploy.md)
+    - [测试](./development/server/testing.md)
   - [数据源](./development/datasource.md)
 - [贡献](./CONTRIBUTING.md)
 - [开发日志]()

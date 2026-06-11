@@ -1,19 +1,160 @@
 # 深入开发
 
-> [!WIP]
+## 架构概览
 
-## 架构
+### Crate 依赖关系
 
 ```mermaid
-block
-  columns 1
-  数据仓库
-  服务器端
-  block
-    数据同步服务
-    数据查询服务
-  end
+graph TD
+    binary["job-hunting-server<br/>(二进制入口)"]
+    api["api<br/>(路由 + 配置)"]
+    service["service<br/>(业务逻辑)"]
+    entity["entity<br/>(Sea-ORM 实体)"]
+    migration["migration<br/>(迁移)"]
+    web["web<br/>(静态文件)"]
+    framework["framework<br/>(基础设施)"]
+    macros["macros<br/>(proc-macro)"]
 
+    binary --> api
+    binary --> framework
+    api --> framework
+    api --> service
+    api --> entity
+    api --> migration
+    api --> web
+    framework --> macros
+    service --> entity
+    service --> framework
+```
+
+### 启动流程
+
+```mermaid
+sequenceDiagram
+    participant CLI as CLI / Config
+    participant Runtime as Tokio Runtime
+    participant Server as Server
+    participant DB as Database
+    participant Router as Axum Router
+    participant Scheduler as Scheduler
+
+    CLI ->> Runtime: 解析 CLI 参数，创建 Runtime
+    Runtime ->> Server: Server::new(args)
+    Server ->> Server: 加载配置（figment）
+    Server ->> Server: 初始化日志（tracing）
+    Runtime ->> DB: establish_connection(database_url)
+    DB -->> Runtime: DatabaseConnection
+    Runtime ->> DB: migration::Migrator::up()
+    DB -->> Runtime: 迁移完成
+    Runtime ->> Runtime: Jwt::init(auth_config)
+    par 并发启动
+        Runtime ->> Router: start_app(state)
+        Router ->> Router: create_router() + bind socket
+    and
+        Runtime ->> Scheduler: start_scheduler()
+        Scheduler ->> Scheduler: cron 循环执行任务
+    end
+```
+
+### 路由组装
+
+所有 API 模块通过 `create_routes(state: AppState) -> OpenApiRouter` 导出路由，在 `create_router()` 中统一组装：
+
+```rust,ignore
+// api/src/lib.rs
+pub fn create_router(state: AppState, ct: CancellationToken) -> Router {
+    let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
+        // 嵌套各模块路由
+        .nest("/api", job::create_routes(state.clone()))
+        .nest("/api", company::create_routes(state.clone()))
+        .nest("/api", auth::create_routes(state.clone()))
+        // ... 更多模块
+        .split_for_parts();
+
+    router
+        // Scalar API 文档
+        .merge(Scalar::with_url("/docs", api))
+        // 静态文件
+        .route("/assets/{*file}", get(web::assets_handler))
+        // SPA fallback
+        .fallback(web::index_handler)
+        // 全局中间件
+        .layer((
+            TimeoutLayer::new(Duration::from_secs(300)),
+            DefaultBodyLimit::max(100 * 1024 * 1024),
+            TraceLayer::new_for_http(),
+            CorsLayer::permissive(),
+        ))
+}
+```
+
+### Handler 编写规范
+
+每个 API handler 遵循统一模式：
+
+```rust,ignore
+// 1. 标签常量
+const TAG: &str = "Company";
+
+// 2. handler 函数
+#[debug_handler]
+#[utoipa::path(
+    post,
+    path = "/company",
+    tag = TAG,
+    security(("AccessToken" = [])),
+    request_body = CreateCompanyParam,
+    responses(
+        (status = 200, description = "创建成功", body = ApiResponse<Company>),
+    )
+)]
+async fn create(
+    State(AppState { conn, .. }): State<AppState>,
+    ValidJson(param): ValidJson<CreateCompanyParam>,
+) -> ApiResult<ApiResponse<Company>> {
+    let result = CompanyService::create(&conn, param).await?;
+    Ok(ApiResponse::ok(result))
+}
+
+// 3. 路由导出
+pub fn create_routes(state: AppState) -> OpenApiRouter {
+    OpenApiRouter::new()
+        .routes(routes!(create, update, search, detail, delete))
+        .with_state(state)
+}
+```
+
+关键约定：
+- `#[debug_handler]` 提供编译期类型匹配错误提示
+- `#[utoipa::path]` 同时生成 Axum 路由和 OpenAPI 文档
+- `ValidJson<T>` / `ValidQuery<T>` 自动校验请求体/查询参数
+- 响应统一用 `ApiResult<ApiResponse<T>>` 包装
+- `routes!` 宏来自 `utoipa_axum`，批量注册路由
+
+### 中间件链
+
+全局中间件按顺序应用：
+
+| 中间件 | 说明 |
+|--------|------|
+| `TimeoutLayer` | 300 秒请求超时 |
+| `DefaultBodyLimit` | 100 MiB 请求体上限 |
+| `TraceLayer` | tracing 日志注入 |
+| `CorsLayer` | 允许所有来源跨域 |
+
+模块级中间件：
+- `JwtAuth` — 通过 `route_layer(get_auth_layer())` 添加到需要认证的路由组
+- `CompressionLayer` — 对静态资源路由启用 gzip 压缩
+
+### AppState
+
+`AppState` 通过 Axum `State` 提取器在 handler 间共享：
+
+```rust,ignore
+pub struct AppState {
+    pub conn: DatabaseConnection,
+    pub auth_config: AuthConfig,
+}
 ```
 
 ## ErrorCode 设计
