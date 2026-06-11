@@ -26,7 +26,7 @@
 
 ## 最近主要改动/新增特性
 
-1. 新增内置大模型引擎[web-llm](https://github.com/mlc-ai/web-llm)
+1. 新增服务端
 
 ## 插件安装
 
@@ -42,22 +42,22 @@
 
 > 以下平台为技术研究的分析对象，非鼓励对其进行数据采集。
 
-| 招聘平台                 | 访问地址                                                                | 备注                          |
-| ------------------------ | ----------------------------------------------------------------------- | ----------------------------- |
-| BOSS 直聘                | https://www.zhipin.com/web/geek/jobs                                  | 推荐页/搜索页[账号未登录]     |
-|                          | https://www.zhipin.com/web/geek/jobs                                  | 推荐页/搜索页[账号已登录]     |
-| 前程无忧                 | https://we.51job.com/pc/search                                        | 搜索页                        |
-| 智联招聘                 | https://sou.zhaopin.com/                                              | 搜索页                        |
-| 拉勾网                   | https://www.lagou.com/wn/zhaopin                                      | 搜索页                        |
-| 猎聘网                   | https://www.liepin.com/zhaopin                                        | 搜索页,需点击搜索按钮才有效果 |
-| 就业在线                 | https://www.jobonline.cn/position                                     | 搜索页                        |
-| 广东公共求职招聘服务平台 | https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/#/search?type=1 | 搜索页                        |
+| 招聘平台                 | 访问地址                                                              | 备注                          |
+| ------------------------ | --------------------------------------------------------------------- | ----------------------------- |
+| BOSS 直聘                | <https://www.zhipin.com/web/geek/jobs>                                  | 推荐页/搜索页[账号未登录]     |
+|                          | <https://www.zhipin.com/web/geek/jobs>                                  | 推荐页/搜索页[账号已登录]     |
+| 前程无忧                 | <https://we.51job.com/pc/search>                                        | 搜索页                        |
+| 智联招聘                 | <https://sou.zhaopin.com/>                                              | 搜索页                        |
+| 拉勾网                   | <https://www.lagou.com/wn/zhaopin>                                      | 搜索页                        |
+| 猎聘网                   | <https://www.liepin.com/zhaopin>                                        | 搜索页,需点击搜索按钮才有效果 |
+| 就业在线                 | <https://www.jobonline.cn/position>                                     | 搜索页                        |
+| 广东公共求职招聘服务平台 | <https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/#/search?type=1> | 搜索页                        |
 
 ## 企业搜索平台支持列表
 
-| 企业搜索平台 | 访问地址                      | 备注 |
-| ------------ | ----------------------------- | ---- |
-| 爱企查       | https://aiqicha.baidu.com/s |      |
+| 企业搜索平台 | 访问地址                    | 备注 |
+| ------------ | --------------------------- | ---- |
+| 爱企查       | <https://aiqicha.baidu.com/s> |      |
 
 ## 浏览器支持
 

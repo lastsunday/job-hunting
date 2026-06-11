@@ -3,7 +3,6 @@
 - [职位猎人](README.md)
 - [教程](./guide/README.md)
   - [快速开始](./guide/quickstart.md)
-  - [安装]()
   - [用户手册]()
 - [开发](./development/README.md)
   - [浏览器插件](./development/extension/README.md)

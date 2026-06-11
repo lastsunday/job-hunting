@@ -62,7 +62,7 @@
 
 ## 最近主要改动/新增特性
 
-1. 新增内置大模型引擎[web-llm](https://github.com/mlc-ai/web-llm)
+1. 新增服务端
 
 ## 招聘平台支持列表
 
@@ -88,3 +88,152 @@
 | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="Edge" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br/> Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br/>Chrome |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | last version                                                                                                                                                                                           | last version                                                                                                                                                                                                  |
+
+## 服务端
+
+插件端受限于浏览器本地数据库性能，服务端作为服务端数据处理方案的技术示例，演示了大规模职位数据的存储、检索与分析实现。
+
+首页访问地址:<http://localhost:3000/>
+
+后台访问地址:<http://localhost:3000/login>
+
+- 账户/密码: root/Change_Me
+
+### 注意事项
+
+> **服务端仅供个人学习与技术研究使用。**
+>
+> - 本服务端为技术学习与研究工具，禁止用于任何商业用途。不推荐公网部署，仅限本地或内网环境使用。
+> - 使用者在导入或采集数据时须遵守中华人民共和国相关法律法规，包括但不限于《网络安全法》《数据安全法》《个人信息保护法》，不得从事任何侵犯他人合法权益的行为。
+> - 首次部署后请立即修改默认账户密码(`root` / `Change_Me`)，并更换 `auth_access_token_secret` 和 `auth_refresh_token_secret` 为随机字符串，避免未授权访问与 JWT 伪造。
+> - 对于因使用本服务端而引起的任何法律责任，本项目开发者不承担责任。使用即表示您已阅读并同意[免责声明](./disclaimer.md)的全部条款。
+
+### 服务端运行截图
+
+#### 仪表板
+
+<div style="margin-top:30px">
+    <img src="assets/introduction/server_dashboard.png" alt="server_dashboard" width="1000px"/>
+</div>
+
+#### 数据同步
+
+<div style="margin-top:30px">
+    <img src="assets/introduction/server_data_sync.png" alt="server_data_sync" width="1000px"/>
+</div>
+
+## 服务端安装
+
+### bin
+
+> 从 [Releases](https://github.com/lastsunday/job-hunting/releases/latest) 下载对应平台的二进制文件，以下示例以 Linux amd64 为主：
+
+```bash
+# 默认使用 SQLite
+./job-hunting-server-linux-amd64
+
+# 使用 PostgreSQL
+JH_DATABASE_URL="postgres://postgres:changeme@127.0.0.1/postgres" ./job-hunting-server-linux-amd64
+
+# 指定配置文件（从 application-example.toml 复制按需修改）
+./job-hunting-server-linux-amd64 --config /path/to/custom-config.toml
+```
+
+可用平台：
+
+| 平台                  | 二进制文件名                          |
+| --------------------- | ------------------------------------- |
+| Linux amd64           | `job-hunting-server-linux-amd64`      |
+| Linux arm64           | `job-hunting-server-linux-arm64`      |
+| macOS (Intel)         | `job-hunting-server-macos-amd64`      |
+| macOS (Apple Silicon) | `job-hunting-server-macos-arm64`      |
+| macOS (通用)          | `job-hunting-server-macos`            |
+| Windows amd64         | `job-hunting-server-window-amd64.exe` |
+
+### docker
+
+> 仅供本地学习使用，请勿在公网环境部署。
+
+```bash
+docker run -e JH_ADDRESS=0.0.0.0 -e JH_DATABASE_URL="sqlite:///data/db.sqlite?mode=rwc" -v ./data:/data -p 127.0.0.1:3000:3000 lastsunday/job-hunting:latest
+```
+
+### docker-compose
+
+> 仅供本地学习使用，请勿在公网环境部署。
+
+```yaml
+networks:
+  app-tier:
+    driver: bridge
+
+services:
+  postgresql:
+    image: 'postgres:18.4'
+    environment:
+      - POSTGRES_PASSWORD=changeme
+    ports:
+      - 5432:5432
+    networks:
+      - app-tier
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  server:
+    image: lastsunday/job-hunting:latest
+    ports:
+      - 127.0.0.1:3000:3000
+    environment:
+      - JH_ADDRESS=0.0.0.0
+      - JH_DATABASE_URL=postgres://postgres:changeme@postgresql:5432/postgres
+    depends_on:
+      - postgresql
+    networks:
+      - app-tier
+
+volumes:
+  pgdata:
+```
+
+或者使用配置文件挂载方式，`config.toml` 内容如下（从 `application-example.toml` 复制按需修改）：
+
+```toml
+address = "0.0.0.0"
+database_url = "postgres://postgres:changeme@postgresql:5432/postgres"
+```
+
+```yaml
+networks:
+  app-tier:
+    driver: bridge
+
+services:
+  postgresql:
+    image: 'postgres:18.4'
+    environment:
+      - POSTGRES_PASSWORD=changeme
+    ports:
+      - 5432:5432
+    networks:
+      - app-tier
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  server:
+    image: lastsunday/job-hunting:latest
+    ports:
+      - 127.0.0.1:3000:3000
+    environment:
+      - JH_CONFIG=/app/config.toml
+    volumes:
+      - ./config.toml:/app/config.toml:ro
+    depends_on:
+      - postgresql
+    networks:
+      - app-tier
+
+volumes:
+  pgdata:
+```
+
+> 更多部署与配置细节请参阅[配置与部署](./development/server/config_and_deploy.md)。
