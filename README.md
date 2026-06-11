@@ -150,18 +150,18 @@
 
 ### bin
 
-> 从 [Releases](https://github.com/lastsunday/job-hunting/releases/latest) 下载对应平台的二进制文件，以下示例以 Linux amd64 为主：
+#### 从源码构建
 
 ```bash
-# 默认使用 SQLite
-./job-hunting-server-linux-amd64
-
-# 使用 PostgreSQL
-JH_DATABASE_URL="postgres://postgres:changeme@127.0.0.1/postgres" ./job-hunting-server-linux-amd64
-
-# 指定配置文件（从 application-example.toml 复制按需修改）
-./job-hunting-server-linux-amd64 --config /path/to/custom-config.toml
+nix develop .#server
+cd apps/server
+cargo build --release
+./target/release/job-hunting-server --config /path/to/custom-config.toml
 ```
+
+#### 预编译下载
+
+> 服务器端二进制将随 Release 发布，届时可从 [Releases](https://github.com/lastsunday/job-hunting/releases) 下载。
 
 可用平台：
 

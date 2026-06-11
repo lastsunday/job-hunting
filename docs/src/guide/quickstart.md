@@ -18,26 +18,22 @@
 
 ## 服务器端
 
-### 二进制（推荐）
+### 运行服务器
 
-从 [Releases](https://github.com/lastsunday/job-hunting/releases/latest) 下载对应平台二进制：
+#### 从源码构建
 
 ```bash
-# 默认 SQLite
-./job-hunting-server-linux-amd64
-
-# 使用配置文件
-./job-hunting-server-linux-amd64 --config=application.toml
-
-# 使用环境变量覆盖（字段名小写，加 JH_ 前缀）
-JH_DATABASE_URL="postgres://postgres:changeme@127.0.0.1/postgres" \
-JH_ADDRESS=0.0.0.0 \
-  ./job-hunting-server-linux-amd64
+nix develop .#server
+cd apps/server
+cargo build --release
+./target/release/job-hunting-server --config=application.toml
 ```
 
-可用平台：Linux(amd64/arm64)、macOS(Intel/Apple Silicon/通用)、Windows amd64
+#### 预编译下载
 
-> 环境变量命名规则：配置字段名转大写 + `JH_` 前缀，如 `database_url` → `JH_DATABASE_URL`，`address` → `JH_ADDRESS`。也可用 `-O key=value` 直接覆盖。
+> 服务器端二进制将随 Release 发布，届时可从 [Releases](https://github.com/lastsunday/job-hunting/releases) 下载。
+
+可用平台：Linux(amd64/arm64)、macOS(Intel/Apple Silicon/通用)、Windows amd64
 
 ### 配置文件
 
@@ -59,6 +55,8 @@ auth_refresh_token_secret = "更换为另一随机字符串"
 ```bash
 ./job-hunting-server-linux-amd64 --config=application.toml
 ```
+
+> 环境变量命名规则：配置字段名转大写 + `JH_` 前缀，如 `database_url` → `JH_DATABASE_URL`，`address` → `JH_ADDRESS`。也可用 `-O key=value` 直接覆盖。
 
 ### Docker
 
