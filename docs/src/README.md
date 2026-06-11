@@ -12,59 +12,71 @@
 
 为了提高使用这些招聘平台找工作的用户体验，项目会对目标平台网站页面进行增强展示；对出现过的职位进行本地历史快照，跨平台本地检索;对职位数据进行多维度的分析，并以可视化的手段呈现；通过内置的讨论区，对职位进行评论，为职位打上标签等方式进行中立的职位交流；
 
-## 运行截图
+## 最近主要改动/新增特性
 
-### 招聘/企业信息网站页面
+1. 新增服务端
 
-#### 搜索页（前程无忧）
+## 插件
+
+### 运行截图
+
+#### 招聘/企业信息网站页面
+
+##### 搜索页（前程无忧）
 
 <div style="margin-top:30px">
     <img src="assets/introduction/job-item-51job.jpg" alt="51job" width="1000px"/>
 </div>
 
-#### 推荐页（BOSS 直聘）
+##### 推荐页（BOSS 直聘）
 
 <div style="margin-top:30px">
     <img src="assets/introduction/job-recommend-boss.jpg" alt="boss" width="1000px"/>
 </div>
 
-### 详情页
+#### 详情页
 
 <div style="margin-top:30px">
     <img src="assets/introduction/job-snapshot-51job.jpg" alt="job-snapshot-51job" width="1000px"/>
 </div>
 
-### 职位快照
+#### 职位快照
 
 <div style="margin-top:30px">
     <img src="assets/introduction/job-snapshot-history-51job.jpg" alt="job-snapshot-history-51job" width="1000px"/>
 </div>
 
-#### 爱企查
+##### 爱企查
 
 <div style="margin-top:30px">
     <img src="assets/introduction/company-aiqicha.jpg" alt="aiqicha" width="1000px"/>
 </div>
 
-### 管理页面
+#### 管理页面
 
-#### 打开管理页面
+##### 打开管理页面
 
 <div style="margin-top:30px">
     <img src="assets/introduction/chrome_extension_sidepanel_open.png" alt="chrome_extension_sidepanel_open" width="1000px"/>
 </div>
 
-#### 管理页面（需点击插件图标打开）
+##### 管理页面（需点击插件图标打开）
 
 <div style="margin-top:30px">
     <img src="assets/introduction/sidepanel_admin_home.png" alt="sidepanel_admin_home" width="1000px"/>
 </div>
 
-## 最近主要改动/新增特性
+### 插件安装
 
-1. 新增服务端
+> 插件的**开发**请跳转到[extension 开发目录](https://github.com/lastsunday/job-hunting/tree/dev/apps/extension)
 
-## 招聘平台支持列表
+1. 打开 Release 页 或 直接访问 [最新发布](https://github.com/lastsunday/job-hunting/releases/latest)
+2. 点击下载 Assets 下的 job-hunting-extension-chrome-xxx.zip
+3. 打开浏览器，安装插件，下面是针对不同浏览器的安装步骤
+   1. chrome：地址栏输入 <chrome://extensions/>，打开开发者模式，将 zip 文件拖进页面里
+   2. edge，地址栏输入 <edge://extensions/>，打开开发人员模式，将 zip 文件拖进页面里
+
+### 招聘平台支持列表
 
 | 招聘平台                 | 访问地址                                                                | 备注                          |
 | ------------------------ | ----------------------------------------------------------------------- | ----------------------------- |
@@ -77,13 +89,13 @@
 | 就业在线                 | <https://www.jobonline.cn/position>                                     | 搜索页                        |
 | 广东公共求职招聘服务平台 | <https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/#/search?type=1> | 搜索页                        |
 
-## 企业搜索平台支持列表
+### 企业搜索平台支持列表
 
 | 企业搜索平台 | 访问地址                      | 备注 |
 | ------------ | ----------------------------- | ---- |
 | 爱企查       | <https://aiqicha.baidu.com/s> |      |
 
-## 浏览器支持
+### 浏览器支持
 
 | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="Edge" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br/> Edge | [<img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" />](http://godban.github.io/browsers-support-badges/)<br/>Chrome |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -122,118 +134,3 @@
     <img src="assets/introduction/server_data_sync.png" alt="server_data_sync" width="1000px"/>
 </div>
 
-## 服务端安装
-
-### bin
-
-> 从 [Releases](https://github.com/lastsunday/job-hunting/releases/latest) 下载对应平台的二进制文件，以下示例以 Linux amd64 为主：
-
-```bash
-# 默认使用 SQLite
-./job-hunting-server-linux-amd64
-
-# 使用 PostgreSQL
-JH_DATABASE_URL="postgres://postgres:changeme@127.0.0.1/postgres" ./job-hunting-server-linux-amd64
-
-# 指定配置文件（从 application-example.toml 复制按需修改）
-./job-hunting-server-linux-amd64 --config /path/to/custom-config.toml
-```
-
-可用平台：
-
-| 平台                  | 二进制文件名                          |
-| --------------------- | ------------------------------------- |
-| Linux amd64           | `job-hunting-server-linux-amd64`      |
-| Linux arm64           | `job-hunting-server-linux-arm64`      |
-| macOS (Intel)         | `job-hunting-server-macos-amd64`      |
-| macOS (Apple Silicon) | `job-hunting-server-macos-arm64`      |
-| macOS (通用)          | `job-hunting-server-macos`            |
-| Windows amd64         | `job-hunting-server-window-amd64.exe` |
-
-### docker
-
-> 仅供本地学习使用，请勿在公网环境部署。
-
-```bash
-docker run -e JH_ADDRESS=0.0.0.0 -e JH_DATABASE_URL="sqlite:///data/db.sqlite?mode=rwc" -v ./data:/data -p 127.0.0.1:3000:3000 lastsunday/job-hunting:latest
-```
-
-### docker-compose
-
-> 仅供本地学习使用，请勿在公网环境部署。
-
-```yaml
-networks:
-  app-tier:
-    driver: bridge
-
-services:
-  postgresql:
-    image: 'postgres:18.4'
-    environment:
-      - POSTGRES_PASSWORD=changeme
-    ports:
-      - 5432:5432
-    networks:
-      - app-tier
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-  server:
-    image: lastsunday/job-hunting:latest
-    ports:
-      - 127.0.0.1:3000:3000
-    environment:
-      - JH_ADDRESS=0.0.0.0
-      - JH_DATABASE_URL=postgres://postgres:changeme@postgresql:5432/postgres
-    depends_on:
-      - postgresql
-    networks:
-      - app-tier
-
-volumes:
-  pgdata:
-```
-
-或者使用配置文件挂载方式，`config.toml` 内容如下（从 `application-example.toml` 复制按需修改）：
-
-```toml
-address = "0.0.0.0"
-database_url = "postgres://postgres:changeme@postgresql:5432/postgres"
-```
-
-```yaml
-networks:
-  app-tier:
-    driver: bridge
-
-services:
-  postgresql:
-    image: 'postgres:18.4'
-    environment:
-      - POSTGRES_PASSWORD=changeme
-    ports:
-      - 5432:5432
-    networks:
-      - app-tier
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
-  server:
-    image: lastsunday/job-hunting:latest
-    ports:
-      - 127.0.0.1:3000:3000
-    environment:
-      - JH_CONFIG=/app/config.toml
-    volumes:
-      - ./config.toml:/app/config.toml:ro
-    depends_on:
-      - postgresql
-    networks:
-      - app-tier
-
-volumes:
-  pgdata:
-```
-
-> 更多部署与配置细节请参阅[配置与部署](./development/server/config_and_deploy.md)。
