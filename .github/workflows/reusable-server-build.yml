@@ -196,7 +196,7 @@ jobs:
           prerelease: ${{ inputs.prerelease }}
           make_latest: false
           tag_name: ${{ inputs.tag-name || github.ref_name }}
-          name: Server ${{ inputs.version }}
+          name: job-hunting-server@${{ inputs.version }}
           files: release-binaries/*
 
 
