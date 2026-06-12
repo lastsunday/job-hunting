@@ -5,7 +5,7 @@ import {
 import { handleData } from "./index.js";
 var count = 0;
 
-export async function handleBossRecommendData(data, page, pageSize) {
+export async function handleBossRecommendData(data) {
   const startIndex = count;
   count = count + data.length;
   if (startIndex != 0) {
