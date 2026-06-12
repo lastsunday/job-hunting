@@ -414,7 +414,7 @@ const DatabaseView: React.FC = () => {
                     showTotal: (total, range) =>
                       `${range[0]}-${range[1]} 共 ${total} 条记录`,
                     showSizeChanger: true,
-                    pageSizeOptions: [10, 50, 100, 200, 500, 1000],
+                    pageSizeOptions: [20, 50, 100, 200],
                   }}
                   scroll={{ x: '100%' }}
                   sticky={{ offsetHeader: 64 }}

@@ -116,7 +116,7 @@ const BasicTable = forwardRef(function Component(props: BasicTableProps, ref) {
       current: 1,
       pageSize: UI_DEFAULT_PAGE_SIZE,
       showSizeChanger: true,
-      pageSizeOptions: [10, 20, 50, 100, 200, 500, 1000],
+      pageSizeOptions: [20, 50, 100, 200],
       position: ['topRight', 'bottomRight'],
       showTotal: (total) => `共 ${total} 条`,
     },

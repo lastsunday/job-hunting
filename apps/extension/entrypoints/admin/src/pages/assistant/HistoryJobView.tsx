@@ -297,7 +297,7 @@ const HistoryJobView: React.FC = () => {
                 setPage(page);
                 setPageSize(pageSize);
               }}
-              pageSizeOptions={[10, 20, 50, 100, 200, 500, 1000]}
+              pageSizeOptions={[20, 50, 100, 200]}
               defaultPageSize={20}
             />
           </Spin>

@@ -4,5 +4,7 @@ tags: ['lit', 'web-components']
 
 tasks:
   build:
+    command: "pnpm"
+    args: ["--filter", "analysis", "run", "build"]
     deps:
       - ~:ensure-deps
