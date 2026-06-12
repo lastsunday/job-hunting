@@ -2,24 +2,39 @@
 set -euo pipefail
 set -f
 
-[ $# -ne 3 ] && {
-  echo "Usage: $0 <tag-prefix> <manifest> <include-paths>" >&2
+[ $# -lt 2 ] && {
+  echo "Usage: $0 <tag-prefix> <manifest> [path ...]" >&2
   exit 1
 }
 
 TAG_PREFIX=$1
 MANIFEST=$2
+shift 2
 
 git diff --quiet HEAD || {
   echo "Working directory is not clean. Commit or stash changes first." >&2
   exit 1
 }
 
-INCLUDE_PATHS=($3)
+INCLUDE_PATHS=()
+SCOPE_PARTS=()
+for p in "$@"; do
+  INCLUDE_PATHS+=(--include-path "$p")
+  dir="${p%%/**}"
+  SCOPE_PARTS+=("${dir}/")
+done
 
 COMMIT_SCOPE="$TAG_PREFIX"
 TAG_PATTERN="${TAG_PREFIX}@[0-9]+\.[0-9]+\.[0-9]+"
-CONFIG="$(git rev-parse --show-toplevel)/cliff.toml"
+CONFIG="$(git rev-parse --show-toplevel)/scripts/cliff.toml"
+
+if [ ${#SCOPE_PARTS[@]} -gt 0 ]; then
+  _saved_ifs="$IFS"
+  IFS='|'
+  GIT_CLIFF_INCLUDE_PATTERNS="^(${SCOPE_PARTS[*]})"
+  IFS="$_saved_ifs"
+  export GIT_CLIFF_INCLUDE_PATTERNS
+fi
 
 extract_version() {
   local file=$1

@@ -8,7 +8,8 @@ tasks:
       bash ../../scripts/bump.sh \
         "@job-hunting/extension" \
         "package.json" \
-        "--include-path apps/extension/** --include-path libs/analysis/**"
+        "apps/extension/**" \
+        "libs/analysis/**"
     options:
       runInCI: false
 

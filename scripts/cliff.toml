@@ -13,6 +13,10 @@ commit_parsers = [
   { message = ".*", skip = true },
 ]
 
+commit_preprocessors = [
+  { pattern = "(?m)^CHANGELOG: .*", replace_command = "bash -c \"if git diff-tree --no-commit-id -r --name-only $COMMIT_SHA | grep -qvE '${GIT_CLIFF_INCLUDE_PATTERNS:-.*}' 2>/dev/null; then exit 0; else cat; fi\"" },
+]
+
 [changelog]
 trim = false
 body = """
