@@ -6,23 +6,39 @@ permissions:
 
 on:
   workflow_dispatch:
-  push:
+  workflow_run:
+    workflows: ["ci"]
+    types: [completed]
     branches: [dev]
-    paths:
-      - "apps/extension/**"
-      - "libs/analysis/**"
 
 jobs:
   prepare:
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
     outputs:
       dev-version: ${{ steps.gen.outputs.DEV_VERSION }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.ref }}
+
+      - uses: dorny/paths-filter@de90bc6a95a69c3fdf0c0f30488bf5fbe7054183
+        id: filter
+        with:
+          filters: |
+            extension:
+              - 'apps/extension/**'
+            analysis:
+              - 'libs/analysis/**'
 
       - id: gen
+        if: |
+          github.event_name == 'workflow_dispatch' ||
+          steps.filter.outputs.extension == 'true' ||
+          steps.filter.outputs.analysis == 'true'
         run: |
           dev_version=$(bash scripts/dev-version.sh apps/extension/package.json)
           echo "DEV_VERSION=$dev_version" >> "$GITHUB_ENV"
@@ -30,6 +46,7 @@ jobs:
 
   build:
     needs: prepare
+    if: needs.prepare.outputs.dev-version != ''
     uses: ./.github/workflows/reusable-extension-build.yml
     with:
       version: ${{ needs.prepare.outputs.dev-version }}
