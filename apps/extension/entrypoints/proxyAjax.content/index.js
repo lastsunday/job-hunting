@@ -49,18 +49,11 @@ export default defineContentScript({
           ) {
             if (
               responseURL.indexOf('/wapi/zpgeek/pc/recommend/job/list.json') !==
-                -1 ||
+              -1 ||
               responseURL.indexOf('/search/joblist.json') !== -1
             ) {
-              const url = new URL(responseURL);
-              let page = Number.parseInt(url.searchParams.get('page'));
-              page = Number.isNaN(page) ? 1 : page;
-              let pageSize = Number.parseInt(url.searchParams.get('pageSize'));
-              pageSize = Number.isNaN(pageSize) ? 15 : pageSize;
               handleBossRecommendData(
                 JSON.parse(data?.response)?.zpData?.jobList,
-                page,
-                pageSize
               );
             } else if (
               responseURL.indexOf('/wapi/zpgeek/job/detail.json') !== -1

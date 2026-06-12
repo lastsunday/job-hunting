@@ -199,10 +199,8 @@ export async function handleData(list, getListItem, getJobItemDetailUrlFunction,
     if (!isRecommendPage && !isBossLogin) {
       renderSortJobItem(totalJobDTOList, getListItem, { platform: PLATFORM_BOSS, orderStartIndex, isRecommendPage });
     }
-    hiddenLoadingDOM();
   })().catch((error) => {
     console.log(error);
-    hiddenLoadingDOM();
   });
 }
 
