@@ -1,11 +1,9 @@
 import { onMessageHandle, onMessageHandleForWorker } from "@/common/extension/offscreen/util";
 import { infoLog } from "../../common/log";
-// @ts-expect-error: Query params not typed
-import MyWorker from "./worker?worker&url";
 
 infoLog("offscreen ready");
-
-const worker = new Worker(new URL(MyWorker, import.meta.url), {
+const workerUrl = chrome.runtime.getURL("/offscreen-worker.js");
+const worker = new Worker(workerUrl, {
   type: "module",
 });
 

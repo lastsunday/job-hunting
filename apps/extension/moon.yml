@@ -12,6 +12,13 @@ tasks:
     options:
       runInCI: false
 
+  dev:
+    command: "pnpm"
+    args: ["run", "dev"]
+    deps:
+      - ~:ensure-deps
+      - analysis:build
+
   build:
     command: "pnpm"
     args: ["run", "build"]
