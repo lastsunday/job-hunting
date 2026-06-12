@@ -90,7 +90,7 @@ jobs:
           prerelease: ${{ inputs.prerelease }}
           make_latest: ${{ !inputs.prerelease }}
           tag_name: ${{ inputs.tag-name || github.ref_name }}
-          name: Extension ${{ inputs.version }}
+          name: ${{ inputs.tag-name || github.ref_name }}
           files: |
             ${{ env.ROOT_DIR }}.output/job-hunting-extension-chrome-${{ inputs.version }}.zip
             ${{ env.ROOT_DIR }}.output/job-hunting-extension-firefox-${{ inputs.version }}.zip
