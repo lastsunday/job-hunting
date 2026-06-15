@@ -129,7 +129,7 @@ jobs:
           rm -rf ./web/dist
           mv ../server-ui/dist ./web/dist
 
-      - uses: taiki-e/upload-rust-binary-action@3962470d6e7f1993108411bc3f75a135ec67fc8c
+      - uses: taiki-e/upload-rust-binary-action@f0d45ae91ee7b8ee928de7a9d04d893a08bcbec6
         with:
           bin: ${{ env.BIN_NAME }}
           archive: ${{ env.BIN_NAME }}-${{ inputs.version }}-${{ matrix.target }}
