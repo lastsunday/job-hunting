@@ -6,16 +6,25 @@ tasks:
   build:
     command: 'pnpm'
     args: ['run', 'build']
+    inputs:
+      - '**/*'
+      - '@group(js-shared)'
     deps:
       - ~:ensure-deps
   test:
     command: 'pnpm'
     args: ['run', 'test']
+    inputs:
+      - '**/*'
+      - '@group(js-shared)'
     deps:
       - ~:ensure-deps
   typecheck:
     command: 'pnpm'
     args: ['run', 'typecheck']
+    inputs:
+      - '**/*'
+      - '@group(js-shared)'
     deps:
       - ~:ensure-deps
   preview:

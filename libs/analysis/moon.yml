@@ -6,5 +6,8 @@ tasks:
   build:
     command: "pnpm"
     args: ["--filter", "analysis", "run", "build"]
+    inputs:
+      - '**/*'
+      - '@group(js-shared)'
     deps:
       - ~:ensure-deps

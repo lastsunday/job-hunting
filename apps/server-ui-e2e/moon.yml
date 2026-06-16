@@ -13,6 +13,9 @@ tasks:
   e2e:
     command: 'pnpm'
     args: ['run', 'e2e']
+    inputs:
+      - '**/*'
+      - '@group(js-shared)'
     deps:
       - server-ui:build
       - ~:install-playwright

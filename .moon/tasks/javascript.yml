@@ -1,6 +1,12 @@
 inheritedBy:
   toolchains: ['javascript', 'typescript']
 
+fileGroups:
+  js-shared:
+    - '/package.json'
+    - '/pnpm-lock.yaml'
+    - '/pnpm-workspace.yaml'
+
 tasks:
   ensure-deps:
     command: 'pnpm install'

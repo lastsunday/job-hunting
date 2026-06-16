@@ -23,6 +23,9 @@ tasks:
   build:
     command: "pnpm"
     args: ["run", "build"]
+    inputs:
+      - '**/*'
+      - '@group(js-shared)'
     deps:
       - ~:ensure-deps
       - analysis:build
@@ -30,6 +33,9 @@ tasks:
   build-firefox:
     command: "pnpm"
     args: ["run", "build:firefox"]
+    inputs:
+      - '**/*'
+      - '@group(js-shared)'
     deps:
       - ~:ensure-deps
       - analysis:build
@@ -37,6 +43,9 @@ tasks:
   test-unit:
     command: "pnpm"
     args: ["run", "test:unit"]
+    inputs:
+      - '**/*'
+      - '@group(js-shared)'
     deps:
       - ~:ensure-deps
 
