@@ -26,7 +26,7 @@ jobs:
       checks: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 0
           ref: ${{ inputs.ref || github.ref }}
@@ -68,7 +68,7 @@ jobs:
           fi
 
       - name: (allure-report) Load test report history
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         if: ${{ steps.e2e-report.outputs.exists == 'true' && !cancelled() }}
         continue-on-error: true
         with:
@@ -107,7 +107,7 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           fetch-depth: 1
           ref: ${{ inputs.ref || github.ref }}
