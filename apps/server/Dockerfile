@@ -1,4 +1,4 @@
-FROM alpine:3.20.2
+FROM alpine:3.24.1
 WORKDIR /app
 ARG TARGETOS TARGETARCH
 COPY job-hunting-server-${TARGETOS}-${TARGETARCH} ./server
