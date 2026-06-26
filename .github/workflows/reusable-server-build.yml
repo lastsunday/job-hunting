@@ -96,7 +96,7 @@ jobs:
 
       - name: Install pnpm (Windows)
         if: runner.os == 'Windows'
-        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
         with:
           version: "10.13.1"
           run_install: false
