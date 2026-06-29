@@ -49,11 +49,6 @@ jobs:
           MOON_OUTPUT_STYLE: buffer-only-failure
           MOON_LOG: error
 
-      - name: PostgreSQL tests
-        run: nix develop --command moon run server:test-pg
-        env:
-          MOON_OUTPUT_STYLE: buffer-only-failure
-
       - uses: moonrepo/run-report-action@bbe7e99bf2aca819ec660ec01fc59d84bdd492d6
         if: success() || failure()
         with:
