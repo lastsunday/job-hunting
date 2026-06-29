@@ -35,9 +35,12 @@ import { EmitterService } from './service/emitterService';
 import { SystemService } from './service/systemService';
 import { setUser, UserService } from './service/userService';
 import { onMessageHandle as onSingleFileMessageHandle } from '@/lib/single-file/background.js';
+import App, { WORLD_BACKGROUND } from '@/common/extension/app';
+import { setupFirefoxEnvironment } from './firefox';
 
 export default defineBackground(() => {
   infoLog('background ready');
+  App.setWorld(WORLD_BACKGROUND);
   chrome.runtime.onInstalled.addListener(async () => {
     debugLog('updateDynamicRules ready');
     //https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest
@@ -195,6 +198,24 @@ export default defineBackground(() => {
   mergeServiceMethod(ACTION_FUNCTION, EmitterService);
 
   let creating: any;
+
+  let _taskRunning = false;
+  let _taskRunCount = 0;
+  const startBackgroundTaskLoop = async () => {
+    if (_taskRunning) return;
+    _taskRunning = true;
+    while (true) {
+      _taskRunCount += 1;
+      infoLog(`[Task] Task run seq = < ${_taskRunCount} >`);
+      try {
+        await AppApi.appBackgroundTaskRun({});
+      } catch (e) {
+        errorLog(e);
+      }
+      await randomDelay(TASK_LOOP_DELAY, 0);
+    }
+  };
+
   async function setupOffscreenDocument(path: string) {
     // Check all windows controlled by the service worker to see if one
     // of them is the offscreen document with the given path
@@ -214,24 +235,7 @@ export default defineBackground(() => {
       await creating;
       creating = null;
       //
-      let taskRunCount = 0;
-      let taskRun = false;
-      const backgroundTaskRunning = async () => {
-        if (!taskRun) {
-          taskRun = true;
-          try {
-            taskRunCount += 1;
-            infoLog(`[Task] Task run seq = < ${taskRunCount} >`);
-            await AppApi.appBackgroundTaskRun({});
-          } catch (e) {
-            errorLog(e);
-          }
-          taskRun = false;
-          await randomDelay(TASK_LOOP_DELAY, 0);
-          backgroundTaskRunning();
-        }
-      };
-      backgroundTaskRunning();
+      startBackgroundTaskLoop();
     }
 
     chrome.runtime.onMessage.addListener(
@@ -246,7 +250,11 @@ export default defineBackground(() => {
   }
 
   async function setup() {
-    await setupOffscreenDocument('offscreen.html');
+    if (chrome.offscreen) {
+      await setupOffscreenDocument('offscreen.html');
+    } else {
+      setupFirefoxEnvironment(ACTION_FUNCTION, startBackgroundTaskLoop);
+    }
     let analysisConfig = await getAnalysisConfig();
     if (analysisConfig.enable && analysisConfig.source === 'EXTENSION') {
       const llmSetup = async () => {
