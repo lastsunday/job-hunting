@@ -29,20 +29,44 @@ import { PGlite } from '@electric-sql/pglite';
 import { auto_explain } from '@electric-sql/pglite/contrib/auto_explain';
 import { pgDump } from '@electric-sql/pglite-tools/pg_dump';
 import { zipFileToBlob, unzipAdvanceFileToText } from '@/common/zip';
+import { connectionManager } from './connectionManager';
 
 const DATA_DIR = 'data';
 const JOB_DIR = 'job';
 const JOB_DB_PATH = '/' + DATA_DIR + '/' + JOB_DIR + '/';
 const DUMP_FILE_NAME = 'db.sql';
-let db;
-let initializing = false;
-let recoveryMode = false;
 
-export async function getDb({ dataDir } = {}) {
-  if (recoveryMode) {
-    throw 'get database error while current database in recovery mode';
+const changelogList = [
+  new ChangeLogV1(),
+  new ChangeLogV2(),
+  new ChangeLogV3(),
+  new ChangeLogV4(),
+  new ChangeLogV5(),
+  new ChangeLogV6(),
+  new ChangeLogV7(),
+  new ChangeLogV8(),
+  new ChangeLogV9(),
+  new ChangeLogV10(),
+  new ChangeLogV11(),
+  new ChangeLogV12(),
+  new ChangeLogV13(),
+  new ChangeLogV14(),
+  new ChangeLogV15(),
+  new ChangeLogV16(),
+];
+initChangeLog(changelogList);
+
+let dataDir = `opfs-ahp://${JOB_DB_PATH}`;
+
+connectionManager.setInitHandler(async () => {
+  return initDb({ dataDir });
+});
+
+export async function getDb({ dataDir: overrideDir } = {}) {
+  if (overrideDir) {
+    dataDir = overrideDir;
   }
-  return await Database.innerInit({ dataDir });
+  return connectionManager.getDb();
 }
 
 export async function getOne(sql, bind, obj, { connection = null } = {}) {
@@ -441,73 +465,28 @@ export async function sort(
   const nowDatetimeString = dayjs(now).format();
   connection ??= await getDb();
   if (param && param.length > 0) {
-    param.forEach(async (id, index) => {
+    for (let i = 0; i < param.length; i++) {
       await connection.query(
         `UPDATE ${tableName} SET seq=$1,update_datetime=$2 WHERE ${idColumnName} = $3`,
-        [index, nowDatetimeString, id]
+        [i, nowDatetimeString, param[i]]
       );
-    });
+    }
   }
 }
 
 export const Database = {
-  /**
-   *
-   * @param {*} message
-   * @param {*} param
-   */
   init: async function (message, param) {
     try {
-      await Database.innerInit({ dataDir: param.dataDir });
+      if (param?.dataDir) {
+        dataDir = param.dataDir;
+      }
+      await connectionManager.getDb();
+      postSuccessMessage(message);
     } catch (e) {
       postErrorMessage(message, 'init database error : ' + e.message);
     }
-    postSuccessMessage(message);
   },
 
-  innerInit: async function ({ dataDir } = {}) {
-    return new Promise(async (resolve, reject) => {
-      if (initializing) {
-        resolve(db);
-      }
-      if (!initializing) {
-        try {
-          initializing = true;
-          debugLog('Loading and initializing...');
-          const changelogList = [];
-          changelogList.push(new ChangeLogV1());
-          changelogList.push(new ChangeLogV2());
-          changelogList.push(new ChangeLogV3());
-          changelogList.push(new ChangeLogV4());
-          changelogList.push(new ChangeLogV5());
-          changelogList.push(new ChangeLogV6());
-          changelogList.push(new ChangeLogV7());
-          changelogList.push(new ChangeLogV8());
-          changelogList.push(new ChangeLogV9());
-          changelogList.push(new ChangeLogV10());
-          changelogList.push(new ChangeLogV11());
-          changelogList.push(new ChangeLogV12());
-          changelogList.push(new ChangeLogV13());
-          changelogList.push(new ChangeLogV14());
-          changelogList.push(new ChangeLogV15());
-          changelogList.push(new ChangeLogV16());
-          initChangeLog(changelogList);
-          await initDb({ dataDir });
-          debugLog('Done initializing. Running app...');
-          resolve(db);
-        } catch (e) {
-          reject('init database error : ' + e.message);
-        }
-      } else {
-        resolve(db);
-      }
-    });
-  },
-  /**
-   *
-   * @param {*} message
-   * @param { void } param
-   */
   dbExport: async function (message, param) {
     try {
       const file = await pgDump({ pg: await getDb() });
@@ -520,34 +499,32 @@ export const Database = {
     }
   },
 
-  /**
-   *
-   * @param {*} message
-   * @param {string} param base64 zip file
-   */
   dbImport: async function (message, param) {
     try {
-      let blob = await fetch(param).then((r) => r.blob());
-      let sqlText = await unzipAdvanceFileToText({
+      const blob = await fetch(param).then((r) => r.blob());
+      const sqlText = await unzipAdvanceFileToText({
         fileName: DUMP_FILE_NAME,
         file: blob,
       });
       await _dbDelete();
-      let restoredPG = await PGlite.create(`opfs-ahp://${JOB_DB_PATH}`);
+      const restoredPG = await PGlite.create(`opfs-ahp://${JOB_DB_PATH}`);
       await restoredPG.exec(sqlText);
+      await connectionManager.adoptDb(restoredPG);
       postSuccessMessage(message, {});
     } catch (e) {
       postErrorMessage(message, '[worker] dbImport error : ' + e.message);
     }
   },
+
   dbClose: async function (message, param) {
     try {
-      await (await getDb()).close();
+      await connectionManager.close();
       postSuccessMessage(message, {});
     } catch (e) {
       postErrorMessage(message, '[worker] dbClose error : ' + e.message);
     }
   },
+
   dbDelete: async function (message, param) {
     try {
       await _dbDelete();
@@ -556,6 +533,7 @@ export const Database = {
       postErrorMessage(message, '[worker] dbDelete error : ' + e.message);
     }
   },
+
   dbSize: async function (message, param) {
     try {
       const sql = `SELECT SUM(t1.pg_relation_size) AS total FROM (SELECT PG_RELATION_SIZE(relid) FROM pg_stat_user_tables) AS t1`;
@@ -566,6 +544,7 @@ export const Database = {
       postErrorMessage(message, '[worker] dbSize error : ' + e.message);
     }
   },
+
   dbSchemaVersion: async function (message, param) {
     try {
       const sql = `SELECT num FROM version;`;
@@ -579,6 +558,7 @@ export const Database = {
       );
     }
   },
+
   dbExec: async function (message, param) {
     try {
       const sql = param.sql;
@@ -588,6 +568,7 @@ export const Database = {
       postErrorMessage(message, '[worker] dbExec error : ' + e.message);
     }
   },
+
   dbGetAllTableName: async function (message, param) {
     try {
       const sql = `select tablename as name from pg_tables where schemaname = 'public'`;
@@ -603,8 +584,8 @@ export const Database = {
 };
 
 const _dbDelete = async () => {
-  (await getDb()).close();
-  recoveryMode = true;
+  await connectionManager.close();
+  connectionManager.enterRecoveryMode();
   const root = await navigator.storage.getDirectory();
   const fileHandle = await root.getDirectoryHandle(DATA_DIR);
   await fileHandle.removeEntry(JOB_DIR, { recursive: true });
@@ -615,6 +596,7 @@ const _dbDelete = async () => {
  * @returns
  */
 const initDb = async function ({ dataDir = `opfs-ahp://${JOB_DB_PATH}` } = {}) {
+  let db;
   if (isDevEnv() && ENABLE_SQL_AUTO_EXPLAIN) {
     db = new PGlite(dataDir, {
       extensions: { auto_explain },
@@ -692,6 +674,7 @@ const initDb = async function ({ dataDir = `opfs-ahp://${JOB_DB_PATH}` } = {}) {
   } catch (e) {
     errorLog('[DB] schema upgrade fail,' + e.message);
   }
+  return db;
 };
 
 export function convertRows(rows) {
