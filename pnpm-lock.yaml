@@ -36,11 +36,11 @@ importers:
         specifier: 3.2.2
         version: 3.2.2(react@19.2.6)
       '@electric-sql/pglite':
-        specifier: 0.4.5
-        version: 0.4.5
+        specifier: 0.5.3
+        version: 0.5.3
       '@electric-sql/pglite-tools':
-        specifier: 0.3.5
-        version: 0.3.5(@electric-sql/pglite@0.4.5)
+        specifier: 0.4.3
+        version: 0.4.3(@electric-sql/pglite@0.5.3)
       '@lit/react':
         specifier: 1.0.8
         version: 1.0.8(@types/react@19.2.15)
@@ -1108,13 +1108,13 @@ packages:
     peerDependencies:
       react: '>=16.8.0'
 
-  '@electric-sql/pglite-tools@0.3.5':
-    resolution: {integrity: sha512-4him0RnIyqrSqk0zzeBJKJ++VVFk6bFCwKSVV7DP3T8fOQgRSVZShlrHfAChLG2uA/T4JdQ8b/15CxBn+E34TQ==}
+  '@electric-sql/pglite-tools@0.4.3':
+    resolution: {integrity: sha512-KFpstSxcTxq+kzY0TCToEC7yHuAXYMcGNeTCSEnivugTVrW+UqvjOhuFxauXctZEFSGPW0Biik6lf0ery21U1Q==}
     peerDependencies:
-      '@electric-sql/pglite': 0.4.5
+      '@electric-sql/pglite': 0.5.3
 
-  '@electric-sql/pglite@0.4.5':
-    resolution: {integrity: sha512-aGG2zGEyZzGWKy8P+9ZoNUV0jxt1+hgbeTf+bVAYyxVZZLXg3/9aFlfLxb08AYZVAfAkQlQIysmWjhc5hwDG8g==}
+  '@electric-sql/pglite@0.5.3':
+    resolution: {integrity: sha512-iTTYbA5Uesrl+N7zss0J5LopT7KE4j9aymYo+EZZh+rZbARQCUQOs+n2pay64JRUpc3fCkpfrniTNJnvYzOE+g==}
 
   '@emnapi/core@1.10.0':
     resolution: {integrity: sha512-yq6OkJ4p82CAfPl0u9mQebQHKPJkY7WrIuk205cTYnYe+k2Z8YBh11FrbRG/H6ihirqcacOgl2BIO8oyMQLeXw==}
@@ -11383,11 +11383,11 @@ snapshots:
       react: 19.2.6
       tslib: 2.8.1
 
-  '@electric-sql/pglite-tools@0.3.5(@electric-sql/pglite@0.4.5)':
+  '@electric-sql/pglite-tools@0.4.3(@electric-sql/pglite@0.5.3)':
     dependencies:
-      '@electric-sql/pglite': 0.4.5
+      '@electric-sql/pglite': 0.5.3
 
-  '@electric-sql/pglite@0.4.5': {}
+  '@electric-sql/pglite@0.5.3': {}
 
   '@emnapi/core@1.10.0':
     dependencies:
