@@ -80,7 +80,7 @@ jobs:
           allure_results: apps/extension/allure-results
 
       - name: (allure-report) Upload test report to action artifacts
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: ${{ steps.e2e-report.outputs.exists == 'true' && !cancelled() }}
         with:
           name: extension-e2e-tests-allure-report
@@ -88,7 +88,7 @@ jobs:
           retention-days: 30
 
       - name: (cucumber-report) Upload test report to action artifacts
-        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: ${{ steps.e2e-report.outputs.exists == 'true' && !cancelled() }}
         with:
           name: extension-e2e-tests-cucumber-report
