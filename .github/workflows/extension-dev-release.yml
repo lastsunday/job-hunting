@@ -33,12 +33,17 @@ jobs:
               - 'apps/extension/**'
             analysis:
               - 'libs/analysis/**'
+            workspace:
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
 
       - id: gen
         if: |
           github.event_name == 'workflow_dispatch' ||
           steps.filter.outputs.extension == 'true' ||
-          steps.filter.outputs.analysis == 'true'
+          steps.filter.outputs.analysis == 'true' ||
+          steps.filter.outputs.workspace == 'true'
         run: |
           dev_version=$(bash scripts/dev-version.sh apps/extension/package.json)
           echo "DEV_VERSION=$dev_version" >> "$GITHUB_ENV"
