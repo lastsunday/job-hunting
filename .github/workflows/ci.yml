@@ -44,7 +44,7 @@ jobs:
         continue-on-error: true
 
       - name: Moon CI pipeline (affected)
-        run: nix develop --command moon ci --base=origin/${{ github.base_ref || 'dev' }}
+        run: nix develop --command moon ci --base=${{ github.event.before || format('origin/{0}', github.base_ref || 'dev') }}
         env:
           MOON_OUTPUT_STYLE: buffer-only-failure
           MOON_LOG: error
