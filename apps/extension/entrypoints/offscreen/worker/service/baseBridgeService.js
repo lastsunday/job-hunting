@@ -44,9 +44,10 @@ export const addTransactionServiceMethod = ({ bridgeService = null, methodName =
   bridgeService.methodNameMapping.set(methodName, targetMethodName);
   bridgeService[targetMethodName] = async (message, param) => {
     try {
-      await (await getDb()).transaction(async (tx) => {
-        await postSuccessMessage(message, await methodFunction({ param, tx }));
+      const result = await (await getDb()).transaction(async (tx) => {
+        return await methodFunction({ param, tx });
       });
+      await postSuccessMessage(message, result);
     } catch (e) {
       await postErrorMessage(message, `[worker] ${targetMethodName} error : ` + e);
     }

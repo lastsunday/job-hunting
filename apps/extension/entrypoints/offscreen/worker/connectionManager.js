@@ -8,6 +8,8 @@
  * 其他属性（close、closed、on 等）直接透传原始实例。
  */
 
+import { debugLog, errorLog } from '@/common/log';
+
 const STATE = {
   UNINITIALIZED: 0,
   INITIALIZING: 1,
@@ -109,6 +111,12 @@ class ConnectionManager {
         resolve(await target[method](...args));
       } catch (e) {
         reject(e);
+        errorLog('[ConnectionManager] operation failed, attempting ROLLBACK: ' + e.message);
+        try {
+          await target.exec('ROLLBACK');
+        } catch (re) {
+          debugLog('[ConnectionManager] ROLLBACK after error: ' + re.message);
+        }
       }
     }
     this.#busy = false;

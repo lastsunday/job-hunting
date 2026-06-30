@@ -168,7 +168,7 @@ export async function batchInsertOrReplace(
     for (let i = 0; i < count; i++) {
       const start = i * maxRecordCountForOneExec;
       let end = (i + 1) * maxRecordCountForOneExec;
-      if (i == count.length - 1) {
+      if (i == count - 1) {
         //last index
         end = recordTotal;
       }
@@ -673,6 +673,8 @@ const initDb = async function ({ dataDir = `opfs-ahp://${JOB_DB_PATH}` } = {}) {
     });
   } catch (e) {
     errorLog('[DB] schema upgrade fail,' + e.message);
+    await db.close();
+    throw e;
   }
   return db;
 };

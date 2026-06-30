@@ -300,3 +300,17 @@ test('database init correct', async () => {
     });
   });
 });
+
+test('connection recovers after failed transaction', async () => {
+  const db = await getDb({ dataDir: 'memory://' });
+  expect(db).toBeInstanceOf(PGlite);
+
+  await expect(
+    db.transaction(async (tx) => {
+      await tx.exec('INVALID SQL SYNTAX');
+    })
+  ).rejects.toThrow();
+
+  const { rows } = await db.query('SELECT 1 AS val');
+  expect(rows[0].val).toBe(1);
+});

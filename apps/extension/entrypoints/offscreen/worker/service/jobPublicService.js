@@ -49,12 +49,12 @@ export const _jobPublicBatchAddJobPublicAndUpdateJob = async (param, { connectio
       value.jobIdList.push(item.jobId);
       jobPublicSourceAndJobIdMap.set(key, value);
     });
-    jobPublicSourceAndJobIdMap.values().forEach(item => {
-      SERVICE_INSTANCE._deleteByIds(item.jobIdList, "job_id", {
+    for (const item of jobPublicSourceAndJobIdMap.values()) {
+      await SERVICE_INSTANCE._deleteByIds(item.jobIdList, "job_id", {
         connection,
         otherCondition: `source_type = ${item.sourceType} AND ${item.source ? `source = '${item.source}'` : `source is null`} `
       });
-    });
+    }
     await SERVICE_INSTANCE._batchAddOrUpdate(jobPublicList, { overrideCreateDatetime: true, overrideUpdateDatetime: true, connection });
   }
   if (jobList && jobList.length > 0) {

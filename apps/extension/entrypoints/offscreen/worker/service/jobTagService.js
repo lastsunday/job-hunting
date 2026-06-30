@@ -360,12 +360,12 @@ export async function _jobTagBatchAddOrUpdate(jobTagBOs, overrideUpdateDatetime,
         }
         sourceTypeSourceAndJobIdsMap.get(key).push(item.jobId);
     }
-    sourceTypeSourceAndJobIdsMap.forEach(async (value, key, map) => {
+    for (const [key] of sourceTypeSourceAndJobIdsMap) {
         const ids = sourceTypeSourceAndJobIdsMap.get(key);
         const sourceType = sourceTypeSourceAndSourceTypeMap.get(key);
         const source = sourceTypeSourceAndSourceMap.get(key);
         await SERVICE_INSTANCE._deleteByIds(ids, JOB_ID_COLUMN, { connection, otherCondition: `source_type=${sourceType} AND ${source ? "source = '" + source + "'" : "source IS NULL"}` });
-    });
+    }
     const jobTags = [];
     for (let i = 0; i < jobTagBOs.length; i++) {
         const item = jobTagBOs[i];

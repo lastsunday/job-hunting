@@ -100,8 +100,8 @@ export const JobSnapshotService = {
         try {
             await (await getDb()).transaction(async (tx) => {
                 await SERVICE_INSTANCE._batchAddOrUpdate(param.items, { overrideUpdateDatetime: param.overrideUpdateDatetime, connection: tx })
-                postSuccessMessage(message, {});
             });
+            postSuccessMessage(message, {});
         } catch (e) {
             postErrorMessage(
                 message,
