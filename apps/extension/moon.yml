@@ -9,7 +9,9 @@ tasks:
         "@job-hunting/extension" \
         "package.json" \
         "apps/extension/**" \
-        "libs/analysis/**"
+        "libs/analysis/**" \
+        "package.json" \
+        "pnpm-lock.yaml"
     options:
       runInCI: false
 

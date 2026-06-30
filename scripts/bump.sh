@@ -20,7 +20,11 @@ INCLUDE_PATHS=()
 SCOPE_PARTS=()
 for p in "$@"; do
   INCLUDE_PATHS+=(--include-path "$p")
-  dir="${p%%/**}"
+  if [[ "$p" == *"/**" ]]; then
+    dir="${p%%/**}"
+  else
+    dir=$(dirname "$p")
+  fi
   SCOPE_PARTS+=("${dir}/")
 done
 

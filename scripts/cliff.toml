@@ -15,6 +15,7 @@ commit_parsers = [
 
 commit_preprocessors = [
   { pattern = "(?m)^CHANGELOG: .*", replace_command = "bash -c \"if git diff-tree --no-commit-id -r --name-only $COMMIT_SHA | grep -qvE '${GIT_CLIFF_INCLUDE_PATTERNS:-.*}' 2>/dev/null; then exit 0; else cat; fi\"" },
+  { pattern = "^[\\s\\S]*\\bBREAKING\\s+CHANGE\\b[\\s\\S]*$", replace_command = "sed -E 's/^(\\w+(\\(\\w+\\))?)(!)?:/\\1!:/'" },
 ]
 
 [changelog]
@@ -22,19 +23,24 @@ trim = false
 body = """
 ## {{ version }} ({{ timestamp | date(format="%Y-%m-%d") }})
 {%- for group, commits in commits | group_by(attribute="group") %}
-{%- set_global has_entries = false -%}
+{%- set_global has_changelog = false -%}
 {%- for commit in commits -%}
 {%- if "CHANGELOG: " in commit.raw_message -%}
-{%- set_global has_entries = true -%}
+{%- set_global has_changelog = true -%}
 {%- endif -%}
 {%- endfor -%}
-{%- if has_entries %}
+{%- if has_changelog or group == "💣 BREAKING CHANGES" %}
 
 ### {{ group }}
 {% for commit in commits -%}
-{%- if "CHANGELOG: " in commit.raw_message -%}
+{%- if "CHANGELOG: " in commit.raw_message %}
 {%- for footer in commit.footers -%}{% if footer.token == "CHANGELOG" %}
 - {{ footer.value | upper_first }}{% endif %}{% endfor -%}
+{%- elif group == "💣 BREAKING CHANGES" %}
+{%- for footer in commit.footers -%}{% if footer.token == "BREAKING CHANGE" %}
+- {{ footer.value | upper_first }}{% endif %}{% endfor -%}
+{%- else %}
+- {{ commit.message | upper_first }}
 {%- endif -%}
 {%- endfor -%}
 {%- endif -%}
