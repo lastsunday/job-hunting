@@ -7,7 +7,7 @@
 # This project uses Conventional Commits v1.0.0 — https://conventionalcommits.org
 # Types: feat, fix, build, chore, ci, docs, perf,
 #         refactor, remove, deprecate, revert, security,
-#         style, test
+#         style, test, bump
 # CHANGELOG: will add to changelog
 # BREAKING CHANGE: will add to changelog and affect version rule
 #

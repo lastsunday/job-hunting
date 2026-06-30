@@ -4,7 +4,7 @@ commit-msg:
       run: |
         commit_file={1}
         summary=$(head -1 "$commit_file")
-        if ! echo "$summary" | grep -qE '^(feat|fix|build|chore|ci|docs|perf|refactor|remove|deprecate|revert|security|style|test)(\([^)]+\))?!?: .+$'; then
+        if ! echo "$summary" | grep -qE '^(feat|fix|build|chore|ci|docs|perf|refactor|remove|deprecate|revert|security|style|test|bump)(\([^)]+\))?!?: .+$'; then
           echo ""
           echo "  !! Commit message must follow Conventional Commits v1.0.0:"
           echo "     <type>[optional scope]: <description>"
