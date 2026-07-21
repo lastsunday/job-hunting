@@ -126,7 +126,7 @@
     "ajax-hooks": "1.8.0",
     "antd": "6.4.3",
     "array-move": "4.0.0",
-    "axios": "1.16.1",
+    "axios": "1.18.0",
     "blob-polyfill": "9.0.20240710",
     "buffer": "6.0.3",
     "core-js": "3.49.0",
