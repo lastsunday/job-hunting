@@ -35,7 +35,7 @@
     "@unocss/preset-uno": "66.7.2",
     "@vitejs/plugin-react": "6.0.2",
     "@vitejs/plugin-react-oxc": "0.4.3",
-    "@vitest/browser": "4.1.9",
+    "@vitest/browser": "4.1.10",
     "@vitest/browser-playwright": "4.1.9",
     "@vitest/coverage-v8": "4.1.9",
     "@vitest/ui": "4.1.9",
