@@ -103,7 +103,7 @@ jobs:
 
       - name: Setup Node.js (Windows)
         if: runner.os == 'Windows'
-        uses: actions/setup-node@3235b876344d2a9aa001b8d1453c930bba69e610
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version-file: '.node-version'
           cache: pnpm
