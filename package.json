@@ -161,7 +161,7 @@
     "sha.js": "2.4.12",
     "single-file-core": "1.5.84",
     "swiper": "12.1.4",
-    "uuid": "14.0.0",
+    "uuid": "14.0.2",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
     "zod": "4.4.3",
     "zustand": "5.0.13"
