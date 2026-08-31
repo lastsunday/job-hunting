@@ -68,7 +68,7 @@ jobs:
         if: runner.os == 'Linux'
 
       - name: Setup Perl (Windows only)
-        uses: shogo82148/actions-setup-perl@a198315ec4e9244f206879ea7b63078003aec8a6
+        uses: shogo82148/actions-setup-perl@53e33bb27be492a926eee378e8a5f7ff6618b061
         if: contains(matrix.os, 'windows')
         with:
           perl-version: "5.38"
