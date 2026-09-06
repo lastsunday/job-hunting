@@ -5,6 +5,7 @@ import { getJob51Data } from '../content/plantforms/job51/index.js';
 import { getJobsdbData } from '../content/plantforms/jobsdb/index.js';
 import { getLiepinData } from '../content/plantforms/liepin/index.js';
 import { getZhiLianData } from '../content/plantforms/zhilian/index.js';
+import { isZhilianListPage, isZhilianListResponse } from '../content/plantforms/zhilian/data.js';
 import { getLaGouData } from '../content/plantforms/lagou/index.js';
 import { handle as aiqichaHandle } from '../content/company/plantforms/aiqicha/index.js';
 import { getJobOnlineData } from '../content/plantforms/jobonline/index.js';
@@ -30,7 +31,9 @@ export default defineContentScript({
   main(ctx) {
     console.log(`[Inject] proxy ajax content js`);
     (async () => {
-      await initBridge();
+      const bridgeReady = initBridge();
+      // Capture Zhilian's initial client-side request while the DB starts.
+      if (window.location.hostname !== 'www.zhaopin.com') await bridgeReady;
       // Executed when content script is loaded, can be async
       // 这里的 window 和页面的 window 不是同一个
       window.$ = window.jQuery = $;
@@ -39,6 +42,7 @@ export default defineContentScript({
       window.addEventListener('ajaxGetData', async function (e) {
         const data = e?.detail;
         if (!data) return;
+        await bridgeReady;
         const responseURL = data?.responseURL;
         if (responseURL) {
           // boss直聘推荐页/搜索页接口
@@ -66,8 +70,8 @@ export default defineContentScript({
           }
 
           // 智联招聘接口
-          if (responseURL.indexOf('/search/positions') !== -1) {
-            getZhiLianData(data?.response, true);
+          if (isZhilianListPage(window.location) && isZhilianListResponse(responseURL)) {
+            await getZhiLianData(data?.response);
           }
 
           // 前程无忧接口

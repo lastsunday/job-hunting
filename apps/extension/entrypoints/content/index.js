@@ -2,6 +2,7 @@ import '@webcomponents/custom-elements';
 import { handle as aiqichaHandle } from './company/plantforms/aiqicha/index.js';
 import lagouFirstOpen from './plantforms/lagou/firstOpen.js';
 import zhilianFirstOpen from './plantforms/zhilian/firstOpen.js';
+import { isZhilianListPage } from './plantforms/zhilian/data.js';
 import '@yaireo/dragsort/dist/dragsort.css';
 import '@yaireo/tagify/dist/tagify.css';
 import '../assets/css/app.css';
@@ -37,11 +38,11 @@ export default defineContentScript({
           await initBridge();
           const data = e?.detail?.aiqicha?.initialState?.result?.resultList;
           aiqichaHandle(data, true);
-        } else if (location.host === 'www.zhaopin.com') {
+        } else if (isZhilianListPage(location)) {
           // 智联招聘首次打开
           await initBridge();
           const data = e?.detail?.zhipin?.initialState;
-          zhilianFirstOpen(data || {});
+          await zhilianFirstOpen(data || {});
         }
       } catch (error) {
         console.error('Error handling firstOpen event:', error);

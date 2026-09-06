@@ -1,94 +1,101 @@
-import { PLATFORM_ZHILIAN } from "../../../../common";
-import { JobApi } from "../../../../common/api";
-import { getJobIds, saveBrowseJob, getAnalysisConfig } from "../../commonDataHandler";
-import {
-  createLoadingDOM,
-  finalRender,
-  hiddenLoadingDOM,
-  renderFunctionPanel,
-  renderSortJobItem,
-  renderTimeTag,
-  setupSortJobItem
-} from "../../commonRender";
-// const DELAY_FETCH_TIME = 75; //ms
-// const DELAY_FETCH_TIME_RANDOM_OFFSET = 50; //ms
+import { PLATFORM_ZHILIAN } from '../../../../common';
+import { JobApi } from '../../../../common/api';
+import { getJobIds, saveBrowseJob, getAnalysisConfig } from '../../commonDataHandler';
+import { finalRender, renderFunctionPanel, renderSortJobItem, renderTimeTag, setupSortJobItem } from '../../commonRender';
+import { LIST_SELECTOR, extractList, normalizeJob, matchCards } from './data';
 
-export function getZhiLianData(responseText) {
+let pending = Promise.resolve();
+
+export function getZhiLianData(response) {
   try {
-    const data = JSON.parse(responseText);
-    mutationContainer().then((node) => {
-      setupSortJobItem(node);
-      parseZhilianData(data?.data?.list || [], getListByNode(node));
-    });
-  } catch (err) {
-    console.error("解析 JSON 失败", err);
+    const rawList = extractList(response);
+    const list = rawList.map(normalizeJob).filter(Boolean);
+    console.info('[job-hunting] zhilian fix.3', { received: rawList.length, valid: list.length });
+    if (!list.length) return Promise.resolve();
+    pending = pending.then(async () => {
+      const pairs = await waitForCards(list);
+      if (!pairs.length) console.warn('[job-hunting] 智联：未找到可唯一匹配的职位卡片');
+      if (pairs.length) await parseZhilianData(
+        pairs.map(pair => pair.item), index => pairs[index]?.dom,
+      );
+    }).catch(error => console.error('[job-hunting] 智联适配失败', error));
+    return pending;
+  } catch (error) {
+    console.error('[job-hunting] 智联响应解析失败', error);
+    return Promise.resolve();
   }
 }
 
-// 获取职位列表节点
 export function getListByNode(node) {
-  const children = node?.children;
-  return function getListItem(index) {
-    return children?.[index];
-  };
+  const children = Array.from(node?.children || []);
+  return index => children[index];
 }
 
-// 监听 positionList-hook 节点，判断职位列表是否被挂载
-function mutationContainer() {
-  return new Promise((resolve, reject) => {
-    const dom = document.querySelector(".positionlist__list");
-    const observer = new MutationObserver(function (childList) {
-      const isAdd = (childList || []).some((item) => {
-        return item?.addedNodes?.length > 0;
-      });
-      return isAdd ? resolve(dom) : reject("未找到职位列表");
-    });
-
-    observer.observe(dom, {
-      childList: true,
-      subtree: false,
-    });
+// Check existing cards as well as containers mounted after the response.
+function waitForCards(list) {
+  return new Promise(resolve => {
+    let timer;
+    const finish = pairs => {
+      clearTimeout(timer);
+      observer.disconnect();
+      resolve(pairs);
+    };
+    const check = () => {
+      const node = document.querySelector(LIST_SELECTOR);
+      const pairs = node ? matchCards(node, list) : [];
+      if (pairs.length) finish(pairs);
+    };
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    timer = setTimeout(() => finish([]), 5000);
+    check();
   });
 }
 
-// 解析数据，插入时间标签
 export async function parseZhilianData(list, getListItem) {
-  list.forEach((item, index) => {
-    const dom = getListItem(index);
-    const { companyName } = item;
-    const loadingLastModifyTimeTag = createLoadingDOM(
-      companyName,
-      "__zhilian_time_tag"
-    );
-    dom.appendChild(loadingLastModifyTimeTag);
-  });
-  await saveBrowseJob(list, PLATFORM_ZHILIAN);
-  const jobDTOList = await JobApi.getJobBrowseInfoByIds(
-    getJobIds(list, PLATFORM_ZHILIAN)
-  );
-  const analysisConfig = await getAnalysisConfig();
-  list.forEach((item, index) => {
-    const dom = getListItem(index);
-    const tag = createDOM(jobDTOList[index], { analysisConfig });
-    dom.appendChild(tag);
-  });
-  hiddenLoadingDOM();
-  renderSortJobItem(
-    jobDTOList,
-    getListItem,
-    { platform: PLATFORM_ZHILIAN }
-  );
-  await renderFunctionPanel(
-    jobDTOList,
-    getListItem,
-    { platform: PLATFORM_ZHILIAN }
-  );
-  finalRender(jobDTOList, { platform: PLATFORM_ZHILIAN });
+  const pairs = list.map((item, index) => ({ item, dom: getListItem(index) }))
+    .filter(({ item, dom }) => dom?.isConnected &&
+      dom.dataset.jobHuntingZhilianId !== item.jobId);
+  if (!pairs.length) return;
+  // firstOpen and proxyAjax are separate bundles; reserve through the DOM.
+  pairs.forEach(({ item, dom }) => { dom.dataset.jobHuntingZhilianId = item.jobId; });
+  try {
+    const jobs = pairs.map(pair => pair.item);
+    await saveBrowseJob(jobs, PLATFORM_ZHILIAN);
+    const dtos = await JobApi.getJobBrowseInfoByIds(getJobIds(jobs, PLATFORM_ZHILIAN));
+    const dtoById = new Map(dtos.map(dto => [dto.jobId, dto]));
+    const analysisConfig = await getAnalysisConfig();
+    const current = pairs.filter(({ item, dom }) => {
+      const stillMatches = dom.isConnected &&
+        (!dom.parentElement.matches('.job-list-panel') ||
+          matchCards(dom.parentElement, jobs).some(pair => pair.dom === dom && pair.item.jobId === item.jobId));
+      const valid = stillMatches && dom.dataset.jobHuntingZhilianId === item.jobId &&
+        dtoById.has(`ZHILIAN_${item.jobId}`);
+      if (!valid && dom.dataset.jobHuntingZhilianId === item.jobId) delete dom.dataset.jobHuntingZhilianId;
+      return valid;
+    });
+    if (!current.length) return;
+    const getDom = index => current[index].dom;
+    const currentDtos = current.map(({ item }) => dtoById.get(`ZHILIAN_${item.jobId}`));
+    current.forEach(({ dom }, index) => {
+      dom.querySelectorAll('.__zhilian_time_tag').forEach(tag => tag.remove());
+      dom.appendChild(createDOM(currentDtos[index], { analysisConfig }));
+    });
+    setupSortJobItem(current[0].dom.parentElement);
+    renderSortJobItem(currentDtos, getDom, { platform: PLATFORM_ZHILIAN });
+    await renderFunctionPanel(currentDtos, getDom, { platform: PLATFORM_ZHILIAN });
+    finalRender(currentDtos, { platform: PLATFORM_ZHILIAN });
+  } catch (error) {
+    pairs.forEach(({ item, dom }) => {
+      if (dom.dataset.jobHuntingZhilianId === item.jobId) delete dom.dataset.jobHuntingZhilianId;
+    });
+    throw error;
+  }
 }
 
 export function createDOM(jobDTO, { analysisConfig } = {}) {
-  const div = document.createElement("div");
-  div.classList.add("__zhilian_time_tag");
+  const div = document.createElement('div');
+  div.classList.add('__zhilian_time_tag');
   renderTimeTag(div, jobDTO, { analysisConfig });
   return div;
 }
