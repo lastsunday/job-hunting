@@ -1,5 +1,5 @@
 import reactOxc from '@vitejs/plugin-react-oxc';
-import { copyFileSync } from 'fs';
+import { copyFileSync, existsSync, unlinkSync } from 'fs';
 import { resolve } from 'path';
 import wasm from 'vite-plugin-wasm';
 import { defineConfig } from 'wxt';
@@ -7,8 +7,11 @@ import { defineConfig } from 'wxt';
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   modules: ['@wxt-dev/unocss', '@wxt-dev/module-react'],
+  zip: {
+    artifactTemplate: 'job-hunting-extension-{{version}}-{{browser}}.zip',
+  },
   unocss: {},
-  manifest: {
+  manifest: ({ browser }) => ({
     name: 'job-hunting',
     action: {
       default_title: 'Click to open admin page',
@@ -38,19 +41,35 @@ export default defineConfig({
         ],
       },
     ],
-    permissions: [
-      'webRequest',
-      'offscreen',
-      'unlimitedStorage',
-      'declarativeNetRequestWithHostAccess',
-      'declarativeNetRequestFeedback',
-      'debugger',
-      'cookies',
-      'storage',
-    ],
+    permissions: browser === 'firefox'
+      ? [
+          'storage',
+          'unlimitedStorage',
+          'webRequest',
+          'declarativeNetRequest',
+          'debugger',
+          'cookies',
+        ]
+      : [
+          'webRequest',
+          'offscreen',
+          'unlimitedStorage',
+          'declarativeNetRequestWithHostAccess',
+          'declarativeNetRequestFeedback',
+          'debugger',
+          'cookies',
+          'storage',
+        ],
     host_permissions: ['http://*/', 'https://*/'],
-    key: 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4sziiWIatNirncnJmxcaJVqmDELP+eQo4C1ZYCCgGJEkAEgDlZpIlKuPS5JRe1h91vo9kPmivK833Trrm1tQtfoaCNxo+oFGTJfYJxKDWE82cMbM1gWsL7HkeiU7nJ7U2EBDA1hKT2TkGO0k5JVwgPpvaOomAFfB9/14hcPwYuDf/3eeRRTzLDK/LpCbt821jmrPlOZ9jgk0MPNxJ7BnZf5e6rG90sOdClhe8EYB/7ysXKv0uiYiJdbOLbmWC1WfmabIvJL2SoUAdBQJf4HWgZ+ZmxMwgWoAikrbBr0Hug+xDTFgiTJCNCOIbma0M1f7Sf7SP55vcbr1FMsoRfifowIDAQAB',
-  },
+    browser_specific_settings:
+      browser === 'firefox'
+        ? { gecko: { id: '{73047bbe-2a75-4f4e-ba8e-31c1e51b44f6}' } }
+        : undefined,
+    key:
+      browser === 'firefox'
+        ? undefined
+        : 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4sziiWIatNirncnJmxcaJVqmDELP+eQo4C1ZYCCgGJEkAEgDlZpIlKuPS5JRe1h91vo9kPmivK833Trrm1tQtfoaCNxo+oFGTJfYJxKDWE82cMbM1gWsL7HkeiU7nJ7U2EBDA1hKT2TkGO0k5JVwgPpvaOomAFfB9/14hcPwYuDf/3eeRRTzLDK/LpCbt821jmrPlOZ9jgk0MPNxJ7BnZf5e6rG90sOdClhe8EYB/7ysXKv0uiYiJdbOLbmWC1WfmabIvJL2SoUAdBQJf4HWgZ+ZmxMwgWoAikrbBr0Hug+xDTFgiTJCNCOIbma0M1f7Sf7SP55vcbr1FMsoRfifowIDAQAB',
+  }),
   hooks: {
     'build:done'(wxt, output) {
       const extRoot = wxt.config.root;
@@ -65,6 +84,12 @@ export default defineConfig({
         resolve(outDir, 'package.json'),
       );
       copyFileSync(resolve(extRoot, 'LICENSE'), resolve(outDir, 'LICENSE'));
+      if (wxt.config.browser === 'firefox') {
+        const offscreenHtml = resolve(outDir, 'offscreen.html');
+        if (existsSync(offscreenHtml)) {
+          unlinkSync(offscreenHtml);
+        }
+      }
       if (wxt.config.mode == 'production') {
         const nm = resolve(workspaceRoot, 'node_modules');
         copyFileSync(
