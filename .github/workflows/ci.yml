@@ -72,7 +72,7 @@ jobs:
           fetch-depth: 1
 
       - name: (allure-report) Build test report
-        uses: simple-elf/allure-report-action@53ebb757a2097edc77c53ecef4d454fc2f2f774c
+        uses: simple-elf/allure-report-action@385367cde61ac68c2568a117f7579f7f148dc459
         if: ${{ steps.e2e-report.outputs.exists == 'true' && !cancelled() }}
         with:
           gh_pages: gh-test
