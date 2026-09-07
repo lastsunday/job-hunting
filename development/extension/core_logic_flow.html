@@ -1,0 +1,1308 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>核心逻辑 - Job Hunting</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon.svg">
+        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="stylesheet" href="../../css/variables.css">
+        <link rel="stylesheet" href="../../css/general.css">
+        <link rel="stylesheet" href="../../css/chrome.css">
+        <link rel="stylesheet" href="../../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Job Hunting</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="核心逻辑"><a class="header" href="#核心逻辑">核心逻辑</a></h1>
+<h2 id="从网站获取数据和渲染额外信息"><a class="header" href="#从网站获取数据和渲染额外信息">从网站获取数据和渲染额外信息</a></h2>
+<h3 id="职位数据"><a class="header" href="#职位数据">职位数据</a></h3>
+<pre class="mermaid">sequenceDiagram
+  participant browser as 浏览器
+  participant extension as 插件
+  autonumber
+  extension -&gt;&gt; browser: 注册待侦测目标页面
+  browser -&gt;&gt; browser: 打开职位列表页面
+  browser -&gt;&gt; extension: 触发侦测目标页面事件
+  extension -&gt;&gt; browser: 注入脚本(拦截XMLHttpRequest)到目标页面
+  extension -&gt;&gt; extension: 初始化Extension Bridge
+  browser -&gt;&gt; extension: 发送职位列表数据
+  extension -&gt;&gt; extension: 监听查找职位列表界面元素
+  extension -&gt;&gt; extension: 解析职位列表数据
+  extension -&gt;&gt; extension: 保存职位信息到持久层
+  extension -&gt;&gt; extension: 从持久层获取保存的职位信息
+  extension -&gt;&gt; browser: 在职位项界面上进行自定义职位信息渲染
+  extension -&gt;&gt; browser: 在职位项界面上进行自定义公司信息界面框架渲染
+  extension -&gt;&gt; browser: 渲染职位评论框架
+  opt
+    browser -&gt;&gt; extension: 获取和渲染公司信息
+    alt 持久层含有指定未过期的公司信息
+      extension -&gt;&gt; extension: 从持久层获取保存的公司信息
+    else
+      extension -&gt;&gt; extension: 向公司信息服务查询公司信息
+      extension -&gt;&gt; extension: 保存公司信息到持久层
+      extension -&gt;&gt; extension: 从持久层获取保存的公司信息
+    end
+    extension -&gt;&gt; browser: 渲染自定义公司信息
+    extension -&gt;&gt; browser: 渲染公司评论框架
+    opt
+      browser -&gt;&gt; extension: 获取和渲染公司评论信息
+      extension -&gt;&gt; browser: 渲染公司评论信息
+    end
+  end
+  opt
+    browser -&gt;&gt; extension: 获取和渲染职位评论信息
+    extension -&gt;&gt; browser: 渲染职位评论信息
+  end
+</pre>
+<h3 id="公司数据"><a class="header" href="#公司数据">公司数据</a></h3>
+<pre class="mermaid">sequenceDiagram
+  participant browser as 浏览器
+  participant extension as 插件
+  autonumber
+  extension -&gt;&gt; browser: 注册待侦测目标页面
+  browser -&gt;&gt; browser: 打开公司列表页面
+  browser -&gt;&gt; extension: 触发侦测目标页面事件
+  extension -&gt;&gt; browser: 注入脚本(拦截XMLHttpRequest)到目标页面
+  extension -&gt;&gt; extension: 初始化Extension Bridge
+  browser -&gt;&gt; extension: 发送公司列表数据
+  extension -&gt;&gt; extension: 监听查找公司列表界面元素
+  extension -&gt;&gt; extension: 解析公司列表数据
+  alt 持久层含有指定未过期的公司信息
+    extension -&gt;&gt; extension: 从持久层获取保存的公司信息
+  else
+    extension -&gt;&gt; extension: 向公司信息服务查询公司信息
+    extension -&gt;&gt; extension: 保存公司信息到持久层
+    extension -&gt;&gt; extension: 从持久层获取保存的公司信息
+  end
+  extension -&gt;&gt; browser: 在公司项界面上进行自定义公司信息渲染
+  extension -&gt;&gt; browser: 渲染自定义公司信息
+  extension -&gt;&gt; browser: 渲染公司评论框架
+  opt
+    browser -&gt;&gt; extension: 获取和渲染公司评论信息
+    extension -&gt;&gt; browser: 渲染公司评论信息
+  end
+</pre>
+<h2 id="自定义职位卡片渲染"><a class="header" href="#自定义职位卡片渲染">自定义职位卡片渲染</a></h2>
+<pre><code class="language-text">┌────────────────────────────────────────────────────────────────┐
+│                                                │ Job extra info│
+│────────────────────────────────────────────────────────────────│
+│                     Job info                                   │
+│                                                                │
+│────────────────────────────────────────────────────────────────│
+│                     Company info                               │
+│                                                                │
+│                                                                │
+│                                                                │
+│────────────────────────────────────────────────────────────────│
+│ Company evaluation checking                                    │
+│────────────────────────────────────────────────────────────────│
+│ Company tag                                                    │
+│────────────────────────────────────────────────────────────────│
+│                   Othre|Company comment| Online company comment│
+│────────────────────────────────────────────────────────────────│
+│ Job tag                                                        │
+│────────────────────────────────────────────────────────────────│
+│ Job browse statistics ===                           Job Comment│
+└────────────────────────────────────────────────────────────────┘
+</code></pre>
+<ol>
+<li>
+<p>监听职位列表元素
+▲</p>
+<div class="table-wrapper"><table><thead><tr><th>平台</th><th>职位列表元素定位</th><th>备注</th></tr></thead><tbody>
+<tr><td>前程无忧</td><td>.joblist</td><td></td></tr>
+<tr><td>BOSS 直聘</td><td>.rec-job-list</td><td></td></tr>
+<tr><td>猎聘网</td><td>.job-list-box</td><td></td></tr>
+<tr><td>智联招聘</td><td>.positionlist__list</td><td></td></tr>
+<tr><td>拉勾网</td><td>.list__YibNq</td><td></td></tr>
+<tr><td>就业在线</td><td>.position-wrap</td><td></td></tr>
+<tr><td>广东公共求职招聘服务平台</td><td>.ant-list-items</td><td></td></tr>
+</tbody></table>
+</div></li>
+<li>
+<p>为职位列表容器设置 flex 布局(使得在不改变 dom 结构的情况下，通过设置 css 的 order 属性来达到改变职位项前后位置)</p>
+</li>
+<li>
+<p>渲染<code>加载中</code>元素</p>
+</li>
+<li>
+<p>渲染职位额外信息</p>
+<ol>
+<li>进行年龄限制的检测渲染</li>
+<li>对职位时间进行处理渲染（初见时间/发布时间）</li>
+<li>Hr 活跃时间渲染</li>
+<li>职位的公司信息（外包/培训机构）渲染</li>
+<li>对职位时间进行染色</li>
+<li>职位分析检测和渲染</li>
+</ol>
+</li>
+<li>
+<p>隐藏<code>加载中</code>元素</p>
+</li>
+<li>
+<p>修改职位卡片 css 的 order 属性，对职位卡片进行排序</p>
+</li>
+<li>
+<p>渲染底部功能栏</p>
+<ol>
+<li>渲染 logo</li>
+<li>公司信息渲染
+<ol>
+<li>查询公司信息按钮渲染</li>
+<li>对公司名处理</li>
+<li>公司详情渲染</li>
+<li>公司标签渲染(其他人/我)</li>
+<li>公司风评渲染</li>
+<li>其他途径查询弹窗渲染</li>
+<li>在线公司评论按钮渲染</li>
+</ol>
+</li>
+<li>职位标签渲染(其他人/我)</li>
+<li>职位查看和展示次数渲染</li>
+</ol>
+</li>
+<li>
+<p>最终渲染</p>
+<ol>
+<li>职位评论按钮渲染</li>
+<li>职位卡片渲染完成标识</li>
+</ol>
+</li>
+</ol>
+<h2 id="内部-api"><a class="header" href="#内部-api">内部 API</a></h2>
+<h3 id="内部-api-注册与使用"><a class="header" href="#内部-api-注册与使用">内部 API 注册与使用</a></h3>
+<h4 id="1-service-注册workerjs"><a class="header" href="#1-service-注册workerjs">1. Service 注册(worker.js)</a></h4>
+<pre><code class="language-js">const ACTION_FUNCTION = new Map();
+
+export const WorkerBridge = {
+  ping: function (message, param) {
+    postSuccessMessage(message, 'pong');
+  },
+};
+
+const { mergeServiceMethod } = useService();
+
+mergeServiceMethod(ACTION_FUNCTION, WorkerBridge);
+mergeServiceMethod(ACTION_FUNCTION, DataSourceMetadataService);
+</code></pre>
+<h4 id="2-api-注册apiindexjs"><a class="header" href="#2-api-注册apiindexjs">2. API 注册(api/index.js)</a></h4>
+<pre><code class="language-js">export const DataSourceMetadataApi = {
+  dataSourceMetadataSearch: mockFunction,
+  dataSourceMetadataAddOrUpdate: mockFunction,
+  dataSourceMetadataBatchAddOrUpdate: mockFunction,
+  dataSourceMetadataGetById: mockFunction,
+  dataSourceMetadataGetByIds: mockFunction,
+  dataSourceMetadataDeleteById: mockFunction,
+  dataSourceMetadataDeleteByIds: mockFunction,
+};
+fillBridgeApi({ api: DataSourceMetadataApi });
+</code></pre>
+<h4 id="3-api-使用"><a class="header" href="#3-api-使用">3. API 使用</a></h4>
+<blockquote>
+<p>[!IMPORTANT]
+通过 API 方法来调用 Service 方法</p>
+</blockquote>
+<pre><code class="language-js">const param = new DataSourceMetadataSearchBO();
+param.enable = true;
+param.orderByColumn = 'seq';
+param.orderBy = 'ASC';
+const result = await DataSourceMetadataApi.dataSourceMetadataSearch(param);
+</code></pre>
+<h4 id="约束"><a class="header" href="#约束">约束</a></h4>
+<ol>
+<li>方法名约定： ClassName+MethodName，如 DataSourceMetadataApi
+<ul>
+<li>ClassName: DataSourceMetadata</li>
+<li>MethodName: Search</li>
+<li>结果为: dataSourceMetadataSearch</li>
+</ul>
+</li>
+<li>方法传入参数类型约定: JSONObject 或其他基本数据类型</li>
+<li>方法都为 async function</li>
+</ol>
+<h4 id="原理"><a class="header" href="#原理">原理</a></h4>
+<ul>
+<li>利用 JSONObject 的 keys,value 进行 Service 方法的绑定</li>
+</ul>
+<pre><code class="language-js">const fillBridgeApi = ({ api = {} } = {}) =&gt; {
+  const keys = Object.keys(api);
+  keys.forEach((invokeName) =&gt; {
+    api[invokeName] = async (param) =&gt; {
+      const result = await invoke(invokeName, param);
+      return result.data;
+    };
+  });
+  return api;
+};
+</code></pre>
+<ul>
+<li>手动声明进行 Service 方法绑定</li>
+</ul>
+<pre><code class="language-js">export const JobSnapshotApi = {
+  jobSnapshotDeleteByIds: async function (param) {
+    const result = await invoke(this.jobSnapshotDeleteByIds.name, param);
+    return result.data;
+  },
+};
+</code></pre>
+<ul>
+<li>利用方法名来定位 Service 和 Service 方法: className+MethodName</li>
+</ul>
+<h3 id="内部-api-调用原理"><a class="header" href="#内部-api-调用原理">内部 API 调用原理</a></h3>
+<blockquote>
+<p>[!IMPORTANT]
+action = className+MethodName</p>
+</blockquote>
+<h4 id="从-contentscript-调用"><a class="header" href="#从-contentscript-调用">从 ContentScript 调用</a></h4>
+<pre class="mermaid">sequenceDiagram
+  participant Api
+  participant ContentScript
+  participant Background
+  participant Offscreen
+  participant WebWorker
+  autonumber
+  ContentScript -&gt;&gt;  Api: 调用Api方法
+  Api -&gt;&gt; ContentScript: 调用invoke方法，传递action,param
+  ContentScript -&gt;&gt; ContentScript: 生成callbackId和Promise
+  ContentScript -&gt;&gt; ContentScript: 关联callbackId和当前生成的Promise
+  ContentScript -&gt;&gt; Background: 发送Message
+  alt 如果Background可以处理该Message
+    Background -&gt;&gt; Background: 处理Message
+    Background --&gt;&gt; ContentScript: 返回处理后的Message
+  else
+    Background -&gt;&gt; Offscreen: 转发Message
+    Offscreen -&gt;&gt; WebWorker: 转发Message
+    WebWorker -&gt;&gt; WebWorker: 处理Message
+    WebWorker --&gt;&gt; Offscreen: 返回处理后的Message
+    Offscreen --&gt;&gt; Background: 转发处理后的Message
+    Background --&gt;&gt; ContentScript: 转发处理后的Message
+  end
+  ContentScript -&gt;&gt; ContentScript:根据返回Message的callbadkId查找Promise
+  alt 如果Message含有error
+    ContentScript -&gt;&gt; Api:调用Promise.reject返回错误
+  else
+    ContentScript -&gt;&gt; Api:调用Promise.resolve返回结果
+  end
+</pre>
+<h4 id="从-background-调用"><a class="header" href="#从-background-调用">从 Background 调用</a></h4>
+<pre class="mermaid">sequenceDiagram
+  participant Api
+  participant Background
+  participant Offscreen
+  participant WebWorker
+  autonumber
+  Background -&gt;&gt;  Api: 调用Api方法
+  Api -&gt;&gt; Background: 调用invoke方法，传递action,param
+  Background -&gt;&gt; Background: 生成callbackId和Promise
+  Background -&gt;&gt; Background: 关联callbackId和当前生成的Promise
+  Background -&gt;&gt; Offscreen: 发送Message
+  Offscreen -&gt;&gt; WebWorker: 转发Message
+  WebWorker -&gt;&gt; WebWorker: 处理Message
+  WebWorker --&gt;&gt; Offscreen: 返回处理后的Message
+  Offscreen --&gt;&gt; Background: 转发处理后的Message
+  Background -&gt;&gt; Background:根据返回Message的callbadkId查找Promise
+  alt 如果Message含有error
+    Background -&gt;&gt; Api:调用Promise.reject返回错误
+  else
+    Background -&gt;&gt; Api:调用Promise.resolve返回结果
+  end
+</pre>
+<h4 id="从-webworker-调用"><a class="header" href="#从-webworker-调用">从 WebWorker 调用</a></h4>
+<blockquote>
+<p>[!IMPORTANT]</p>
+<ul>
+<li>Webworker 发起的 Api 调用不会经过 ContentScript,Background,Offscreen 这些模块的处理流程</li>
+<li>调用的方法仅限于 Github Api (仅执行网络访问)</li>
+</ul>
+</blockquote>
+<h4 id="对大-message-传递的处理"><a class="header" href="#对大-message-传递的处理">对大 Message 传递的处理</a></h4>
+<blockquote>
+<p>[!IMPORTANT]</p>
+<p><a href="https://github.com/lastsunday/job-hunting/commit/ae0cee1">https://github.com/lastsunday/job-hunting/commit/ae0cee1</a></p>
+</blockquote>
+<h2 id="内嵌数据库"><a class="header" href="#内嵌数据库">内嵌数据库</a></h2>
+<h3 id="sql-class"><a class="header" href="#sql-class">SQL Class</a></h3>
+<pre class="mermaid">---
+title: Database
+---
+classDiagram
+    class Database
+    Database: +initDb$({ dataDir } = {})
+    Database: +getOne$(sql, bind, obj, { connection = null } = {})
+    Database: +getAll$(sql, bind, obj, { connection = null } = {})
+    Database: +batchInsert$(obj, tableName, params, { overrideCreateDatetime = false, overrideUpdateDatetime = false, connection = null } = {})
+    Database: +batchInsertOrReplace$(obj, tableName, tableIdColumn, params, { replace = true, overrideCreateDatetime = false, overrideUpdateDatetime = false, connection = null } = {})
+    Database: +one$(entity, tableName, idColumn, id, { connection = null } = {})
+    Database: +all$(entity, tableName, orderBy, { connection = null } = {})
+    Database: +batchGet$(obj, tableName, idColumnName, ids, { connection = null } = {})
+    Database: +del$(tableName, idColumn, id, { otherCondition = null, connection = null } = {})
+    Database: +batchDel$(tableName, idColumn, ids, { otherCondition = null, connection = null } = {})
+    Database: +search$(entity, tableName, param, whereConditionFunction, { connection = null } = {})
+    Database: +searchCount$(entity, tableName, param, whereConditionFunction, { connection = null } = {})
+    Database: +sort$(tableName, idColumnName, param, { connection = null } = {})
+    Database: +innerInit({ dataDir } = {})
+    Database: +dbExport(message, param)
+    Database: +dbImport(message, param)
+    Database: +dbClose(message, param)
+    Database: +dbDelete(message, param)
+    Database: +dbSize(message, param)
+    Database: +dbSchemaVersion(message, param)
+    Database: +dbExec(message, param)
+    Database: +dbGetAllTableName(message, param)
+
+    class BaseService
+    BaseService: +constructor(tableName, tableIdColumn, entityClassCreateFunction, searchDTOCreateFunction, whereConditionFunction)
+    BaseService: +search(message, param, { detailInjectAsyncCallback = null, entityClassCreateFunction = null } = {})
+    BaseService: +count(message, param)
+    BaseService: +getOne(message, param, column)
+    BaseService: +getById(message, param)
+    BaseService: +getByIds(message, param)
+    BaseService: +addOrUpdate(message, param)
+    BaseService: +deleteById(message, id, column)
+    BaseService: +deleteByIds(message, ids, column)
+    BaseService: #_search(param, { detailInjectAsyncCallback = null, connection = null, entityClassCreateFunction = null } = {})
+    BaseService: #_count()
+    BaseService: #_getOne(param, column)
+    BaseService: #_getById(param, { connection = null } = {})
+    BaseService: #_getByIds(param, { connection = null } = {})
+    BaseService: #_deleteById(id, column, { otherCondition, connection = null } = {})
+    BaseService: #_deleteByIds(ids, column, { connection = null, otherCondition = null } = {})
+    BaseService: #_updateByIds(ids, column, { otherCondition })
+    BaseService: #_addOrUpdate(param, { overrideUpdateDatetime = false, overrideCreateDatetime = false, connection = null } = {})
+    BaseService: #_batchAddOrUpdate(params, { connection = null, overrideCreateDatetime = false, overrideUpdateDatetime = false, genIdFunction = null, entityClassCreateFunction = null } = {})
+
+    class BaseBridgeService
+    BaseBridgeService: +constructor(baseServiceInstance, serviceName)
+    BaseBridgeService: +getMethodName(name)
+    BaseBridgeService: +getMethodNameMap()
+    BaseBridgeService: +addServiceMethod$({ bridgeService = null, methodName = null, methodFunction = async ({ param = null } = {}) =&gt; { } } = {})
+    BaseBridgeService: +addTransactionServiceMethod$({ bridgeService = null, methodName = null, methodFunction = async ({ param = null, tx = null } = {}) =&gt; { } } = {})
+    BaseBridgeService: +fillBaseServiceMethod$({ bridgeService = null, overrideUpdateDatetime = false, overrideCreateDatetime = false } = {})
+
+    BaseService ..&gt; Database
+    BaseBridgeService ..&gt; BaseService
+
+</pre>
+<h4 id="service-实现"><a class="header" href="#service-实现">Service 实现</a></h4>
+<pre><code class="language-js">import { DataSourceMetadataSearchBO } from '@/common/data/bo/dataSourceMetadataSearchBO';
+import { DataSourceMetadata } from '@/common/data/domain/dataSourceMetadata';
+import BaseBridgeService, { fillBaseServiceMethod } from './baseBridgeService';
+import { BaseService } from './baseService';
+import {
+  genEqValueConditionSql,
+  genInTextSql,
+  genLikeSql,
+  genRangeDatetimeConditionSql,
+} from './sqlUtil';
+const TABLE_NAME = 'data_source_metadata';
+const TABLE_ID_COLUMN = 'id';
+const SERVICE_NAME = 'dataSourceMetadata';
+export const SERVICE_INSTANCE = new BaseService(
+  TABLE_NAME,
+  TABLE_ID_COLUMN,
+  () =&gt; {
+    return new DataSourceMetadata();
+  },
+  () =&gt; {
+    return new DataSourceMetadataSearchBO();
+  },
+  (param) =&gt; {
+    let whereCondition = ''.concat(
+      genInTextSql(param.id, 'id'),
+      genLikeSql(param.name, 'name'),
+      genEqValueConditionSql(param.enable, 'enable'),
+      genInTextSql(param.type, 'type'),
+      genEqValueConditionSql(param.autoUpdateEnable, 'auto_update_enable'),
+      genRangeDatetimeConditionSql(
+        param.startDatetimeForCreate,
+        param.endDatetimeForCreate,
+        'create_datetime'
+      ),
+      genRangeDatetimeConditionSql(
+        param.startDatetimeForUpdate,
+        param.endDatetimeForUpdate,
+        'update_datetime'
+      )
+    );
+    return whereCondition;
+  }
+);
+const DataSourceMetadataService = new BaseBridgeService(
+  SERVICE_INSTANCE,
+  SERVICE_NAME
+);
+fillBaseServiceMethod({
+  bridgeService: DataSourceMetadataService,
+  overrideCreateDatetime: true,
+  overrideUpdateDatetime: true,
+});
+
+export default DataSourceMetadataService;
+</code></pre>
+<h4 id="orm-机制"><a class="header" href="#orm-机制">ORM 机制</a></h4>
+<ol>
+<li>例子</li>
+</ol>
+<pre><code class="language-js">const company = new Company();
+await CompanyApi.addOrUpdateCompany(company);
+
+//companyService
+const SERVICE_INSTANCE = new BaseService(
+  'company',
+  'company_id',
+  () =&gt; {
+    return new Company();
+  },
+  () =&gt; {
+    return new SearchCompanyDTO();
+  },
+  null
+);
+
+export const CompanyService = {
+  addOrUpdateCompany: async function (message, param) {
+    try {
+      await SERVICE_INSTANCE._batchAddOrUpdate([param]);
+      postSuccessMessage(message, {});
+    } catch (e) {
+      postErrorMessage(
+        message,
+        '[worker] addOrUpdateCompany error : ' + e.message
+      );
+    }
+  },
+};
+</code></pre>
+<ol>
+<li>
+<p>当前实现的特性</p>
+<ol>
+<li>根据 JSONObject 进行 SQL 查询，新增，更新，删除</li>
+</ol>
+</li>
+<li>
+<p>底层原理</p>
+<ol>
+<li>利用 JSONObject 的 keys,value 来识别列名，字段类型和内容。通过此来进行 SQL 的生成和返回结果 JSONObject 的生成</li>
+<li>JSONObject 属性名采用小驼峰命名法（lowerCamelCase）</li>
+<li>表字段名采用下划线命名法（Snake Case）</li>
+<li>SQL 插入字段的值位置采用下标定位的方式，如$1</li>
+<li>分页采用 LIMIT,OFFSET</li>
+</ol>
+</li>
+</ol>
+<h3 id="schema-changes"><a class="header" href="#schema-changes">Schema Changes</a></h3>
+<pre><code class="language-js">const changelogList = getChangeLogList();
+let oldVersion = 0;
+const newVersion = changelogList.length;
+try {
+  await db.transaction(async (tx) =&gt; {
+    const SQL_CREATE_TABLE_VERSION = `
+          CREATE TABLE IF NOT EXISTS version(
+          num INTEGER
+        )
+      `;
+    await tx.exec(SQL_CREATE_TABLE_VERSION);
+    const SQL_QUERY_VERSION = 'SELECT num FROM version';
+    const result = await tx.query(SQL_QUERY_VERSION);
+    const rows = result.rows;
+    if (rows.length &gt; 0) {
+      oldVersion = rows[0].num;
+    } else {
+      const SQL_INSERT_VERSION = `INSERT INTO version(num) values($1)`;
+      await tx.query(SQL_INSERT_VERSION, [0]);
+    }
+    infoLog(
+      '[DB] schema oldVersion = ' + oldVersion + ', newVersion = ' + newVersion
+    );
+    if (newVersion &gt; oldVersion) {
+      infoLog('[DB] schema upgrade start');
+      for (let i = oldVersion; i &lt; newVersion; i++) {
+        const currentVersion = i + 1;
+        const changelog = changelogList[i];
+        const sqlList = changelog.getSqlList();
+        infoLog(
+          '[DB] schema upgrade changelog version = ' +
+            currentVersion +
+            ', sql total = ' +
+            sqlList.length
+        );
+        for (let seq = 0; seq &lt; sqlList.length; seq++) {
+          infoLog(
+            '[DB] schema upgrade changelog version = ' +
+              currentVersion +
+              ', execute sql = ' +
+              (seq + 1) +
+              '/' +
+              sqlList.length
+          );
+          const sql = sqlList[seq];
+          await tx.exec(sql);
+        }
+      }
+      const SQL_UPDATE_VERSION = `UPDATE version SET num = $1`;
+      await tx.query(SQL_UPDATE_VERSION, [newVersion]);
+      infoLog('[DB] schema upgrade finish to version = ' + newVersion);
+      infoLog('[DB] current schema version = ' + newVersion);
+    } else {
+      infoLog('[DB] skip schema upgrade');
+      infoLog('[DB] current schema version = ' + oldVersion);
+    }
+  });
+} catch (e) {
+  errorLog('[DB] schema upgrade fail,' + e.message);
+}
+</code></pre>
+<ol>
+<li>
+<p>ChangeLog 文件</p>
+<ol>
+<li>
+<p>文件格式: ChangeLog+V+版本号 = ChangeLogVxxx.js</p>
+</li>
+<li>
+<p>例子</p>
+<pre><code class="language-js">export class ChangeLogV1 extends ChangeLog {
+  getSqlList() {
+    let sqlList = [
+      SQL_CREATE_TABLE_JOB,
+      SQL_CREATE_TABLE_JOB_BROWSE_HISTORY,
+    ];
+    return sqlList;
+  }
+}
+</code></pre>
+</li>
+</ol>
+</li>
+<li>
+<p>ChangeLog 执行规则</p>
+<ol>
+<li>将需要执行的 ChangeLog 存放到列表中</li>
+<li>开启事务，以确保 ChangeLog 的执行的原子性</li>
+<li>通过计算 ChangeLog 列表的总数与当前数据库版本号（版本号为上一次执行 ChangLog 的数量）进行对比计算，来获取当前需要执行的 ChangeLog</li>
+<li>执行完成后，更新数据库版本号（版本号即为已执行 ChangeLog 的数量）</li>
+</ol>
+</li>
+</ol>
+<h3 id="备份"><a class="header" href="#备份">备份</a></h3>
+<blockquote>
+<p>[!IMPORTANT]
+当前使用 pglite dump 备份大量数据的数据库会出错</p>
+</blockquote>
+<p>TODO</p>
+<h2 id="内部任务系统"><a class="header" href="#内部任务系统">内部任务系统</a></h2>
+<pre class="mermaid">---
+title: Task System
+---
+sequenceDiagram
+  participant Service
+  participant Database
+  participant GitHubApi
+  participant GitService
+
+  Note right of Service: 计算和保存下载和上传任务
+  Service -&gt;&gt; Database: 获取数据同步配置
+  Database --&gt;&gt; Service: 返回数据同步配置
+  opt if 开启私有数据同步
+    Service -&gt;&gt; Database: 获取用户信息
+    Database --&gt;&gt; Service: 返回用户信息
+    Service -&gt;&gt; Service: 获取私有数据上传任务类型
+    opt if 需要同步私有的数据
+      Service -&gt;&gt; Service: 获取私有数据仓库名
+      Service -&gt;&gt; GitHubApi: 尝试根据用户名和仓库名创建私有数据仓库
+      loop 私有数据上传任务类型
+        rect rgb(191, 223, 255)
+          Note right of Service: 计算并保存上传任务
+          Service -&gt;&gt; Database: 根据用户名，仓库名获取指定任务类型最近上传任务截至时间
+          Database --&gt;&gt; Service: 返回最近上传任务截至时间
+          opt if 最近上传任务截至时间不为今天
+            Service -&gt;&gt; GitService: 根据用户名，仓库名和获取指定任务类型最近上传文件时间
+            GitService --&gt;&gt; Service: 返回最近上传文件时间
+            Service -&gt;&gt; Service: 在最近上传任务截至时间和最近上传文件时间取最小值，作为任务开始时间
+            Service -&gt;&gt; Database: 根据用户名，仓库名，任务类型，任务开始时间，任务结束时间（今天）保存任务记录
+          end
+        end
+      end
+      Service -&gt;&gt; Service: 获取私有数据下载任务类型
+      Service -&gt;&gt; Service: 将私有数据下载任务保存到下载列表
+    end
+  end
+  alt if 是否开启公开数据同步
+    Service -&gt;&gt; Database: 获取用户信息
+    Database --&gt;&gt; Service: 返回用户信息
+    Service -&gt;&gt; Service: 获取公开数据上传任务类型
+    opt if 有需要同步公开的数据
+      Service -&gt;&gt; Service: 获取公开数据仓库名
+      Service -&gt;&gt; GitHubApi: 尝试根据用户名和仓库名创建公开数据仓库
+      loop 公开数据上传任务类型
+        rect rgb(191, 223, 255)
+          Note right of Service: 计算并保存上传任务
+        end
+      end
+      Service -&gt;&gt; Service: 获取公开数据下载任务类型
+      Service -&gt;&gt; Service: 将公开数据下载任务保存到下载列表
+    end
+  end
+  Service -&gt;&gt; Database: 获取数据共享伙伴列表
+  Database --&gt;&gt; Service: 返回数据共享伙伴列表
+  Service -&gt;&gt; Service: 将数据共享伙伴数据的下载任务保存到下载列表
+  loop 下载列表
+    Service -&gt;&gt; Service: 根据下载列表获取伙伴信息
+    Service -&gt;&gt; Service: 根据下载列表获取下载任务类型
+    loop 下载任务类型
+      rect rgb(191, 255, 223)
+        Note right of Service: 计算并保存下载任务
+        Service -&gt;&gt; GitService: 根据任务类型或文件名查询日期目录列表
+        GitService --&gt;&gt; Service: 返回日期目录列表
+        Service -&gt;&gt; Service: 根据下载历史文件保留天数和当前日期过滤和升序日期列表，获得仓库文件日期列表
+        Service -&gt;&gt; Service: 根据仓库文件日期列表，获取开始时间(列表中最小时间)和结束时间(列表中最大时间)
+        Service -&gt;&gt; Database: 根据开始时间和结束时间查询指定类型的下载任务列表
+        Database --&gt;&gt; Service: 返回下载任务列表
+        Service -&gt;&gt; Service: 根据仓库文件日期列表和下载任务列表的日期计算得出本地缺失日期列表
+        Service -&gt;&gt; Database: 根据本地缺失日期列表，新增指定类型的下载任务
+      end
+    end
+  end
+  Service -&gt;&gt; Database: 获取数据源元数据自动更新列表
+  Database --&gt;&gt; Service: 返回数据源元数据自动更新列表
+  loop 数据源元数据自动更新列表
+      rect rgb(255, 223,191)
+        Note right of Service: 计算并保存元数据下载任务
+        Service -&gt;&gt; Database: 根据任务类型编号获取最近下载任务列表
+        Database --&gt;&gt; Service: 返回下载任务列表
+        opt if 任务列表中含有非今天未完成的任务
+          Service -&gt;&gt; Database: 将未完成的任务状态设置为取消
+        end
+        opt if 任务列表中没有今天未完成的任务
+          Service -&gt;&gt; Database: 新增数据源元数据下载任务
+        end
+      end
+  end
+  Note right of Service: 执行下载和上传任务
+  Service -&gt;&gt; Database: 查询需要执行的任务
+  Database --&gt;&gt; Service: 返回需要执行的任务
+  Service -&gt;&gt; Service: 执行查询到的需要执行的任务
+  Note right of Service: 执行定时任务
+  Service -&gt;&gt; Database: 查询已合并但未删除的文件
+  Database --&gt;&gt; Service: 返回已合并但未删除的文件
+  Service -&gt;&gt; Service: 根据历史文件保留数量和最大历史文件保留容量计算需要删除的文件列表
+  Service -&gt;&gt; Database: 根据需要删除的文件列表删除文件
+</pre>
+<h3 id="任务状态图"><a class="header" href="#任务状态图">任务状态图</a></h3>
+<pre class="mermaid">---
+title: Task state
+---
+stateDiagram-v2
+    [*] --&gt; READY
+    READY --&gt; RUNNING
+    READY --&gt; CANCEL
+    RUNNING --&gt; FINISHED
+    RUNNING --&gt; FINISHED_BUT_ERROR
+    RUNNING --&gt; ERROR
+    RUNNING --&gt; CANCEL
+    FINISHED --&gt; [*]
+    FINISHED_BUT_ERROR --&gt; [*]
+    ERROR --&gt; [*]
+    CANCEL --&gt; [*]
+</pre>
+<h3 id="数据关系图"><a class="header" href="#数据关系图">数据关系图</a></h3>
+<pre class="mermaid">---
+title: Task ER
+---
+erDiagram
+    task ||--|| task_data_upload: owns
+    task {
+      string(255) id PK &quot;编号&quot;
+      string(255) type &quot;任务类型&quot;
+      string(255) data_id FK &quot;任务详情编号&quot;
+      string(255) status &quot;任务状态&quot;
+      string error_reason &quot;错误原因&quot;
+      int cost_time &quot;耗时&quot;
+      int retry_count &quot;重试次数&quot;
+      datetime create_datetime &quot;创建时间&quot;
+      datetime update_datetime &quot;更新时间&quot;
+    }
+    task_data_upload {
+      string(255) id PK &quot;编号&quot;
+      string(255) type &quot;任务类型&quot;
+      string(255) username &quot;用户名&quot;
+      string(255) reponame &quot;仓库名&quot;
+      datetime start_datetime &quot;开始时间&quot;
+      datetime end_datetime &quot;结束时间&quot;
+      int data_count &quot;数据量&quot;
+      int data_page_num &quot;页数&quot;
+      int data_page_size &quot;页大小&quot;
+      datetime create_datetime &quot;创建时间&quot;
+      datetime update_datetime &quot;更新时间&quot;
+    }
+    task ||--|| task_data_download: owns
+    task_data_download {
+      string(255) id PK &quot;编号&quot;
+      string(255) type &quot;任务类型&quot;
+      string(255) username &quot;用户名&quot;
+      string(255) reponame &quot;仓库名&quot;
+      datetime datetime &quot;日期&quot;
+      int seq &quot;序号&quot;
+      datetime create_datetime &quot;创建时间&quot;
+      datetime update_datetime &quot;更新时间&quot;
+      string(255) type_id &quot;类型标识，用于识别特定文件&quot;
+      json config &quot;配置&quot;
+      string(255) data_id FK &quot;文件编号&quot;
+    }
+    task ||--|| task_data_merge: owns
+    task_data_merge {
+      string(255) id PK &quot;编号&quot;
+      string(255) type &quot;任务类型&quot;
+      string(255) username &quot;用户名&quot;
+      string(255) reponame &quot;仓库名&quot;
+      datetime datetime &quot;日期&quot;
+      string(255) data_id FK &quot;文件编号&quot;
+      int data_count &quot;数据量&quot;
+      int data_page_num &quot;页数&quot;
+      int data_page_size &quot;页大小&quot;
+      datetime create_datetime &quot;创建时间&quot;
+      datetime update_datetime &quot;更新时间&quot;
+      string(255) type_id &quot;类型标识，用于识别特定文件&quot;
+      json config &quot;配置&quot;
+    }
+    task_data_merge |o--|| file: has
+    file {
+      string(255) id PK &quot;编号&quot;
+      string(255) name &quot;文件名&quot;
+      string(255) sha &quot;散列值&quot;
+      string(255) encoding &quot;编码&quot;
+      string content &quot;文件内容&quot;
+      int size &quot;文件尺寸&quot;
+      string type &quot;文件类型&quot;
+      is_delete boolean &quot;是否刪除&quot;
+      datetime create_datetime &quot;创建时间&quot;
+      datetime update_datetime &quot;更新时间&quot;
+    }
+</pre>
+<h3 id="任务类型"><a class="header" href="#任务类型">任务类型</a></h3>
+<pre><code class="language-js">export const TASK_TYPE_JOB_DATA_UPLOAD = 'JOB_DATA_UPLOAD';
+export const TASK_TYPE_JOB_DATA_DOWNLOAD = 'JOB_DATA_DOWNLOAD';
+export const TASK_TYPE_JOB_DATA_MERGE = 'JOB_DATA_MERGE';
+
+export const TASK_TYPE_COMPANY_DATA_UPLOAD = 'COMPANY_DATA_UPLOAD';
+export const TASK_TYPE_COMPANY_DATA_DOWNLOAD = 'COMPANY_DATA_DOWNLOAD';
+export const TASK_TYPE_COMPANY_DATA_MERGE = 'COMPANY_DATA_MERGE';
+
+export const TASK_TYPE_COMPANY_TAG_DATA_UPLOAD = 'COMPANY_TAG_DATA_UPLOAD';
+export const TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD = 'COMPANY_TAG_DATA_DOWNLOAD';
+export const TASK_TYPE_COMPANY_TAG_DATA_MERGE = 'COMPANY_TAG_DATA_MERGE';
+
+export const TASK_TYPE_JOB_TAG_DATA_UPLOAD = 'JOB_TAG_DATA_UPLOAD';
+export const TASK_TYPE_JOB_TAG_DATA_DOWNLOAD = 'JOB_TAG_DATA_DOWNLOAD';
+export const TASK_TYPE_JOB_TAG_DATA_MERGE = 'JOB_TAG_DATA_MERGE';
+
+export const TASK_TYPE_JOB_PUBLIC_DATA_UPLOAD = 'JOB_PUBLIC_DATA_UPLOAD';
+export const TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD = 'JOB_PUBLIC_DATA_DOWNLOAD';
+export const TASK_TYPE_JOB_PUBLIC_DATA_MERGE = 'JOB_PUBLIC_DATA_MERGE';
+
+export const TASK_TYPE_METADATA_DATA_DOWNLOAD = 'METADATA_DATA_DOWNLOAD';
+export const TASK_TYPE_METADATA_DATA_MERGE = 'METADATA_DATA_MERGE';
+
+export const TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD =
+  'COMPANY_COMMENT_DATA_DOWNLOAD';
+export const TASK_TYPE_COMPANY_COMMENT_DATA_MERGE =
+  'COMPANY_COMMENT_DATA_MERGE';
+</code></pre>
+<h2 id="数据同步"><a class="header" href="#数据同步">数据同步</a></h2>
+<h3 id="数据仓库文件结构"><a class="header" href="#数据仓库文件结构">数据仓库文件结构</a></h3>
+<pre><code class="language-txt">  ├── YYYY                              //年份，格式YYYY
+  │   └── MM-DD                         //月日，格式MM-DD
+  │       ├─── company.zip
+  │       ├─── job.zip
+  │       ├─── job_tag.zip
+  │       ├─── company_tag.zip
+</code></pre>
+<h3 id="git-读取数据仓库文件结构"><a class="header" href="#git-读取数据仓库文件结构">Git 读取数据仓库文件结构</a></h3>
+<blockquote>
+<p><a href="https://git-scm.com/docs/gitprotocol-v2">https://git-scm.com/docs/gitprotocol-v2</a></p>
+</blockquote>
+<pre class="mermaid">sequenceDiagram
+    participant GitService
+    participant GitServer
+
+    GitService -&gt;&gt; GitServer: 发送ls-refs请求
+    GitServer --&gt;&gt; GitService: 返回refs
+    GitService -&gt;&gt; GitService: 根据refs获取commitHash
+    GitService -&gt;&gt; GitServer: 根据commitHash获取treesIdx
+    GitServer --&gt;&gt; GitService: 返回treesIdx
+    GitService -&gt;&gt; GitServer: 根据treesIdx遍历仓库目录
+    GitServer --&gt;&gt; GitService: 返回仓库目录
+    GitService --&gt;&gt; GitService: 根据仓库目录过滤符合日期目录的指定文件的文件列表
+</pre>
+<h3 id="数据合并文件"><a class="header" href="#数据合并文件">数据合并文件</a></h3>
+<ol>
+<li>
+<p>文件格式: excel</p>
+</li>
+<li>
+<p>文件内容格式</p>
+<div class="table-wrapper"><table><thead><tr><th>字段名</th><th>字段类型</th><th>备注</th></tr></thead><tbody>
+<tr><td>编号</td><td>string</td><td>记录唯一标识</td></tr>
+<tr><td>xxx</td><td>xxx</td><td></td></tr>
+<tr><td><code>__VERSION_</code></td><td>int</td><td>版本号,如果该字段不存在，则会被认为第 0 版</td></tr>
+</tbody></table>
+</div></li>
+<li>
+<p>版本识别规则</p>
+<ol>
+<li>通过版本号字段读取文件的文件字段列表</li>
+<li>根据文件字段列表识别文件是否合法</li>
+</ol>
+</li>
+</ol>
+<h3 id="数据递增规则"><a class="header" href="#数据递增规则">数据递增规则</a></h3>
+<ol>
+<li>
+<p>以记录创建时间为数据增量规则</p>
+</li>
+<li>
+<p>各数据格式增量更新规则字段</p>
+<ol>
+<li>
+<p>职位</p>
+<ol>
+<li><code>createDatetime</code></li>
+<li><code>updateDatetime</code></li>
+<li><code>isFullCompanyName</code></li>
+</ol>
+</li>
+<li>
+<p>职位公开数据</p>
+<ol>
+<li><code>createDatetime</code></li>
+</ol>
+</li>
+<li>
+<p>职位快照</p>
+<ol>
+<li><code>updateDatetime</code></li>
+</ol>
+</li>
+<li>
+<p>职位标签</p>
+<blockquote>
+<p>未正确实现覆盖更新</p>
+</blockquote>
+<ol>
+<li><code>updateDatetime</code></li>
+</ol>
+</li>
+<li>
+<p>公司</p>
+<ol>
+<li><code>sourceRefreshDatetime</code></li>
+</ol>
+</li>
+<li>
+<p>公司标签</p>
+<blockquote>
+<p>未正确实现覆盖更新</p>
+</blockquote>
+<ol>
+<li><code>updateDatetime</code></li>
+</ol>
+</li>
+<li>
+<p>公司评论</p>
+<ol>
+<li><code>createDatetime</code></li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<h3 id="各数据类型版本"><a class="header" href="#各数据类型版本">各数据类型版本</a></h3>
+<h4 id="职位"><a class="header" href="#职位">职位</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>职位自编号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>发布平台</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>职位访问地址</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>职位</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>公司</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>公司是否为全称</td><td>bool</td><td>0</td><td></td></tr>
+<tr><td>地区</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>地址</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>经度</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>纬度</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>职位描述</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>学历</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>所需经验</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>技能</td><td>string</td><td>1</td><td></td></tr>
+<tr><td>福利</td><td>string</td><td>1</td><td></td></tr>
+<tr><td>最低薪资</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>最高薪资</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>几薪</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>首次发布时间</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>招聘人</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>招聘公司</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>招聘者职位</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>首次扫描日期</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>记录更新日期</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h4 id="职位标签"><a class="header" href="#职位标签">职位标签</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>职位编号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>标签</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>记录更新日期</td><td>datetime</td><td>1</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h4 id="职位公开数据"><a class="header" href="#职位公开数据">职位公开数据</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>职位自编号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>首次扫描日期</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>记录更新日期</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h4 id="职位快照"><a class="header" href="#职位快照">职位快照</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>编号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>职位编号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>职位链接</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>内容</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>招聘平台</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>创建日期</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>更新日期</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h4 id="公司"><a class="header" href="#公司">公司</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>公司</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>公司描述</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>成立时间</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>经营状态</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>法人</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>统一社会信用代码</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>官网</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>社保人数</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>自身风险数</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>关联风险数</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>地址</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>经营范围</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>纳税人识别号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>所属行业</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>工商注册号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>经度</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>纬度</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>注册资本</td><td>string</td><td>2</td><td></td></tr>
+<tr><td>注册资本货币</td><td>string</td><td>2</td><td></td></tr>
+<tr><td>数据来源地址</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>数据来源平台</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>数据来源记录编号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>数据来源更新时间</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>记录创建日期</td><td>datetime</td><td>1</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>记录更新日期</td><td>datetime</td><td>1</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h4 id="公司标签"><a class="header" href="#公司标签">公司标签</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>公司</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>标签</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>记录更新日期</td><td>datetime</td><td>1</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h4 id="公司评论"><a class="header" href="#公司评论">公司评论</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>公司</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>评论</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>情感</td><td>string</td><td>1</td><td></td></tr>
+<tr><td>数据集</td><td>string</td><td>1</td><td></td></tr>
+<tr><td>创建日期</td><td>datetime</td><td>1</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>更新日期</td><td>datetime</td><td>1</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h2 id="数据导入与导出"><a class="header" href="#数据导入与导出">数据导入与导出</a></h2>
+<blockquote>
+<p>[!IMPORTANT]
+数据导入逻辑与数据同步逻辑一样</p>
+</blockquote>
+<ol>
+<li>数据拆分导出</li>
+</ol>
+<h2 id="oauth"><a class="header" href="#oauth">Oauth</a></h2>
+<h3 id="github-oauth2-流程"><a class="header" href="#github-oauth2-流程">Github Oauth2 流程</a></h3>
+<pre class="mermaid">sequenceDiagram
+  participant ContentScript
+  participant Background
+  participant GithubWebsite
+  participant GithubServer
+
+  ContentScript -&gt;&gt; Background: authOauth2Login
+  activate GithubWebsite
+  Background -&gt;&gt; GithubWebsite: chrome.tabs.create
+  Note over GithubWebsite: https://github.com/login/oauth/authorize?client_id=
+  GithubWebsite -&gt;&gt; GithubWebsite: github login
+  GithubWebsite -&gt;&gt; GithubWebsite: redirect to callback url
+  Note over GithubWebsite: https://github.com/lastsunday/job-hunting-github-app/blob/main/INSTALL?code=
+  GithubWebsite --&gt;&gt; Background: notify url with code
+  Background -&gt;&gt; Background: chrome.tabs.onUpdated
+  Background -&gt;&gt; GithubServer: http request access_token
+  Note over GithubWebsite: https://github.com/login/oauth/access_token?client_id=&amp;client_secret=&amp;code=
+  GithubServer --&gt;&gt; Background: return oauth info
+  Background -&gt;&gt; GithubWebsite: chrome.tabs.remove
+  deactivate GithubWebsite
+</pre>
+<h2 id="bbs-系统"><a class="header" href="#bbs-系统">BBS 系统</a></h2>
+<ol>
+<li>
+<p>采用 Github Issues 作为服务端</p>
+</li>
+<li>
+<p>地区选择实现原理</p>
+<ol>
+<li>
+<p>利用标题作为搜索字段</p>
+</li>
+<li>
+<p>targetId = sha256 地区名: sha256(省)-sha256(市)-sha256(区)</p>
+<pre><code class="language-hql">   search(query:"${targetId} in:title sort:created-desc is:issue is:open repo:${GITHUB_APP_REPO}", type: ISSUE, first: ${first ?? null}, after: ${after ? "\"" + after + "\"" : null},last:${last ?? null},before:${before ? "\"" + before + "\"" : null})
+</code></pre>
+</li>
+</ol>
+</li>
+<li>
+<p>使用的 Github API</p>
+<ol>
+<li>HQL 查询(可查询 Issues): <a href="https://api.github.com/graphql">https://api.github.com/graphql</a></li>
+<li>新增 Issues: POST <a href="https://api.github.com/repos/lastsunday/job-hunting-github-app/issues">https://api.github.com/repos/lastsunday/job-hunting-github-app/issues</a></li>
+<li>查询 Issues Comment: GET <a href="https://api.github.com/repos/lastsunday/job-hunting-github-app/issues/$%7BissueNumber%7D/comments?per_page=$%7BpageSize%7D&amp;page=$%7BpageNum%7D">https://api.github.com/repos/lastsunday/job-hunting-github-app/issues/${issueNumber}/comments?per_page=${pageSize}&amp;page=${pageNum}</a></li>
+<li>新增 Issues Comment: POST <a href="https://api.github.com/repos/lastsunday/job-hunting-github-app/issues/$%7BissueNumber%7D/comments">https://api.github.com/repos/lastsunday/job-hunting-github-app/issues/${issueNumber}/comments</a></li>
+</ol>
+</li>
+</ol>
+<h2 id="自动化"><a class="header" href="#自动化">自动化</a></h2>
+<ol>
+<li>采用 puppeteer 类库在 debug 模式下运行</li>
+<li>当前用于自动浏览职位页面</li>
+</ol>
+<h2 id="llm"><a class="header" href="#llm">LLM</a></h2>
+<ol>
+<li>
+<p>外部 LLM</p>
+<ol>
+<li>
+<p>ollama</p>
+<p><a href="https://docs.ollama.com/api/introduction">https://docs.ollama.com/api/introduction</a></p>
+</li>
+<li>
+<p>openai</p>
+<p><a href="https://platform.openai.com/docs/api-reference/chat">https://platform.openai.com/docs/api-reference/chat</a></p>
+</li>
+<li>
+<p>siliconflow</p>
+<p><a href="https://docs.siliconflow.com/en/api-reference/chat-completions/chat-completions">https://docs.siliconflow.com/en/api-reference/chat-completions/chat-completions</a></p>
+</li>
+</ol>
+</li>
+<li>
+<p>内嵌 LLM</p>
+<ol>
+<li>
+<p>web-llm</p>
+<p><a href="https://github.com/mlc-ai/web-llm">https://github.com/mlc-ai/web-llm</a></p>
+</li>
+</ol>
+</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../development/extension/dev_in_deep.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../../development/component/analysis.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../development/extension/dev_in_deep.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../../development/component/analysis.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr.min.js"></script>
+        <script src="../../mark.min.js"></script>
+        <script src="../../searcher.js"></script>
+
+        <script src="../../clipboard.min.js"></script>
+        <script src="../../highlight.js"></script>
+        <script src="../../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../mermaid.min.js"></script>
+        <script src="../../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

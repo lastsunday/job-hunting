@@ -1,0 +1,3342 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Job Hunting</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Job Hunting</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="job-hunting职位猎人---一款协助找工作的浏览器插件"><a class="header" href="#job-hunting职位猎人---一款协助找工作的浏览器插件">Job Hunting(职位猎人) - 一款协助找工作的浏览器插件</a></h1>
+<p align="center">
+    <img width="180" src="assets/logo.svg" alt="logo">
+</p>
+<h2 id="为什么要做这个项目"><a class="header" href="#为什么要做这个项目">为什么要做这个项目</a></h2>
+<p>当前国内使用率较高的招聘平台（排名不分先后）分别有 BOSS 直聘，前程无忧，智联招聘，猎聘网，拉勾网，其提供了各个行业的职位招聘信息的展示。但在实际使用过程中发现其展示职位信息的策略对于求职者有诸多不便，包括不仅限于：职位发布时间久远（俗称僵尸岗），不能简单识别普通职位，职位发布时间被隐藏或乱序显示，职位的公司名不是全称，没有职位公司的风险提示。</p>
+<h2 id="项目做了什么"><a class="header" href="#项目做了什么">项目做了什么</a></h2>
+<p>为了提高使用这些招聘平台找工作的用户体验，项目会对目标平台网站页面进行增强展示；对出现过的职位进行本地历史快照，跨平台本地检索;对职位数据进行多维度的分析，并以可视化的手段呈现；通过内置的讨论区，对职位进行评论，为职位打上标签等方式进行中立的职位交流；</p>
+<h2 id="最近主要改动新增特性"><a class="header" href="#最近主要改动新增特性">最近主要改动/新增特性</a></h2>
+<ol>
+<li>新增服务端</li>
+</ol>
+<h2 id="插件"><a class="header" href="#插件">插件</a></h2>
+<h3 id="运行截图"><a class="header" href="#运行截图">运行截图</a></h3>
+<h4 id="招聘企业信息网站页面"><a class="header" href="#招聘企业信息网站页面">招聘/企业信息网站页面</a></h4>
+<h5 id="搜索页前程无忧"><a class="header" href="#搜索页前程无忧">搜索页（前程无忧）</a></h5>
+<div style="margin-top:30px">
+    <img src="assets/introduction/job-item-51job.jpg" alt="51job" width="1000px"/>
+</div>
+<h5 id="推荐页boss-直聘"><a class="header" href="#推荐页boss-直聘">推荐页（BOSS 直聘）</a></h5>
+<div style="margin-top:30px">
+    <img src="assets/introduction/job-recommend-boss.jpg" alt="boss" width="1000px"/>
+</div>
+<h4 id="详情页"><a class="header" href="#详情页">详情页</a></h4>
+<div style="margin-top:30px">
+    <img src="assets/introduction/job-snapshot-51job.jpg" alt="job-snapshot-51job" width="1000px"/>
+</div>
+<h4 id="职位快照"><a class="header" href="#职位快照">职位快照</a></h4>
+<div style="margin-top:30px">
+    <img src="assets/introduction/job-snapshot-history-51job.jpg" alt="job-snapshot-history-51job" width="1000px"/>
+</div>
+<h5 id="爱企查"><a class="header" href="#爱企查">爱企查</a></h5>
+<div style="margin-top:30px">
+    <img src="assets/introduction/company-aiqicha.jpg" alt="aiqicha" width="1000px"/>
+</div>
+<h4 id="管理页面"><a class="header" href="#管理页面">管理页面</a></h4>
+<h5 id="打开管理页面"><a class="header" href="#打开管理页面">打开管理页面</a></h5>
+<div style="margin-top:30px">
+    <img src="assets/introduction/chrome_extension_sidepanel_open.png" alt="chrome_extension_sidepanel_open" width="1000px"/>
+</div>
+<h5 id="管理页面需点击插件图标打开"><a class="header" href="#管理页面需点击插件图标打开">管理页面（需点击插件图标打开）</a></h5>
+<div style="margin-top:30px">
+    <img src="assets/introduction/sidepanel_admin_home.png" alt="sidepanel_admin_home" width="1000px"/>
+</div>
+<h3 id="插件安装"><a class="header" href="#插件安装">插件安装</a></h3>
+<blockquote>
+<p>插件的<strong>开发</strong>请跳转到<a href="https://github.com/lastsunday/job-hunting/tree/dev/apps/extension">extension 开发目录</a></p>
+</blockquote>
+<ol>
+<li>打开 Release 页 或 直接访问 <a href="https://github.com/lastsunday/job-hunting/releases/latest">最新发布</a></li>
+<li>点击下载 Assets 下的 job-hunting-extension-chrome-xxx.zip</li>
+<li>打开浏览器，安装插件，下面是针对不同浏览器的安装步骤
+<ol>
+<li>chrome：地址栏输入 <a href="chrome://extensions/">chrome://extensions/</a>，打开开发者模式，将 zip 文件拖进页面里</li>
+<li>edge，地址栏输入 <a href="edge://extensions/">edge://extensions/</a>，打开开发人员模式，将 zip 文件拖进页面里</li>
+</ol>
+</li>
+</ol>
+<h3 id="招聘平台支持列表"><a class="header" href="#招聘平台支持列表">招聘平台支持列表</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>招聘平台</th><th>访问地址</th><th>备注</th></tr></thead><tbody>
+<tr><td>BOSS 直聘</td><td><a href="https://www.zhipin.com/web/geek/jobs">https://www.zhipin.com/web/geek/jobs</a></td><td>推荐页/搜索页[账号未登录]</td></tr>
+<tr><td></td><td><a href="https://www.zhipin.com/web/geek/jobs">https://www.zhipin.com/web/geek/jobs</a></td><td>推荐页/搜索页[账号已登录]</td></tr>
+<tr><td>前程无忧</td><td><a href="https://we.51job.com/pc/search">https://we.51job.com/pc/search</a></td><td>搜索页</td></tr>
+<tr><td>智联招聘</td><td><a href="https://sou.zhaopin.com/">https://sou.zhaopin.com/</a></td><td>搜索页</td></tr>
+<tr><td>拉勾网</td><td><a href="https://www.lagou.com/wn/zhaopin">https://www.lagou.com/wn/zhaopin</a></td><td>搜索页</td></tr>
+<tr><td>猎聘网</td><td><a href="https://www.liepin.com/zhaopin">https://www.liepin.com/zhaopin</a></td><td>搜索页,需点击搜索按钮才有效果</td></tr>
+<tr><td>就业在线</td><td><a href="https://www.jobonline.cn/position">https://www.jobonline.cn/position</a></td><td>搜索页</td></tr>
+<tr><td>广东公共求职招聘服务平台</td><td><a href="https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/#/search?type=1">https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/#/search?type=1</a></td><td>搜索页</td></tr>
+</tbody></table>
+</div>
+<h3 id="企业搜索平台支持列表"><a class="header" href="#企业搜索平台支持列表">企业搜索平台支持列表</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>企业搜索平台</th><th>访问地址</th><th>备注</th></tr></thead><tbody>
+<tr><td>爱企查</td><td><a href="https://aiqicha.baidu.com/s">https://aiqicha.baidu.com/s</a></td><td></td></tr>
+</tbody></table>
+</div>
+<h3 id="浏览器支持"><a class="header" href="#浏览器支持">浏览器支持</a></h3>
+<div class="table-wrapper"><table><thead><tr><th><a href="http://godban.github.io/browsers-support-badges/"><img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png" alt="Edge" width="24px" height="24px" /></a><br/> Edge</th><th><a href="http://godban.github.io/browsers-support-badges/"><img src="https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png" alt="Chrome" width="24px" height="24px" /></a><br/>Chrome</th></tr></thead><tbody>
+<tr><td>last version</td><td>last version</td></tr>
+</tbody></table>
+</div>
+<h2 id="服务端"><a class="header" href="#服务端">服务端</a></h2>
+<p>插件端受限于浏览器本地数据库性能，服务端作为服务端数据处理方案的技术示例，演示了大规模职位数据的存储、检索与分析实现。</p>
+<p>首页访问地址:<a href="http://localhost:3000/">http://localhost:3000/</a></p>
+<p>后台访问地址:<a href="http://localhost:3000/login">http://localhost:3000/login</a></p>
+<ul>
+<li>账户/密码: root/Change_Me</li>
+</ul>
+<h3 id="注意事项"><a class="header" href="#注意事项">注意事项</a></h3>
+<blockquote>
+<p><strong>服务端仅供个人学习与技术研究使用。</strong></p>
+<ul>
+<li>本服务端为技术学习与研究工具，禁止用于任何商业用途。不推荐公网部署，仅限本地或内网环境使用。</li>
+<li>使用者在导入或采集数据时须遵守中华人民共和国相关法律法规，包括但不限于《网络安全法》《数据安全法》《个人信息保护法》，不得从事任何侵犯他人合法权益的行为。</li>
+<li>首次部署后请立即修改默认账户密码(<code>root</code> / <code>Change_Me</code>)，并更换 <code>auth_access_token_secret</code> 和 <code>auth_refresh_token_secret</code> 为随机字符串，避免未授权访问与 JWT 伪造。</li>
+<li>对于因使用本服务端而引起的任何法律责任，本项目开发者不承担责任。使用即表示您已阅读并同意<a href="./disclaimer.html">免责声明</a>的全部条款。</li>
+</ul>
+</blockquote>
+<h3 id="服务端运行截图"><a class="header" href="#服务端运行截图">服务端运行截图</a></h3>
+<h4 id="仪表板"><a class="header" href="#仪表板">仪表板</a></h4>
+<div style="margin-top:30px">
+    <img src="assets/introduction/server_dashboard.png" alt="server_dashboard" width="1000px"/>
+</div>
+<h4 id="数据同步"><a class="header" href="#数据同步">数据同步</a></h4>
+<div style="margin-top:30px">
+    <img src="assets/introduction/server_data_sync.png" alt="server_data_sync" width="1000px"/>
+</div>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="教程"><a class="header" href="#教程">教程</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="快速开始"><a class="header" href="#快速开始">快速开始</a></h1>
+<h2 id="职位猎人插件"><a class="header" href="#职位猎人插件">职位猎人插件</a></h2>
+<ol>
+<li>打开 Release 页 或 直接访问 <a href="https://github.com/lastsunday/job-hunting/releases/latest">最新发布</a></li>
+<li>点击下载 Assets 下的 job-hunting-extension-chrome-xxx.zip</li>
+<li>打开浏览器，安装插件，下面是针对不同浏览器的安装步骤
+<ol>
+<li>chrome：地址栏输入 <a href="chrome://extensions/">chrome://extensions/</a>，打开开发者模式，将 zip 文件拖进页面里</li>
+<li>edge，地址栏输入 <a href="edge://extensions/">edge://extensions/</a>，打开开发人员模式，将 zip 文件拖进页面里</li>
+</ol>
+</li>
+<li>打开页面
+<ul>
+<li>boss 直聘： <a href="https://www.zhipin.com/web/geek/jobs">https://www.zhipin.com/web/geek/jobs</a></li>
+<li>51Job： <a href="https://we.51job.com/pc/search">https://we.51job.com/pc/search</a></li>
+<li>智联招聘： <a href="https://sou.zhaopin.com/">https://sou.zhaopin.com/</a></li>
+<li>拉钩网：<a href="https://www.lagou.com/wn/zhaopin">https://www.lagou.com/wn/zhaopin</a></li>
+<li>猎聘网： <a href="https://www.liepin.com/zhaopin">https://www.liepin.com/zhaopin</a></li>
+<li>就业在线： <a href="https://www.jobonline.cn/position">https://www.jobonline.cn/position</a></li>
+<li>广东公共求职招聘服务平台 <a href="https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/#/search?type=1">https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/#/search?type=1</a></li>
+</ul>
+</li>
+</ol>
+<h2 id="服务器端"><a class="header" href="#服务器端">服务器端</a></h2>
+<h3 id="运行服务器"><a class="header" href="#运行服务器">运行服务器</a></h3>
+<h4 id="从源码构建"><a class="header" href="#从源码构建">从源码构建</a></h4>
+<pre><code class="language-bash">nix develop .#server
+cd apps/server
+cargo build --release
+./target/release/job-hunting-server --config=application.toml
+</code></pre>
+<h4 id="预编译下载"><a class="header" href="#预编译下载">预编译下载</a></h4>
+<blockquote>
+<p>服务器端二进制将随 Release 发布，届时可从 <a href="https://github.com/lastsunday/job-hunting/releases">Releases</a> 下载。</p>
+</blockquote>
+<p>可用平台：Linux(amd64/arm64)、macOS(Intel/Apple Silicon/通用)、Windows amd64</p>
+<h3 id="配置文件"><a class="header" href="#配置文件">配置文件</a></h3>
+<p>创建 <code>application.toml</code>：</p>
+<pre><code class="language-toml"># 监听地址
+address = "0.0.0.0"
+port = 3000
+
+# 数据库（SQLite 默认即可）
+database_url = "sqlite://db.sqlite?mode=rwc"
+
+# 生产环境务必修改以下三项
+auth_access_token_secret = "更换为随机字符串"
+auth_refresh_token_secret = "更换为另一随机字符串"
+</code></pre>
+<pre><code class="language-bash">./job-hunting-server-linux-amd64 --config=application.toml
+</code></pre>
+<blockquote>
+<p>环境变量命名规则：配置字段名转大写 + <code>JH_</code> 前缀，如 <code>database_url</code> → <code>JH_DATABASE_URL</code>，<code>address</code> → <code>JH_ADDRESS</code>。也可用 <code>-O key=value</code> 直接覆盖。</p>
+</blockquote>
+<h3 id="docker"><a class="header" href="#docker">Docker</a></h3>
+<pre><code class="language-bash">docker run -e JH_ADDRESS=0.0.0.0 \
+  -e JH_DATABASE_URL="sqlite:///data/db.sqlite?mode=rwc" \
+  -v ./data:/data \
+  -p 127.0.0.1:3000:3000 \
+  lastsunday/job-hunting:latest
+</code></pre>
+<h3 id="docker-compose完整部署示例"><a class="header" href="#docker-compose完整部署示例">docker-compose（完整部署示例）</a></h3>
+<blockquote>
+<p>仓库中的 <code>docker-compose.yml</code> 仅含 PostgreSQL，用于本地开发。以下为完整部署示例。</p>
+</blockquote>
+<pre><code class="language-yaml">services:
+  postgresql:
+    image: postgres:18.4
+    environment:
+      - POSTGRES_PASSWORD=changeme
+    ports:
+      - 5432:5432
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  server:
+    image: lastsunday/job-hunting:latest
+    ports:
+      - 127.0.0.1:3000:3000
+    environment:
+      - JH_ADDRESS=0.0.0.0
+      - JH_DATABASE_URL=postgres://postgres:changeme@postgresql:5432/postgres
+    depends_on:
+      - postgresql
+
+volumes:
+  pgdata:
+</code></pre>
+<h3 id="访问"><a class="header" href="#访问">访问</a></h3>
+<ul>
+<li>管理后台：<a href="http://localhost:3000/login">http://localhost:3000/login</a>（默认账号 <code>root</code> / <code>Change_Me</code>）</li>
+<li>API 文档（Scalar）：<a href="http://localhost:3000/docs">http://localhost:3000/docs</a></li>
+</ul>
+<blockquote>
+<p>首次部署后请立即修改默认密码，并更换 <code>auth_access_token_secret</code> 和 <code>auth_refresh_token_secret</code> 为随机字符串（可在配置文件中设置，或通过 <code>JH_AUTH_ACCESS_TOKEN_SECRET</code> / <code>JH_AUTH_REFRESH_TOKEN_SECRET</code> 环境变量覆盖）。否则持有默认值者可伪造 JWT。</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="开发"><a class="header" href="#开发">开发</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="浏览器插件"><a class="header" href="#浏览器插件">浏览器插件</a></h1>
+<blockquote>
+<p>[!IMPORTANT]
+项目根目录: apps/extension</p>
+</blockquote>
+<h2 id="编译"><a class="header" href="#编译">编译</a></h2>
+<ol>
+<li>安装，编译</li>
+</ol>
+<pre><code class="language-bash">    pnpm i
+    pnpm run build
+</code></pre>
+<ol>
+<li>
+<p>打开 chrome，选择加载已解压的扩展程序，选择当前项目的 .output/chrome-mv3 目录</p>
+</li>
+<li>
+<p>打开页面</p>
+<ul>
+<li>boss 直聘： <a href="https://www.zhipin.com/web/geek/jobs">https://www.zhipin.com/web/geek/jobs</a></li>
+<li>51Job： <a href="https://we.51job.com/pc/search">https://we.51job.com/pc/search</a></li>
+<li>智联招聘： <a href="https://www.zhaopin.com/jobs">https://www.zhaopin.com/jobs</a>, <a href="https://www.zhaopin.com/sou">https://www.zhaopin.com/sou</a></li>
+<li>拉钩网：<a href="https://www.lagou.com/wn/zhaopin">https://www.lagou.com/wn/zhaopin</a></li>
+<li>猎聘网： <a href="https://www.liepin.com/zhaopin">https://www.liepin.com/zhaopin</a></li>
+<li>就业在线： <a href="https://www.jobonline.cn/position">https://www.jobonline.cn/position</a></li>
+<li>广东公共求职招聘服务平台 <a href="https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/#/search?type=1">https://ggfw.hrss.gd.gov.cn/recruitment/internet/main/#/search?type=1</a></li>
+</ul>
+</li>
+</ol>
+<h2 id="开发-1"><a class="header" href="#开发-1">开发</a></h2>
+<ol>
+<li>
+<p>安装，编译</p>
+<pre><code class="language-bash">pnpm i
+pnpm run dev
+</code></pre>
+</li>
+<li>
+<p>chrome 浏览器打开 chrome://extensions/ 页面</p>
+</li>
+<li>
+<p>点击<code>加载已解压的扩展程序</code></p>
+</li>
+<li>
+<p>选择项目中生成的 .output/chrome-mv3-dev 文件夹即可</p>
+</li>
+<li>
+<p>每次保存都会重新编译，扩展程序需要<em><strong>重新点一次刷新按钮</strong></em>才生效</p>
+</li>
+</ol>
+<h2 id="测试"><a class="header" href="#测试">测试</a></h2>
+<blockquote>
+<p><a href="https://vitalets.github.io/playwright-bdd/">https://vitalets.github.io/playwright-bdd/</a></p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="深入开发"><a class="header" href="#深入开发">深入开发</a></h1>
+<h2 id="架构"><a class="header" href="#架构">架构</a></h2>
+<pre class="mermaid">block
+  columns 1
+  招聘网站
+  桌面浏览器
+  职位猎人浏览器插件
+  block
+    数据同步服务
+    公司信息查询服务
+    LLM服务
+    Oauth服务
+    BBS服务
+  end
+</pre>
+<ol>
+<li>
+<p>招聘网站</p>
+<ul>
+<li>支持桌面版的招聘网站版面</li>
+<li>提供职位信息列表</li>
+</ul>
+</li>
+<li>
+<p>桌面浏览器</p>
+<ul>
+<li>Chrome,Edge</li>
+</ul>
+</li>
+<li>
+<p>职位猎人浏览器插件</p>
+</li>
+<li>
+<p>外部服务</p>
+<ol>
+<li>
+<p>数据同步服务</p>
+<pre><code class="language-text">Git
+</code></pre>
+<ul>
+<li>基础信息
+<ul>
+<li>职位信息</li>
+<li>公司信息</li>
+<li>职位标签</li>
+<li>公司标签</li>
+</ul>
+</li>
+<li>数据源</li>
+</ul>
+</li>
+<li>
+<p>公司信息查询服务</p>
+<ul>
+<li>基础信息</li>
+<li>风评</li>
+</ul>
+</li>
+<li>
+<p>公司评论查询服务</p>
+</li>
+<li>
+<p>LLM 服务</p>
+<pre><code class="language-text">内嵌 LLM(Web llm)，远程 LLM
+</code></pre>
+<ul>
+<li>职位分析</li>
+</ul>
+</li>
+<li>
+<p>Oauth 服务</p>
+<pre><code class="language-text">Github Oauth2
+</code></pre>
+</li>
+<li>
+<p>BBS 服务</p>
+<pre><code class="language-text">Github Issues API
+</code></pre>
+<ul>
+<li>讨论区</li>
+<li>评论(职位，公司)</li>
+</ul>
+</li>
+</ol>
+</li>
+</ol>
+<h2 id="职位猎人浏览器插件"><a class="header" href="#职位猎人浏览器插件">职位猎人浏览器插件</a></h2>
+<h3 id="职位展示页面"><a class="header" href="#职位展示页面">职位展示页面</a></h3>
+<ol>
+<li>数据获取
+<ul>
+<li>职位</li>
+<li>公司</li>
+</ul>
+</li>
+<li>数据持久化</li>
+<li>自定义职位卡片信息
+<ul>
+<li>职位发布/初见时间</li>
+<li>公司特性检测(外包,培训机构等...)</li>
+<li>年龄限制检测</li>
+<li>职位浏览/展示次数</li>
+<li>职位匹配度</li>
+<li>HR 活跃状态</li>
+<li>标签
+<ul>
+<li>职位</li>
+<li>公司</li>
+</ul>
+</li>
+<li>评论
+<ul>
+<li>职位</li>
+<li>公司</li>
+</ul>
+</li>
+<li>公司风评检测</li>
+<li>公司官网
+<ul>
+<li>可达性检测</li>
+<li>备案信息检测</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h3 id="后台管理"><a class="header" href="#后台管理">后台管理</a></h3>
+<ol>
+<li>职位搜索
+<ul>
+<li>列表</li>
+<li>地图</li>
+</ul>
+</li>
+<li>职位浏览历史</li>
+<li>职位详情快照</li>
+<li>讨论区</li>
+<li>数据
+<ul>
+<li>职位</li>
+<li>公司</li>
+<li>标签</li>
+<li>职位标签</li>
+<li>公司标签</li>
+<li>公司评论</li>
+</ul>
+</li>
+<li>数据源
+<ul>
+<li>列表</li>
+<li>元数据</li>
+</ul>
+</li>
+<li>任务
+<ul>
+<li>统计</li>
+<li>详情</li>
+</ul>
+</li>
+<li>系统
+<ul>
+<li>设置
+<ul>
+<li>数据备份</li>
+</ul>
+</li>
+<li>数据管理
+<ul>
+<li>数据导入</li>
+<li>数据导出</li>
+</ul>
+</li>
+<li>数据库
+<ul>
+<li>概况</li>
+<li>调试</li>
+</ul>
+</li>
+<li>文件</li>
+</ul>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="核心逻辑"><a class="header" href="#核心逻辑">核心逻辑</a></h1>
+<h2 id="从网站获取数据和渲染额外信息"><a class="header" href="#从网站获取数据和渲染额外信息">从网站获取数据和渲染额外信息</a></h2>
+<h3 id="职位数据"><a class="header" href="#职位数据">职位数据</a></h3>
+<pre class="mermaid">sequenceDiagram
+  participant browser as 浏览器
+  participant extension as 插件
+  autonumber
+  extension -&gt;&gt; browser: 注册待侦测目标页面
+  browser -&gt;&gt; browser: 打开职位列表页面
+  browser -&gt;&gt; extension: 触发侦测目标页面事件
+  extension -&gt;&gt; browser: 注入脚本(拦截XMLHttpRequest)到目标页面
+  extension -&gt;&gt; extension: 初始化Extension Bridge
+  browser -&gt;&gt; extension: 发送职位列表数据
+  extension -&gt;&gt; extension: 监听查找职位列表界面元素
+  extension -&gt;&gt; extension: 解析职位列表数据
+  extension -&gt;&gt; extension: 保存职位信息到持久层
+  extension -&gt;&gt; extension: 从持久层获取保存的职位信息
+  extension -&gt;&gt; browser: 在职位项界面上进行自定义职位信息渲染
+  extension -&gt;&gt; browser: 在职位项界面上进行自定义公司信息界面框架渲染
+  extension -&gt;&gt; browser: 渲染职位评论框架
+  opt
+    browser -&gt;&gt; extension: 获取和渲染公司信息
+    alt 持久层含有指定未过期的公司信息
+      extension -&gt;&gt; extension: 从持久层获取保存的公司信息
+    else
+      extension -&gt;&gt; extension: 向公司信息服务查询公司信息
+      extension -&gt;&gt; extension: 保存公司信息到持久层
+      extension -&gt;&gt; extension: 从持久层获取保存的公司信息
+    end
+    extension -&gt;&gt; browser: 渲染自定义公司信息
+    extension -&gt;&gt; browser: 渲染公司评论框架
+    opt
+      browser -&gt;&gt; extension: 获取和渲染公司评论信息
+      extension -&gt;&gt; browser: 渲染公司评论信息
+    end
+  end
+  opt
+    browser -&gt;&gt; extension: 获取和渲染职位评论信息
+    extension -&gt;&gt; browser: 渲染职位评论信息
+  end
+</pre>
+<h3 id="公司数据"><a class="header" href="#公司数据">公司数据</a></h3>
+<pre class="mermaid">sequenceDiagram
+  participant browser as 浏览器
+  participant extension as 插件
+  autonumber
+  extension -&gt;&gt; browser: 注册待侦测目标页面
+  browser -&gt;&gt; browser: 打开公司列表页面
+  browser -&gt;&gt; extension: 触发侦测目标页面事件
+  extension -&gt;&gt; browser: 注入脚本(拦截XMLHttpRequest)到目标页面
+  extension -&gt;&gt; extension: 初始化Extension Bridge
+  browser -&gt;&gt; extension: 发送公司列表数据
+  extension -&gt;&gt; extension: 监听查找公司列表界面元素
+  extension -&gt;&gt; extension: 解析公司列表数据
+  alt 持久层含有指定未过期的公司信息
+    extension -&gt;&gt; extension: 从持久层获取保存的公司信息
+  else
+    extension -&gt;&gt; extension: 向公司信息服务查询公司信息
+    extension -&gt;&gt; extension: 保存公司信息到持久层
+    extension -&gt;&gt; extension: 从持久层获取保存的公司信息
+  end
+  extension -&gt;&gt; browser: 在公司项界面上进行自定义公司信息渲染
+  extension -&gt;&gt; browser: 渲染自定义公司信息
+  extension -&gt;&gt; browser: 渲染公司评论框架
+  opt
+    browser -&gt;&gt; extension: 获取和渲染公司评论信息
+    extension -&gt;&gt; browser: 渲染公司评论信息
+  end
+</pre>
+<h2 id="自定义职位卡片渲染"><a class="header" href="#自定义职位卡片渲染">自定义职位卡片渲染</a></h2>
+<pre><code class="language-text">┌────────────────────────────────────────────────────────────────┐
+│                                                │ Job extra info│
+│────────────────────────────────────────────────────────────────│
+│                     Job info                                   │
+│                                                                │
+│────────────────────────────────────────────────────────────────│
+│                     Company info                               │
+│                                                                │
+│                                                                │
+│                                                                │
+│────────────────────────────────────────────────────────────────│
+│ Company evaluation checking                                    │
+│────────────────────────────────────────────────────────────────│
+│ Company tag                                                    │
+│────────────────────────────────────────────────────────────────│
+│                   Othre|Company comment| Online company comment│
+│────────────────────────────────────────────────────────────────│
+│ Job tag                                                        │
+│────────────────────────────────────────────────────────────────│
+│ Job browse statistics ===                           Job Comment│
+└────────────────────────────────────────────────────────────────┘
+</code></pre>
+<ol>
+<li>
+<p>监听职位列表元素
+▲</p>
+<div class="table-wrapper"><table><thead><tr><th>平台</th><th>职位列表元素定位</th><th>备注</th></tr></thead><tbody>
+<tr><td>前程无忧</td><td>.joblist</td><td></td></tr>
+<tr><td>BOSS 直聘</td><td>.rec-job-list</td><td></td></tr>
+<tr><td>猎聘网</td><td>.job-list-box</td><td></td></tr>
+<tr><td>智联招聘</td><td>.positionlist__list</td><td></td></tr>
+<tr><td>拉勾网</td><td>.list__YibNq</td><td></td></tr>
+<tr><td>就业在线</td><td>.position-wrap</td><td></td></tr>
+<tr><td>广东公共求职招聘服务平台</td><td>.ant-list-items</td><td></td></tr>
+</tbody></table>
+</div></li>
+<li>
+<p>为职位列表容器设置 flex 布局(使得在不改变 dom 结构的情况下，通过设置 css 的 order 属性来达到改变职位项前后位置)</p>
+</li>
+<li>
+<p>渲染<code>加载中</code>元素</p>
+</li>
+<li>
+<p>渲染职位额外信息</p>
+<ol>
+<li>进行年龄限制的检测渲染</li>
+<li>对职位时间进行处理渲染（初见时间/发布时间）</li>
+<li>Hr 活跃时间渲染</li>
+<li>职位的公司信息（外包/培训机构）渲染</li>
+<li>对职位时间进行染色</li>
+<li>职位分析检测和渲染</li>
+</ol>
+</li>
+<li>
+<p>隐藏<code>加载中</code>元素</p>
+</li>
+<li>
+<p>修改职位卡片 css 的 order 属性，对职位卡片进行排序</p>
+</li>
+<li>
+<p>渲染底部功能栏</p>
+<ol>
+<li>渲染 logo</li>
+<li>公司信息渲染
+<ol>
+<li>查询公司信息按钮渲染</li>
+<li>对公司名处理</li>
+<li>公司详情渲染</li>
+<li>公司标签渲染(其他人/我)</li>
+<li>公司风评渲染</li>
+<li>其他途径查询弹窗渲染</li>
+<li>在线公司评论按钮渲染</li>
+</ol>
+</li>
+<li>职位标签渲染(其他人/我)</li>
+<li>职位查看和展示次数渲染</li>
+</ol>
+</li>
+<li>
+<p>最终渲染</p>
+<ol>
+<li>职位评论按钮渲染</li>
+<li>职位卡片渲染完成标识</li>
+</ol>
+</li>
+</ol>
+<h2 id="内部-api"><a class="header" href="#内部-api">内部 API</a></h2>
+<h3 id="内部-api-注册与使用"><a class="header" href="#内部-api-注册与使用">内部 API 注册与使用</a></h3>
+<h4 id="1-service-注册workerjs"><a class="header" href="#1-service-注册workerjs">1. Service 注册(worker.js)</a></h4>
+<pre><code class="language-js">const ACTION_FUNCTION = new Map();
+
+export const WorkerBridge = {
+  ping: function (message, param) {
+    postSuccessMessage(message, 'pong');
+  },
+};
+
+const { mergeServiceMethod } = useService();
+
+mergeServiceMethod(ACTION_FUNCTION, WorkerBridge);
+mergeServiceMethod(ACTION_FUNCTION, DataSourceMetadataService);
+</code></pre>
+<h4 id="2-api-注册apiindexjs"><a class="header" href="#2-api-注册apiindexjs">2. API 注册(api/index.js)</a></h4>
+<pre><code class="language-js">export const DataSourceMetadataApi = {
+  dataSourceMetadataSearch: mockFunction,
+  dataSourceMetadataAddOrUpdate: mockFunction,
+  dataSourceMetadataBatchAddOrUpdate: mockFunction,
+  dataSourceMetadataGetById: mockFunction,
+  dataSourceMetadataGetByIds: mockFunction,
+  dataSourceMetadataDeleteById: mockFunction,
+  dataSourceMetadataDeleteByIds: mockFunction,
+};
+fillBridgeApi({ api: DataSourceMetadataApi });
+</code></pre>
+<h4 id="3-api-使用"><a class="header" href="#3-api-使用">3. API 使用</a></h4>
+<blockquote>
+<p>[!IMPORTANT]
+通过 API 方法来调用 Service 方法</p>
+</blockquote>
+<pre><code class="language-js">const param = new DataSourceMetadataSearchBO();
+param.enable = true;
+param.orderByColumn = 'seq';
+param.orderBy = 'ASC';
+const result = await DataSourceMetadataApi.dataSourceMetadataSearch(param);
+</code></pre>
+<h4 id="约束"><a class="header" href="#约束">约束</a></h4>
+<ol>
+<li>方法名约定： ClassName+MethodName，如 DataSourceMetadataApi
+<ul>
+<li>ClassName: DataSourceMetadata</li>
+<li>MethodName: Search</li>
+<li>结果为: dataSourceMetadataSearch</li>
+</ul>
+</li>
+<li>方法传入参数类型约定: JSONObject 或其他基本数据类型</li>
+<li>方法都为 async function</li>
+</ol>
+<h4 id="原理"><a class="header" href="#原理">原理</a></h4>
+<ul>
+<li>利用 JSONObject 的 keys,value 进行 Service 方法的绑定</li>
+</ul>
+<pre><code class="language-js">const fillBridgeApi = ({ api = {} } = {}) =&gt; {
+  const keys = Object.keys(api);
+  keys.forEach((invokeName) =&gt; {
+    api[invokeName] = async (param) =&gt; {
+      const result = await invoke(invokeName, param);
+      return result.data;
+    };
+  });
+  return api;
+};
+</code></pre>
+<ul>
+<li>手动声明进行 Service 方法绑定</li>
+</ul>
+<pre><code class="language-js">export const JobSnapshotApi = {
+  jobSnapshotDeleteByIds: async function (param) {
+    const result = await invoke(this.jobSnapshotDeleteByIds.name, param);
+    return result.data;
+  },
+};
+</code></pre>
+<ul>
+<li>利用方法名来定位 Service 和 Service 方法: className+MethodName</li>
+</ul>
+<h3 id="内部-api-调用原理"><a class="header" href="#内部-api-调用原理">内部 API 调用原理</a></h3>
+<blockquote>
+<p>[!IMPORTANT]
+action = className+MethodName</p>
+</blockquote>
+<h4 id="从-contentscript-调用"><a class="header" href="#从-contentscript-调用">从 ContentScript 调用</a></h4>
+<pre class="mermaid">sequenceDiagram
+  participant Api
+  participant ContentScript
+  participant Background
+  participant Offscreen
+  participant WebWorker
+  autonumber
+  ContentScript -&gt;&gt;  Api: 调用Api方法
+  Api -&gt;&gt; ContentScript: 调用invoke方法，传递action,param
+  ContentScript -&gt;&gt; ContentScript: 生成callbackId和Promise
+  ContentScript -&gt;&gt; ContentScript: 关联callbackId和当前生成的Promise
+  ContentScript -&gt;&gt; Background: 发送Message
+  alt 如果Background可以处理该Message
+    Background -&gt;&gt; Background: 处理Message
+    Background --&gt;&gt; ContentScript: 返回处理后的Message
+  else
+    Background -&gt;&gt; Offscreen: 转发Message
+    Offscreen -&gt;&gt; WebWorker: 转发Message
+    WebWorker -&gt;&gt; WebWorker: 处理Message
+    WebWorker --&gt;&gt; Offscreen: 返回处理后的Message
+    Offscreen --&gt;&gt; Background: 转发处理后的Message
+    Background --&gt;&gt; ContentScript: 转发处理后的Message
+  end
+  ContentScript -&gt;&gt; ContentScript:根据返回Message的callbadkId查找Promise
+  alt 如果Message含有error
+    ContentScript -&gt;&gt; Api:调用Promise.reject返回错误
+  else
+    ContentScript -&gt;&gt; Api:调用Promise.resolve返回结果
+  end
+</pre>
+<h4 id="从-background-调用"><a class="header" href="#从-background-调用">从 Background 调用</a></h4>
+<pre class="mermaid">sequenceDiagram
+  participant Api
+  participant Background
+  participant Offscreen
+  participant WebWorker
+  autonumber
+  Background -&gt;&gt;  Api: 调用Api方法
+  Api -&gt;&gt; Background: 调用invoke方法，传递action,param
+  Background -&gt;&gt; Background: 生成callbackId和Promise
+  Background -&gt;&gt; Background: 关联callbackId和当前生成的Promise
+  Background -&gt;&gt; Offscreen: 发送Message
+  Offscreen -&gt;&gt; WebWorker: 转发Message
+  WebWorker -&gt;&gt; WebWorker: 处理Message
+  WebWorker --&gt;&gt; Offscreen: 返回处理后的Message
+  Offscreen --&gt;&gt; Background: 转发处理后的Message
+  Background -&gt;&gt; Background:根据返回Message的callbadkId查找Promise
+  alt 如果Message含有error
+    Background -&gt;&gt; Api:调用Promise.reject返回错误
+  else
+    Background -&gt;&gt; Api:调用Promise.resolve返回结果
+  end
+</pre>
+<h4 id="从-webworker-调用"><a class="header" href="#从-webworker-调用">从 WebWorker 调用</a></h4>
+<blockquote>
+<p>[!IMPORTANT]</p>
+<ul>
+<li>Webworker 发起的 Api 调用不会经过 ContentScript,Background,Offscreen 这些模块的处理流程</li>
+<li>调用的方法仅限于 Github Api (仅执行网络访问)</li>
+</ul>
+</blockquote>
+<h4 id="对大-message-传递的处理"><a class="header" href="#对大-message-传递的处理">对大 Message 传递的处理</a></h4>
+<blockquote>
+<p>[!IMPORTANT]</p>
+<p><a href="https://github.com/lastsunday/job-hunting/commit/ae0cee1">https://github.com/lastsunday/job-hunting/commit/ae0cee1</a></p>
+</blockquote>
+<h2 id="内嵌数据库"><a class="header" href="#内嵌数据库">内嵌数据库</a></h2>
+<h3 id="sql-class"><a class="header" href="#sql-class">SQL Class</a></h3>
+<pre class="mermaid">---
+title: Database
+---
+classDiagram
+    class Database
+    Database: +initDb$({ dataDir } = {})
+    Database: +getOne$(sql, bind, obj, { connection = null } = {})
+    Database: +getAll$(sql, bind, obj, { connection = null } = {})
+    Database: +batchInsert$(obj, tableName, params, { overrideCreateDatetime = false, overrideUpdateDatetime = false, connection = null } = {})
+    Database: +batchInsertOrReplace$(obj, tableName, tableIdColumn, params, { replace = true, overrideCreateDatetime = false, overrideUpdateDatetime = false, connection = null } = {})
+    Database: +one$(entity, tableName, idColumn, id, { connection = null } = {})
+    Database: +all$(entity, tableName, orderBy, { connection = null } = {})
+    Database: +batchGet$(obj, tableName, idColumnName, ids, { connection = null } = {})
+    Database: +del$(tableName, idColumn, id, { otherCondition = null, connection = null } = {})
+    Database: +batchDel$(tableName, idColumn, ids, { otherCondition = null, connection = null } = {})
+    Database: +search$(entity, tableName, param, whereConditionFunction, { connection = null } = {})
+    Database: +searchCount$(entity, tableName, param, whereConditionFunction, { connection = null } = {})
+    Database: +sort$(tableName, idColumnName, param, { connection = null } = {})
+    Database: +innerInit({ dataDir } = {})
+    Database: +dbExport(message, param)
+    Database: +dbImport(message, param)
+    Database: +dbClose(message, param)
+    Database: +dbDelete(message, param)
+    Database: +dbSize(message, param)
+    Database: +dbSchemaVersion(message, param)
+    Database: +dbExec(message, param)
+    Database: +dbGetAllTableName(message, param)
+
+    class BaseService
+    BaseService: +constructor(tableName, tableIdColumn, entityClassCreateFunction, searchDTOCreateFunction, whereConditionFunction)
+    BaseService: +search(message, param, { detailInjectAsyncCallback = null, entityClassCreateFunction = null } = {})
+    BaseService: +count(message, param)
+    BaseService: +getOne(message, param, column)
+    BaseService: +getById(message, param)
+    BaseService: +getByIds(message, param)
+    BaseService: +addOrUpdate(message, param)
+    BaseService: +deleteById(message, id, column)
+    BaseService: +deleteByIds(message, ids, column)
+    BaseService: #_search(param, { detailInjectAsyncCallback = null, connection = null, entityClassCreateFunction = null } = {})
+    BaseService: #_count()
+    BaseService: #_getOne(param, column)
+    BaseService: #_getById(param, { connection = null } = {})
+    BaseService: #_getByIds(param, { connection = null } = {})
+    BaseService: #_deleteById(id, column, { otherCondition, connection = null } = {})
+    BaseService: #_deleteByIds(ids, column, { connection = null, otherCondition = null } = {})
+    BaseService: #_updateByIds(ids, column, { otherCondition })
+    BaseService: #_addOrUpdate(param, { overrideUpdateDatetime = false, overrideCreateDatetime = false, connection = null } = {})
+    BaseService: #_batchAddOrUpdate(params, { connection = null, overrideCreateDatetime = false, overrideUpdateDatetime = false, genIdFunction = null, entityClassCreateFunction = null } = {})
+
+    class BaseBridgeService
+    BaseBridgeService: +constructor(baseServiceInstance, serviceName)
+    BaseBridgeService: +getMethodName(name)
+    BaseBridgeService: +getMethodNameMap()
+    BaseBridgeService: +addServiceMethod$({ bridgeService = null, methodName = null, methodFunction = async ({ param = null } = {}) =&gt; { } } = {})
+    BaseBridgeService: +addTransactionServiceMethod$({ bridgeService = null, methodName = null, methodFunction = async ({ param = null, tx = null } = {}) =&gt; { } } = {})
+    BaseBridgeService: +fillBaseServiceMethod$({ bridgeService = null, overrideUpdateDatetime = false, overrideCreateDatetime = false } = {})
+
+    BaseService ..&gt; Database
+    BaseBridgeService ..&gt; BaseService
+
+</pre>
+<h4 id="service-实现"><a class="header" href="#service-实现">Service 实现</a></h4>
+<pre><code class="language-js">import { DataSourceMetadataSearchBO } from '@/common/data/bo/dataSourceMetadataSearchBO';
+import { DataSourceMetadata } from '@/common/data/domain/dataSourceMetadata';
+import BaseBridgeService, { fillBaseServiceMethod } from './baseBridgeService';
+import { BaseService } from './baseService';
+import {
+  genEqValueConditionSql,
+  genInTextSql,
+  genLikeSql,
+  genRangeDatetimeConditionSql,
+} from './sqlUtil';
+const TABLE_NAME = 'data_source_metadata';
+const TABLE_ID_COLUMN = 'id';
+const SERVICE_NAME = 'dataSourceMetadata';
+export const SERVICE_INSTANCE = new BaseService(
+  TABLE_NAME,
+  TABLE_ID_COLUMN,
+  () =&gt; {
+    return new DataSourceMetadata();
+  },
+  () =&gt; {
+    return new DataSourceMetadataSearchBO();
+  },
+  (param) =&gt; {
+    let whereCondition = ''.concat(
+      genInTextSql(param.id, 'id'),
+      genLikeSql(param.name, 'name'),
+      genEqValueConditionSql(param.enable, 'enable'),
+      genInTextSql(param.type, 'type'),
+      genEqValueConditionSql(param.autoUpdateEnable, 'auto_update_enable'),
+      genRangeDatetimeConditionSql(
+        param.startDatetimeForCreate,
+        param.endDatetimeForCreate,
+        'create_datetime'
+      ),
+      genRangeDatetimeConditionSql(
+        param.startDatetimeForUpdate,
+        param.endDatetimeForUpdate,
+        'update_datetime'
+      )
+    );
+    return whereCondition;
+  }
+);
+const DataSourceMetadataService = new BaseBridgeService(
+  SERVICE_INSTANCE,
+  SERVICE_NAME
+);
+fillBaseServiceMethod({
+  bridgeService: DataSourceMetadataService,
+  overrideCreateDatetime: true,
+  overrideUpdateDatetime: true,
+});
+
+export default DataSourceMetadataService;
+</code></pre>
+<h4 id="orm-机制"><a class="header" href="#orm-机制">ORM 机制</a></h4>
+<ol>
+<li>例子</li>
+</ol>
+<pre><code class="language-js">const company = new Company();
+await CompanyApi.addOrUpdateCompany(company);
+
+//companyService
+const SERVICE_INSTANCE = new BaseService(
+  'company',
+  'company_id',
+  () =&gt; {
+    return new Company();
+  },
+  () =&gt; {
+    return new SearchCompanyDTO();
+  },
+  null
+);
+
+export const CompanyService = {
+  addOrUpdateCompany: async function (message, param) {
+    try {
+      await SERVICE_INSTANCE._batchAddOrUpdate([param]);
+      postSuccessMessage(message, {});
+    } catch (e) {
+      postErrorMessage(
+        message,
+        '[worker] addOrUpdateCompany error : ' + e.message
+      );
+    }
+  },
+};
+</code></pre>
+<ol>
+<li>
+<p>当前实现的特性</p>
+<ol>
+<li>根据 JSONObject 进行 SQL 查询，新增，更新，删除</li>
+</ol>
+</li>
+<li>
+<p>底层原理</p>
+<ol>
+<li>利用 JSONObject 的 keys,value 来识别列名，字段类型和内容。通过此来进行 SQL 的生成和返回结果 JSONObject 的生成</li>
+<li>JSONObject 属性名采用小驼峰命名法（lowerCamelCase）</li>
+<li>表字段名采用下划线命名法（Snake Case）</li>
+<li>SQL 插入字段的值位置采用下标定位的方式，如$1</li>
+<li>分页采用 LIMIT,OFFSET</li>
+</ol>
+</li>
+</ol>
+<h3 id="schema-changes"><a class="header" href="#schema-changes">Schema Changes</a></h3>
+<pre><code class="language-js">const changelogList = getChangeLogList();
+let oldVersion = 0;
+const newVersion = changelogList.length;
+try {
+  await db.transaction(async (tx) =&gt; {
+    const SQL_CREATE_TABLE_VERSION = `
+          CREATE TABLE IF NOT EXISTS version(
+          num INTEGER
+        )
+      `;
+    await tx.exec(SQL_CREATE_TABLE_VERSION);
+    const SQL_QUERY_VERSION = 'SELECT num FROM version';
+    const result = await tx.query(SQL_QUERY_VERSION);
+    const rows = result.rows;
+    if (rows.length &gt; 0) {
+      oldVersion = rows[0].num;
+    } else {
+      const SQL_INSERT_VERSION = `INSERT INTO version(num) values($1)`;
+      await tx.query(SQL_INSERT_VERSION, [0]);
+    }
+    infoLog(
+      '[DB] schema oldVersion = ' + oldVersion + ', newVersion = ' + newVersion
+    );
+    if (newVersion &gt; oldVersion) {
+      infoLog('[DB] schema upgrade start');
+      for (let i = oldVersion; i &lt; newVersion; i++) {
+        const currentVersion = i + 1;
+        const changelog = changelogList[i];
+        const sqlList = changelog.getSqlList();
+        infoLog(
+          '[DB] schema upgrade changelog version = ' +
+            currentVersion +
+            ', sql total = ' +
+            sqlList.length
+        );
+        for (let seq = 0; seq &lt; sqlList.length; seq++) {
+          infoLog(
+            '[DB] schema upgrade changelog version = ' +
+              currentVersion +
+              ', execute sql = ' +
+              (seq + 1) +
+              '/' +
+              sqlList.length
+          );
+          const sql = sqlList[seq];
+          await tx.exec(sql);
+        }
+      }
+      const SQL_UPDATE_VERSION = `UPDATE version SET num = $1`;
+      await tx.query(SQL_UPDATE_VERSION, [newVersion]);
+      infoLog('[DB] schema upgrade finish to version = ' + newVersion);
+      infoLog('[DB] current schema version = ' + newVersion);
+    } else {
+      infoLog('[DB] skip schema upgrade');
+      infoLog('[DB] current schema version = ' + oldVersion);
+    }
+  });
+} catch (e) {
+  errorLog('[DB] schema upgrade fail,' + e.message);
+}
+</code></pre>
+<ol>
+<li>
+<p>ChangeLog 文件</p>
+<ol>
+<li>
+<p>文件格式: ChangeLog+V+版本号 = ChangeLogVxxx.js</p>
+</li>
+<li>
+<p>例子</p>
+<pre><code class="language-js">export class ChangeLogV1 extends ChangeLog {
+  getSqlList() {
+    let sqlList = [
+      SQL_CREATE_TABLE_JOB,
+      SQL_CREATE_TABLE_JOB_BROWSE_HISTORY,
+    ];
+    return sqlList;
+  }
+}
+</code></pre>
+</li>
+</ol>
+</li>
+<li>
+<p>ChangeLog 执行规则</p>
+<ol>
+<li>将需要执行的 ChangeLog 存放到列表中</li>
+<li>开启事务，以确保 ChangeLog 的执行的原子性</li>
+<li>通过计算 ChangeLog 列表的总数与当前数据库版本号（版本号为上一次执行 ChangLog 的数量）进行对比计算，来获取当前需要执行的 ChangeLog</li>
+<li>执行完成后，更新数据库版本号（版本号即为已执行 ChangeLog 的数量）</li>
+</ol>
+</li>
+</ol>
+<h3 id="备份"><a class="header" href="#备份">备份</a></h3>
+<blockquote>
+<p>[!IMPORTANT]
+当前使用 pglite dump 备份大量数据的数据库会出错</p>
+</blockquote>
+<p>TODO</p>
+<h2 id="内部任务系统"><a class="header" href="#内部任务系统">内部任务系统</a></h2>
+<pre class="mermaid">---
+title: Task System
+---
+sequenceDiagram
+  participant Service
+  participant Database
+  participant GitHubApi
+  participant GitService
+
+  Note right of Service: 计算和保存下载和上传任务
+  Service -&gt;&gt; Database: 获取数据同步配置
+  Database --&gt;&gt; Service: 返回数据同步配置
+  opt if 开启私有数据同步
+    Service -&gt;&gt; Database: 获取用户信息
+    Database --&gt;&gt; Service: 返回用户信息
+    Service -&gt;&gt; Service: 获取私有数据上传任务类型
+    opt if 需要同步私有的数据
+      Service -&gt;&gt; Service: 获取私有数据仓库名
+      Service -&gt;&gt; GitHubApi: 尝试根据用户名和仓库名创建私有数据仓库
+      loop 私有数据上传任务类型
+        rect rgb(191, 223, 255)
+          Note right of Service: 计算并保存上传任务
+          Service -&gt;&gt; Database: 根据用户名，仓库名获取指定任务类型最近上传任务截至时间
+          Database --&gt;&gt; Service: 返回最近上传任务截至时间
+          opt if 最近上传任务截至时间不为今天
+            Service -&gt;&gt; GitService: 根据用户名，仓库名和获取指定任务类型最近上传文件时间
+            GitService --&gt;&gt; Service: 返回最近上传文件时间
+            Service -&gt;&gt; Service: 在最近上传任务截至时间和最近上传文件时间取最小值，作为任务开始时间
+            Service -&gt;&gt; Database: 根据用户名，仓库名，任务类型，任务开始时间，任务结束时间（今天）保存任务记录
+          end
+        end
+      end
+      Service -&gt;&gt; Service: 获取私有数据下载任务类型
+      Service -&gt;&gt; Service: 将私有数据下载任务保存到下载列表
+    end
+  end
+  alt if 是否开启公开数据同步
+    Service -&gt;&gt; Database: 获取用户信息
+    Database --&gt;&gt; Service: 返回用户信息
+    Service -&gt;&gt; Service: 获取公开数据上传任务类型
+    opt if 有需要同步公开的数据
+      Service -&gt;&gt; Service: 获取公开数据仓库名
+      Service -&gt;&gt; GitHubApi: 尝试根据用户名和仓库名创建公开数据仓库
+      loop 公开数据上传任务类型
+        rect rgb(191, 223, 255)
+          Note right of Service: 计算并保存上传任务
+        end
+      end
+      Service -&gt;&gt; Service: 获取公开数据下载任务类型
+      Service -&gt;&gt; Service: 将公开数据下载任务保存到下载列表
+    end
+  end
+  Service -&gt;&gt; Database: 获取数据共享伙伴列表
+  Database --&gt;&gt; Service: 返回数据共享伙伴列表
+  Service -&gt;&gt; Service: 将数据共享伙伴数据的下载任务保存到下载列表
+  loop 下载列表
+    Service -&gt;&gt; Service: 根据下载列表获取伙伴信息
+    Service -&gt;&gt; Service: 根据下载列表获取下载任务类型
+    loop 下载任务类型
+      rect rgb(191, 255, 223)
+        Note right of Service: 计算并保存下载任务
+        Service -&gt;&gt; GitService: 根据任务类型或文件名查询日期目录列表
+        GitService --&gt;&gt; Service: 返回日期目录列表
+        Service -&gt;&gt; Service: 根据下载历史文件保留天数和当前日期过滤和升序日期列表，获得仓库文件日期列表
+        Service -&gt;&gt; Service: 根据仓库文件日期列表，获取开始时间(列表中最小时间)和结束时间(列表中最大时间)
+        Service -&gt;&gt; Database: 根据开始时间和结束时间查询指定类型的下载任务列表
+        Database --&gt;&gt; Service: 返回下载任务列表
+        Service -&gt;&gt; Service: 根据仓库文件日期列表和下载任务列表的日期计算得出本地缺失日期列表
+        Service -&gt;&gt; Database: 根据本地缺失日期列表，新增指定类型的下载任务
+      end
+    end
+  end
+  Service -&gt;&gt; Database: 获取数据源元数据自动更新列表
+  Database --&gt;&gt; Service: 返回数据源元数据自动更新列表
+  loop 数据源元数据自动更新列表
+      rect rgb(255, 223,191)
+        Note right of Service: 计算并保存元数据下载任务
+        Service -&gt;&gt; Database: 根据任务类型编号获取最近下载任务列表
+        Database --&gt;&gt; Service: 返回下载任务列表
+        opt if 任务列表中含有非今天未完成的任务
+          Service -&gt;&gt; Database: 将未完成的任务状态设置为取消
+        end
+        opt if 任务列表中没有今天未完成的任务
+          Service -&gt;&gt; Database: 新增数据源元数据下载任务
+        end
+      end
+  end
+  Note right of Service: 执行下载和上传任务
+  Service -&gt;&gt; Database: 查询需要执行的任务
+  Database --&gt;&gt; Service: 返回需要执行的任务
+  Service -&gt;&gt; Service: 执行查询到的需要执行的任务
+  Note right of Service: 执行定时任务
+  Service -&gt;&gt; Database: 查询已合并但未删除的文件
+  Database --&gt;&gt; Service: 返回已合并但未删除的文件
+  Service -&gt;&gt; Service: 根据历史文件保留数量和最大历史文件保留容量计算需要删除的文件列表
+  Service -&gt;&gt; Database: 根据需要删除的文件列表删除文件
+</pre>
+<h3 id="任务状态图"><a class="header" href="#任务状态图">任务状态图</a></h3>
+<pre class="mermaid">---
+title: Task state
+---
+stateDiagram-v2
+    [*] --&gt; READY
+    READY --&gt; RUNNING
+    READY --&gt; CANCEL
+    RUNNING --&gt; FINISHED
+    RUNNING --&gt; FINISHED_BUT_ERROR
+    RUNNING --&gt; ERROR
+    RUNNING --&gt; CANCEL
+    FINISHED --&gt; [*]
+    FINISHED_BUT_ERROR --&gt; [*]
+    ERROR --&gt; [*]
+    CANCEL --&gt; [*]
+</pre>
+<h3 id="数据关系图"><a class="header" href="#数据关系图">数据关系图</a></h3>
+<pre class="mermaid">---
+title: Task ER
+---
+erDiagram
+    task ||--|| task_data_upload: owns
+    task {
+      string(255) id PK &quot;编号&quot;
+      string(255) type &quot;任务类型&quot;
+      string(255) data_id FK &quot;任务详情编号&quot;
+      string(255) status &quot;任务状态&quot;
+      string error_reason &quot;错误原因&quot;
+      int cost_time &quot;耗时&quot;
+      int retry_count &quot;重试次数&quot;
+      datetime create_datetime &quot;创建时间&quot;
+      datetime update_datetime &quot;更新时间&quot;
+    }
+    task_data_upload {
+      string(255) id PK &quot;编号&quot;
+      string(255) type &quot;任务类型&quot;
+      string(255) username &quot;用户名&quot;
+      string(255) reponame &quot;仓库名&quot;
+      datetime start_datetime &quot;开始时间&quot;
+      datetime end_datetime &quot;结束时间&quot;
+      int data_count &quot;数据量&quot;
+      int data_page_num &quot;页数&quot;
+      int data_page_size &quot;页大小&quot;
+      datetime create_datetime &quot;创建时间&quot;
+      datetime update_datetime &quot;更新时间&quot;
+    }
+    task ||--|| task_data_download: owns
+    task_data_download {
+      string(255) id PK &quot;编号&quot;
+      string(255) type &quot;任务类型&quot;
+      string(255) username &quot;用户名&quot;
+      string(255) reponame &quot;仓库名&quot;
+      datetime datetime &quot;日期&quot;
+      int seq &quot;序号&quot;
+      datetime create_datetime &quot;创建时间&quot;
+      datetime update_datetime &quot;更新时间&quot;
+      string(255) type_id &quot;类型标识，用于识别特定文件&quot;
+      json config &quot;配置&quot;
+      string(255) data_id FK &quot;文件编号&quot;
+    }
+    task ||--|| task_data_merge: owns
+    task_data_merge {
+      string(255) id PK &quot;编号&quot;
+      string(255) type &quot;任务类型&quot;
+      string(255) username &quot;用户名&quot;
+      string(255) reponame &quot;仓库名&quot;
+      datetime datetime &quot;日期&quot;
+      string(255) data_id FK &quot;文件编号&quot;
+      int data_count &quot;数据量&quot;
+      int data_page_num &quot;页数&quot;
+      int data_page_size &quot;页大小&quot;
+      datetime create_datetime &quot;创建时间&quot;
+      datetime update_datetime &quot;更新时间&quot;
+      string(255) type_id &quot;类型标识，用于识别特定文件&quot;
+      json config &quot;配置&quot;
+    }
+    task_data_merge |o--|| file: has
+    file {
+      string(255) id PK &quot;编号&quot;
+      string(255) name &quot;文件名&quot;
+      string(255) sha &quot;散列值&quot;
+      string(255) encoding &quot;编码&quot;
+      string content &quot;文件内容&quot;
+      int size &quot;文件尺寸&quot;
+      string type &quot;文件类型&quot;
+      is_delete boolean &quot;是否刪除&quot;
+      datetime create_datetime &quot;创建时间&quot;
+      datetime update_datetime &quot;更新时间&quot;
+    }
+</pre>
+<h3 id="任务类型"><a class="header" href="#任务类型">任务类型</a></h3>
+<pre><code class="language-js">export const TASK_TYPE_JOB_DATA_UPLOAD = 'JOB_DATA_UPLOAD';
+export const TASK_TYPE_JOB_DATA_DOWNLOAD = 'JOB_DATA_DOWNLOAD';
+export const TASK_TYPE_JOB_DATA_MERGE = 'JOB_DATA_MERGE';
+
+export const TASK_TYPE_COMPANY_DATA_UPLOAD = 'COMPANY_DATA_UPLOAD';
+export const TASK_TYPE_COMPANY_DATA_DOWNLOAD = 'COMPANY_DATA_DOWNLOAD';
+export const TASK_TYPE_COMPANY_DATA_MERGE = 'COMPANY_DATA_MERGE';
+
+export const TASK_TYPE_COMPANY_TAG_DATA_UPLOAD = 'COMPANY_TAG_DATA_UPLOAD';
+export const TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD = 'COMPANY_TAG_DATA_DOWNLOAD';
+export const TASK_TYPE_COMPANY_TAG_DATA_MERGE = 'COMPANY_TAG_DATA_MERGE';
+
+export const TASK_TYPE_JOB_TAG_DATA_UPLOAD = 'JOB_TAG_DATA_UPLOAD';
+export const TASK_TYPE_JOB_TAG_DATA_DOWNLOAD = 'JOB_TAG_DATA_DOWNLOAD';
+export const TASK_TYPE_JOB_TAG_DATA_MERGE = 'JOB_TAG_DATA_MERGE';
+
+export const TASK_TYPE_JOB_PUBLIC_DATA_UPLOAD = 'JOB_PUBLIC_DATA_UPLOAD';
+export const TASK_TYPE_JOB_PUBLIC_DATA_DOWNLOAD = 'JOB_PUBLIC_DATA_DOWNLOAD';
+export const TASK_TYPE_JOB_PUBLIC_DATA_MERGE = 'JOB_PUBLIC_DATA_MERGE';
+
+export const TASK_TYPE_METADATA_DATA_DOWNLOAD = 'METADATA_DATA_DOWNLOAD';
+export const TASK_TYPE_METADATA_DATA_MERGE = 'METADATA_DATA_MERGE';
+
+export const TASK_TYPE_COMPANY_COMMENT_DATA_DOWNLOAD =
+  'COMPANY_COMMENT_DATA_DOWNLOAD';
+export const TASK_TYPE_COMPANY_COMMENT_DATA_MERGE =
+  'COMPANY_COMMENT_DATA_MERGE';
+</code></pre>
+<h2 id="数据同步-1"><a class="header" href="#数据同步-1">数据同步</a></h2>
+<h3 id="数据仓库文件结构"><a class="header" href="#数据仓库文件结构">数据仓库文件结构</a></h3>
+<pre><code class="language-txt">  ├── YYYY                              //年份，格式YYYY
+  │   └── MM-DD                         //月日，格式MM-DD
+  │       ├─── company.zip
+  │       ├─── job.zip
+  │       ├─── job_tag.zip
+  │       ├─── company_tag.zip
+</code></pre>
+<h3 id="git-读取数据仓库文件结构"><a class="header" href="#git-读取数据仓库文件结构">Git 读取数据仓库文件结构</a></h3>
+<blockquote>
+<p><a href="https://git-scm.com/docs/gitprotocol-v2">https://git-scm.com/docs/gitprotocol-v2</a></p>
+</blockquote>
+<pre class="mermaid">sequenceDiagram
+    participant GitService
+    participant GitServer
+
+    GitService -&gt;&gt; GitServer: 发送ls-refs请求
+    GitServer --&gt;&gt; GitService: 返回refs
+    GitService -&gt;&gt; GitService: 根据refs获取commitHash
+    GitService -&gt;&gt; GitServer: 根据commitHash获取treesIdx
+    GitServer --&gt;&gt; GitService: 返回treesIdx
+    GitService -&gt;&gt; GitServer: 根据treesIdx遍历仓库目录
+    GitServer --&gt;&gt; GitService: 返回仓库目录
+    GitService --&gt;&gt; GitService: 根据仓库目录过滤符合日期目录的指定文件的文件列表
+</pre>
+<h3 id="数据合并文件"><a class="header" href="#数据合并文件">数据合并文件</a></h3>
+<ol>
+<li>
+<p>文件格式: excel</p>
+</li>
+<li>
+<p>文件内容格式</p>
+<div class="table-wrapper"><table><thead><tr><th>字段名</th><th>字段类型</th><th>备注</th></tr></thead><tbody>
+<tr><td>编号</td><td>string</td><td>记录唯一标识</td></tr>
+<tr><td>xxx</td><td>xxx</td><td></td></tr>
+<tr><td><code>__VERSION_</code></td><td>int</td><td>版本号,如果该字段不存在，则会被认为第 0 版</td></tr>
+</tbody></table>
+</div></li>
+<li>
+<p>版本识别规则</p>
+<ol>
+<li>通过版本号字段读取文件的文件字段列表</li>
+<li>根据文件字段列表识别文件是否合法</li>
+</ol>
+</li>
+</ol>
+<h3 id="数据递增规则"><a class="header" href="#数据递增规则">数据递增规则</a></h3>
+<ol>
+<li>
+<p>以记录创建时间为数据增量规则</p>
+</li>
+<li>
+<p>各数据格式增量更新规则字段</p>
+<ol>
+<li>
+<p>职位</p>
+<ol>
+<li><code>createDatetime</code></li>
+<li><code>updateDatetime</code></li>
+<li><code>isFullCompanyName</code></li>
+</ol>
+</li>
+<li>
+<p>职位公开数据</p>
+<ol>
+<li><code>createDatetime</code></li>
+</ol>
+</li>
+<li>
+<p>职位快照</p>
+<ol>
+<li><code>updateDatetime</code></li>
+</ol>
+</li>
+<li>
+<p>职位标签</p>
+<blockquote>
+<p>未正确实现覆盖更新</p>
+</blockquote>
+<ol>
+<li><code>updateDatetime</code></li>
+</ol>
+</li>
+<li>
+<p>公司</p>
+<ol>
+<li><code>sourceRefreshDatetime</code></li>
+</ol>
+</li>
+<li>
+<p>公司标签</p>
+<blockquote>
+<p>未正确实现覆盖更新</p>
+</blockquote>
+<ol>
+<li><code>updateDatetime</code></li>
+</ol>
+</li>
+<li>
+<p>公司评论</p>
+<ol>
+<li><code>createDatetime</code></li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+<h3 id="各数据类型版本"><a class="header" href="#各数据类型版本">各数据类型版本</a></h3>
+<h4 id="职位"><a class="header" href="#职位">职位</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>职位自编号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>发布平台</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>职位访问地址</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>职位</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>公司</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>公司是否为全称</td><td>bool</td><td>0</td><td></td></tr>
+<tr><td>地区</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>地址</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>经度</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>纬度</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>职位描述</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>学历</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>所需经验</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>技能</td><td>string</td><td>1</td><td></td></tr>
+<tr><td>福利</td><td>string</td><td>1</td><td></td></tr>
+<tr><td>最低薪资</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>最高薪资</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>几薪</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>首次发布时间</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>招聘人</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>招聘公司</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>招聘者职位</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>首次扫描日期</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>记录更新日期</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h4 id="职位标签"><a class="header" href="#职位标签">职位标签</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>职位编号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>标签</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>记录更新日期</td><td>datetime</td><td>1</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h4 id="职位公开数据"><a class="header" href="#职位公开数据">职位公开数据</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>职位自编号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>首次扫描日期</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>记录更新日期</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h4 id="职位快照-1"><a class="header" href="#职位快照-1">职位快照</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>编号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>职位编号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>职位链接</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>内容</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>招聘平台</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>创建日期</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>更新日期</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h4 id="公司"><a class="header" href="#公司">公司</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>公司</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>公司描述</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>成立时间</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>经营状态</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>法人</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>统一社会信用代码</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>官网</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>社保人数</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>自身风险数</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>关联风险数</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>地址</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>经营范围</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>纳税人识别号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>所属行业</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>工商注册号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>经度</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>纬度</td><td>number</td><td>0</td><td></td></tr>
+<tr><td>注册资本</td><td>string</td><td>2</td><td></td></tr>
+<tr><td>注册资本货币</td><td>string</td><td>2</td><td></td></tr>
+<tr><td>数据来源地址</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>数据来源平台</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>数据来源记录编号</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>数据来源更新时间</td><td>datetime</td><td>0</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>记录创建日期</td><td>datetime</td><td>1</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>记录更新日期</td><td>datetime</td><td>1</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h4 id="公司标签"><a class="header" href="#公司标签">公司标签</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>公司</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>标签</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>记录更新日期</td><td>datetime</td><td>1</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h4 id="公司评论"><a class="header" href="#公司评论">公司评论</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>生效版本</th><th>格式</th></tr></thead><tbody>
+<tr><td>公司</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>评论</td><td>string</td><td>0</td><td></td></tr>
+<tr><td>情感</td><td>string</td><td>1</td><td></td></tr>
+<tr><td>数据集</td><td>string</td><td>1</td><td></td></tr>
+<tr><td>创建日期</td><td>datetime</td><td>1</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+<tr><td>更新日期</td><td>datetime</td><td>1</td><td>rfc3339/yyyy-MM-dd HH:mm:ss</td></tr>
+</tbody></table>
+</div>
+<h2 id="数据导入与导出"><a class="header" href="#数据导入与导出">数据导入与导出</a></h2>
+<blockquote>
+<p>[!IMPORTANT]
+数据导入逻辑与数据同步逻辑一样</p>
+</blockquote>
+<ol>
+<li>数据拆分导出</li>
+</ol>
+<h2 id="oauth"><a class="header" href="#oauth">Oauth</a></h2>
+<h3 id="github-oauth2-流程"><a class="header" href="#github-oauth2-流程">Github Oauth2 流程</a></h3>
+<pre class="mermaid">sequenceDiagram
+  participant ContentScript
+  participant Background
+  participant GithubWebsite
+  participant GithubServer
+
+  ContentScript -&gt;&gt; Background: authOauth2Login
+  activate GithubWebsite
+  Background -&gt;&gt; GithubWebsite: chrome.tabs.create
+  Note over GithubWebsite: https://github.com/login/oauth/authorize?client_id=
+  GithubWebsite -&gt;&gt; GithubWebsite: github login
+  GithubWebsite -&gt;&gt; GithubWebsite: redirect to callback url
+  Note over GithubWebsite: https://github.com/lastsunday/job-hunting-github-app/blob/main/INSTALL?code=
+  GithubWebsite --&gt;&gt; Background: notify url with code
+  Background -&gt;&gt; Background: chrome.tabs.onUpdated
+  Background -&gt;&gt; GithubServer: http request access_token
+  Note over GithubWebsite: https://github.com/login/oauth/access_token?client_id=&amp;client_secret=&amp;code=
+  GithubServer --&gt;&gt; Background: return oauth info
+  Background -&gt;&gt; GithubWebsite: chrome.tabs.remove
+  deactivate GithubWebsite
+</pre>
+<h2 id="bbs-系统"><a class="header" href="#bbs-系统">BBS 系统</a></h2>
+<ol>
+<li>
+<p>采用 Github Issues 作为服务端</p>
+</li>
+<li>
+<p>地区选择实现原理</p>
+<ol>
+<li>
+<p>利用标题作为搜索字段</p>
+</li>
+<li>
+<p>targetId = sha256 地区名: sha256(省)-sha256(市)-sha256(区)</p>
+<pre><code class="language-hql">   search(query:"${targetId} in:title sort:created-desc is:issue is:open repo:${GITHUB_APP_REPO}", type: ISSUE, first: ${first ?? null}, after: ${after ? "\"" + after + "\"" : null},last:${last ?? null},before:${before ? "\"" + before + "\"" : null})
+</code></pre>
+</li>
+</ol>
+</li>
+<li>
+<p>使用的 Github API</p>
+<ol>
+<li>HQL 查询(可查询 Issues): <a href="https://api.github.com/graphql">https://api.github.com/graphql</a></li>
+<li>新增 Issues: POST <a href="https://api.github.com/repos/lastsunday/job-hunting-github-app/issues">https://api.github.com/repos/lastsunday/job-hunting-github-app/issues</a></li>
+<li>查询 Issues Comment: GET <a href="https://api.github.com/repos/lastsunday/job-hunting-github-app/issues/$%7BissueNumber%7D/comments?per_page=$%7BpageSize%7D&amp;page=$%7BpageNum%7D">https://api.github.com/repos/lastsunday/job-hunting-github-app/issues/${issueNumber}/comments?per_page=${pageSize}&amp;page=${pageNum}</a></li>
+<li>新增 Issues Comment: POST <a href="https://api.github.com/repos/lastsunday/job-hunting-github-app/issues/$%7BissueNumber%7D/comments">https://api.github.com/repos/lastsunday/job-hunting-github-app/issues/${issueNumber}/comments</a></li>
+</ol>
+</li>
+</ol>
+<h2 id="自动化"><a class="header" href="#自动化">自动化</a></h2>
+<ol>
+<li>采用 puppeteer 类库在 debug 模式下运行</li>
+<li>当前用于自动浏览职位页面</li>
+</ol>
+<h2 id="llm"><a class="header" href="#llm">LLM</a></h2>
+<ol>
+<li>
+<p>外部 LLM</p>
+<ol>
+<li>
+<p>ollama</p>
+<p><a href="https://docs.ollama.com/api/introduction">https://docs.ollama.com/api/introduction</a></p>
+</li>
+<li>
+<p>openai</p>
+<p><a href="https://platform.openai.com/docs/api-reference/chat">https://platform.openai.com/docs/api-reference/chat</a></p>
+</li>
+<li>
+<p>siliconflow</p>
+<p><a href="https://docs.siliconflow.com/en/api-reference/chat-completions/chat-completions">https://docs.siliconflow.com/en/api-reference/chat-completions/chat-completions</a></p>
+</li>
+</ol>
+</li>
+<li>
+<p>内嵌 LLM</p>
+<ol>
+<li>
+<p>web-llm</p>
+<p><a href="https://github.com/mlc-ai/web-llm">https://github.com/mlc-ai/web-llm</a></p>
+</li>
+</ol>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="职位分析组件"><a class="header" href="#职位分析组件">职位分析组件</a></h1>
+<blockquote>
+<p>[!IMPORTANT]
+项目根目录: libs/analysis</p>
+</blockquote>
+<h2 id="编译-1"><a class="header" href="#编译-1">编译</a></h2>
+<pre><code class="language-shell">pnpm exec nx run analysis:build
+</code></pre>
+<h2 id="文档"><a class="header" href="#文档">文档</a></h2>
+<pre><code class="language-shell">pnpm exec nx run analysis:storybook
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="服务器端-1"><a class="header" href="#服务器端-1">服务器端</a></h1>
+<p>服务器端是一个基于 <a href="https://crates.io/crates/axum">Axum</a> 的 Rust Web 服务，提供 REST API 和后台任务调度能力。</p>
+<h2 id="核心功能"><a class="header" href="#核心功能">核心功能</a></h2>
+<ul>
+<li><strong>REST API</strong>: 职位/公司数据 CRUD、搜索、分页排序</li>
+<li><strong>认证授权</strong>: JWT（access token + refresh token，HS256）</li>
+<li><strong>OpenAPI 文档</strong>: 基于 utoipa + Scalar UI，访问 <code>/docs</code></li>
+<li><strong>数据同步</strong>: 定时从远程仓库拉取数据，解析并合并入库</li>
+<li><strong>任务调度</strong>: 基于 cron 表达式的任务计划系统，支持失败重试</li>
+<li><strong>静态文件服务</strong>: 内嵌管理后台 SPA（<code>server-ui</code>）</li>
+</ul>
+<h2 id="crate-结构"><a class="header" href="#crate-结构">Crate 结构</a></h2>
+<pre class="mermaid">graph TD
+    binary[&quot;job-hunting-server&lt;br/&gt;(binary)&quot;]
+    api[&quot;api&lt;br/&gt;(路由层 + 配置)&quot;]
+    service[&quot;service&lt;br/&gt;(业务逻辑)&quot;]
+    entity[&quot;entity&lt;br/&gt;(Sea-ORM 模型)&quot;]
+    migration[&quot;migration&lt;br/&gt;(数据库迁移)&quot;]
+    web[&quot;web&lt;br/&gt;(静态文件服务)&quot;]
+    framework[&quot;framework&lt;br/&gt;(基础设施)&quot;]
+    macros[&quot;macros / framework-macros&lt;br/&gt;(proc-macro)&quot;]
+    build_metadata[&quot;build-metadata&lt;br/&gt;(构建元数据)&quot;]
+
+    binary --&gt; api
+    api --&gt; framework
+    api --&gt; service
+    api --&gt; entity
+    api --&gt; migration
+    api --&gt; web
+    api --&gt; macros
+    framework --&gt; macros
+    framework --&gt; build_metadata
+</pre>
+<div class="table-wrapper"><table><thead><tr><th>Crate</th><th>说明</th></tr></thead><tbody>
+<tr><td><code>job-hunting-server</code></td><td>二进制入口：CLI 解析、Tokio runtime、日志、信号处理</td></tr>
+<tr><td><code>api</code></td><td>REST API 路由定义、路由组装、配置结构体、<code>AppState</code></td></tr>
+<tr><td><code>service</code></td><td>业务逻辑层：任务调度、数据同步、文件解析、Git 操作</td></tr>
+<tr><td><code>entity</code></td><td>Sea-ORM 实体模型（自动生成 + 手动补充）</td></tr>
+<tr><td><code>migration</code></td><td>Sea-ORM 数据库迁移脚本</td></tr>
+<tr><td><code>web</code></td><td>使用 <code>rust-embed</code> 内嵌 <code>server-ui</code> 前端产物</td></tr>
+<tr><td><code>framework</code></td><td>共享基础设施：认证、错误处理、数据提取器、数据库连接、中间件</td></tr>
+<tr><td><code>macros</code></td><td>proc-macro 工具（<code>#[error]</code> 错误码宏等）</td></tr>
+</tbody></table>
+</div>
+<h2 id="技术栈"><a class="header" href="#技术栈">技术栈</a></h2>
+<ul>
+<li><strong>Web 框架</strong>: Axum 0.8</li>
+<li><strong>中间件</strong>: tower-http（CORS、timeout、body limit、tracing、compression）</li>
+<li><strong>API 文档</strong>: utoipa-axum + Scalar</li>
+<li><strong>ORM</strong>: Sea-ORM（PostgreSQL / SQLite）</li>
+<li><strong>Auth</strong>: jsonwebtoken（HS256）+ bcrypt</li>
+<li><strong>配置</strong>: figment（TOML 文件 + 环境变量 + CLI 覆盖）</li>
+<li><strong>ID 生成</strong>: xid</li>
+<li><strong>日志</strong>: tracing + tracing-subscriber（支持 console、文件、flamegraph、tokio-console）</li>
+<li><strong>测试</strong>: cucumber BDD + testcontainers</li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="深入开发-1"><a class="header" href="#深入开发-1">深入开发</a></h1>
+<h2 id="架构概览"><a class="header" href="#架构概览">架构概览</a></h2>
+<h3 id="crate-依赖关系"><a class="header" href="#crate-依赖关系">Crate 依赖关系</a></h3>
+<pre class="mermaid">graph TD
+    binary[&quot;job-hunting-server&lt;br/&gt;(二进制入口)&quot;]
+    api[&quot;api&lt;br/&gt;(路由 + 配置)&quot;]
+    service[&quot;service&lt;br/&gt;(业务逻辑)&quot;]
+    entity[&quot;entity&lt;br/&gt;(Sea-ORM 实体)&quot;]
+    migration[&quot;migration&lt;br/&gt;(迁移)&quot;]
+    web[&quot;web&lt;br/&gt;(静态文件)&quot;]
+    framework[&quot;framework&lt;br/&gt;(基础设施)&quot;]
+    macros[&quot;macros&lt;br/&gt;(proc-macro)&quot;]
+
+    binary --&gt; api
+    binary --&gt; framework
+    api --&gt; framework
+    api --&gt; service
+    api --&gt; entity
+    api --&gt; migration
+    api --&gt; web
+    framework --&gt; macros
+    service --&gt; entity
+    service --&gt; framework
+</pre>
+<h3 id="启动流程"><a class="header" href="#启动流程">启动流程</a></h3>
+<pre class="mermaid">sequenceDiagram
+    participant CLI as CLI / Config
+    participant Runtime as Tokio Runtime
+    participant Server as Server
+    participant DB as Database
+    participant Router as Axum Router
+    participant Scheduler as Scheduler
+
+    CLI -&gt;&gt; Runtime: 解析 CLI 参数，创建 Runtime
+    Runtime -&gt;&gt; Server: Server::new(args)
+    Server -&gt;&gt; Server: 加载配置（figment）
+    Server -&gt;&gt; Server: 初始化日志（tracing）
+    Runtime -&gt;&gt; DB: establish_connection(database_url)
+    DB --&gt;&gt; Runtime: DatabaseConnection
+    Runtime -&gt;&gt; DB: migration::Migrator::up()
+    DB --&gt;&gt; Runtime: 迁移完成
+    Runtime -&gt;&gt; Runtime: Jwt::init(auth_config)
+    par 并发启动
+        Runtime -&gt;&gt; Router: start_app(state)
+        Router -&gt;&gt; Router: create_router() + bind socket
+    and
+        Runtime -&gt;&gt; Scheduler: start_scheduler()
+        Scheduler -&gt;&gt; Scheduler: cron 循环执行任务
+    end
+</pre>
+<h3 id="路由组装"><a class="header" href="#路由组装">路由组装</a></h3>
+<p>所有 API 模块通过 <code>create_routes(state: AppState) -&gt; OpenApiRouter</code> 导出路由，在 <code>create_router()</code> 中统一组装：</p>
+<pre><code class="language-rust ignore">// api/src/lib.rs
+pub fn create_router(state: AppState, ct: CancellationToken) -&gt; Router {
+    let (router, api) = OpenApiRouter::with_openapi(ApiDoc::openapi())
+        // 嵌套各模块路由
+        .nest("/api", job::create_routes(state.clone()))
+        .nest("/api", company::create_routes(state.clone()))
+        .nest("/api", auth::create_routes(state.clone()))
+        // ... 更多模块
+        .split_for_parts();
+
+    router
+        // Scalar API 文档
+        .merge(Scalar::with_url("/docs", api))
+        // 静态文件
+        .route("/assets/{*file}", get(web::assets_handler))
+        // SPA fallback
+        .fallback(web::index_handler)
+        // 全局中间件
+        .layer((
+            TimeoutLayer::new(Duration::from_secs(300)),
+            DefaultBodyLimit::max(100 * 1024 * 1024),
+            TraceLayer::new_for_http(),
+            CorsLayer::permissive(),
+        ))
+}</code></pre>
+<h3 id="handler-编写规范"><a class="header" href="#handler-编写规范">Handler 编写规范</a></h3>
+<p>每个 API handler 遵循统一模式：</p>
+<pre><code class="language-rust ignore">// 1. 标签常量
+const TAG: &amp;str = "Company";
+
+// 2. handler 函数
+#[debug_handler]
+#[utoipa::path(
+    post,
+    path = "/company",
+    tag = TAG,
+    security(("AccessToken" = [])),
+    request_body = CreateCompanyParam,
+    responses(
+        (status = 200, description = "创建成功", body = ApiResponse&lt;Company&gt;),
+    )
+)]
+async fn create(
+    State(AppState { conn, .. }): State&lt;AppState&gt;,
+    ValidJson(param): ValidJson&lt;CreateCompanyParam&gt;,
+) -&gt; ApiResult&lt;ApiResponse&lt;Company&gt;&gt; {
+    let result = CompanyService::create(&amp;conn, param).await?;
+    Ok(ApiResponse::ok(result))
+}
+
+// 3. 路由导出
+pub fn create_routes(state: AppState) -&gt; OpenApiRouter {
+    OpenApiRouter::new()
+        .routes(routes!(create, update, search, detail, delete))
+        .with_state(state)
+}</code></pre>
+<p>关键约定：</p>
+<ul>
+<li><code>#[debug_handler]</code> 提供编译期类型匹配错误提示</li>
+<li><code>#[utoipa::path]</code> 同时生成 Axum 路由和 OpenAPI 文档</li>
+<li><code>ValidJson&lt;T&gt;</code> / <code>ValidQuery&lt;T&gt;</code> 自动校验请求体/查询参数</li>
+<li>响应统一用 <code>ApiResult&lt;ApiResponse&lt;T&gt;&gt;</code> 包装</li>
+<li><code>routes!</code> 宏来自 <code>utoipa_axum</code>，批量注册路由</li>
+</ul>
+<h3 id="中间件链"><a class="header" href="#中间件链">中间件链</a></h3>
+<p>全局中间件按顺序应用：</p>
+<div class="table-wrapper"><table><thead><tr><th>中间件</th><th>说明</th></tr></thead><tbody>
+<tr><td><code>TimeoutLayer</code></td><td>300 秒请求超时</td></tr>
+<tr><td><code>DefaultBodyLimit</code></td><td>100 MiB 请求体上限</td></tr>
+<tr><td><code>TraceLayer</code></td><td>tracing 日志注入</td></tr>
+<tr><td><code>CorsLayer</code></td><td>允许所有来源跨域</td></tr>
+</tbody></table>
+</div>
+<p>模块级中间件：</p>
+<ul>
+<li><code>JwtAuth</code> — 通过 <code>route_layer(get_auth_layer())</code> 添加到需要认证的路由组</li>
+<li><code>CompressionLayer</code> — 对静态资源路由启用 gzip 压缩</li>
+</ul>
+<h3 id="appstate"><a class="header" href="#appstate">AppState</a></h3>
+<p><code>AppState</code> 通过 Axum <code>State</code> 提取器在 handler 间共享：</p>
+<pre><code class="language-rust ignore">pub struct AppState {
+    pub conn: DatabaseConnection,
+    pub auth_config: AuthConfig,
+}</code></pre>
+<h2 id="errorcode-设计"><a class="header" href="#errorcode-设计">ErrorCode 设计</a></h2>
+<h3 id="使用教程"><a class="header" href="#使用教程">使用教程</a></h3>
+<h4 id="1-定义错误码枚举"><a class="header" href="#1-定义错误码枚举">1. 定义错误码枚举</a></h4>
+<p>使用 <code>#[error]</code> 宏在 <code>framework/src/error/</code> 下定义枚举，或在各业务模块中定义。</p>
+<p><strong>命名规则</strong> - 枚举名称必须以 <code>ErrorCode</code> 结尾，前缀即为模块名</p>
+<div class="table-wrapper"><table><thead><tr><th>枚举名称</th><th>模块名</th></tr></thead><tbody>
+<tr><td><code>FrameworkErrorCode</code></td><td>framework</td></tr>
+<tr><td><code>UserErrorCode</code></td><td>user</td></tr>
+</tbody></table>
+</div>
+<p><strong>框架级错误码</strong> - 定义在 <code>framework/src/error/</code> 下</p>
+<pre><code class="language-rust ignore">#[error]
+pub enum FrameworkErrorCode {
+    // 3xx 框架错误: 参数校验失败、无效查询等
+    ValidationInvalid = 301001,
+    QueryInvalid = 301002,
+}</code></pre>
+<p><strong>业务级错误码</strong> - 定义在各业务模块中</p>
+<pre><code class="language-rust ignore">#[error]
+pub enum UserErrorCode {
+    // 5xx 业务错误
+    AccountNotFound = 503001,
+    OldPasswordIncorrect = 503002,
+}</code></pre>
+<p><strong>默认 message</strong> - 从模块名 + 变体名自动生成（空格分隔）</p>
+<div class="table-wrapper"><table><thead><tr><th>模块名</th><th>变体名</th><th>默认消息</th></tr></thead><tbody>
+<tr><td>user</td><td><code>AccountNotFound</code></td><td>"user account not found"</td></tr>
+<tr><td>user</td><td><code>OldPasswordIncorrect</code></td><td>"user old password incorrect"</td></tr>
+<tr><td>framework</td><td><code>ValidationInvalid</code></td><td>"framework validation invalid"</td></tr>
+</tbody></table>
+</div>
+<p><strong>自定义 message</strong> - 使用宏属性</p>
+<pre><code class="language-rust ignore">#[error]
+pub enum UserErrorCode {
+    #[error(message = "用户不存在")]
+    AccountNotFound = 503001,
+}</code></pre>
+<hr />
+<h4 id="2-在业务代码中使用"><a class="header" href="#2-在业务代码中使用">2. 在业务代码中使用</a></h4>
+<p><strong>基本用法</strong> - 使用 <code>err!</code> 宏自动注入调用位置</p>
+<pre><code class="language-rust ignore">return Err(err!(UserErrorCode::AccountNotFound));
+// message = "user account not found"
+// 自动注入调用位置 (file:line)</code></pre>
+<p><strong>添加 extra_message</strong></p>
+<pre><code class="language-rust ignore">// 需要在 ErrorCode 定义中添加 with_extra 方法
+return Err(err!(UserErrorCode::AccountNotFound.with_extra("user_id=123")));
+// message = "user account not found"
+// extra_message = "user_id=123"
+// 自动注入调用位置</code></pre>
+<p><strong>使用 ? 运算符</strong></p>
+<pre><code class="language-rust ignore">let user = User::find_by_id(id).await?
+    .ok_or(err!(UserErrorCode::AccountNotFound))?;</code></pre>
+<p><strong>使用 with_extra</strong></p>
+<pre><code class="language-rust ignore">.ok_or(err!(UserErrorCode::AccountNotFound.with_extra("user_id not found")))?;</code></pre>
+<hr />
+<h4 id="3-api-响应格式"><a class="header" href="#3-api-响应格式">3. API 响应格式</a></h4>
+<pre><code class="language-json">{
+  "code": 503001,
+  "message": "account not found"
+}
+</code></pre>
+<hr />
+<ol>
+<li>
+<p>在 <code>error_tests!</code> 宏中添加新类型：</p>
+<pre><code class="language-rust ignore">error_tests! {
+    FrameworkErrorCode,
+    UserErrorCode,
+    CompanyErrorCode,
+    JobErrorCode,
+    NewErrorCode,  // 添加新类型
+}</code></pre>
+</li>
+</ol>
+<hr />
+<h3 id="设计原理"><a class="header" href="#设计原理">设计原理</a></h3>
+<h4 id="错误码分类"><a class="header" href="#错误码分类">错误码分类</a></h4>
+<div class="table-wrapper"><table><thead><tr><th>分类</th><th>范围</th><th>说明</th><th>日志级别</th><th>API 错误响应(StatusCode/Code/Message)</th></tr></thead><tbody>
+<tr><td>1xxyyy</td><td>101001-199999</td><td>底层错误，预留</td><td>error</td><td>500/内部错误 code/内部错误</td></tr>
+<tr><td>2xxyyy</td><td>201001-299999</td><td>第三方错误</td><td>error</td><td>500/内部错误 code/内部错误</td></tr>
+<tr><td>3xxyyy</td><td>301001-399999</td><td>框架错误:如参数校验失败</td><td>warn</td><td>500/内部错误 code/内部错误</td></tr>
+<tr><td>4xxyyy</td><td>401001-499999</td><td>关键业务错误:如多次登录错误,数据不完整</td><td>warn</td><td>500/内部错误 code/内部错误</td></tr>
+<tr><td>5xxyyy</td><td>501001-599999</td><td>业务错误</td><td>info</td><td>400/直出/直出</td></tr>
+</tbody></table>
+</div>
+<p>注意事项</p>
+<ul>
+<li>登录错误: API 错误响应，按常规方式处理</li>
+<li>参数校验失败: API 错误响应，按常规方式处理</li>
+</ul>
+<h4 id="编码规则"><a class="header" href="#编码规则">编码规则</a></h4>
+<p>6 位数字：<code>类别(1-5) + 模块(01-99) + 序号(001-999)</code></p>
+<h4 id="err-宏"><a class="header" href="#err-宏">err! 宏</a></h4>
+<p>使用 <code>err!</code> 宏可以自动注入调用位置（file:line）。</p>
+<p><strong>原理</strong></p>
+<ul>
+<li>自动注入调用位置（<code>file!()</code> + <code>line!()</code>）</li>
+<li>存储在 <code>ApiError</code> 的 <code>file</code> 和 <code>line</code> 字段中</li>
+</ul>
+<p><strong>日志输出</strong></p>
+<pre><code class="language-shell">[503001]account not found at src/user.rs:86
+</code></pre>
+<p><strong>使用前提</strong></p>
+<ol>
+<li>在模块中引入 prelude：</li>
+</ol>
+<pre><code class="language-rust ignore">use framework::prelude::*;</code></pre>
+<ol>
+<li>开启 DEBUG 日志级别：</li>
+</ol>
+<pre><code class="language-bash">RUST_LOG=DEBUG
+</code></pre>
+<blockquote>
+<p>注意：文件和行号只在 DEBUG 级别下打印</p>
+</blockquote>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="核心逻辑与数据结构设计"><a class="header" href="#核心逻辑与数据结构设计">核心逻辑与数据结构设计</a></h1>
+<h2 id="数据同步流程"><a class="header" href="#数据同步流程">数据同步流程</a></h2>
+<blockquote>
+<p>[!WIP]</p>
+</blockquote>
+<p>数据同步流程以任务形式执行</p>
+<p>流程：计算数据下载任务 -&gt; 数据下载 -&gt; 数据贮藏与合并</p>
+<ul>
+<li>计算数据下载任务
+<ul>
+<li>(task_data_plan,task_data_source_plan)task_plan &lt;-&gt; task,task_data_download</li>
+</ul>
+</li>
+<li>数据下载
+<ul>
+<li>task,task_data_download &lt;-&gt; file,task,task_data_merge</li>
+</ul>
+</li>
+<li>数据贮藏与合并
+<ul>
+<li>task,task_data_merge &lt;-&gt; task,task_data_merge,job_source,company_source,job_tag_source,company_tag_source,job,company,job_tag,company_tag</li>
+</ul>
+</li>
+</ul>
+<h3 id="数据合并"><a class="header" href="#数据合并">数据合并</a></h3>
+<pre class="mermaid">sequenceDiagram
+  participant out_data as 外部数据
+  participant logic as 数据处理器
+  participant source as 来源表
+  participant main as 主表
+
+  out_data -&gt;&gt; logic: 发送外部数据
+  logic -&gt;&gt; logic: 提取外部数据中的唯一标识(业务主键+uri)列表
+  logic -&gt;&gt; source: 根据唯一标识列表查询现存来源数据
+  source -&gt;&gt; logic: 返回现存来源数据
+  logic -&gt;&gt; logic: 去掉外部数据中重复的现存来源数据，得到去重外部数据
+  logic -&gt;&gt; source: 插入去重外部数据
+  source -&gt;&gt; logic: 插入外部去重数据成功
+  logic -&gt;&gt; logic: 提取去重外部数据的业务主键列表
+  logic -&gt;&gt; main: 根据业务主键列表查询现存主数据
+  main -&gt;&gt; logic: 返回现存主数据
+  logic -&gt;&gt; logic: 根据现存主数据和去重外部数据，计算出主数据插入列表和主数据更新列表
+  logic -&gt;&gt; main: 插入主数据插入列表
+  main -&gt;&gt; logic: 插入主数据插入列表成功
+  logic -&gt;&gt; main: 更新主数据更新列表
+  main -&gt;&gt; logic: 更新主数据更新列表成功
+
+</pre>
+<h2 id="核心数据模型"><a class="header" href="#核心数据模型">核心数据模型</a></h2>
+<h4 id="uri-规范"><a class="header" href="#uri-规范">URI 规范</a></h4>
+<blockquote>
+<p>参考：<a href="https://www.rfc-editor.org/rfc/rfc3986.html">RFC 3986</a></p>
+</blockquote>
+<ul>
+<li>第三方数据来源格式：<code>data://[username[@]]host/path</code></li>
+<li>本地文件导入数据来源格式：<code>data://[username[@]]system/[file_hash]</code></li>
+<li>界面新增或编辑数据来源格式：<code>data://[username[@]]system-ui/[version]/[file_hash]/[rfc3339]</code></li>
+</ul>
+<p>字段说明：</p>
+<ul>
+<li><code>username</code>：数据贡献者/上传者标识</li>
+</ul>
+<p>示例：</p>
+<pre><code class="language-txt">data://lastsunday@github.com/lastsunday/job-hunting-data/2026/03-03/job.zip
+data://lastsunday@github.com/lastsunday/job-hunting-data/2024/12-20/company.zip
+data://admin@system/c38036efd481b06a5b0a4292ac7dfbcfb93e9eb0d1c4de0aef0f4d685cf6b3a9
+data://admin@system-ui/1/c38036efd481b06a5b0a4292ac7dfbcfb93e9eb0d1c4de0aef0f4d685cf6b3a9/2026-04-16T14:08:17+00:00
+</code></pre>
+<h3 id="职位相关表"><a class="header" href="#职位相关表">职位相关表</a></h3>
+<blockquote>
+<p>设计说明：</p>
+<ul>
+<li><code>job_source</code>：多渠道原始数据来源表，存储来自不同用户/渠道的原始数据</li>
+<li><code>job</code>：标准化表，去重后的一手数据</li>
+</ul>
+</blockquote>
+<pre class="mermaid">---
+title: Job ER
+---
+erDiagram
+    job_source{
+      id varchar(255) PK &quot;编号&quot;
+      job_id varchar(255) &quot;职位编号&quot;
+      platform varchar(255) &quot;发布平台&quot;
+      url varchar(255) &quot;链接&quot;
+      name varchar(255) &quot;名称&quot;
+      company_name varchar(255) &quot;公司名&quot;
+      location_name varchar(255) &quot;地区&quot;
+      address varchar(255) &quot;地址&quot;
+      longitude numeric(16_13) &quot;经度&quot;
+      latitude numeric(16_13) &quot;纬度&quot;
+      description text &quot;描述&quot;
+      degree_name varchar(255) &quot;学历&quot;
+      year int2 &quot;所需经验&quot;
+      salary_min numeric(12_2) &quot;最低薪资&quot;
+      salary_max numeric(12_2) &quot;最高薪资&quot;
+      salary_total_month int2 &quot;几薪&quot;
+      first_publish_datetime timestamptz &quot;首次发布时间&quot;
+      boss_name varchar(255) &quot;招聘人名称&quot;
+      boss_company_name varchar(255) &quot;招聘公司&quot;
+      boss_position varchar(255) &quot;招聘者职位&quot;
+      is_full_company_name bool &quot;公司名是否为全称&quot;
+      skill_tag text &quot;技能标签: 逗号作为分隔符&quot;
+      welfare_tag text &quot;福利标签: 逗号作为分隔符&quot;
+      first_scan_datetime timestamptz &quot;首次扫描时间&quot;
+      uri varchar(255) &quot;来源&quot;
+      publish_datetime timestamptz &quot;数据发布时间&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    job_source }|..|| job : &quot;源自(最新)&quot;
+    job {
+      id varchar(255) PK &quot;职位编号&quot;
+      platform varchar(255) &quot;发布平台&quot;
+      url varchar(255) &quot;链接&quot;
+      name varchar(255) &quot;名称&quot;
+      company_name varchar(255) &quot;公司名&quot;
+      location_name varchar(255) &quot;地区&quot;
+      address varchar(255) &quot;地址&quot;
+      longitude numeric(16_13) &quot;经度&quot;
+      latitude numeric(16_13) &quot;纬度&quot;
+      description text &quot;描述&quot;
+      degree_name varchar(255) &quot;学历&quot;
+      year int2 &quot;所需经验&quot;
+      salary_min numeric(12_2) &quot;最低薪资&quot;
+      salary_max numeric(12_2) &quot;最高薪资&quot;
+      salary_total_month int2 &quot;几薪&quot;
+      first_publish_datetime timestamptz &quot;首次发布时间&quot;
+      boss_name varchar(255) &quot;招聘人名称&quot;
+      boss_company_name varchar(255) &quot;招聘公司&quot;
+      boss_position varchar(255) &quot;招聘者职位&quot;
+      is_full_company_name bool &quot;公司名是否为全称&quot;
+      skill_tag text &quot;技能标签: 逗号作为分隔符&quot;
+      welfare_tag text &quot;福利标签: 逗号作为分隔符&quot;
+      first_scan_datetime timestamptz &quot;首次扫描时间&quot;
+      uri varchar(255) &quot;来源&quot;
+      publish_datetime timestamptz &quot;数据发布时间&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+</pre>
+<h3 id="公司相关表"><a class="header" href="#公司相关表">公司相关表</a></h3>
+<blockquote>
+<p>设计说明：</p>
+<ul>
+<li><code>company_source</code>：多渠道原始数据来源表，存储来自不同用户/渠道的原始数据</li>
+<li><code>company</code>：标准化表，去重后的一手数据</li>
+</ul>
+</blockquote>
+<pre class="mermaid">---
+title: Company ER
+---
+erDiagram
+    company_source{
+      id varchar(255) PK &quot;编号&quot;
+      company_id varchar(255) &quot;公司编号&quot;
+      name varchar(255) &quot;名称&quot;
+      desc text &quot;描述&quot;
+      start_date timestamptz &quot;成立时间&quot;
+      status varchar(255) &quot;经营状态&quot;
+      legal_person varchar(255) &quot;法人&quot;
+      unified_code varchar(255) &quot;统一社会信用代码&quot;
+      web_site text &quot;官网&quot;
+      insurance_num int4 &quot;社保人数&quot;
+      self_risk int4 &quot;自身风险数&quot;
+      union_risk int4 &quot;关联风险数&quot;
+      address text &quot;地址&quot;
+      scope text &quot;经营范围&quot;
+      tax_no varchar(255) &quot;纳税人识别号&quot;
+      industry varchar(255) &quot;所属行业&quot;
+      license_number varchar(255) &quot;工商注册号&quot;
+      longitude numeric(16_13) &quot;经度&quot;
+      latitude numeric(16_13) &quot;纬度&quot;
+      source_url text &quot;数据来源地址&quot;
+      source_platform varchar(255) &quot;数据来源平台&quot;
+      source_record_id varchar(255) &quot;数据来源记录编号&quot;
+      source_refresh_datetime timestamptz &quot;数据来源更新时间&quot;
+      reg_capital_value numeric(17_2) &quot;注册资本数值&quot;
+      reg_capital_currency varchar(255) &quot;注册资本货币&quot;
+      paidin_capital_value numeric(17_2) &quot;实缴资本数值&quot;
+      paidin_capital_currency varchar(255) &quot;实缴资本货币&quot;
+      uri varchar(255) &quot;来源&quot;
+      publish_datetime timestamptz &quot;数据发布时间&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    company_source }|..|| company : &quot;源自(最新)&quot;
+    company{
+      id varchar(255) PK &quot;公司编号&quot;
+      name varchar(255) UK &quot;名称&quot;
+      desc text &quot;描述&quot;
+      start_date timestamptz &quot;成立时间&quot;
+      status varchar(255) &quot;经营状态&quot;
+      legal_person varchar(255) &quot;法人&quot;
+      unified_code varchar(255) &quot;统一社会信用代码&quot;
+      web_site text &quot;官网&quot;
+      insurance_num int4 &quot;社保人数&quot;
+      self_risk int4 &quot;自身风险数&quot;
+      union_risk int4 &quot;关联风险数&quot;
+      address text &quot;地址&quot;
+      scope text &quot;经营范围&quot;
+      tax_no varchar(255) &quot;纳税人识别号&quot;
+      industry varchar(255) &quot;所属行业&quot;
+      license_number varchar(255) &quot;工商注册号&quot;
+      longitude numeric(16_13) &quot;经度&quot;
+      latitude numeric(16_13) &quot;纬度&quot;
+      source_url text &quot;数据来源地址&quot;
+      source_platform varchar(255) &quot;数据来源平台&quot;
+      source_record_id varchar(255) &quot;数据来源记录编号&quot;
+      source_refresh_datetime timestamptz &quot;数据来源更新时间&quot;
+      reg_capital_value numeric(17_2) &quot;注册资本数值&quot;
+      reg_capital_currency varchar(255) &quot;注册资本货币&quot;
+      paidin_capital_value numeric(17_2) &quot;实缴资本数值&quot;
+      paidin_capital_currency varchar(255) &quot;实缴资本货币&quot;
+      uri varchar(255) &quot;来源&quot;
+      publish_datetime timestamptz &quot;数据发布时间&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+</pre>
+<h2 id="标签数据模型"><a class="header" href="#标签数据模型">标签数据模型</a></h2>
+<pre class="mermaid">---
+title: Tag ER
+---
+erDiagram
+    tag{
+      id varchar(255) PK &quot;编号&quot;
+      name text &quot;名称&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    tag ||--o{ job_tag_source: &quot;关联&quot;
+    job_tag_source{
+      id varchar(255) PK &quot;编号&quot;
+      job_id varchar(255) &quot;职位编号&quot;
+      tag_id varchar(255) &quot;标签编号&quot;
+      seq int4 &quot;序号&quot;
+      uri varchar(255) &quot;来源&quot;
+      publish_datetime timestamptz &quot;数据发布时间&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    tag ||--o{ company_tag_source: &quot;关联&quot;
+    company_tag_source{
+      id varchar(255) PK &quot;编号&quot;
+      company_id varchar(255) &quot;公司编号&quot;
+      company_name varchar(255) &quot;公司名称&quot;
+      tag_id varchar(255) &quot;标签编号&quot;
+      seq int4 &quot;序号&quot;
+      uri varchar(255) &quot;来源&quot;
+      publish_datetime timestamptz &quot;数据发布时间&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    tag ||--o{ job_tag: &quot;关联&quot;
+    job ||--o{ job_tag: &quot;关联&quot;
+    job_tag_source }|..|| job_tag : &quot;源自(最新)&quot;
+    job_tag{
+      id varchar(255) PK &quot;编号&quot;
+      job_id varchar(255) &quot;职位编号&quot;
+      tag_id varchar(255) &quot;标签编号&quot;
+      seq int4 &quot;序号&quot;
+      uri varchar(255) &quot;来源&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    tag ||--o{ company_tag: &quot;关联&quot;
+    company ||--o{ company_tag: &quot;关联&quot;
+    company_tag_source }|..|| company_tag : &quot;源自(最新)&quot;
+    company_tag{
+      id varchar(255) PK &quot;编号&quot;
+      company_id varchar(255) &quot;公司编号&quot;
+      company_name varchar(255) &quot;公司名称&quot;
+      tag_id varchar(255) &quot;标签编号&quot;
+      seq int4 &quot;序号&quot;
+      uri varchar(255) &quot;来源&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+</pre>
+<h2 id="任务系统设计"><a class="header" href="#任务系统设计">任务系统设计</a></h2>
+<h3 id="任务关系图"><a class="header" href="#任务关系图">任务关系图</a></h3>
+<blockquote>
+<p>设计说明：</p>
+<ul>
+<li><code>task_data_plan</code> / <code>task_data_source_plan</code>：用于生成 <code>task_plan</code> 的配置表，便于从界面上描述任务计划，实际参与任务生成的是 <code>task_plan</code></li>
+</ul>
+</blockquote>
+<pre class="mermaid">---
+title: Task ER
+---
+erDiagram
+    task_plan{
+      id varchar(255) PK &quot;编号&quot;
+      type int4 &quot;任务计划类型: 0: DATA_DOWNLOAD,1: METADATA_DOWNLOAD&quot;
+      enable bool &quot;开关&quot;
+      config jsonb &quot;配置&quot;
+      cron varchar(255) &quot;cron定时任务表达式&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    task_plan ||..o| task : &quot;触发&quot;
+    task{
+      id varchar(255) PK &quot;编号&quot;
+      plan_id varchar(255) &quot;任务计划编号&quot;
+      type varchar(255) &quot;任务类型&quot;
+      data_id varchar(255) &quot;任务编号&quot;
+      status varchar(255) &quot;状态&quot;
+      error_reason text &quot;错误原因&quot;
+      cost_time int4 &quot;耗时&quot;
+      retry_count int4 &quot;重试次数&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    task_data_plan ||--|| task_plan: owns
+    task_data_plan{
+      id varchar(255) PK &quot;编号&quot;
+      plan_id varchar(255) &quot;任务计划编号&quot;
+      username varchar(255) &quot;用户名&quot;
+      repo_name varchar(255) &quot;仓库名&quot;
+      repo_type varchar(255) &quot;仓库类型&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    task_data_source_plan ||--|| task_plan: owns
+    task_data_source_plan{
+      id varchar(255) PK &quot;编号&quot;
+      plan_id varchar(255) &quot;任务计划编号&quot;
+      username varchar(255) &quot;用户名&quot;
+      repo_name varchar(255) &quot;仓库名&quot;
+      repo_type varchar(255) &quot;仓库类型&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    task ||--|| task_data_download: owns
+    task_data_download{
+      id varchar(255) PK &quot;编号&quot;
+      type varchar(255) &quot;下载数据任务类型&quot;
+      username varchar(255) &quot;用户名&quot;
+      repo_name varchar(255) &quot;仓库名&quot;
+      datetime timestamptz &quot;时间&quot;
+      config jsonb &quot;配置&quot;
+      data_id varchar(255) &quot;文件编号&quot;
+      seq int4 &quot;序号&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    task ||--|| task_data_merge: owns
+    task_data_merge{
+      id varchar(255) PK &quot;编号&quot;
+      type varchar(255) &quot;合并数据任务类型&quot;
+      username varchar(255) &quot;用户名&quot;
+      repo_name varchar(255) &quot;仓库名&quot;
+      datetime timestamptz &quot;时间&quot;
+      data_id varchar(255) &quot;文件编号&quot;
+      data_count int4 &quot;合并后的数据总数&quot;
+      config jsonb &quot;配置&quot;
+      data_page_num int4 &quot;分页页码，控制批量合并的页索引&quot;
+      data_page_size int4 &quot;分页大小，控制每批合并的数据量&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    task_data_download ||..|| file : &quot;生成&quot;
+    task_data_merge ||..|| file : &quot;读取&quot;
+    file{
+      id varchar(255) PK &quot;编号&quot;
+      name varchar(255) &quot;名称&quot;
+      sha varchar(255) &quot;sha&quot;
+      content BLOB &quot;内容&quot;
+      size int8 &quot;尺寸&quot;
+      is_delete bool &quot;是否删除&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+</pre>
+<h3 id="任务类型-1"><a class="header" href="#任务类型-1">任务类型</a></h3>
+<ul>
+<li>JOB_DATA_DOWNLOAD</li>
+<li>JOB_DATA_STORAGE_AND_MERGE</li>
+<li>COMPANY_DATA_DOWNLOAD</li>
+<li>COMPANY_DATA_STORAGE_AND_MERGE</li>
+<li>COMPANY_TAG_DATA_DOWNLOAD</li>
+<li>COMPANY_TAG_DATA_STORAGE_AND_MERGE</li>
+<li>JOB_TAG_DATA_DOWNLOAD</li>
+<li>JOB_TAG_DATA_STORAGE_AND_MERGE</li>
+</ul>
+<h3 id="任务状态"><a class="header" href="#任务状态">任务状态</a></h3>
+<p>状态值：</p>
+<ul>
+<li>READY：等待执行</li>
+<li>RUNNING：执行中</li>
+<li>CANCEL：已取消</li>
+<li>FINISHED：执行成功</li>
+<li>FINISHED_BUT_ERROR：执行完成但有错误</li>
+<li>ERROR：执行失败</li>
+</ul>
+<pre class="mermaid">---
+title: Task state
+---
+stateDiagram-v2
+    [*] --&gt; READY
+    READY --&gt; RUNNING
+    READY --&gt; CANCEL
+    RUNNING --&gt; FINISHED
+    RUNNING --&gt; FINISHED_BUT_ERROR
+    RUNNING --&gt; ERROR
+    RUNNING --&gt; CANCEL
+    FINISHED --&gt; [*]
+    FINISHED_BUT_ERROR --&gt; [*]
+    ERROR --&gt; RUNNING
+    CANCEL --&gt; [*]
+</pre>
+<p>状态转换说明：</p>
+<ul>
+<li>READY → RUNNING：任务被调度器领取</li>
+<li>READY → CANCEL：任务被取消</li>
+<li>RUNNING → FINISHED：任务执行成功</li>
+<li>RUNNING → FINISHED_BUT_ERROR：任务执行完成但有错误（如部分数据处理失败、超出重试次数）</li>
+<li>RUNNING → ERROR：任务执行失败（如网络异常、数据解析错误）</li>
+<li>RUNNING → CANCEL：任务执行中被取消</li>
+<li>ERROR → RUNNING：任务重试执行</li>
+</ul>
+<h3 id="任务编排"><a class="header" href="#任务编排">任务编排</a></h3>
+<h4 id="流程串联"><a class="header" href="#流程串联">流程串联</a></h4>
+<p><strong>流程一：计算数据下载任务</strong></p>
+<ul>
+<li>由 <code>task_data_plan</code> / <code>task_data_source_plan</code> 生成 <code>task_plan</code></li>
+<li><code>task_plan</code> 触发创建 <code>task</code> 和 <code>task_data_download</code></li>
+</ul>
+<p><strong>流程二：数据下载</strong></p>
+<ul>
+<li><code>task</code> + <code>task_data_download</code> 执行下载</li>
+<li>下载完成后生成 <code>file</code> 文件</li>
+<li>下载任务完成后，根据预设的最大数据量生成多个合并任务，避免一次超大合并带来的性能问题</li>
+</ul>
+<p><strong>流程三：数据贮藏与合并</strong></p>
+<ul>
+<li><code>task</code> + <code>task_data_merge</code> 执行合并</li>
+<li>根据 <code>data_page_num</code> 和 <code>data_page_size</code> 读取对应批次数据</li>
+<li>合并流程：
+<ol>
+<li>写入 source 表（job_source, company_source, job_tag_source, company_tag_source），遇到重复数据则忽略</li>
+<li>将最新数据写入标准化表（job, company, job_tag, company_tag）</li>
+</ol>
+</li>
+<li><code>data_count</code> 记录合并后的数据总数</li>
+</ul>
+<h4 id="失败重试策略"><a class="header" href="#失败重试策略">失败重试策略</a></h4>
+<ul>
+<li><code>ERROR</code> 状态可触发重试，回到 <code>RUNNING</code></li>
+<li><code>retry_count</code> 字段记录当前重试次数</li>
+<li>最大重试次数由<strong>系统配置</strong>设定</li>
+<li>超出最大重试次数后状态置为 <code>FINISHED_BUT_ERROR</code></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="配置与部署"><a class="header" href="#配置与部署">配置与部署</a></h1>
+<h2 id="配置加载机制"><a class="header" href="#配置加载机制">配置加载机制</a></h2>
+<p>配置通过 <a href="https://crates.io/crates/figment">figment</a> 加载，支持多层来源，后者覆盖前者：</p>
+<ol>
+<li><code>JH_CONFIG</code> 环境变量 → 指向一个 TOML 文件路径</li>
+<li><code>--config</code> / <code>-c</code> CLI 参数 → 指定 TOML 配置文件路径</li>
+<li><code>JH_*</code> 环境变量 → 字段名转大写加 <code>JH_</code> 前缀，如 <code>database_url</code> → <code>JH_DATABASE_URL</code></li>
+<li><code>-O key=value</code> CLI 参数 → 直接覆盖（TOML 语法）</li>
+</ol>
+<pre><code class="language-bash"># 方式一：指定配置文件
+./server --config=application-dev.toml
+
+# 方式二：环境变量
+JH_CONFIG=/etc/job-hunting/server.toml ./server
+
+# 方式三：覆盖单个字段
+./server -O database_url="postgres://localhost/mydb" -O port=8080
+</code></pre>
+<h2 id="配置项参考"><a class="header" href="#配置项参考">配置项参考</a></h2>
+<p>以下为 <code>config</code> 结构体中的全部字段，默认值即不做配置时的值。</p>
+<h3 id="server"><a class="header" href="#server">Server</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>默认值</th><th>说明</th></tr></thead><tbody>
+<tr><td><code>server_name</code></td><td>string</td><td><code>"localhost"</code></td><td>服务器名称</td></tr>
+<tr><td><code>address</code></td><td>string / string[]</td><td><code>["127.0.0.1", "::1"]</code></td><td>监听地址，支持多个</td></tr>
+<tr><td><code>port</code></td><td>u16 / u16[]</td><td><code>3000</code></td><td>监听端口</td></tr>
+</tbody></table>
+</div>
+<h3 id="database"><a class="header" href="#database">Database</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>默认值</th><th>说明</th></tr></thead><tbody>
+<tr><td><code>database_url</code></td><td>string</td><td><code>"sqlite://db.sqlite?mode=rwc"</code></td><td>数据库连接 URL（PostgreSQL 或 SQLite）</td></tr>
+</tbody></table>
+</div>
+<h3 id="auth"><a class="header" href="#auth">Auth</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>默认值</th><th>说明</th></tr></thead><tbody>
+<tr><td><code>auth_access_token_secret</code></td><td>string</td><td><code>"QLjJTeVblAlM47de"</code></td><td>Access Token 签名密钥</td></tr>
+<tr><td><code>auth_access_token_expires_in</code></td><td>u32</td><td><code>28800</code></td><td>Access Token 过期时间（秒）</td></tr>
+<tr><td><code>auth_refresh_token_secret</code></td><td>string</td><td><code>"N8lI0uitNzJl6vYK"</code></td><td>Refresh Token 签名密钥</td></tr>
+<tr><td><code>auth_refresh_token_expires_in</code></td><td>u32</td><td><code>15897600</code></td><td>Refresh Token 过期时间（秒）</td></tr>
+<tr><td><code>auth_audience</code></td><td>string</td><td><code>"audience"</code></td><td>JWT audience</td></tr>
+<tr><td><code>auth_issuer</code></td><td>string</td><td><code>"issuer"</code></td><td>JWT issuer</td></tr>
+<tr><td><code>auth_client_id</code></td><td>string</td><td><code>"d1aicsr57dijo7h963ig"</code></td><td>客户端 ID</td></tr>
+<tr><td><code>auth_client_secret</code></td><td>string</td><td><code>"ujTgh2lEQYy0PXhK"</code></td><td>客户端密钥</td></tr>
+</tbody></table>
+</div>
+<blockquote>
+<p><strong>生产环境必须修改</strong>: <code>auth_access_token_secret</code>、<code>auth_refresh_token_secret</code></p>
+</blockquote>
+<h3 id="task"><a class="header" href="#task">Task</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>默认值</th><th>说明</th></tr></thead><tbody>
+<tr><td><code>history_file_max_size</code></td><td>u64</td><td><code>5368709120</code></td><td>历史文件最大总大小（字节，默认 5 GiB）</td></tr>
+</tbody></table>
+</div>
+<h3 id="logging"><a class="header" href="#logging">Logging</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>字段</th><th>类型</th><th>默认值</th><th>说明</th></tr></thead><tbody>
+<tr><td><code>log_console_enabled</code></td><td>bool</td><td><code>true</code></td><td>启用控制台日志</td></tr>
+<tr><td><code>log_console_level</code></td><td>string</td><td><code>"info"</code></td><td>控制台日志级别（trace/debug/info/warn/error）</td></tr>
+<tr><td><code>log_console_format</code></td><td>string</td><td><code>"text"</code></td><td>控制台输出格式（text/json/compact/pretty）</td></tr>
+<tr><td><code>log_file_enabled</code></td><td>bool</td><td><code>false</code></td><td>启用文件日志</td></tr>
+<tr><td><code>log_file_level</code></td><td>string</td><td><code>"info"</code></td><td>文件日志级别</td></tr>
+<tr><td><code>log_file_format</code></td><td>string</td><td><code>"json"</code></td><td>文件输出格式</td></tr>
+<tr><td><code>log_file_directory</code></td><td>string</td><td><code>"./logs"</code></td><td>日志目录</td></tr>
+<tr><td><code>log_file_name</code></td><td>string</td><td><code>"server"</code></td><td>日志文件名前缀</td></tr>
+<tr><td><code>log_file_max_files</code></td><td>u32</td><td><code>10</code></td><td>最多保留的日志文件数</td></tr>
+<tr><td><code>log_file_rotation</code></td><td>string</td><td><code>"daily"</code></td><td>日志轮转策略（daily/hourly/never）</td></tr>
+<tr><td><code>log_tokio_console_enabled</code></td><td>bool</td><td><code>false</code></td><td>启用 tokio-console（性能分析）</td></tr>
+<tr><td><code>log_flame_enabled</code></td><td>bool</td><td><code>false</code></td><td>启用火焰图输出</td></tr>
+<tr><td><code>log_flame_directory</code></td><td>string</td><td><code>"./flame"</code></td><td>火焰图输出目录</td></tr>
+</tbody></table>
+</div>
+<h3 id="完整配置示例"><a class="header" href="#完整配置示例">完整配置示例</a></h3>
+<pre><code class="language-toml">server_name = "job-hunting"
+address = "0.0.0.0"
+port = 3000
+
+database_url = "postgres://user:password@localhost:5432/job_hunting"
+
+# 生产环境务必修改以下两项
+auth_access_token_secret = "your-long-secret-string"
+auth_access_token_expires_in = 28800
+auth_refresh_token_secret = "your-another-secret-string"
+auth_refresh_token_expires_in = 15897600
+
+log_console_enabled = true
+log_console_level = "info"
+log_file_enabled = true
+log_file_level = "debug"
+log_file_directory = "/var/log/job-hunting"
+log_file_rotation = "daily"
+</code></pre>
+<h2 id="数据库迁移"><a class="header" href="#数据库迁移">数据库迁移</a></h2>
+<p>迁移由 Sea-ORM 管理，在服务器启动时<strong>自动执行</strong>，无需手动干预：</p>
+<pre><code class="language-rust ignore">// api/src/lib.rs - api::start() 中
+migration::Migrator::up(&amp;conn, None).await?;</code></pre>
+<p>也可手动执行迁移 CLI：</p>
+<pre><code class="language-bash"># 在 migration 目录下
+cargo run -- up
+</code></pre>
+<p>迁移文件位于 <code>migration/src/</code>，按时间命名：</p>
+<ul>
+<li><code>m20260000_000000_init.rs</code> — 初始建表</li>
+<li><code>m20260605_000001_add_indexes.rs</code> — 索引补充</li>
+</ul>
+<h2 id="docker-部署"><a class="header" href="#docker-部署">Docker 部署</a></h2>
+<h3 id="构建镜像"><a class="header" href="#构建镜像">构建镜像</a></h3>
+<pre><code class="language-bash"># 交叉编译二进制（由 CI 负责）
+# 构建 Docker 镜像
+docker build -t job-hunting-server -f apps/server/Dockerfile .
+</code></pre>
+<h3 id="dockerfile简化版"><a class="header" href="#dockerfile简化版">Dockerfile（简化版）</a></h3>
+<pre><code class="language-dockerfile">FROM alpine:3.20.2
+WORKDIR /app
+COPY target/release/job-hunting-server /app/server
+EXPOSE 3000
+CMD ["./server"]
+</code></pre>
+<h3 id="docker-composepostgresql-本地开发"><a class="header" href="#docker-composepostgresql-本地开发">docker-compose（PostgreSQL 本地开发）</a></h3>
+<p>项目中提供了 <code>docker-compose.yml</code>，仅包含 PostgreSQL 服务：</p>
+<pre><code class="language-bash">cd apps/server
+docker compose up -d    # 启动 PostgreSQL
+</code></pre>
+<p>修改配置指向本地 PostgreSQL：</p>
+<pre><code class="language-bash">./server -O database_url="postgres://postgres:changeme@127.0.0.1:5432/postgres"
+</code></pre>
+<h2 id="运行时控制"><a class="header" href="#运行时控制">运行时控制</a></h2>
+<h3 id="cli-参数"><a class="header" href="#cli-参数">CLI 参数</a></h3>
+<pre><code class="language-bash">./server --help
+
+# 可选参数：
+#   -c, --config &lt;FILE&gt;      指定配置文件（可多次指定）
+#   -O &lt;KEY=VALUE&gt;          覆盖配置项（TOML 语法）
+</code></pre>
+<h3 id="信号linuxmacos"><a class="header" href="#信号linuxmacos">信号（Linux/macOS）</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>信号</th><th>行为</th></tr></thead><tbody>
+<tr><td><code>SIGINT</code></td><td>优雅关闭</td></tr>
+<tr><td><code>SIGTERM</code> / <code>SIGQUIT</code></td><td>立即关闭</td></tr>
+<tr><td><code>SIGUSR1</code></td><td>重新加载日志配置</td></tr>
+<tr><td><code>SIGUSR2</code></td><td>循环切换控制台日志级别</td></tr>
+</tbody></table>
+</div>
+<h3 id="moon-任务"><a class="header" href="#moon-任务">moon 任务</a></h3>
+<div class="table-wrapper"><table><thead><tr><th>命令</th><th>说明</th></tr></thead><tbody>
+<tr><td><code>moon run server:build</code></td><td>编译二进制</td></tr>
+<tr><td><code>moon run server:dev</code></td><td>开发模式运行（使用 <code>application-dev.toml</code>）</td></tr>
+<tr><td><code>moon run server:run</code></td><td>正式运行（使用 <code>application.toml</code>）</td></tr>
+<tr><td><code>moon run server:test</code></td><td>运行测试</td></tr>
+<tr><td><code>moon run server:lint</code></td><td>运行 clippy</td></tr>
+<tr><td><code>moon run server:format</code></td><td>格式检查</td></tr>
+<tr><td><code>moon run server:bump</code></td><td>版本升级 + 生成 CHANGELOG</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="测试-1"><a class="header" href="#测试-1">测试</a></h1>
+<h2 id="测试架构"><a class="header" href="#测试架构">测试架构</a></h2>
+<p>测试分布在三个 crate 中，按层次划分：</p>
+<div class="table-wrapper"><table><thead><tr><th>Crate</th><th>测试类型</th><th>工具</th><th>位置</th></tr></thead><tbody>
+<tr><td><code>framework</code></td><td>纯单元测试</td><td><code>#[cfg(test)]</code> 内联</td><td><code>src/*.rs</code></td></tr>
+<tr><td><code>service</code></td><td>业务逻辑集成测试</td><td>testcontainers + SQLite</td><td><code>service/tests/</code></td></tr>
+<tr><td><code>api</code></td><td>API BDD 测试 + 接口集成测试</td><td>cucumber + tower::oneshot</td><td><code>api/tests/</code></td></tr>
+</tbody></table>
+</div><pre class="mermaid">graph TD
+    subgraph &quot;api/tests/&quot;
+        BDD[&quot;Cucumber BDD&lt;br/&gt;(feature 文件 + step 定义)&quot;]
+        INT[&quot;HTTP 集成测试&lt;br/&gt;(oneshot 发请求)&quot;]
+    end
+    subgraph &quot;service/tests/&quot;
+        SVC[&quot;业务逻辑测试&lt;br/&gt;(DAO / Git / 任务流)&quot;]
+    end
+    subgraph &quot;framework/src/&quot;
+        UNIT[&quot;纯单元测试&lt;br/&gt;(工具函数)&quot;]
+    end
+    BDD --&gt;|调用 handlers| Router[&quot;Axum Router&lt;br/&gt;(完整路由栈)&quot;]
+    INT --&gt;|调用 handlers| Router
+    SVC --&gt;|直接操作| DB[&quot;Sea-ORM Connection&lt;br/&gt;(SQLite in-memory)&quot;]
+</pre>
+<h2 id="cucumber-bdd-测试"><a class="header" href="#cucumber-bdd-测试">Cucumber BDD 测试</a></h2>
+<p>BDD 测试是 API 层的主要测试方式，使用 <a href="https://crates.io/crates/cucumber">cucumber</a> crate。</p>
+<h3 id="目录结构"><a class="header" href="#目录结构">目录结构</a></h3>
+<pre><code class="language-text">api/tests/
+├── common/
+│   └── mod.rs              # 测试辅助函数：HTTP 客户端、DB 初始化
+├── features/               # Gherkin 场景文件
+│   ├── auth/auth.feature
+│   ├── company/company.feature
+│   └── job/get_info/search.feature
+├── feature_auth_test.rs    # Auth step 定义
+├── feature_company_test.rs # Company step 定义
+├── feature_job_test.rs     # Job search step 定义
+├── company_test.rs         # 纯单元测试（CSV 转换）
+└── index_test.rs           # 冒烟测试
+</code></pre>
+<h3 id="world-结构体"><a class="header" href="#world-结构体">World 结构体</a></h3>
+<p>每个 feature 文件对应一个 <code>World</code> 结构体，实现 <code>cucumber::World</code> trait：</p>
+<pre><code class="language-rust ignore">#[derive(Debug, Default, cucumber::World)]
+struct TestWorld {
+    // 数据库连接
+    conn: Option&lt;DatabaseConnection&gt;,
+    // 当前登录用户的 token
+    access_token: Option&lt;String&gt;,
+    // 某场景下的状态（如创建的公司 ID）
+    company_id: Option&lt;String&gt;,
+    // ...
+}</code></pre>
+<h3 id="feature-文件示例"><a class="header" href="#feature-文件示例">Feature 文件示例</a></h3>
+<pre><code class="language-gherkin">Feature: Company CRUD
+  Background:
+    Given insert tables
+
+  Scenario: Create company
+    Given access_token without token
+    When I create the #companyName company
+    Then I should see company created
+
+  Scenario: Search companies
+    Given access_token without token
+    And company #companyName created
+    When I search companies without params
+    Then I should see company #companyName in the search results
+</code></pre>
+<h3 id="step-定义示例"><a class="header" href="#step-定义示例">Step 定义示例</a></h3>
+<pre><code class="language-rust ignore">#[given(expr = "access_token {word} token")]
+async fn setup_token(world: &amp;mut TestWorld, token_type: String) {
+    // 根据 token_type 设置 world.access_token
+    match token_type.as_str() {
+        "without" =&gt; world.access_token = None,
+        "with" =&gt; {
+            // 登录获取 token
+            let result = login(&amp;world.conn, "root", "root").await;
+            world.access_token = Some(result.access_token);
+        }
+        _ =&gt; unreachable!(),
+    }
+}
+
+#[when(expr = "I create the {string} company")]
+async fn create_company(world: &amp;mut TestWorld, name: String) {
+    use common::post_json_with_token;
+
+    let resp = post_json_with_token(
+        &amp;world.app, "/api/company", &amp;create_params(&amp;name), world.access_token.as_deref()
+    ).await;
+    let body = common::response_to_json(resp).await;
+    world.company_id = Some(common::get_from_value(&amp;body, "data.id"));
+}
+
+#[then(expr = "I should see company {string} in the search results")]
+async fn check_company_in_results(world: &amp;mut TestWorld, name: String) {
+    let resp = get_json_with_token(
+        &amp;world.app, "/api/company/search?name={name}", world.access_token.as_deref()
+    ).await;
+    let body = common::response_to_json(resp).await;
+    let items = common::get_json_paging_result_items(&amp;body);
+    assert!(items.iter().any(|i| i["name"] == name));
+}</code></pre>
+<h3 id="场景执行入口"><a class="header" href="#场景执行入口">场景执行入口</a></h3>
+<p>每个 BDD 测试文件有一个 <code>#[tokio::test]</code> 入口：</p>
+<pre><code class="language-rust ignore">#[tokio::test]
+async fn main() {
+    TestWorld::cucumber()
+        .before(|_feature, _rule, _scenario, world| {
+            // 每个场景前执行：初始化数据库、组装 Router
+            Box::pin(async {
+                let (container, conn) = common::setup_database().await;
+                world.conn = Some(conn.clone());
+                world.app = Some(create_test_router(conn).await);
+                world.container = container;
+            })
+        })
+        .after(|_feature, _rule, _scenario, world| {
+            // 每个场景后执行：清理数据库
+            Box::pin(async {
+                common::tear_down(world.container.take()).await;
+            })
+        })
+        .run("tests/features/company/company.feature")
+        .await;
+}</code></pre>
+<h3 id="运行-bdd-测试"><a class="header" href="#运行-bdd-测试">运行 BDD 测试</a></h3>
+<pre><code class="language-bash"># 运行所有 API 测试（含 BDD 和集成测试）
+cargo test --package job-hunting-server
+
+# 仅运行 API crate 的测试
+moon run server:test
+</code></pre>
+<h2 id="数据库测试隔离"><a class="header" href="#数据库测试隔离">数据库：测试隔离</a></h2>
+<p>每个测试场景获得<strong>独立的 SQLite in-memory 数据库</strong>，通过 <code>setup_database()</code> 创建：</p>
+<pre><code class="language-rust ignore">pub async fn setup_database() -&gt; (Option&lt;ContainerAsync&lt;Postgres&gt;&gt;, DatabaseConnection) {
+    // 当前使用 SQLite in-memory（快速、隔离）
+    let container = None;
+    let conn = framework::database::establish_connection("sqlite::memory:")
+        .await
+        .unwrap();
+    // 运行全部迁移
+    migration::Migrator::up(&amp;conn, None).await.unwrap();
+    (container, conn)
+}</code></pre>
+<blockquote>
+<p>设计预留了切换到 PostgreSQL 的能力：取消注释 testcontainers 部分即可，<code>Option&lt;ContainerAsync&lt;Postgres&gt;&gt;</code> 保证了兼容。</p>
+</blockquote>
+<h2 id="测试辅助工具"><a class="header" href="#测试辅助工具">测试辅助工具</a></h2>
+<p><code>api/tests/common/mod.rs</code> 提供了一套 HTTP 测试工具函数，通过 <code>tower::ServiceExt::oneshot</code> 直接向 Axum Router 发请求（不走 TCP 网络）：</p>
+<div class="table-wrapper"><table><thead><tr><th>函数</th><th>说明</th></tr></thead><tbody>
+<tr><td><code>setup_database()</code></td><td>初始化 SQLite 内存库 + 运行迁移</td></tr>
+<tr><td><code>tear_down()</code></td><td>如需则停止 testcontainers 容器</td></tr>
+<tr><td><code>response_to_json()</code></td><td><code>Response&lt;Body&gt;</code> → <code>serde_json::Value</code></td></tr>
+<tr><td><code>get_json_result()</code></td><td>从 API 响应中提取 <code>data</code> 字段</td></tr>
+<tr><td><code>get_json_paging_result_items()</code></td><td>从分页响应中提取 <code>data.items</code></td></tr>
+<tr><td><code>get_from_value()</code></td><td>从 JSON Value 中按类型提取字段</td></tr>
+<tr><td><code>post_json()</code></td><td>POST JSON body</td></tr>
+<tr><td><code>post_json_with_token()</code></td><td>POST JSON body + Bearer token</td></tr>
+<tr><td><code>get_json()</code> / <code>get_json_with_token()</code></td><td>GET + 可选 token</td></tr>
+<tr><td><code>put_json()</code> / <code>put_json_with_token()</code></td><td>PUT + 可选 token</td></tr>
+<tr><td><code>delete_json()</code> / <code>delete_json_with_token()</code></td><td>DELETE + 可选 token</td></tr>
+</tbody></table>
+</div>
+<h2 id="服务层测试"><a class="header" href="#服务层测试">服务层测试</a></h2>
+<p><code>service/tests/</code> 下的测试直接操作 Sea-ORM 连接和业务逻辑：</p>
+<ul>
+<li><strong><code>dao_test.rs</code></strong>: 实体 CRUD、分页查询</li>
+<li><strong><code>file_parser_test.rs</code></strong>: Excel 文件解析、表头校验</li>
+<li><strong><code>import_job_test.rs</code></strong>: 从 Excel 行导入职位数据</li>
+<li><strong><code>import_company_test.rs</code></strong>: 从 Excel 行导入公司数据</li>
+<li><strong><code>task_test.rs</code></strong>: 完整的下载+合并任务流程</li>
+<li><strong><code>scheduler_test.rs</code></strong>: 任务计划调度 + 任务队列消费</li>
+<li><strong><code>git_test.rs</code> / <code>git_lite_test.rs</code></strong>: Git 操作（需 Gitea testcontainers）</li>
+</ul>
+<p>服务层测试也提供了一套公共工具（<code>service/tests/common/mod.rs</code>），包括：</p>
+<ul>
+<li><code>setup_gitea_with_test_data()</code> — 启动 Gitea 容器并推送测试 fixture 数据</li>
+<li><code>create_test_file_map()</code> — 映射测试资源文件</li>
+</ul>
+<h2 id="测试用-fixture-数据"><a class="header" href="#测试用-fixture-数据">测试用 Fixture 数据</a></h2>
+<pre><code class="language-text">service/tests/resources/data/
+├── job-v0.zip / job-v1.zip         # 职位数据
+├── company-v0.zip / company-v1.zip / company-v2.zip  # 公司数据
+├── job-v1.xlsx                     # 职位 Excel
+└── company-v2.xlsx                 # 公司 Excel
+</code></pre>
+<h2 id="新增测试场景"><a class="header" href="#新增测试场景">新增测试场景</a></h2>
+<h3 id="新增-api-bdd-场景"><a class="header" href="#新增-api-bdd-场景">新增 API BDD 场景</a></h3>
+<ol>
+<li>在 <code>features/</code> 对应子目录下编写 <code>.feature</code> 文件</li>
+<li>在 <code>feature_*_test.rs</code> 中添加 <code>#[given]</code> / <code>#[when]</code> / <code>#[then]</code> step 定义</li>
+<li>在 step 定义中使用 <code>common::*</code> 工具函数发送 HTTP 请求、提取响应</li>
+</ol>
+<h3 id="新增服务层测试"><a class="header" href="#新增服务层测试">新增服务层测试</a></h3>
+<ol>
+<li>在 <code>service/tests/</code> 下新建 <code>_test.rs</code> 文件</li>
+<li>使用 <code>common::setup_database()</code> 初始化数据库</li>
+<li>直接调用 <code>service</code> crate 中的函数并断言结果</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="数据源"><a class="header" href="#数据源">数据源</a></h1>
+<h2 id="数据源仓库说明"><a class="header" href="#数据源仓库说明">数据源仓库说明</a></h2>
+<ol>
+<li>仓库目录结构</li>
+</ol>
+<pre><code class="language-txt">├── 2025                              //年份，格式YYYY
+│   └── 07-01                         //月日，格式MM-DD
+│       └── 深圳避雷公司.zip          //数据文件，格式xxx.zip（包含文件xxx.xlsx）备注：zip文件和xlsx文件的文件名必须相同
+├── metadata.json                     //源数据，包含数据源元数据，可用的数据源列表
+</code></pre>
+<ol>
+<li>metadata.json 文件格式</li>
+</ol>
+<pre><code class="language-json">{
+  "data": {
+    "source": [
+      {
+        "name": ""    //数据源名称
+        "config": {
+          "taskTypeList": [
+            {
+              "name": "",                                 //名称
+              "type": "COMPANY_COMMENT_DATA_DOWNLOAD",    //固定值，代表公司评论数据类型
+              "emotion": "NEGATIVE",                      //情感导向，负面：NEGATIVE，积极：POSITIVE，正常：其他值
+              "fileName": "深圳避雷公司",                             //数据文件名
+              "description": "",                          //描述
+              "retentionDay": 3650                      //数据保留时间，单位：天
+            }
+          ]
+        },
+        "repoType": "GITHUB",                         //固定值
+        "reponame": "",                               //仓库名
+        "username": "",                               //仓库用户名
+        "description": ""                             //数据源描述
+      }
+    ]
+  },
+  "icon":"",                                          //元数据图标，格式为svg，注意转移字符
+  "name": "",                                         //元数据名称
+  "type": "GIT_METADATA",                             //固定值，GIT元数据类型
+  "config": {
+    "config": {
+      "url": "",                                      //元数据git仓库地址，以http或https开头的地址
+      "filePath": "metadata.json"                     //元数据文件名，一般取metadata.json
+    }
+  },
+  "enable": true,                                   //是否开启
+  "description": "",                                  //元数据描述
+  "autoUpdateEnable": true                          //是否自动更新元数据
+}
+</code></pre>
+<ol>
+<li>
+<p>公司评论数据文件格式</p>
+<div class="table-wrapper"><table><thead><tr><th>公司</th><th>评论</th></tr></thead><tbody>
+<tr><td>xxxx</td><td>yyyy</td></tr>
+</tbody></table>
+</div>
+<p>备注：</p>
+<ol>
+<li>第一行的标题必须保留，插件会以标题来标识字段列的数据</li>
+<li>公司：可以同时填写多家公司，换行隔开</li>
+<li>公司或评论为空的行将被跳过</li>
+</ol>
+</li>
+<li>
+<p>Q&amp;A</p>
+<ol>
+<li>
+<p>如何更新数据？
+根据仓库目录结构，新建<strong>年月日目录</strong>，将整理后的数据文件<strong>zip 文件</strong>上传到新建的<strong>年月日目录</strong>里即可</p>
+</li>
+<li>
+<p>如何快速测试文件格式是否正确
+打开插件后台页面 -&gt;系统 -&gt;数据管理 -&gt;公司评论数据导入</p>
+<p>如果能正常导入 xlsx 文件，则代表该文件正常（当前不支持导入 zip 文件）</p>
+</li>
+<li>
+<p>如何使用？</p>
+<ol>
+<li>
+<p>新增元数据：打开插件后台页面 -&gt;数据源 -&gt;元数据 -&gt;从网络导入</p>
+<p>1.从网络导入，填入 <strong>metadata.json</strong> 的访问地址: <a href="https://github.com/%E7%94%A8%E6%88%B7%E5%90%8D/%E4%BB%93%E5%BA%93%E5%90%8D/raw/refs/heads/main/metadata.json">https://github.com/用户名/仓库名/raw/refs/heads/main/metadata.json</a></p>
+</li>
+<li>
+<p>添加数据源: 打开插件后台页面 -&gt;数据源 -&gt;列表 -&gt;搜寻数据源 -&gt;选中新增的元数据 -&gt;选中并添加数据源</p>
+</li>
+</ol>
+</li>
+<li>
+<p>数据同步的逻辑是怎样的？
+插件会遍历整个仓库的年月日目录，根据 metadata.json 的规则进行数据的增量同步，公司评论信息采取 散列（公司名+评论）作为唯一标识进行去重逻辑。</p>
+</li>
+</ol>
+</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="commit-message"><a class="header" href="#commit-message">Commit Message</a></h1>
+<pre><code class="language-txt">&lt;type&gt;[optional scope]: &lt;description&gt;
+
+[optional body]
+
+[optional footer(s)]
+
+提交说明包含了下面的结构化元素，以向类库使用者表明其意图：
+
+    fix: 类型 为 fix 的提交表示在代码库中修复了一个 bug（这和语义化版本中的 PATCH 相对应）。
+    feat: 类型 为 feat 的提交表示在代码库中新增了一个功能（这和语义化版本中的 MINOR 相对应）。
+    BREAKING CHANGE: 在脚注中包含 BREAKING CHANGE: 或 &lt;类型&gt;(范围) 后面有一个 ! 的提交，表示引入了破坏性 API 变更（这和语义化版本中的 MAJOR 相对应）。 破坏性变更可以是任意 类型 提交的一部分。
+    除 fix: 和 feat: 之外，也可以使用其它提交 类型 ，例如 @commitlint/config-conventional（基于 Angular 约定）中推荐的 build:、chore:、 ci:、docs:、style:、refactor:、perf:、test:，等等。
+    build: 用于修改项目构建系统，例如修改依赖库、外部接口或者升级 Node 版本等；
+    chore: 用于对非业务性代码进行修改，例如修改构建流程或者工具配置等；
+    ci: 用于修改持续集成流程，例如修改 Travis、Jenkins 等工作流配置；
+    docs: 用于修改文档，例如修改 README 文件、API 文档等；
+    style: 用于修改代码的样式，例如调整缩进、空格、空行等；
+    refactor: 用于重构代码，例如修改代码结构、变量名、函数名等但不修改功能逻辑；
+    perf: 用于优化性能，例如提升代码的性能、减少内存占用等；
+    test: 用于修改测试用例，例如添加、删除、修改代码的测试用例等。
+    脚注中除了 BREAKING CHANGE: &lt;description&gt; ，其它条目应该采用类似 git trailer format 这样的惯例。
+    其它提交类型在约定式提交规范中并没有强制限制，并且在语义化版本中没有隐式影响（除非它们包含 BREAKING CHANGE）。 可以为提交类型添加一个围在圆括号内的范围，以为其提供额外的上下文信息。例如 feat(parser): adds ability to parse arrays.。
+    特别地：
+        bump: v1.1.0，代表发布版本
+</code></pre>
+<h1 id="version"><a class="header" href="#version">Version</a></h1>
+<pre><code class="language-txt">版本格式：主版本号.次版本号.修订号，版本号递增规则如下：
+
+主版本号：当你做了不兼容的 API 修改，
+次版本号：当你做了向下兼容的功能性新增，
+修订号：当你做了向下兼容的问题修正。
+先行版本号及版本编译信息可以加到“主版本号.次版本号.修订号”的后面，作为延伸。
+</code></pre>
+<h1 id="reference"><a class="header" href="#reference">Reference</a></h1>
+<ul>
+<li><a href="https://keepachangelog.com/zh-CN/1.1.0/">https://keepachangelog.com/zh-CN/1.1.0/</a></li>
+<li><a href="https://github.com/angular/angular/blob/main/CONTRIBUTING.md#-commit-message-format">https://github.com/angular/angular/blob/main/CONTRIBUTING.md#-commit-message-format</a></li>
+<li><a href="https://www.conventionalcommits.org/zh-hans/v1.0.0/">https://www.conventionalcommits.org/zh-hans/v1.0.0/</a></li>
+<li><a href="https://semver.org/lang/zh-CN/">https://semver.org/lang/zh-CN/</a></li>
+</ul>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="auto_explain"><a class="header" href="#auto_explain">auto_explain</a></h1>
+<pre><code class="language-ts">   db = new PGlite(`opfs-ahp://${JOB_DB_PATH}`, {
+       extensions: { auto_explain },
+       debug:1,
+   });
+ await db.exec(`
+   LOAD 'auto_explain';
+   SET auto_explain.log_min_duration = '0';
+   SET auto_explain.log_analyze = 'true';
+   `);
+</code></pre>
+<p>打开offscreen的console，可看到详细的分析日志</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="transaction"><a class="header" href="#transaction">Transaction</a></h1>
+<h2 id="chrome-extension下的持久层事务问题transaction"><a class="header" href="#chrome-extension下的持久层事务问题transaction">Chrome Extension下的持久层事务问题（Transaction）</a></h2>
+<ol>
+<li>当前采用PGLite，其事务的调用采用异步调用下的在回调函数里进行，如</li>
+</ol>
+<pre><code class="language-javascript">await pg.transaction(async (tx) =&gt; {
+  await tx.query(
+    'INSERT INTO test (name) VALUES ('$1');',
+    [ 'test' ]
+  );
+  return await tx.query('SELECT * FROM test;');
+});
+</code></pre>
+<ol start="2">
+<li>Chrome Extension的调用链为</li>
+</ol>
+<pre><code class="language-text">ContentScript（或SidePanel） -&gt; Background -&gt; OffScreen -&gt; WebWorker
+</code></pre>
+<p>而持久层（即PGLite）是在WebWorker进行调用，而运行逻辑部份是放在Background或ContentScript(或SidePanel)里，这样会出现一个问题，怎样使得逻辑的调用链处在事务的回调函数里？</p>
+<h2 id="可能的解决方案"><a class="header" href="#可能的解决方案">可能的解决方案</a></h2>
+<ol>
+<li>传递tx对象</li>
+</ol>
+<p>伪代码：</p>
+<pre><code class="language-javascript">let idAndTxMap = new Map();
+let idAndTxPromiseResolveReject = new Map()
+
+async function startTransaction(){
+    await pg.transaction(async (tx) =&gt; {
+    let id = genId();
+    idAndTxMap.set(id,tx);
+    postMessage(message,id);
+    return new Promise((resolve,reject)=&gt;{
+        idAndTxPromiseResolveReject.set(id,{resolve,reject});
+    });
+    });
+}
+
+async function endTransaction(id){
+    idAndTxPromiseResolveReject.get(id).resolve();
+}
+
+async function update(param,{transactionId=null}={}){
+    let connection = idAndTxMap.get(transactionId)??await getDb();
+    connection.query("update....",param);
+}
+
+async main(){
+    let id = await startTransaction();
+    update(param,{transactionId:id})
+    await endTransaction(id);
+}
+
+</code></pre>
+<ol start="2">
+<li>将逻辑都放到WebWorker里</li>
+</ol>
+<h2 id="选择的解决方案"><a class="header" href="#选择的解决方案">选择的解决方案</a></h2>
+<ol>
+<li>选择将逻辑都放到WebWorker里。</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="dump"><a class="header" href="#dump">Dump</a></h1>
+<h2 id="数据库备份"><a class="header" href="#数据库备份">数据库备份</a></h2>
+<blockquote>
+<p><a href="https://github.com/electric-sql/pglite/tree/main/packages/pglite-tools">https://github.com/electric-sql/pglite/tree/main/packages/pglite-tools</a></p>
+</blockquote>
+<blockquote>
+<p><a href="https://github.com/electric-sql/pglite/blob/6b60fbc55c2d59eb7642d1d3f560999ec5b4ec40/packages/pglite-tools/README.md">https://github.com/electric-sql/pglite/blob/6b60fbc55c2d59eb7642d1d3f560999ec5b4ec40/packages/pglite-tools/README.md</a></p>
+</blockquote>
+<blockquote>
+<p>这里有pgDump的工具，但整合后报错（pg_dump failed with exit code 1），不能正常导出</p>
+</blockquote>
+<ol>
+<li>导出</li>
+</ol>
+<p>package.json</p>
+<pre><code class="language-json">"@electric-sql/pglite-tools": "^0.2.2",
+</code></pre>
+<p>wxt.config.ts</p>
+<pre><code class="language-ts">copyFileSync(resolve(srcDir, "node_modules", "@electric-sql", "pglite-tools", "dist", "pg_dump.wasm"), resolve(outDir, "assets", "pg_dump.wasm"));
+</code></pre>
+<p>database.js</p>
+<pre><code class="language-ts">import { PGlite } from '@electric-sql/pglite'
+import { pgDump } from '@electric-sql/pglite-tools/pg_dump'
+
+const pg = await PGlite.create()
+
+// Create a table and insert some data
+await pg.exec(`
+  CREATE TABLE test (
+    id SERIAL PRIMARY KEY,
+    name TEXT
+  );
+`)
+await pg.exec(`
+  INSERT INTO test (name) VALUES ('test');
+`)
+
+// Dump the database to a file
+const dump = await pgDump({ pg })
+</code></pre>
+<ol start="2">
+<li>导入</li>
+</ol>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="data-share-plan-数据共享计划"><a class="header" href="#data-share-plan-数据共享计划">Data Share Plan 数据共享计划</a></h1>
+<blockquote>
+<p>文档版本：2024-10-10</p>
+</blockquote>
+<h2 id="背景"><a class="header" href="#背景">背景</a></h2>
+<p>招聘网站展示给应聘者的岗位存在某些问题</p>
+<ol>
+<li>职位并不是最新的,有可能是挂职几个月的,一页展示的只有大概三分之一是最近的</li>
+<li>部分职位因为使用某种手段,使其展示的优先级往上靠</li>
+<li>某些招聘网站没有提供按职位发布时间进行排序的功能</li>
+<li>招聘网站提供的职位搜索条件较少,一般只通过职位关键字来进行搜索</li>
+</ol>
+<p>基于上述的原因,实现数据共享计划并结合 JobHutting 内置的职位偏好功能是部分痛点的解决方案</p>
+<h2 id="数据字段"><a class="header" href="#数据字段">数据字段</a></h2>
+<h3 id="职位数据字段"><a class="header" href="#职位数据字段">职位数据字段</a></h3>
+<pre><code class="language-txt">  职位自编号
+  发布平台
+  职位访问地址
+  职位
+  公司
+  公司是否为全称
+  地区
+  地址
+  经度
+  纬度
+  职位描述
+  学历
+  所需经验
+  最低薪资
+  最高薪资
+  首次发布时间
+  招聘人
+  招聘公司
+  招聘者职位
+  首次扫描日期
+  记录更新日期
+</code></pre>
+<h3 id="公司数据字段"><a class="header" href="#公司数据字段">公司数据字段</a></h3>
+<pre><code class="language-txt">  公司
+  公司描述
+  成立时间
+  经营状态
+  法人
+  统一社会信用代码
+  官网
+  社保人数
+  自身风险数
+  关联风险数
+  地址
+  经营范围
+  纳税人识别号
+  所属行业
+  工商注册号
+  经度
+  纬度
+  数据来源地址
+  数据来源平台
+  数据来源记录编号
+  数据来源更新时间
+</code></pre>
+<h3 id="公司标签数据字段"><a class="header" href="#公司标签数据字段">公司标签数据字段</a></h3>
+<pre><code class="language-txt">  公司
+  标签
+</code></pre>
+<h2 id="数据流向"><a class="header" href="#数据流向">数据流向</a></h2>
+<h3 id="官方数据流数据上传"><a class="header" href="#官方数据流数据上传">官方数据流（数据上传）</a></h3>
+<pre><code class="language-txt">    招聘网站 -&gt; JobHunting Extension -&gt; Git(个人GitHub仓库)
+</code></pre>
+<h3 id="共享数据流数据下载"><a class="header" href="#共享数据流数据下载">共享数据流（数据下载）</a></h3>
+<pre><code class="language-txt">    共享数据仓库列表 -&gt; Git(个人GitHub仓库) -&gt; JobHunting Extension
+</code></pre>
+<h2 id="数据提交流程"><a class="header" href="#数据提交流程">数据提交流程</a></h2>
+<pre><code class="language-txt">最多每天提交一次,插件启动时开启定时检查任务
+查询仓库最近一次提交时间
+提交的记录的范围条件：记录更新时间 &lt; 今天0点0分 和记录更新时间 &gt;= 最近一次提交时间
+    备注：针对公司标签,现在是全量提交
+提交的目录
+    提交时间（YYYY）
+        提交时间（MM-DD）
+            job.zip
+            company.zip
+            company_tag.zip
+</code></pre>
+<h2 id="数据获取和同步流程"><a class="header" href="#数据获取和同步流程">数据获取和同步流程</a></h2>
+<pre><code class="language-txt">1. 查询仓库60天内的记录
+2. 下载60天内缺失的数据文件
+3. 根据数据文件进行数据同步
+4. 针对不同类型数据进行处理
+    职位数据
+        如果是新数据
+            新增记录
+        如果是重复数据
+            根据创建时间来处理,并且需要处理公司名全称问题
+    公司数据
+        如果是新数据
+            新增记录
+        如果是重复数据
+            根据数据来源更新时间来处理
+    公司标签数据
+        如果是新数据
+            新增记录
+        如果是重复数据
+            合并标签
+</code></pre>
+<h2 id="关键组件及行为"><a class="header" href="#关键组件及行为">关键组件及行为</a></h2>
+<h3 id="相关表"><a class="header" href="#相关表">相关表</a></h3>
+<pre><code class="language-txt">task 任务表
+    id 编号
+    type 任务类型
+    data_id 数据编号
+    status 任务状态
+    error_reason 异常原因
+    cost_time 最近一次任务执行耗时
+    retry_count 重试次数
+    create_datetime 创建时间
+    update_datetime 更新时间
+</code></pre>
+<pre><code class="language-txt">task_data_upload 任务数据表（上传）
+    id 编号
+    type 任务类型
+    username 用户名
+    reponame 仓库名
+    start_datetime 数据开始时间
+    end_datetime 数据结束时间
+    data_count 数据总量
+    create_datetime 创建时间
+    update_datetime 更新时间
+</code></pre>
+<pre><code class="language-txt">task_data_download 任务数据表（下载）
+    id 编号
+    type 任务类型
+    username 用户名
+    reponame 仓库名
+    datetime 文件日期
+    create_datetime 创建时间
+    update_datetime 更新时间
+</code></pre>
+<pre><code class="language-txt">file 文件表
+    id 编号
+    name 文件名
+    sha 散列值
+    encoding 文件内容编码,
+    content 文件内容,
+    size 文件尺寸,
+    type 类型（当前只有file）
+    create_datetime 创建时间
+    update_datetime 更新时间
+</code></pre>
+<pre><code class="language-txt">task_data_merge 任务数据表（数据合并）
+    id 编号
+    type 任务类型
+    username 用户名
+    reponame 仓库名
+    datetime 文件日期
+    data_id 文件编号
+    data_count 数据总量
+    create_datetime 创建时间
+    update_datetime 更新时间
+</code></pre>
+<pre><code class="language-txt">data_share_partner 数据共享伙伴信息表
+    id 编号
+    username 用户名
+    reponame 仓库名
+    repo_type 仓库类型（当前只有GITHUB）
+    create_datetime 创建时间
+    update_datetime 更新时间
+
+</code></pre>
+<pre><code class="language-txt">附表：
+任务类型
+    职位数据上传:TASK_TYPE_JOB_DATA_UPLOAD
+    公司数据上传:TASK_TYPE_COMPANY_DATA_UPLOAD
+    公司标签数据上传:TASK_TYPE_COMPANY_TAG_DATA_UPLOAD
+    职位数据下载:TASK_TYPE_JOB_DATA_DOWNLOAD
+    公司数据下载:TASK_TYPE_COMPANY_DATA_DOWNLOAD
+    公司标签数据下载:TASK_TYPE_COMPANY_TAG_DATA_DOWNLOAD
+    职位数据合并:TASK_TYPE_JOB_DATA_MERGE
+    公司数据合并:TASK_TYPE_COMPANY_DATA_MERGE
+    公司标签数据合并:TASK_TYPE_COMPANY_TAG_DATA_MERGE
+状态
+    准备:TASK_STATUS_READY
+    运行中:TASK_STATUS_RUNNING
+    完成:TASK_STATUS_FINISHED
+    异常完成:TASK_STATUS_FINISHED_BUT_ERROR
+    错误:TASK_STATUS_ERROR
+    取消:TASK_STATUS_CANCEL
+</code></pre>
+<h3 id="数据存储目录结构"><a class="header" href="#数据存储目录结构">数据存储目录结构</a></h3>
+<pre><code class="language-txt">提交时间（YYYY）
+    提交时间（MM-DD）
+        job.zip
+        company.zip
+        company_tag.zip
+</code></pre>
+<h3 id="github"><a class="header" href="#github">GitHub</a></h3>
+<pre><code class="language-txt">    仓库的建立
+        所需权限："Administration" repository permissions (write)
+        https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#create-a-repository-for-the-authenticated-user
+            /user/repos
+
+    仓库目录的提交&amp;数据文件的提交
+        所需权限："Contents" repository permissions (write)
+        https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#create-or-update-file-contents
+            /repos/{owner}/{repo}/contents/{path}
+
+    仓库目录的查询&amp;仓库文件的下载
+        所需权限：无
+        特别事项：This API has an upper limit of 1,000 files for a directory. If you need to retrieve more files,
+        https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content
+            /repos/{owner}/{repo}/contents/{path}
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="faq"><a class="header" href="#faq">FAQ</a></h1>
+<h2 id="1-报错-no-more-file-handles-available-in-the-pool"><a class="header" href="#1-报错-no-more-file-handles-available-in-the-pool">1. 报错 No more file handles available in the pool</a></h2>
+<p>如果在 Linux 下，请使用命令 <em>ulimit -n</em> 检查 soft file descriptor 的值，一般默认为 1024 或 2048,请设定一个较高的值如 9001</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="免责声明"><a class="header" href="#免责声明">免责声明</a></h1>
+<h2 id="1-项目目的与性质"><a class="header" href="#1-项目目的与性质">1. 项目目的与性质</a></h2>
+<p>本项目（以下简称“本项目”）是作为一个技术研究与学习工具而创建的，旨在探索和学习网络数据采集技术。本项目专注于招聘平台的数据爬取与分析技术研究，旨在提供给学习者和研究者作为技术交流之用。</p>
+<h2 id="2-法律合规性声明"><a class="header" href="#2-法律合规性声明">2. 法律合规性声明</a></h2>
+<p>本项目开发者（以下简称“开发者”）郑重提醒用户在下载、安装和使用本项目时，严格遵守中华人民共和国相关法律法规，包括但不限于《中华人民共和国网络安全法》、《中华人民共和国反间谍法》等所有适用的国家法律和政策。用户应自行承担一切因使用本项目而可能引起的法律责任。</p>
+<h2 id="3-使用目的限制"><a class="header" href="#3-使用目的限制">3. 使用目的限制</a></h2>
+<p>本项目严禁用于任何非法目的或非学习、非研究的商业行为。本项目不得用于任何形式的非法侵入他人计算机系统，不得用于任何侵犯他人知识产权或其他合法权益的行为。用户应保证其使用本项目的目的纯属个人学习和技术研究，不得用于任何形式的非法活动。</p>
+<h2 id="4-免责声明"><a class="header" href="#4-免责声明">4. 免责声明</a></h2>
+<p>开发者已尽最大努力确保本项目的正当性及安全性，但不对用户使用本项目可能引起的任何形式的直接或间接损失承担责任。包括但不限于由于使用本项目而导致的任何数据丢失、设备损坏、法律诉讼等。</p>
+<h2 id="5-知识产权声明"><a class="header" href="#5-知识产权声明">5. 知识产权声明</a></h2>
+<p>本项目的知识产权归开发者所有。本项目受到著作权法和国际著作权条约以及其他知识产权法律和条约的保护。用户在遵守本声明及相关法律法规的前提下，可以下载和使用本项目。</p>
+<h2 id="6-最终解释权"><a class="header" href="#6-最终解释权">6. 最终解释权</a></h2>
+<p>关于本项目的最终解释权归开发者所有。开发者保留随时更改或更新本免责声明的权利，恕不另行通知。</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="mermaid.min.js"></script>
+        <script src="mermaid-init.js"></script>
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+    </div>
+    </body>
+</html>
