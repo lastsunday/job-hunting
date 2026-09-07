@@ -112,19 +112,39 @@
   border-radius: 5px;
 }
 
-/* New Zhilian split-view cards must own their timestamps in normal flow.
-   Absolute positioning anchors all timestamps to the outer page container. */
-.job-list-panel > .job-card > .__zhilian_time_tag {
-  position: static;
-  display: block;
-  width: fit-content;
-  max-width: 100%;
-  box-sizing: border-box;
-  margin-top: 8px;
-  text-align: left;
-  white-space: normal;
-  overflow-wrap: anywhere;
+/*zhilian start*/
+.jobs-split-page__content {
+  width: auto !important;
+  max-width: 1366px;
 }
+
+.jobs-split-page__content > .job-split-layout {
+  width: auto;
+}
+
+.job-split-layout > .job-split-layout__left {
+  width: auto;
+}
+
+.job-split-layout > .job-split-layout__left > .job-list-panel {
+  width: 680px;
+  padding-right: 10px;
+}
+
+.job-split-layout > .job-split-layout__left > .job-list-panel > .job-card {
+  width: 680px;
+  position: relative;
+}
+
+.job-split-layout
+  > .job-split-layout__left
+  > .job-list-panel
+  > .job-card
+  > .job-card__title-row {
+  margin-top: 5px;
+}
+
+/*zhilian end*/
 
 .__jobsdb_time_tag {
   position: absolute;

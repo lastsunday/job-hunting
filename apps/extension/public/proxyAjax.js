@@ -33,7 +33,7 @@ if (window._ahrealxhr) {
 const dispatchDataMap = new Map();
 
 // 监听页面的ajax
-window.addEventListener("ajaxReadyStateChange", async function (e) {
+window.addEventListener('ajaxReadyStateChange', async function (e) {
   try {
     const xhr = e.detail;
     const responseURL = xhr?.responseURL ? xhr.responseURL : xhr?.orignUrl;
@@ -64,23 +64,38 @@ window.addEventListener("ajaxReadyStateChange", async function (e) {
   }
 });
 
-console.log("[Inject] proxy ajax");
-
 // New Zhilian pages may use fetch as well as XMLHttpRequest. Observe only
 // position-list responses and clone them so the site's consumer is unaffected.
 if (window.location.hostname === 'www.zhaopin.com') {
   const originalFetch = window.fetch;
   window.fetch = function (...args) {
-    return originalFetch.apply(this, args).then(response => {
+    return originalFetch.apply(this, args).then((response) => {
       try {
         const url = new URL(response.url);
-        if (response.ok && /(^|\.)zhaopin\.(com|cn)$/.test(url.hostname) &&
-            /^\/c\/i\/(search\/positions|position\/recommend-tag(?:-newest)?)\/?$/.test(url.pathname)) {
-          response.clone().text().then(text => {
-            window.dispatchEvent(new CustomEvent('ajaxGetData', {
-              detail: { response: text, responseURL: response.url, status: response.status },
-            }));
-          }).catch(error => console.error('[job-hunting] 智联 fetch 响应读取失败', error));
+        if (
+          response.ok &&
+          /(^|\.)zhaopin\.(com|cn)$/.test(url.hostname) &&
+          /^\/c\/i\/(search\/positions|position\/recommend-tag(?:-newest)?)\/?$/.test(
+            url.pathname,
+          )
+        ) {
+          response
+            .clone()
+            .text()
+            .then((text) => {
+              window.dispatchEvent(
+                new CustomEvent('ajaxGetData', {
+                  detail: {
+                    response: text,
+                    responseURL: response.url,
+                    status: response.status,
+                  },
+                }),
+              );
+            })
+            .catch((error) =>
+              console.error('[job-hunting] 智联 fetch 响应读取失败', error),
+            );
         }
       } catch (error) {
         console.error('[job-hunting] 智联 fetch 监听失败', error);
@@ -89,3 +104,5 @@ if (window.location.hostname === 'www.zhaopin.com') {
     });
   };
 }
+
+console.log('[Inject] proxy ajax');
