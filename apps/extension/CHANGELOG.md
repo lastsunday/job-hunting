@@ -1,3 +1,14 @@
+## 5.0.1 (2026-09-07)
+
+### 🐛 Fixed
+
+- 适配智联招聘新版职位页面
+
+### ❤️ Thank You
+
+- Randyzhao2025 @Randyzhao2025
+- lastsunday @lastsunday
+
 ## 5.0.0 (2026-06-30)
 
 ### ⚠️ Noteworthy
