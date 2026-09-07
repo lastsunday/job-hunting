@@ -112,6 +112,20 @@
   border-radius: 5px;
 }
 
+/* New Zhilian split-view cards must own their timestamps in normal flow.
+   Absolute positioning anchors all timestamps to the outer page container. */
+.job-list-panel > .job-card > .__zhilian_time_tag {
+  position: static;
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  box-sizing: border-box;
+  margin-top: 8px;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .__jobsdb_time_tag {
   position: absolute;
   right: 0;

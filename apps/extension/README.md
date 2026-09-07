@@ -22,7 +22,7 @@
 2. 打开页面
    - boss 直聘： <https://www.zhipin.com/web/geek/jobs>
    - 51Job： <https://we.51job.com/pc/search>
-   - 智联招聘： <https://sou.zhaopin.com/>
+   - 智联招聘： <https://www.zhaopin.com/jobs>、<https://www.zhaopin.com/sou>（可能重定向到 jobs）
    - 拉钩网：<https://www.lagou.com/wn/zhaopin>
    - 猎聘网： <https://www.liepin.com/zhaopin>
    - 就业在线： <https://www.jobonline.cn/position>

@@ -509,9 +509,9 @@ function handleZhilianData(list) {
       welfareLabel,
     } = item;
     const { workAddress, latitude, longitude } =
-      item.jobDetailData.position.workLocation;
-    const { description } = item.jobDetailData.position.desc;
-    const { staffName, hrJob } = item.staffCard;
+      item.jobDetailData?.position?.workLocation || {};
+    const { description } = item.jobDetailData?.position?.desc || {};
+    const { staffName, hrJob } = item.staffCard || {};
     job.jobId = genId(jobId, PLATFORM_ZHILIAN);
     job.jobPlatform = PLATFORM_ZHILIAN;
     job.jobUrl = convertPureJobDetailUrl(positionUrl).replace(
@@ -551,8 +551,10 @@ function handleZhilianData(list) {
     }
     //handle salary month
     const groupsSalaryCount = salaryCount.match(/(?<count>\d*)/)?.groups;
-    job.jobSalaryTotalMonth = groupsSalaryCount.count;
-    job.jobFirstPublishDatetime = convertDateStringToDateObject(publishTime);
+    job.jobSalaryTotalMonth = groupsSalaryCount?.count || null;
+    // Missing publication time is unknown, not today's date.
+    job.jobFirstPublishDatetime = publishTime
+      ? convertDateStringToDateObject(publishTime) : null;
     job.bossName = staffName;
     job.bossCompanyName = companyName;
     job.bossPosition = hrJob;
