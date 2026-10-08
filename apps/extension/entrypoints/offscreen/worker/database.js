@@ -474,6 +474,45 @@ export async function sort(
   }
 }
 
+// 将 pg_dump 生成的 SQL 文本按语句边界切分为约 2MB 的数据块逐块执行。
+// 背景：大体积备份文件以单个 exec() 执行时会导致 WASM 层致命错误
+// （issue #200：恢复 191.7MB 备份时报 XLogBeginInsert was already called；
+//   本地复现为 Program terminated with exit(100)，崩溃点在 200MB 上下文）。
+// 切分正确性依据（pg_dump 的输出形态）：
+// 1. 语句以行尾的 ';' 结束（INSERT 每行一条，跨行 DDL 以 ';' 行收尾）；
+// 2. 函数体使用 $$...$$ 美元引用，内部可能出现行尾 ';'，需跳过；
+// 3. 字符串值内的换行会被 pg_dump 转义为字面 '\n'，因此按行处理是安全的。
+function* chunkSqlDump(sqlText, targetChunkBytes = 2 * 1024 * 1024) {
+  let chunkStart = 0;
+  let searchPos = 0;
+  let inDollarQuoted = false;
+  while (searchPos < sqlText.length) {
+    const lineEnd = sqlText.indexOf('\n', searchPos);
+    if (lineEnd === -1) break;
+    const line = sqlText.slice(searchPos, lineEnd);
+    const dollarTags = line.match(/\$[A-Za-z_]*\$/g);
+    if (dollarTags) {
+      for (let i = 0; i < dollarTags.length; i++) {
+        inDollarQuoted = !inDollarQuoted;
+      }
+    }
+    searchPos = lineEnd + 1;
+    if (!inDollarQuoted && /;\s*$/.test(line) && searchPos - chunkStart >= targetChunkBytes) {
+      yield sqlText.slice(chunkStart, searchPos);
+      chunkStart = searchPos;
+    }
+  }
+  if (chunkStart < sqlText.length) {
+    yield sqlText.slice(chunkStart);
+  }
+}
+
+async function execSqlDumpChunked(db, sqlText) {
+  for (const chunk of chunkSqlDump(sqlText)) {
+    await db.exec(chunk);
+  }
+}
+
 export const Database = {
   init: async function (message, param) {
     try {
@@ -508,7 +547,7 @@ export const Database = {
       });
       await _dbDelete();
       const restoredPG = await PGlite.create(`opfs-ahp://${JOB_DB_PATH}`);
-      await restoredPG.exec(sqlText);
+      await execSqlDumpChunked(restoredPG, sqlText);
       await connectionManager.adoptDb(restoredPG);
       postSuccessMessage(message, {});
     } catch (e) {
