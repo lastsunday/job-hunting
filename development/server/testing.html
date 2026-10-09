@@ -1,0 +1,410 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>测试 - Job Hunting</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon.svg">
+        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="stylesheet" href="../../css/variables.css">
+        <link rel="stylesheet" href="../../css/general.css">
+        <link rel="stylesheet" href="../../css/chrome.css">
+        <link rel="stylesheet" href="../../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Job Hunting</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="测试"><a class="header" href="#测试">测试</a></h1>
+<h2 id="测试架构"><a class="header" href="#测试架构">测试架构</a></h2>
+<p>测试分布在三个 crate 中，按层次划分：</p>
+<div class="table-wrapper"><table><thead><tr><th>Crate</th><th>测试类型</th><th>工具</th><th>位置</th></tr></thead><tbody>
+<tr><td><code>framework</code></td><td>纯单元测试</td><td><code>#[cfg(test)]</code> 内联</td><td><code>src/*.rs</code></td></tr>
+<tr><td><code>service</code></td><td>业务逻辑集成测试</td><td>testcontainers + SQLite</td><td><code>service/tests/</code></td></tr>
+<tr><td><code>api</code></td><td>API BDD 测试 + 接口集成测试</td><td>cucumber + tower::oneshot</td><td><code>api/tests/</code></td></tr>
+</tbody></table>
+</div><pre class="mermaid">graph TD
+    subgraph &quot;api/tests/&quot;
+        BDD[&quot;Cucumber BDD&lt;br/&gt;(feature 文件 + step 定义)&quot;]
+        INT[&quot;HTTP 集成测试&lt;br/&gt;(oneshot 发请求)&quot;]
+    end
+    subgraph &quot;service/tests/&quot;
+        SVC[&quot;业务逻辑测试&lt;br/&gt;(DAO / Git / 任务流)&quot;]
+    end
+    subgraph &quot;framework/src/&quot;
+        UNIT[&quot;纯单元测试&lt;br/&gt;(工具函数)&quot;]
+    end
+    BDD --&gt;|调用 handlers| Router[&quot;Axum Router&lt;br/&gt;(完整路由栈)&quot;]
+    INT --&gt;|调用 handlers| Router
+    SVC --&gt;|直接操作| DB[&quot;Sea-ORM Connection&lt;br/&gt;(SQLite in-memory)&quot;]
+</pre>
+<h2 id="cucumber-bdd-测试"><a class="header" href="#cucumber-bdd-测试">Cucumber BDD 测试</a></h2>
+<p>BDD 测试是 API 层的主要测试方式，使用 <a href="https://crates.io/crates/cucumber">cucumber</a> crate。</p>
+<h3 id="目录结构"><a class="header" href="#目录结构">目录结构</a></h3>
+<pre><code class="language-text">api/tests/
+├── common/
+│   └── mod.rs              # 测试辅助函数：HTTP 客户端、DB 初始化
+├── features/               # Gherkin 场景文件
+│   ├── auth/auth.feature
+│   ├── company/company.feature
+│   └── job/get_info/search.feature
+├── feature_auth_test.rs    # Auth step 定义
+├── feature_company_test.rs # Company step 定义
+├── feature_job_test.rs     # Job search step 定义
+├── company_test.rs         # 纯单元测试（CSV 转换）
+└── index_test.rs           # 冒烟测试
+</code></pre>
+<h3 id="world-结构体"><a class="header" href="#world-结构体">World 结构体</a></h3>
+<p>每个 feature 文件对应一个 <code>World</code> 结构体，实现 <code>cucumber::World</code> trait：</p>
+<pre><code class="language-rust ignore">#[derive(Debug, Default, cucumber::World)]
+struct TestWorld {
+    // 数据库连接
+    conn: Option&lt;DatabaseConnection&gt;,
+    // 当前登录用户的 token
+    access_token: Option&lt;String&gt;,
+    // 某场景下的状态（如创建的公司 ID）
+    company_id: Option&lt;String&gt;,
+    // ...
+}</code></pre>
+<h3 id="feature-文件示例"><a class="header" href="#feature-文件示例">Feature 文件示例</a></h3>
+<pre><code class="language-gherkin">Feature: Company CRUD
+  Background:
+    Given insert tables
+
+  Scenario: Create company
+    Given access_token without token
+    When I create the #companyName company
+    Then I should see company created
+
+  Scenario: Search companies
+    Given access_token without token
+    And company #companyName created
+    When I search companies without params
+    Then I should see company #companyName in the search results
+</code></pre>
+<h3 id="step-定义示例"><a class="header" href="#step-定义示例">Step 定义示例</a></h3>
+<pre><code class="language-rust ignore">#[given(expr = "access_token {word} token")]
+async fn setup_token(world: &amp;mut TestWorld, token_type: String) {
+    // 根据 token_type 设置 world.access_token
+    match token_type.as_str() {
+        "without" =&gt; world.access_token = None,
+        "with" =&gt; {
+            // 登录获取 token
+            let result = login(&amp;world.conn, "root", "root").await;
+            world.access_token = Some(result.access_token);
+        }
+        _ =&gt; unreachable!(),
+    }
+}
+
+#[when(expr = "I create the {string} company")]
+async fn create_company(world: &amp;mut TestWorld, name: String) {
+    use common::post_json_with_token;
+
+    let resp = post_json_with_token(
+        &amp;world.app, "/api/company", &amp;create_params(&amp;name), world.access_token.as_deref()
+    ).await;
+    let body = common::response_to_json(resp).await;
+    world.company_id = Some(common::get_from_value(&amp;body, "data.id"));
+}
+
+#[then(expr = "I should see company {string} in the search results")]
+async fn check_company_in_results(world: &amp;mut TestWorld, name: String) {
+    let resp = get_json_with_token(
+        &amp;world.app, "/api/company/search?name={name}", world.access_token.as_deref()
+    ).await;
+    let body = common::response_to_json(resp).await;
+    let items = common::get_json_paging_result_items(&amp;body);
+    assert!(items.iter().any(|i| i["name"] == name));
+}</code></pre>
+<h3 id="场景执行入口"><a class="header" href="#场景执行入口">场景执行入口</a></h3>
+<p>每个 BDD 测试文件有一个 <code>#[tokio::test]</code> 入口：</p>
+<pre><code class="language-rust ignore">#[tokio::test]
+async fn main() {
+    TestWorld::cucumber()
+        .before(|_feature, _rule, _scenario, world| {
+            // 每个场景前执行：初始化数据库、组装 Router
+            Box::pin(async {
+                let (container, conn) = common::setup_database().await;
+                world.conn = Some(conn.clone());
+                world.app = Some(create_test_router(conn).await);
+                world.container = container;
+            })
+        })
+        .after(|_feature, _rule, _scenario, world| {
+            // 每个场景后执行：清理数据库
+            Box::pin(async {
+                common::tear_down(world.container.take()).await;
+            })
+        })
+        .run("tests/features/company/company.feature")
+        .await;
+}</code></pre>
+<h3 id="运行-bdd-测试"><a class="header" href="#运行-bdd-测试">运行 BDD 测试</a></h3>
+<pre><code class="language-bash"># 运行所有 API 测试（含 BDD 和集成测试）
+cargo test --package job-hunting-server
+
+# 仅运行 API crate 的测试
+moon run server:test
+</code></pre>
+<h2 id="数据库测试隔离"><a class="header" href="#数据库测试隔离">数据库：测试隔离</a></h2>
+<p>每个测试场景获得<strong>独立的 SQLite in-memory 数据库</strong>，通过 <code>setup_database()</code> 创建：</p>
+<pre><code class="language-rust ignore">pub async fn setup_database() -&gt; (Option&lt;ContainerAsync&lt;Postgres&gt;&gt;, DatabaseConnection) {
+    // 当前使用 SQLite in-memory（快速、隔离）
+    let container = None;
+    let conn = framework::database::establish_connection("sqlite::memory:")
+        .await
+        .unwrap();
+    // 运行全部迁移
+    migration::Migrator::up(&amp;conn, None).await.unwrap();
+    (container, conn)
+}</code></pre>
+<blockquote>
+<p>设计预留了切换到 PostgreSQL 的能力：取消注释 testcontainers 部分即可，<code>Option&lt;ContainerAsync&lt;Postgres&gt;&gt;</code> 保证了兼容。</p>
+</blockquote>
+<h2 id="测试辅助工具"><a class="header" href="#测试辅助工具">测试辅助工具</a></h2>
+<p><code>api/tests/common/mod.rs</code> 提供了一套 HTTP 测试工具函数，通过 <code>tower::ServiceExt::oneshot</code> 直接向 Axum Router 发请求（不走 TCP 网络）：</p>
+<div class="table-wrapper"><table><thead><tr><th>函数</th><th>说明</th></tr></thead><tbody>
+<tr><td><code>setup_database()</code></td><td>初始化 SQLite 内存库 + 运行迁移</td></tr>
+<tr><td><code>tear_down()</code></td><td>如需则停止 testcontainers 容器</td></tr>
+<tr><td><code>response_to_json()</code></td><td><code>Response&lt;Body&gt;</code> → <code>serde_json::Value</code></td></tr>
+<tr><td><code>get_json_result()</code></td><td>从 API 响应中提取 <code>data</code> 字段</td></tr>
+<tr><td><code>get_json_paging_result_items()</code></td><td>从分页响应中提取 <code>data.items</code></td></tr>
+<tr><td><code>get_from_value()</code></td><td>从 JSON Value 中按类型提取字段</td></tr>
+<tr><td><code>post_json()</code></td><td>POST JSON body</td></tr>
+<tr><td><code>post_json_with_token()</code></td><td>POST JSON body + Bearer token</td></tr>
+<tr><td><code>get_json()</code> / <code>get_json_with_token()</code></td><td>GET + 可选 token</td></tr>
+<tr><td><code>put_json()</code> / <code>put_json_with_token()</code></td><td>PUT + 可选 token</td></tr>
+<tr><td><code>delete_json()</code> / <code>delete_json_with_token()</code></td><td>DELETE + 可选 token</td></tr>
+</tbody></table>
+</div>
+<h2 id="服务层测试"><a class="header" href="#服务层测试">服务层测试</a></h2>
+<p><code>service/tests/</code> 下的测试直接操作 Sea-ORM 连接和业务逻辑：</p>
+<ul>
+<li><strong><code>dao_test.rs</code></strong>: 实体 CRUD、分页查询</li>
+<li><strong><code>file_parser_test.rs</code></strong>: Excel 文件解析、表头校验</li>
+<li><strong><code>import_job_test.rs</code></strong>: 从 Excel 行导入职位数据</li>
+<li><strong><code>import_company_test.rs</code></strong>: 从 Excel 行导入公司数据</li>
+<li><strong><code>task_test.rs</code></strong>: 完整的下载+合并任务流程</li>
+<li><strong><code>scheduler_test.rs</code></strong>: 任务计划调度 + 任务队列消费</li>
+<li><strong><code>git_test.rs</code> / <code>git_lite_test.rs</code></strong>: Git 操作（需 Gitea testcontainers）</li>
+</ul>
+<p>服务层测试也提供了一套公共工具（<code>service/tests/common/mod.rs</code>），包括：</p>
+<ul>
+<li><code>setup_gitea_with_test_data()</code> — 启动 Gitea 容器并推送测试 fixture 数据</li>
+<li><code>create_test_file_map()</code> — 映射测试资源文件</li>
+</ul>
+<h2 id="测试用-fixture-数据"><a class="header" href="#测试用-fixture-数据">测试用 Fixture 数据</a></h2>
+<pre><code class="language-text">service/tests/resources/data/
+├── job-v0.zip / job-v1.zip         # 职位数据
+├── company-v0.zip / company-v1.zip / company-v2.zip  # 公司数据
+├── job-v1.xlsx                     # 职位 Excel
+└── company-v2.xlsx                 # 公司 Excel
+</code></pre>
+<h2 id="新增测试场景"><a class="header" href="#新增测试场景">新增测试场景</a></h2>
+<h3 id="新增-api-bdd-场景"><a class="header" href="#新增-api-bdd-场景">新增 API BDD 场景</a></h3>
+<ol>
+<li>在 <code>features/</code> 对应子目录下编写 <code>.feature</code> 文件</li>
+<li>在 <code>feature_*_test.rs</code> 中添加 <code>#[given]</code> / <code>#[when]</code> / <code>#[then]</code> step 定义</li>
+<li>在 step 定义中使用 <code>common::*</code> 工具函数发送 HTTP 请求、提取响应</li>
+</ol>
+<h3 id="新增服务层测试"><a class="header" href="#新增服务层测试">新增服务层测试</a></h3>
+<ol>
+<li>在 <code>service/tests/</code> 下新建 <code>_test.rs</code> 文件</li>
+<li>使用 <code>common::setup_database()</code> 初始化数据库</li>
+<li>直接调用 <code>service</code> crate 中的函数并断言结果</li>
+</ol>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../development/server/config_and_deploy.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../../development/datasource.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../development/server/config_and_deploy.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../../development/datasource.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr.min.js"></script>
+        <script src="../../mark.min.js"></script>
+        <script src="../../searcher.js"></script>
+
+        <script src="../../clipboard.min.js"></script>
+        <script src="../../highlight.js"></script>
+        <script src="../../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../mermaid.min.js"></script>
+        <script src="../../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>

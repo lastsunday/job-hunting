@@ -1,0 +1,665 @@
+<!DOCTYPE HTML>
+<html lang="zh" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>核心逻辑 - Job Hunting</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../../favicon.svg">
+        <link rel="shortcut icon" href="../../favicon.png">
+        <link rel="stylesheet" href="../../css/variables.css">
+        <link rel="stylesheet" href="../../css/general.css">
+        <link rel="stylesheet" href="../../css/chrome.css">
+        <link rel="stylesheet" href="../../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../../toc.js"></script>
+    </head>
+    <body>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            html.classList.remove('sidebar-visible');
+            html.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Job Hunting</h1>
+
+                    <div class="right-buttons">
+                        <a href="../../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="核心逻辑与数据结构设计"><a class="header" href="#核心逻辑与数据结构设计">核心逻辑与数据结构设计</a></h1>
+<h2 id="数据同步流程"><a class="header" href="#数据同步流程">数据同步流程</a></h2>
+<blockquote>
+<p>[!WIP]</p>
+</blockquote>
+<p>数据同步流程以任务形式执行</p>
+<p>流程：计算数据下载任务 -&gt; 数据下载 -&gt; 数据贮藏与合并</p>
+<ul>
+<li>计算数据下载任务
+<ul>
+<li>(task_data_plan,task_data_source_plan)task_plan &lt;-&gt; task,task_data_download</li>
+</ul>
+</li>
+<li>数据下载
+<ul>
+<li>task,task_data_download &lt;-&gt; file,task,task_data_merge</li>
+</ul>
+</li>
+<li>数据贮藏与合并
+<ul>
+<li>task,task_data_merge &lt;-&gt; task,task_data_merge,job_source,company_source,job_tag_source,company_tag_source,job,company,job_tag,company_tag</li>
+</ul>
+</li>
+</ul>
+<h3 id="数据合并"><a class="header" href="#数据合并">数据合并</a></h3>
+<pre class="mermaid">sequenceDiagram
+  participant out_data as 外部数据
+  participant logic as 数据处理器
+  participant source as 来源表
+  participant main as 主表
+
+  out_data -&gt;&gt; logic: 发送外部数据
+  logic -&gt;&gt; logic: 提取外部数据中的唯一标识(业务主键+uri)列表
+  logic -&gt;&gt; source: 根据唯一标识列表查询现存来源数据
+  source -&gt;&gt; logic: 返回现存来源数据
+  logic -&gt;&gt; logic: 去掉外部数据中重复的现存来源数据，得到去重外部数据
+  logic -&gt;&gt; source: 插入去重外部数据
+  source -&gt;&gt; logic: 插入外部去重数据成功
+  logic -&gt;&gt; logic: 提取去重外部数据的业务主键列表
+  logic -&gt;&gt; main: 根据业务主键列表查询现存主数据
+  main -&gt;&gt; logic: 返回现存主数据
+  logic -&gt;&gt; logic: 根据现存主数据和去重外部数据，计算出主数据插入列表和主数据更新列表
+  logic -&gt;&gt; main: 插入主数据插入列表
+  main -&gt;&gt; logic: 插入主数据插入列表成功
+  logic -&gt;&gt; main: 更新主数据更新列表
+  main -&gt;&gt; logic: 更新主数据更新列表成功
+
+</pre>
+<h2 id="核心数据模型"><a class="header" href="#核心数据模型">核心数据模型</a></h2>
+<h4 id="uri-规范"><a class="header" href="#uri-规范">URI 规范</a></h4>
+<blockquote>
+<p>参考：<a href="https://www.rfc-editor.org/rfc/rfc3986.html">RFC 3986</a></p>
+</blockquote>
+<ul>
+<li>第三方数据来源格式：<code>data://[username[@]]host/path</code></li>
+<li>本地文件导入数据来源格式：<code>data://[username[@]]system/[file_hash]</code></li>
+<li>界面新增或编辑数据来源格式：<code>data://[username[@]]system-ui/[version]/[file_hash]/[rfc3339]</code></li>
+</ul>
+<p>字段说明：</p>
+<ul>
+<li><code>username</code>：数据贡献者/上传者标识</li>
+</ul>
+<p>示例：</p>
+<pre><code class="language-txt">data://lastsunday@github.com/lastsunday/job-hunting-data/2026/03-03/job.zip
+data://lastsunday@github.com/lastsunday/job-hunting-data/2024/12-20/company.zip
+data://admin@system/c38036efd481b06a5b0a4292ac7dfbcfb93e9eb0d1c4de0aef0f4d685cf6b3a9
+data://admin@system-ui/1/c38036efd481b06a5b0a4292ac7dfbcfb93e9eb0d1c4de0aef0f4d685cf6b3a9/2026-04-16T14:08:17+00:00
+</code></pre>
+<h3 id="职位相关表"><a class="header" href="#职位相关表">职位相关表</a></h3>
+<blockquote>
+<p>设计说明：</p>
+<ul>
+<li><code>job_source</code>：多渠道原始数据来源表，存储来自不同用户/渠道的原始数据</li>
+<li><code>job</code>：标准化表，去重后的一手数据</li>
+</ul>
+</blockquote>
+<pre class="mermaid">---
+title: Job ER
+---
+erDiagram
+    job_source{
+      id varchar(255) PK &quot;编号&quot;
+      job_id varchar(255) &quot;职位编号&quot;
+      platform varchar(255) &quot;发布平台&quot;
+      url varchar(255) &quot;链接&quot;
+      name varchar(255) &quot;名称&quot;
+      company_name varchar(255) &quot;公司名&quot;
+      location_name varchar(255) &quot;地区&quot;
+      address varchar(255) &quot;地址&quot;
+      longitude numeric(16_13) &quot;经度&quot;
+      latitude numeric(16_13) &quot;纬度&quot;
+      description text &quot;描述&quot;
+      degree_name varchar(255) &quot;学历&quot;
+      year int2 &quot;所需经验&quot;
+      salary_min numeric(12_2) &quot;最低薪资&quot;
+      salary_max numeric(12_2) &quot;最高薪资&quot;
+      salary_total_month int2 &quot;几薪&quot;
+      first_publish_datetime timestamptz &quot;首次发布时间&quot;
+      boss_name varchar(255) &quot;招聘人名称&quot;
+      boss_company_name varchar(255) &quot;招聘公司&quot;
+      boss_position varchar(255) &quot;招聘者职位&quot;
+      is_full_company_name bool &quot;公司名是否为全称&quot;
+      skill_tag text &quot;技能标签: 逗号作为分隔符&quot;
+      welfare_tag text &quot;福利标签: 逗号作为分隔符&quot;
+      first_scan_datetime timestamptz &quot;首次扫描时间&quot;
+      uri varchar(255) &quot;来源&quot;
+      publish_datetime timestamptz &quot;数据发布时间&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    job_source }|..|| job : &quot;源自(最新)&quot;
+    job {
+      id varchar(255) PK &quot;职位编号&quot;
+      platform varchar(255) &quot;发布平台&quot;
+      url varchar(255) &quot;链接&quot;
+      name varchar(255) &quot;名称&quot;
+      company_name varchar(255) &quot;公司名&quot;
+      location_name varchar(255) &quot;地区&quot;
+      address varchar(255) &quot;地址&quot;
+      longitude numeric(16_13) &quot;经度&quot;
+      latitude numeric(16_13) &quot;纬度&quot;
+      description text &quot;描述&quot;
+      degree_name varchar(255) &quot;学历&quot;
+      year int2 &quot;所需经验&quot;
+      salary_min numeric(12_2) &quot;最低薪资&quot;
+      salary_max numeric(12_2) &quot;最高薪资&quot;
+      salary_total_month int2 &quot;几薪&quot;
+      first_publish_datetime timestamptz &quot;首次发布时间&quot;
+      boss_name varchar(255) &quot;招聘人名称&quot;
+      boss_company_name varchar(255) &quot;招聘公司&quot;
+      boss_position varchar(255) &quot;招聘者职位&quot;
+      is_full_company_name bool &quot;公司名是否为全称&quot;
+      skill_tag text &quot;技能标签: 逗号作为分隔符&quot;
+      welfare_tag text &quot;福利标签: 逗号作为分隔符&quot;
+      first_scan_datetime timestamptz &quot;首次扫描时间&quot;
+      uri varchar(255) &quot;来源&quot;
+      publish_datetime timestamptz &quot;数据发布时间&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+</pre>
+<h3 id="公司相关表"><a class="header" href="#公司相关表">公司相关表</a></h3>
+<blockquote>
+<p>设计说明：</p>
+<ul>
+<li><code>company_source</code>：多渠道原始数据来源表，存储来自不同用户/渠道的原始数据</li>
+<li><code>company</code>：标准化表，去重后的一手数据</li>
+</ul>
+</blockquote>
+<pre class="mermaid">---
+title: Company ER
+---
+erDiagram
+    company_source{
+      id varchar(255) PK &quot;编号&quot;
+      company_id varchar(255) &quot;公司编号&quot;
+      name varchar(255) &quot;名称&quot;
+      desc text &quot;描述&quot;
+      start_date timestamptz &quot;成立时间&quot;
+      status varchar(255) &quot;经营状态&quot;
+      legal_person varchar(255) &quot;法人&quot;
+      unified_code varchar(255) &quot;统一社会信用代码&quot;
+      web_site text &quot;官网&quot;
+      insurance_num int4 &quot;社保人数&quot;
+      self_risk int4 &quot;自身风险数&quot;
+      union_risk int4 &quot;关联风险数&quot;
+      address text &quot;地址&quot;
+      scope text &quot;经营范围&quot;
+      tax_no varchar(255) &quot;纳税人识别号&quot;
+      industry varchar(255) &quot;所属行业&quot;
+      license_number varchar(255) &quot;工商注册号&quot;
+      longitude numeric(16_13) &quot;经度&quot;
+      latitude numeric(16_13) &quot;纬度&quot;
+      source_url text &quot;数据来源地址&quot;
+      source_platform varchar(255) &quot;数据来源平台&quot;
+      source_record_id varchar(255) &quot;数据来源记录编号&quot;
+      source_refresh_datetime timestamptz &quot;数据来源更新时间&quot;
+      reg_capital_value numeric(17_2) &quot;注册资本数值&quot;
+      reg_capital_currency varchar(255) &quot;注册资本货币&quot;
+      paidin_capital_value numeric(17_2) &quot;实缴资本数值&quot;
+      paidin_capital_currency varchar(255) &quot;实缴资本货币&quot;
+      uri varchar(255) &quot;来源&quot;
+      publish_datetime timestamptz &quot;数据发布时间&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    company_source }|..|| company : &quot;源自(最新)&quot;
+    company{
+      id varchar(255) PK &quot;公司编号&quot;
+      name varchar(255) UK &quot;名称&quot;
+      desc text &quot;描述&quot;
+      start_date timestamptz &quot;成立时间&quot;
+      status varchar(255) &quot;经营状态&quot;
+      legal_person varchar(255) &quot;法人&quot;
+      unified_code varchar(255) &quot;统一社会信用代码&quot;
+      web_site text &quot;官网&quot;
+      insurance_num int4 &quot;社保人数&quot;
+      self_risk int4 &quot;自身风险数&quot;
+      union_risk int4 &quot;关联风险数&quot;
+      address text &quot;地址&quot;
+      scope text &quot;经营范围&quot;
+      tax_no varchar(255) &quot;纳税人识别号&quot;
+      industry varchar(255) &quot;所属行业&quot;
+      license_number varchar(255) &quot;工商注册号&quot;
+      longitude numeric(16_13) &quot;经度&quot;
+      latitude numeric(16_13) &quot;纬度&quot;
+      source_url text &quot;数据来源地址&quot;
+      source_platform varchar(255) &quot;数据来源平台&quot;
+      source_record_id varchar(255) &quot;数据来源记录编号&quot;
+      source_refresh_datetime timestamptz &quot;数据来源更新时间&quot;
+      reg_capital_value numeric(17_2) &quot;注册资本数值&quot;
+      reg_capital_currency varchar(255) &quot;注册资本货币&quot;
+      paidin_capital_value numeric(17_2) &quot;实缴资本数值&quot;
+      paidin_capital_currency varchar(255) &quot;实缴资本货币&quot;
+      uri varchar(255) &quot;来源&quot;
+      publish_datetime timestamptz &quot;数据发布时间&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+</pre>
+<h2 id="标签数据模型"><a class="header" href="#标签数据模型">标签数据模型</a></h2>
+<pre class="mermaid">---
+title: Tag ER
+---
+erDiagram
+    tag{
+      id varchar(255) PK &quot;编号&quot;
+      name text &quot;名称&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    tag ||--o{ job_tag_source: &quot;关联&quot;
+    job_tag_source{
+      id varchar(255) PK &quot;编号&quot;
+      job_id varchar(255) &quot;职位编号&quot;
+      tag_id varchar(255) &quot;标签编号&quot;
+      seq int4 &quot;序号&quot;
+      uri varchar(255) &quot;来源&quot;
+      publish_datetime timestamptz &quot;数据发布时间&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    tag ||--o{ company_tag_source: &quot;关联&quot;
+    company_tag_source{
+      id varchar(255) PK &quot;编号&quot;
+      company_id varchar(255) &quot;公司编号&quot;
+      company_name varchar(255) &quot;公司名称&quot;
+      tag_id varchar(255) &quot;标签编号&quot;
+      seq int4 &quot;序号&quot;
+      uri varchar(255) &quot;来源&quot;
+      publish_datetime timestamptz &quot;数据发布时间&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    tag ||--o{ job_tag: &quot;关联&quot;
+    job ||--o{ job_tag: &quot;关联&quot;
+    job_tag_source }|..|| job_tag : &quot;源自(最新)&quot;
+    job_tag{
+      id varchar(255) PK &quot;编号&quot;
+      job_id varchar(255) &quot;职位编号&quot;
+      tag_id varchar(255) &quot;标签编号&quot;
+      seq int4 &quot;序号&quot;
+      uri varchar(255) &quot;来源&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    tag ||--o{ company_tag: &quot;关联&quot;
+    company ||--o{ company_tag: &quot;关联&quot;
+    company_tag_source }|..|| company_tag : &quot;源自(最新)&quot;
+    company_tag{
+      id varchar(255) PK &quot;编号&quot;
+      company_id varchar(255) &quot;公司编号&quot;
+      company_name varchar(255) &quot;公司名称&quot;
+      tag_id varchar(255) &quot;标签编号&quot;
+      seq int4 &quot;序号&quot;
+      uri varchar(255) &quot;来源&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+</pre>
+<h2 id="任务系统设计"><a class="header" href="#任务系统设计">任务系统设计</a></h2>
+<h3 id="任务关系图"><a class="header" href="#任务关系图">任务关系图</a></h3>
+<blockquote>
+<p>设计说明：</p>
+<ul>
+<li><code>task_data_plan</code> / <code>task_data_source_plan</code>：用于生成 <code>task_plan</code> 的配置表，便于从界面上描述任务计划，实际参与任务生成的是 <code>task_plan</code></li>
+</ul>
+</blockquote>
+<pre class="mermaid">---
+title: Task ER
+---
+erDiagram
+    task_plan{
+      id varchar(255) PK &quot;编号&quot;
+      type int4 &quot;任务计划类型: 0: DATA_DOWNLOAD,1: METADATA_DOWNLOAD&quot;
+      enable bool &quot;开关&quot;
+      config jsonb &quot;配置&quot;
+      cron varchar(255) &quot;cron定时任务表达式&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    task_plan ||..o| task : &quot;触发&quot;
+    task{
+      id varchar(255) PK &quot;编号&quot;
+      plan_id varchar(255) &quot;任务计划编号&quot;
+      type varchar(255) &quot;任务类型&quot;
+      data_id varchar(255) &quot;任务编号&quot;
+      status varchar(255) &quot;状态&quot;
+      error_reason text &quot;错误原因&quot;
+      cost_time int4 &quot;耗时&quot;
+      retry_count int4 &quot;重试次数&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    task_data_plan ||--|| task_plan: owns
+    task_data_plan{
+      id varchar(255) PK &quot;编号&quot;
+      plan_id varchar(255) &quot;任务计划编号&quot;
+      username varchar(255) &quot;用户名&quot;
+      repo_name varchar(255) &quot;仓库名&quot;
+      repo_type varchar(255) &quot;仓库类型&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    task_data_source_plan ||--|| task_plan: owns
+    task_data_source_plan{
+      id varchar(255) PK &quot;编号&quot;
+      plan_id varchar(255) &quot;任务计划编号&quot;
+      username varchar(255) &quot;用户名&quot;
+      repo_name varchar(255) &quot;仓库名&quot;
+      repo_type varchar(255) &quot;仓库类型&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    task ||--|| task_data_download: owns
+    task_data_download{
+      id varchar(255) PK &quot;编号&quot;
+      type varchar(255) &quot;下载数据任务类型&quot;
+      username varchar(255) &quot;用户名&quot;
+      repo_name varchar(255) &quot;仓库名&quot;
+      datetime timestamptz &quot;时间&quot;
+      config jsonb &quot;配置&quot;
+      data_id varchar(255) &quot;文件编号&quot;
+      seq int4 &quot;序号&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    task ||--|| task_data_merge: owns
+    task_data_merge{
+      id varchar(255) PK &quot;编号&quot;
+      type varchar(255) &quot;合并数据任务类型&quot;
+      username varchar(255) &quot;用户名&quot;
+      repo_name varchar(255) &quot;仓库名&quot;
+      datetime timestamptz &quot;时间&quot;
+      data_id varchar(255) &quot;文件编号&quot;
+      data_count int4 &quot;合并后的数据总数&quot;
+      config jsonb &quot;配置&quot;
+      data_page_num int4 &quot;分页页码，控制批量合并的页索引&quot;
+      data_page_size int4 &quot;分页大小，控制每批合并的数据量&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+    task_data_download ||..|| file : &quot;生成&quot;
+    task_data_merge ||..|| file : &quot;读取&quot;
+    file{
+      id varchar(255) PK &quot;编号&quot;
+      name varchar(255) &quot;名称&quot;
+      sha varchar(255) &quot;sha&quot;
+      content BLOB &quot;内容&quot;
+      size int8 &quot;尺寸&quot;
+      is_delete bool &quot;是否删除&quot;
+      create_datetime timestamptz &quot;创建时间&quot;
+      update_datetime timestamptz &quot;更新时间&quot;
+    }
+</pre>
+<h3 id="任务类型"><a class="header" href="#任务类型">任务类型</a></h3>
+<ul>
+<li>JOB_DATA_DOWNLOAD</li>
+<li>JOB_DATA_STORAGE_AND_MERGE</li>
+<li>COMPANY_DATA_DOWNLOAD</li>
+<li>COMPANY_DATA_STORAGE_AND_MERGE</li>
+<li>COMPANY_TAG_DATA_DOWNLOAD</li>
+<li>COMPANY_TAG_DATA_STORAGE_AND_MERGE</li>
+<li>JOB_TAG_DATA_DOWNLOAD</li>
+<li>JOB_TAG_DATA_STORAGE_AND_MERGE</li>
+</ul>
+<h3 id="任务状态"><a class="header" href="#任务状态">任务状态</a></h3>
+<p>状态值：</p>
+<ul>
+<li>READY：等待执行</li>
+<li>RUNNING：执行中</li>
+<li>CANCEL：已取消</li>
+<li>FINISHED：执行成功</li>
+<li>FINISHED_BUT_ERROR：执行完成但有错误</li>
+<li>ERROR：执行失败</li>
+</ul>
+<pre class="mermaid">---
+title: Task state
+---
+stateDiagram-v2
+    [*] --&gt; READY
+    READY --&gt; RUNNING
+    READY --&gt; CANCEL
+    RUNNING --&gt; FINISHED
+    RUNNING --&gt; FINISHED_BUT_ERROR
+    RUNNING --&gt; ERROR
+    RUNNING --&gt; CANCEL
+    FINISHED --&gt; [*]
+    FINISHED_BUT_ERROR --&gt; [*]
+    ERROR --&gt; RUNNING
+    CANCEL --&gt; [*]
+</pre>
+<p>状态转换说明：</p>
+<ul>
+<li>READY → RUNNING：任务被调度器领取</li>
+<li>READY → CANCEL：任务被取消</li>
+<li>RUNNING → FINISHED：任务执行成功</li>
+<li>RUNNING → FINISHED_BUT_ERROR：任务执行完成但有错误（如部分数据处理失败、超出重试次数）</li>
+<li>RUNNING → ERROR：任务执行失败（如网络异常、数据解析错误）</li>
+<li>RUNNING → CANCEL：任务执行中被取消</li>
+<li>ERROR → RUNNING：任务重试执行</li>
+</ul>
+<h3 id="任务编排"><a class="header" href="#任务编排">任务编排</a></h3>
+<h4 id="流程串联"><a class="header" href="#流程串联">流程串联</a></h4>
+<p><strong>流程一：计算数据下载任务</strong></p>
+<ul>
+<li>由 <code>task_data_plan</code> / <code>task_data_source_plan</code> 生成 <code>task_plan</code></li>
+<li><code>task_plan</code> 触发创建 <code>task</code> 和 <code>task_data_download</code></li>
+</ul>
+<p><strong>流程二：数据下载</strong></p>
+<ul>
+<li><code>task</code> + <code>task_data_download</code> 执行下载</li>
+<li>下载完成后生成 <code>file</code> 文件</li>
+<li>下载任务完成后，根据预设的最大数据量生成多个合并任务，避免一次超大合并带来的性能问题</li>
+</ul>
+<p><strong>流程三：数据贮藏与合并</strong></p>
+<ul>
+<li><code>task</code> + <code>task_data_merge</code> 执行合并</li>
+<li>根据 <code>data_page_num</code> 和 <code>data_page_size</code> 读取对应批次数据</li>
+<li>合并流程：
+<ol>
+<li>写入 source 表（job_source, company_source, job_tag_source, company_tag_source），遇到重复数据则忽略</li>
+<li>将最新数据写入标准化表（job, company, job_tag, company_tag）</li>
+</ol>
+</li>
+<li><code>data_count</code> 记录合并后的数据总数</li>
+</ul>
+<h4 id="失败重试策略"><a class="header" href="#失败重试策略">失败重试策略</a></h4>
+<ul>
+<li><code>ERROR</code> 状态可触发重试，回到 <code>RUNNING</code></li>
+<li><code>retry_count</code> 字段记录当前重试次数</li>
+<li>最大重试次数由<strong>系统配置</strong>设定</li>
+<li>超出最大重试次数后状态置为 <code>FINISHED_BUT_ERROR</code></li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../../development/server/dev_in_deep.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../../development/server/config_and_deploy.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../../development/server/dev_in_deep.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../../development/server/config_and_deploy.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../../elasticlunr.min.js"></script>
+        <script src="../../mark.min.js"></script>
+        <script src="../../searcher.js"></script>
+
+        <script src="../../clipboard.min.js"></script>
+        <script src="../../highlight.js"></script>
+        <script src="../../book.js"></script>
+
+        <!-- Custom JS scripts -->
+        <script src="../../mermaid.min.js"></script>
+        <script src="../../mermaid-init.js"></script>
+
+
+    </div>
+    </body>
+</html>
