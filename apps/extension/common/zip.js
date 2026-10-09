@@ -1,6 +1,10 @@
 import { Archive, ArchiveCompression, ArchiveFormat } from 'libarchive.js';
 import JSZip from 'jszip';
 
+Archive.init({
+  workerUrl: new URL('/worker-bundle.js', self.location.href).href,
+});
+
 export async function getExcelDataFromZipFile(base64Content, dataTypeName) {
   const promise = new Promise((resolve, reject) => {
     JSZip.loadAsync(base64Content, { base64: true })

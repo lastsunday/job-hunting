@@ -65,8 +65,8 @@ export default defineConfig({
         resolve(outDir, 'package.json'),
       );
       copyFileSync(resolve(extRoot, 'LICENSE'), resolve(outDir, 'LICENSE'));
+      const nm = resolve(workspaceRoot, 'node_modules');
       if (wxt.config.mode == 'production') {
-        const nm = resolve(workspaceRoot, 'node_modules');
         copyFileSync(
           resolve(nm, '@electric-sql', 'pglite', 'dist', 'pglite.wasm'),
           resolve(outDir, 'assets', 'pglite.wasm'),
@@ -79,15 +79,15 @@ export default defineConfig({
           resolve(nm, '@electric-sql', 'pglite-tools', 'dist', 'pg_dump.wasm'),
           resolve(outDir, 'assets', 'pg_dump.wasm'),
         );
-        copyFileSync(
-          resolve(nm, 'libarchive.js', 'dist', 'worker-bundle.js'),
-          resolve(outDir, 'worker-bundle.js'),
-        );
-        copyFileSync(
-          resolve(nm, 'libarchive.js', 'dist', 'libarchive.wasm'),
-          resolve(outDir, 'libarchive.wasm'),
-        );
       }
+      copyFileSync(
+        resolve(nm, 'libarchive.js', 'dist', 'worker-bundle.js'),
+        resolve(outDir, 'worker-bundle.js'),
+      );
+      copyFileSync(
+        resolve(nm, 'libarchive.js', 'dist', 'libarchive.wasm'),
+        resolve(outDir, 'libarchive.wasm'),
+      );
     },
   },
   vite: () => {
