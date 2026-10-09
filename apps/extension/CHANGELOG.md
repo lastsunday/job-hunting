@@ -1,3 +1,15 @@
+## 5.0.2 (2026-10-09)
+
+### 🐛 Fixed
+
+- 修复恢复数据量较大的数据库备份文件时报错
+- 修复zip类库worker加载内容触发新版浏览器的内容安全策略问题
+
+### ❤️ Thank You
+
+- llwand1 @llwand1
+- lastsunday @lastsunday
+
 ## 5.0.1 (2026-09-07)
 
 ### 🐛 Fixed
