@@ -44,7 +44,22 @@ jobs:
         continue-on-error: true
 
       - name: Moon CI pipeline (affected)
-        run: nix develop --command moon ci --base=${{ github.event.before || format('origin/{0}', github.base_ref || 'dev') }}
+        run: |
+          set -euo pipefail
+
+          if [ "${{ github.event_name }}" = "push" ]; then
+            BASE="${{ github.event.before }}"
+          else
+            BASE="origin/${{ github.base_ref || 'dev' }}"
+          fi
+
+          if [ "$(git merge-base "$BASE" HEAD)" = "$(git rev-parse HEAD)" ]; then
+            echo "::notice::base $BASE already contains HEAD, running full pipeline"
+            nix develop --command moon ci --force
+          else
+            echo "::notice::moon ci --base=$BASE"
+            nix develop --command moon ci --base="$BASE"
+          fi
         env:
           MOON_OUTPUT_STYLE: buffer-only-failure
           MOON_LOG: error
