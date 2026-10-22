@@ -80,7 +80,7 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.61.1",
     "unocss": "66.7.2",
-    "vite": "8.0.16",
+    "vite": "8.1.6",
     "vite-plugin-dts": "5.0.2",
     "vite-plugin-wasm": "3.6.0",
     "vite-plugin-web-extension": "4.5.1",
