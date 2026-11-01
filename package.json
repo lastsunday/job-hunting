@@ -163,7 +163,7 @@
     "swiper": "12.1.4",
     "uuid": "14.0.0",
     "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
-    "zod": "4.4.3",
+    "zod": "4.6.6",
     "zustand": "5.0.13"
   },
   "packageManager": "pnpm@10.13.1"
